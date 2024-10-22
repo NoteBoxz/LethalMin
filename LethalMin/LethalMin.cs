@@ -714,6 +714,16 @@ namespace LethalMin
                     Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no mesh prefab, skipping registration!");
                     return;
                 }
+                if (string.IsNullOrEmpty(type.AnimPath))
+                {
+                    Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no anim path, skipping registration!");
+                    return;
+                }
+                if (type.MeshPrefab.transform.Find(type.AnimPath).GetComponent<Animator>() == null)
+                {
+                    Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " anim path does not contain an animator, skipping registration!");
+                    return;
+                }
                 if (type.MeshPrefab.GetComponent<NetworkObject>() == null)
                 {
                     //Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " mesh prefab has no network object, skipping registration!");;

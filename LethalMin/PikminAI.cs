@@ -409,7 +409,7 @@ namespace LethalMin
             Mesh = Instantiate(PminType.MeshPrefab, transform);
 
             string? PGP = null;
-            if (string.IsNullOrEmpty(PminType.PikminGlowPath) && PminType.GrowthStagePaths.Length > 0)
+            if (string.IsNullOrEmpty(PminType.PikminGlowPath) && PminType.GrowthStagePaths.Length >= 0)
             {
                 PGP = PminType.GrowthStagePaths[0].RemoveAfterLastSlash();
             }
@@ -450,78 +450,6 @@ namespace LethalMin
             ThrowForce = PminType.ThrowForce * PminType.ThrowForceMultiplier;
 
             transform.Find("MapDot/MapDot (1)").GetComponent<Renderer>().material.color = PminType.PikminColor;
-
-            if (PminType.soundPack != null && PminType.soundPack.FillEmptyWithDefault)
-            {
-                if (PminType.soundPack.AttackVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.AttackVoiceLine = LethalMin.AttackSFX;
-                }
-                if (PminType.soundPack.BornVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.BornVoiceLine = LethalMin.BornSFX;
-                }
-                if (PminType.soundPack.ExitOnionVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.ExitOnionVoiceLine = LethalMin.ExitOnionSFX;
-                }
-                if (PminType.soundPack.EnterOnionVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.EnterOnionVoiceLine = LethalMin.EnterOnionSFX;
-                }
-                if (PminType.soundPack.ItemNoticeVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.ItemNoticeVoiceLine = LethalMin.ItemNoticeSFX;
-                }
-                if (PminType.soundPack.GhostVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.GhostVoiceLine = LethalMin.GhostSFX;
-                }
-                if (PminType.soundPack.CarryVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.CarryVoiceLine = LethalMin.CarrySFX;
-                }
-                if (PminType.soundPack.LostVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.LostVoiceLine = LethalMin.LostSFX;
-                }
-                if (PminType.soundPack.LiftVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.LiftVoiceLine = new[] { LethalMin.LiftSFX };
-                }
-                if (PminType.soundPack.HurtVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.HurtVoiceLine = new[] { LethalMin.DeadSFX };
-                }
-                if (PminType.soundPack.CrushedVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.CrushedVoiceLine = new[] { LethalMin.DeadSFX };
-                }
-                if (PminType.soundPack.NoticeVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.NoticeVoiceLine = new[] { LethalMin.NoticeSFX };
-                }
-                if (PminType.soundPack.ThrowVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.ThrowVoiceLine = new[] { LethalMin.ThrowSFX };
-                }
-                if (PminType.soundPack.HoldVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.HoldVoiceLine = new[] { LethalMin.HoldSFX };
-                }
-                if (PminType.soundPack.YayVoiceLine.Length == 0)
-                {
-                    PminType.soundPack.YayVoiceLine = LethalMin.YaySFX;
-                }
-            }
-            if (PminType.soundPack?.ThrowSFX.Length == 0)
-            {
-                PminType.soundPack.ThrowSFX = LethalMin.PlayerThrowSound;
-            }
-            if (PminType.soundPack?.HitSFX.Length == 0)
-            {
-                PminType.soundPack.HitSFX = LethalMin.RealHitSFX;
-            }
 
             itemDetectionRange = PminType.ItemDetectionRange;
         }
@@ -2686,7 +2614,7 @@ namespace LethalMin
             {
                 if (LethalMin.DebugMode)
                     //LethalMin.Logger.LogInfo($"Pikmin {uniqueDebugId} is already following a car");
-                return;
+                    return;
             }
             if (TargetCarPos != null)
                 Destroy(TargetCarPos.gameObject);

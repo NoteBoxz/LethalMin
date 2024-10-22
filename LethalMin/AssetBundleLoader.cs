@@ -71,11 +71,13 @@ namespace LethalMin
 
         private void ProcessLoadedBundle(AssetBundle bundle)
         {
+            bool IsValidLethalMinBundle = false;
             // Load PikminTypes
             PikminType[] pikminTypes = bundle.LoadAllAssets<PikminType>();
             foreach (PikminType pikminType in pikminTypes)
             {
                 LethalMin.RegisterPikminType(pikminType);
+                IsValidLethalMinBundle = true;
             }
 
             // Load OnionTypes
@@ -83,6 +85,7 @@ namespace LethalMin
             foreach (OnionType onionType in onionTypes)
             {
                 LethalMin.RegisterOnionType(onionType);
+                IsValidLethalMinBundle = true;
             }
 
             // Load OnionFuseRules
@@ -90,6 +93,12 @@ namespace LethalMin
             foreach (OnionFuseRules fuseRule in fuseRules)
             {
                 LethalMin.RegisterFuseRule(fuseRule);
+                IsValidLethalMinBundle = true;
+            }
+
+            if (IsValidLethalMinBundle == false)
+            {
+                LethalMin.Logger.LogWarning($"Bundle does not contain any valid LethalMin assets: {bundle.name}");
             }
         }
     }
