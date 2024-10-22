@@ -27,9 +27,9 @@ Use [EvaisaDev's UnityNetcodePatcher](https://github.com/EvaisaDev/UnityNetcodeP
 2. To fix the reference errors, follow the DLL instructions from [here](https://lethal.wiki/dev/apis/lethallib/custom-enemies/unity-project#setting-up-our-unity-project).
 3. Download the LethalMin.dll file and import it into Unity.
 4. IMPORTANT: With the LethalMin.dll selected in Unity, uncheck "Validate References" in the inspector to remove the reference errors.
-5. Import the ExamplePikminType.unitypackage into the Unity project.
+5. Download and Import the ExamplePikminType.unitypackage into the Unity project.
 6. Put everything that will be used for your Pikmin type into one folder.
-7. With the folder selected, go to AssetBundle and create a new one. Name it something like MyPikminType.lethalmin.
+7. With the folder selected, go to AssetBundle and create a new one. Name it something like "MyPikminType.lethalmin".
 
 ### Type Set-up
 1. Go into Blender or your preferred 3D modeling application and create and animate your Pikmin's 3D model.
