@@ -56,6 +56,7 @@ namespace LethalMin
         public static Dictionary<int, PikminType> IndoorTypes = new Dictionary<int, PikminType>();
         public static Dictionary<int, PikminType> OutdoorTypes = new Dictionary<int, PikminType>();
         public static Dictionary<int, PikminType> SproutTypes = new Dictionary<int, PikminType>();
+        public static Dictionary<int, PikminType> NaturalTypes = new Dictionary<int, PikminType>();
         public static Dictionary<int, OnionType> RegisteredOnionTypes = new Dictionary<int, OnionType>();
         public static Dictionary<int, OnionType> SpawnableOnionTypes = new Dictionary<int, OnionType>();
         public static Dictionary<int, OnionFuseRules> RegisteredFuseRules = new Dictionary<int, OnionFuseRules>();
@@ -138,6 +139,7 @@ namespace LethalMin
         public static bool AllowSpawnMultiplier;
         public static float WhistleVolume;
         public static float ManagerRefreshRate;
+        public static bool DontNatualSpawn;
         public static ObstacleAvoidanceType PikminDefultAvoidanceType, PikminCarryingAvoidanceType;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
@@ -147,7 +149,7 @@ namespace LethalMin
         CustomOnionAllowed, LethalWhistle, LethalLandmines, AllToPItems, LimmitItemGrab, AllowOnionFuseConfig,
         LethalManEaterConfig, CalmableManeaterConfig, Rasisium, NotFormidableOak, LethalTurrentsC, InvinciMin,
         StrudyMin, UselessblueMin, DebugM, FunniMode, PassiveToManEaterConfig, FFOM, FFM, TeleEle, TeleCarie,
-        TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF;
+        TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF,NoPowerSpawn;
 
         public static ConfigEntry<float> Pscale, Sscale, ChaseR, PCPX, PCPY, PCPZ, PCRX, PCRY, PCRZ, PCScale,
          PCPCountX, PCPCountY, PCPCountZ, PCRCCountX, PCRCCountY, PCRCCountZ, PCScaleCount, FallTimer, CounterOffset,
@@ -208,6 +210,7 @@ namespace LethalMin
             GetToDaCar = Config.Bind("Pikmin", "Make Pikmin Carry Items To Car", true, "Makes Pikmin carry items to the car when the car if the car is closer than the ship");
             PikminDefaultAvoidanceTypeConfig = Config.Bind("Pikmin", "Default Avoidance Type", ObstacleAvoidanceType.LowQualityObstacleAvoidance, "The default obstacle avoidance type for Pikmin");
             PikminCarryingAvoidanceTypeConfig = Config.Bind("Pikmin", "Carrying Avoidance Type", ObstacleAvoidanceType.NoObstacleAvoidance, "The obstacle avoidance type for Pikmin when carrying items");
+            NoPowerSpawn = Config.Bind("Pikmin", "Disable Natual Spawning", false, "Makes it so Pikmin won't spawn in from Lethal Company's spawn system");
 
             LethalSpiderConfig = Config.Bind("Enemy AI", "Make Spider eat Pikmin", true, "Makes Spider eat Pikmin that are too close to the spider");
             LethalJesterConfig = Config.Bind("Enemy AI", "Make Jester eat Pikmin", true, "Makes Jester eat Pikmin when opened");
@@ -300,6 +303,7 @@ namespace LethalMin
 
 
             #region Setting Config values
+            DontNatualSpawn = NoPowerSpawn.Value;
             AllowSpawnMultiplier = AllowSpawnMultiplierCF.Value;
             PikminDefultAvoidanceType = PikminDefaultAvoidanceTypeConfig.Value;
             PikminCarryingAvoidanceType = PikminCarryingAvoidanceTypeConfig.Value;
@@ -407,6 +411,7 @@ namespace LethalMin
 
             #region Setting Config Events
             // Add SettingChanged events for all configs
+            NoPowerSpawn.SettingChanged += (_, _) => DontNatualSpawn = NoPowerSpawn.Value;
             AllowSpawnMultiplierCF.SettingChanged += (_, _) => AllowSpawnMultiplier = AllowSpawnMultiplierCF.Value;
             PikminDefaultAvoidanceTypeConfig.SettingChanged += (_, _) => PikminDefultAvoidanceType = PikminDefaultAvoidanceTypeConfig.Value;
             PikminCarryingAvoidanceTypeConfig.SettingChanged += (_, _) => PikminCarryingAvoidanceType = PikminCarryingAvoidanceTypeConfig.Value;
@@ -528,6 +533,8 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(GetToDaCar, false));
             LethalConfigManager.AddConfigItem(new EnumDropDownConfigItem<ObstacleAvoidanceType>(PikminDefaultAvoidanceTypeConfig, false));
             LethalConfigManager.AddConfigItem(new EnumDropDownConfigItem<ObstacleAvoidanceType>(PikminCarryingAvoidanceTypeConfig, false));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(NoPowerSpawn, true));
+
 
             // Controls
             LethalConfigManager.AddConfigItem(new TextInputFieldConfigItem(throwActionConfig, false));
@@ -813,6 +820,12 @@ namespace LethalMin
                     if (DebugMode)
                         Logger.LogInfo(" " + type.GetName() + " spawns as sprout");
                     SproutTypes.Add(type.PikminTypeID, type);
+                }
+                if (type.SpawnsNaturally)
+                {
+                    if (DebugMode)
+                        Logger.LogInfo(" " + type.GetName() + " spawns naturally");
+                    NaturalTypes.Add(type.PikminTypeID, type);
                 }
                 type.MeshData.type = type;
                 type.MeshData.Initalize();
@@ -1103,7 +1116,8 @@ namespace LethalMin
             AddEventToFrame(20, "Hit", AssetLoader.LoadAsset<AnimationClip>("Assets/LethalminAssets/Pikmin/Animations/AttackPlaceHolder2.anim"));
             AddEventToFrame(20, "HitCastable", AssetLoader.LoadAsset<AnimationClip>("Assets/LethalminAssets/Pikmin/Animations/AttackStandingPlaceholder.anim"));
             //AddEventToFrame(65, "Pluck", PluckAnim);
-            pikminTerminalNode.displayText = "__UNDER REWRITEING__";
+            pikminTerminalNode.displayText = "__PLACEHOLDER__";
+            pikminEnemyType.spawningDisabled = DontNatualSpawn;
             Enemies.RegisterEnemy(pikminEnemyType, 50, Levels.LevelTypes.All, pikminTerminalNode, pikminTerminalKeyword);
 
             //RegisterPikminType(AssetLoader.LoadAsset<)

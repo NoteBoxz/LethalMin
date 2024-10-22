@@ -117,13 +117,17 @@ namespace LethalMin
                 return;
             }
 
-            Material onionMaterial = type.OnionMaterial;
-            Texture2D OnionTexture = type.OnionTexture;
-            if (onionMaterial == null && OnionTexture == null)
+            Material onionMaterial = null!;
+            Texture2D OnionTexture = null!;
+            if (type.OnionMaterial != null)
             {
-                LethalMin.Logger.LogError($"Material for {type} Onion not found.");
-                return;
+                onionMaterial = type.OnionMaterial;
             }
+            if (type.OnionTexture != null)
+            {
+                OnionTexture = type.OnionTexture;
+            }
+            
             if (onionMaterial != null)
             {
                 onionRenderer.material = onionMaterial;

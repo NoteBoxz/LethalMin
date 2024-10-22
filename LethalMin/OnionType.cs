@@ -11,9 +11,7 @@ namespace LethalMin
 		public Color OnionColor;
 		[Tooltip("The Onion's texture")]
 		public Texture2D? OnionTexture;
-		public Material OnionMaterial;
-		[Tooltip("The onion's custom script")]
-		public Onion? OnionScript;
+		public Material? OnionMaterial;
 		[Tooltip("The name of the onion's type.")]
 		public string TypeName = "";
 
@@ -33,6 +31,9 @@ namespace LethalMin
 		public GameObject OnionItemMeshPrefab;
 
 		[Header("Unused / Not Implemented")]
+		
+		[Tooltip("The onion's custom script")]
+		public Onion? OnionScript;
 
 		[Tooltip("The onion's icon")]
 		public Sprite? OnionIcon;

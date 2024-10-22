@@ -354,9 +354,17 @@ namespace LethalMin
         {
             if (!PreDefinedType)
             {
-                PminType = LethalMin.RegisteredPikminTypes[enemyRandom.Next(0, LethalMin.RegisteredPikminTypes.Count)];
-                if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo($"Picked {PminType} for ramdo");
+                if (LethalMin.NaturalTypes.Count == 0)
+                {
+                    LethalMin.Logger.LogWarning("No natural types found, this should not happen");
+                    PminType = LethalMin.RegisteredPikminTypes[0];
+                }
+                else
+                {
+                    PminType = LethalMin.NaturalTypes[enemyRandom.Next(0, LethalMin.NaturalTypes.Count)];
+                    if (LethalMin.DebugMode)
+                        LethalMin.Logger.LogInfo($"Picked {PminType} for ramdo");
+                }
             }
 
             //For custom scripts

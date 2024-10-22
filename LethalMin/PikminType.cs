@@ -110,6 +110,10 @@ namespace LethalMin
         public float ItemDetectionRange = 5f;
 
         [Header("Spawning")]
+
+        [Tooltip("Whether the pikmin can spawn in from Lethal Company's spawn system")]
+        public bool SpawnsNaturally = true;
+
         [Tooltip("Whether the pikmin can spawn indoors")]
         public bool SpawnsIndoors;
 

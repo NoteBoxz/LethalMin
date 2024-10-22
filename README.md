@@ -62,9 +62,53 @@ Not everything in the PikminType is required. Here is a list of things that do n
 - Scientific Name
 - Bestiary Segment
 
+LethalMin uses it's own Spawning System that does not affect a moon's power level.
+If SpawnsIndoors and Spawns outdoors is off then the Pikmin won't spawn in very often.
+Pikmin can still spawn outdoors from lethal company's spawn system.
+When this happens a pikmin chose a random type when spawning, this can be disabled for your type by unchecking "SpawnsNaturally".
+
 ### Building
 1. After setting up your Pikmin type, go to the Unity Package Manager and install this with the git URL: "https://github.com/Unity-Technologies/AssetBundles-Browser.git"
 2. Go to the AssetBundles window and look at the Configure tab to make sure everything is okay.
 3. Then go to the Build tab and build the AssetBundle.
 4. When built, take your asset bundle file and put it in the BepInEx plugins folder. Make sure it has the .lethalmin file extension.
 5. Then run the game, and depending on your spawn variables, your Pikmin type should start spawning in the game!
+
+## Making Custom Onions
+
+**Important: You need to have at least some basic knowledge of Unity.**
+
+Custom onions and custom pikmin types do not necessarily need to be in different .lethalmin bundles.
+
+### Unity Set-up
+1. Download the Lethal Company Unity Project Template from [here](https://github.com/XuuXiaolan/LethalCompanyUnityTemplate/tree/main) or [here](https://github.com/EvaisaDev/LethalCompanyUnityTemplate).
+2. To fix the reference errors, follow the DLL instructions from [here](https://lethal.wiki/dev/apis/lethallib/custom-enemies/unity-project#setting-up-our-unity-project).
+3. Download the LethalMin.dll file and import it into Unity.
+4. IMPORTANT: With the LethalMin.dll selected in Unity, uncheck "Validate References" in the inspector to remove the reference errors.
+5. In Unity create a new folder.
+6. With the folder selected, go to AssetBundle and create a new one. Name it something like "MyOnion.lethalmin".
+7. Open the folder and right click in it. Click {Create -> Lethalmin -> OnionType}
+
+### Basic Onion Set-up
+Not everything in an OnionType needs to be filled out.
+- OnionTexture
+- OnionMaterial
+All do not need to be filled out
+
+1. Set the Onion's Color
+2. Input the TypeName
+3. Important, add the pikmin types you want to be held in the onion to TypeCanHold.
+4. Check "SpawnInAsItem" Unless you want to program in a special way for your onion to be obtained.
+5. Go to the PikminTypes you set in TypesCanHold and set their target onion to your custom onion.
+
+### Onion Fuse Rules
+1. Open the Onion's folder and right click in it. Click {Create -> Lethalmin -> OnionFuseRules}
+2. Input the custom onions you want to fuse in to the CompatibleOnions array.
+
+### Building
+1. After setting up your Onion type, go to the Unity Package Manager and install this with the git URL: "https://github.com/Unity-Technologies/AssetBundles-Browser.git"
+2. Go to the AssetBundles window and look at the Configure tab to make sure everything is okay.
+3. Then go to the Build tab and build the AssetBundle.
+4. When built, take your asset bundle file and put it in the BepInEx plugins folder. Make sure it has the .lethalmin file extension.
+5. Then run the game, and depending on your spawn variables, your Onion should start spawning in the game!
+6. If you have multiple onions with their FuseRules set up, then when the ship leaves, the onions should fuse when they land again.
