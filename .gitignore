@@ -1,0 +1,7 @@
+.config
+.vs
+.vscode
+bin
+obj
+BuildAndLaunch.bat
+LethalMin.csproj
