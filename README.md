@@ -1,4 +1,5 @@
-       !!This was programmed with partial AI Asistance!!
+                  !!This was programmed with AI Asistance!!
+
 A lethal company mod that adds function pikmin to the game! 
 LetalLib is requried to install this mod.
 Because of the previously mentioned AI assitance and the fact that I've kinda given up on keeping clean and readable code, the code will be super messy.
@@ -100,7 +101,7 @@ The Onion's Texture/Material do not need to be filled out.
 
 ### Onion Fuse Rules
 1. Open the Onion's folder and right click in it. Click {Create -> Lethalmin -> OnionFuseRules}
-2. Input the custom onions you want to fuse in to the CompatibleOnions array.
+2. Input the custom onions you want to fuse in to the CompatibleOnions array. 
 
 ### Building
 1. After setting up your Onion type, go to the Unity Package Manager and install this with the git URL: "https://github.com/Unity-Technologies/AssetBundles-Browser.git"

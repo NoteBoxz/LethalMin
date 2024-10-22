@@ -868,14 +868,14 @@ namespace LethalMin
                 RegisteredFuseRules.Add(fuseRule.FuseID, fuseRule);
                 if (GetMajorMinorVersion(fuseRule.version) != GetMajorMinorVersion(MyPluginInfo.PLUGIN_VERSION))
                 {
-                    Logger.LogWarning("Pikmin type with ID " + fuseRule.FuseID + " " + fuseRule.name + " has a different version than the mod " + $"({MyPluginInfo.PLUGIN_VERSION})" + ", this may cause issues!");
+                    Logger.LogWarning("Pikmin Onion Fuse Rule with ID " + fuseRule.FuseID + " " + fuseRule.name + " has a different version than the mod " + $"({MyPluginInfo.PLUGIN_VERSION})" + ", this may cause issues!");
                 }
-                Logger.LogMessage("Registered Onion type with ID " + fuseRule.FuseID + " " + fuseRule.name);
+                Logger.LogMessage("Registered Onion Fuse Rule with ID " + fuseRule.FuseID + " " + fuseRule.name);
                 fuseRule.HasBeenRegistered = true;
             }
             else
             {
-                Logger.LogWarning("Onion type: " + fuseRule.name + " with ID " + fuseRule.FuseID + " already registered!");
+                Logger.LogWarning("Onion Fuse Rule type: " + fuseRule.name + " with ID " + fuseRule.FuseID + " already registered!");
             }
         }
 
