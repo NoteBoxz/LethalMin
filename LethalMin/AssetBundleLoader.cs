@@ -46,7 +46,19 @@ namespace LethalMin
             {
                 StartCoroutine(LoadBundleCoroutine(bundleFile));
             }
-            LethalMin.Logger.LogInfo($"Loaded {bundleFiles.Length} bundles");
+            switch (bundleFiles.Length)
+            {
+                case 0:
+                    if (LethalMin.DebugMode)
+                        LethalMin.Logger.LogWarning("No LethalMin bundles found in the plugins folder");
+                    break;
+                case 1:
+                    LethalMin.Logger.LogInfo("Loaded 1 LethalMin bundle");
+                    break;
+                default:
+                    LethalMin.Logger.LogInfo($"Loaded {bundleFiles.Length} LethalMin bundles");
+                    break;
+            }
         }
 
         private IEnumerator LoadBundleCoroutine(string bundlePath)
