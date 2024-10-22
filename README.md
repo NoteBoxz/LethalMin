@@ -90,10 +90,7 @@ Custom onions and custom pikmin types do not necessarily need to be in different
 7. Open the folder and right click in it. Click {Create -> Lethalmin -> OnionType}
 
 ### Basic Onion Set-up
-Not everything in an OnionType needs to be filled out.
-- OnionTexture
-- OnionMaterial
-All do not need to be filled out
+The Onion's Texture/Material do not need to be filled out.
 
 1. Set the Onion's Color
 2. Input the TypeName
