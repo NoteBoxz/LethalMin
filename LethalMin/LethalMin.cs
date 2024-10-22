@@ -1044,7 +1044,7 @@ namespace LethalMin
                 }
                 else
                 {
-                    Logger.LogMessage($"Successfully loaded audio clip: {assetName}");
+                    //Logger.LogMessage($"Successfully loaded audio clip: {assetName}");
                 }
                 clips[i] = clip;
             }
