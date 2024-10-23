@@ -123,7 +123,7 @@ namespace LethalMin
         public EnemyAI? EnemyAttacking;
         public PikminDamager? EnemyDamager;
         public NetworkTransform? transform2;
-        public bool IsDrowing, IsLeaderOnElevator, HasCustomScripts;
+        [IDebuggable.Debug] public bool IsDrowing, IsLeaderOnElevator, HasCustomScripts;
         public bool IsWhistled;
         float KnockBackBuffer, AttackTimer;
         bool ShouldDoKBcheck;
@@ -1825,6 +1825,10 @@ namespace LethalMin
             if (HasCustomScripts)
                 OnSetDrowningClientRpc.Invoke();
 
+            if (currentBehaviourStateIndex == (int)PState.Airborn)
+            {
+                LandPikminClientRpc();
+            }
             if (IsServer && targetItem != null)
             {
                 ReleaseItemServerRpc();
@@ -1874,10 +1878,7 @@ namespace LethalMin
             drowningTimer = enemyRandom.Next(5, 10);
             SwitchToBehaviourClientRpc((int)PState.Idle);
             DrowingAud.Stop();
-            if (IsServer)
-            {
-                UpdateAnimBoolClientRpc("IsDrowing", false);
-            }
+            UpdateAnimBoolClientRpc("IsDrowing", false);
             IsDrowing = false;
             AssignLeader(whistlingPlayer);
             whistlingPlayer = null;
@@ -2735,7 +2736,7 @@ namespace LethalMin
                     HasFoundGrabTarget = false;
                 }
             }
-            agent.Warp(transform.position);
+            agent.Warp(rb.transform.position);
             agent.updatePosition = InitialUP;
             agent.updateRotation = InitalUR;
             IsOnItem = false;
@@ -3272,7 +3273,9 @@ namespace LethalMin
             rb.excludeLayers = 0;
 
             // Resets Agent
-            agent.Warp(transform.position);
+            if (LethalMin.DebugMode)
+                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Landed at {rb.transform.position}");
+            agent.Warp(rb.transform.position);
             agent.updateRotation = InitalUR;
             agent.updatePosition = InitialUP;
 
