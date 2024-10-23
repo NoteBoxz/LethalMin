@@ -1,6 +1,6 @@
 # LethalMin
 
-                                               !!This was programmed with AI Asistance!!
+                       !!This was programmed with AI Asistance!!
 
 A lethal company mod that adds function pikmin to the game! 
 LetalLib is requried to install this mod.
