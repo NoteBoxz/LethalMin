@@ -256,6 +256,7 @@ namespace LethalMin
             if (noticeZone != null)
             {
                 noticeZone.gameObject.SetActive(state);
+                noticeZone.UseCheckSpher = true;
                 noticeZone.IsActive = state;
                 noticeZone.InstantNotice = true;
             }

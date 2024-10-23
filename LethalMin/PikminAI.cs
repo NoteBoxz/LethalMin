@@ -1644,6 +1644,7 @@ namespace LethalMin
             if (currentBehaviourStateIndex == (int)PState.Leaveing) { return; }
             if (IsDrowing) { return; }
             if (IsGettingAsinged) { return; }
+            if(CannotEscape) { return; }
             if (!(currentBehaviourStateIndex == (int)PState.Idle ||
             currentBehaviourStateIndex == (int)PState.Working ||
              currentBehaviourStateIndex == (int)PState.Attacking))

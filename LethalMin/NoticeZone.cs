@@ -16,6 +16,7 @@ namespace LethalMin
     {
         public bool IsActive = true;
         public bool InstantNotice = false;
+        public bool UseCheckSpher = false;
         public PlayerControllerB? leader;
         [ServerRpc(RequireOwnership = false)]
         public void SetLeaderOnServerRpc(NetworkObjectReference leaderref)
@@ -27,7 +28,7 @@ namespace LethalMin
         }
         public void OnTriggerEnter(Collider other)
         {
-            if (!IsActive || !IsServer)
+            if (!IsActive || !IsServer || UseCheckSpher)
             {
                 return;
             }
@@ -37,7 +38,7 @@ namespace LethalMin
                 if (LethalMin.DebugMode)
                     LethalMin.Logger.LogInfo("WhistleDetection entered");
                 PikminAI pikmin = other.GetComponentInParent<PikminAI>();
-                if (pikmin != null && !pikmin.IsDying)
+                if (pikmin != null && !pikmin.IsDying)// && !pikmin.IsWhistled && pikmin.whistlingPlayer != leader)
                 {
                     if (IsServer)
                     {
@@ -90,7 +91,7 @@ namespace LethalMin
         }
         public void OnTriggerExit(Collider other)
         {
-            if (!IsActive || InstantNotice || !IsServer)
+            if (!IsActive || InstantNotice || !IsServer || UseCheckSpher)
             {
                 return;
             }
@@ -100,6 +101,32 @@ namespace LethalMin
                 if (LethalMin.DebugMode)
                     LethalMin.Logger.LogInfo("WhistleDetection entered");
                 StopWhistle(other.GetComponentInParent<PikminAI>());
+            }
+        }
+        void Update()
+        {
+            if (IsServer && IsActive && UseCheckSpher)
+            {
+                StartCoroutine(CheckForPikminInWhistleZone());
+            }
+        }
+        IEnumerator CheckForPikminInWhistleZone()
+        {
+            // Get all colliders within the whistle zone radius
+            Collider[] colliders = Physics.OverlapSphere(transform.position, transform.localScale.x);
+
+            foreach (Collider collider in colliders)
+            {
+                if (collider == null) { continue; }
+                if (collider.name != "PikminColision") { continue; }
+                yield return new WaitForSeconds(0.01f);
+                // Check if the collider belongs to a PikminAI
+                PikminAI pikminAI = collider.GetComponentInParent<PikminAI>();
+                if (pikminAI != null && !pikminAI.CannotEscape && !pikminAI.IsWhistled && pikminAI.whistlingPlayer != leader)
+                {
+                    pikminAI.whistlingPlayer = leader;
+                    pikminAI.IsWhistled = true;
+                }
             }
         }
         public void StopWhistle(PikminAI pikmin)

@@ -741,6 +741,8 @@ namespace LethalMin
                 if (pikmin != null && followingPikmin.Contains(pikmin))
                 {
                     pikmin.previousLeader = this;
+                    pikmin.whistlingPlayer = null;
+                    pikmin.IsWhistled = false;
                     followingPikmin.Remove(pikmin);
                     if (SyncList)
                         SyncPikminListClientRpc(GetPikminNetworkReferences());
