@@ -50,7 +50,7 @@ namespace LethalMin
             {
                 case 0:
                     if (LethalMin.DebugMode)
-                        LethalMin.Logger.LogWarning("No LethalMin bundles found in the plugins folder");
+                        LethalMin.Logger.LogInfo("No LethalMin bundles found in the plugins folder");
                     break;
                 case 1:
                     LethalMin.Logger.LogInfo("Loaded 1 LethalMin bundle");
