@@ -2688,9 +2688,6 @@ namespace LethalMin
         {
             if (TargetCar != null && TargetCar == NextCar)
             {
-                if (LethalMin.DebugMode)
-                    //LethalMin.Logger.LogInfo($"Pikmin {uniqueDebugId} is already following a car");
-                    
                 return;
             }
             if (TargetCarPos != null)
