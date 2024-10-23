@@ -87,6 +87,10 @@ namespace LethalMin
         }
         private void OnLatchOntoEnemyClientRpcEndHandler()
         {
+            if(BaseScript.EnemyDamager == null)
+            {
+                return;
+            }
             if (BaseScript.previousLeader != null)
             {
                 BaseScript.EnemyDamager.HitInAirQoutes(.15f, BaseScript.previousLeader.Controller, true, 1);

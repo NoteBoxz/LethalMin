@@ -29,6 +29,6 @@ for ($i = 1; $i -le 2; $i++) {
     Write-Host "Starting game instance: $i"
     Start-Process $exePath -ArgumentList $arguments
     if ($i -eq 1) {
-        Start-Sleep -Seconds 3  # 3-second pause between launches
+        Start-Sleep -Seconds 4  # 5-second pause between launches
     }
 }

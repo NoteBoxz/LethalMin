@@ -141,6 +141,9 @@ namespace LethalMin
         public static float ManagerRefreshRate;
         public static bool DontNatualSpawn;
         public static ObstacleAvoidanceType PikminDefultAvoidanceType, PikminCarryingAvoidanceType;
+        public static bool MeshWrapping;
+        public static float WhisRange,WhisMin,WhisMax;
+        public static float PlayerNoticeRange;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
         public static ConfigEntry<bool> SkipPluckAnimation, FF, Smartmin, Smartermin, OnlyMainV, OnlyExitV, Pattack,
@@ -149,12 +152,12 @@ namespace LethalMin
         CustomOnionAllowed, LethalWhistle, LethalLandmines, AllToPItems, LimmitItemGrab, AllowOnionFuseConfig,
         LethalManEaterConfig, CalmableManeaterConfig, Rasisium, NotFormidableOak, LethalTurrentsC, InvinciMin,
         StrudyMin, UselessblueMin, DebugM, FunniMode, PassiveToManEaterConfig, FFOM, FFM, TeleEle, TeleCarie,
-        TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF,NoPowerSpawn;
+        TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF,NoPowerSpawn,MWon;
 
         public static ConfigEntry<float> Pscale, Sscale, ChaseR, PCPX, PCPY, PCPZ, PCRX, PCRY, PCRZ, PCScale,
          PCPCountX, PCPCountY, PCPCountZ, PCRCCountX, PCRCCountY, PCRCCountZ, PCScaleCount, FallTimer, CounterOffset,
          NoticeTimer, BarberR, OnionSpawnChance, SproutSpawnChance, IndoorSpawnChance, WhistleVolumeConfig,
-         ManagerRefreshRateC;
+         ManagerRefreshRateC,WhistleRange,WhistleMinRaidus,WhistleMaxRadius,PlayerNR;
 
         public static ConfigEntry<int> MechBurnLimmitConfig, JesterDiet, ThumperDiet, GiantDiet, BarberDiet, ManeaterDiet, SpideDiet,
         JesterBuffer, ThumperBuffer, SpiderBuffer, BeesShockCountConfig, ManeaterBuffer, MaxMin
@@ -271,6 +274,7 @@ namespace LethalMin
             AllowOnionFuseConfig = Config.Bind("Extra", "Allow Onion Fuse", true, "Allows onions to fuse after the ship leaves.");
             WhistleVolumeConfig = Config.Bind("Extra", "Whistle Volume", 1f, "The volume of the whistle sound (I'm only implumenting this because the whistle sound is bugged and I can't fix it)");
             ManagerRefreshRateC = Config.Bind("Extra", "PikminManager Refersh Rate", 0.75f, "The rate at which the PikminManager refreshes it's object refernces. Warning! Having this value too low could cause lag.");
+            MWon = Config.Bind("Extra", "Mesh Wrapping", false, "Enables mesh wrapping for the target object");
 
             LethalManEaterConfig = Config.Bind("Maneater", "Make Adult Maneater Eat Pikmin", true, "Makes The Maneater kill pikmin in it's way when agroed");
             CalmableManeaterConfig = Config.Bind("Maneater", "Make Maneater Calmable by Pikmin", true, "Makes the maneater in it's baby state calmable by pikmin. (Note: The unless Favor any Pikmin Type is enabled, the maneater will only be calmable by the pikmin type that was selected by the first player it sees.)");
@@ -292,6 +296,10 @@ namespace LethalMin
             ItemRequireSubracter = Config.Bind("`Cheats`", "Pikmin Needed Per-item subtraction", 0, "Subtracts the ammount of pikmin needed per item");
             DebugM = Config.Bind("`Cheats`", "Debug Mode", false, "q");
             FunniMode = Config.Bind("`Cheats`", "Funni Onion", false, "Funni Onion");
+            WhistleRange = Config.Bind("`Cheats`", "Whistle Range", 5f, "The range at which the whistle can reach");
+            WhistleMinRaidus = Config.Bind("`Cheats`", "Whistle Min Radius", 1f, "The min radius at which the whistle can be heard");
+            WhistleMaxRadius = Config.Bind("`Cheats`", "Whistle Max Radius", 15f, "The max radius at which the whistle can be heard");
+            PlayerNR = Config.Bind("`Cheats`", "Player Notice Range", 1.5f, "The distance between a player and a pikmin at which the pikmin will notice the player");
 
             FFOM = Config.Bind("LethalMon", "Make Pikmin Attack Leaders Tammed Enemy", false, "Makes Pikmin attack the leaders Pokémon");
             FFM = Config.Bind("LethalMon", "Make Pikmin Attack Tammed Enemies", false, "Makes Pikmin attack any Tamed Enemies");
@@ -303,6 +311,11 @@ namespace LethalMin
 
 
             #region Setting Config values
+            PlayerNoticeRange = PlayerNR.Value;
+            WhisRange = WhistleRange.Value;
+            WhisMin = WhistleMinRaidus.Value;
+            WhisMax = WhistleMaxRadius.Value;
+            MeshWrapping = MWon.Value;
             DontNatualSpawn = NoPowerSpawn.Value;
             AllowSpawnMultiplier = AllowSpawnMultiplierCF.Value;
             PikminDefultAvoidanceType = PikminDefaultAvoidanceTypeConfig.Value;
@@ -411,6 +424,11 @@ namespace LethalMin
 
             #region Setting Config Events
             // Add SettingChanged events for all configs
+            PlayerNR.SettingChanged += (_, _) => PlayerNoticeRange = PlayerNR.Value;
+            WhistleRange.SettingChanged += (_, _) => WhisRange = WhistleRange.Value;
+            WhistleMinRaidus.SettingChanged += (_, _) => WhisMin = WhistleMinRaidus.Value;
+            WhistleMaxRadius.SettingChanged += (_, _) => WhisMax = WhistleMaxRadius.Value;
+            MWon.SettingChanged += (_, _) => MeshWrapping = MWon.Value;
             NoPowerSpawn.SettingChanged += (_, _) => DontNatualSpawn = NoPowerSpawn.Value;
             AllowSpawnMultiplierCF.SettingChanged += (_, _) => AllowSpawnMultiplier = AllowSpawnMultiplierCF.Value;
             PikminDefaultAvoidanceTypeConfig.SettingChanged += (_, _) => PikminDefultAvoidanceType = PikminDefaultAvoidanceTypeConfig.Value;
@@ -592,6 +610,7 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowOnionFuseConfig, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(WhistleVolumeConfig, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(ManagerRefreshRateC, false));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(MWon, true));
 
             // HUD
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(PCPX, false));
@@ -622,6 +641,11 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new IntInputFieldConfigItem(ItemRequireSubracter, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(DebugM, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(FunniMode, true));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(WhistleRange, false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(WhistleMinRaidus, false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(WhistleMaxRadius, false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(PlayerNR, false));
+
 
             // Lethal Mon            
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(FFOM, false));
@@ -915,7 +939,7 @@ namespace LethalMin
         OnionMeunOpen, OnionMeunClose, PikAdd, PikSub, PurpSlam;
         public static AudioClip[] PlayerThrowSound, RealHitSFX;
         public static GameObject PikminObjectPrefab, OnionPrefab, OnionItemPrefab, leaderManagerPrefab,
-         WhistlePrefab, PmanPrefab, ManeaterScriptContainer, IdelGlowPrefab, EaterBehavior;
+         WhistlePrefab, PmanPrefab, ManeaterScriptContainer, IdelGlowPrefab, EaterBehavior,NoticeZone;
         public static Mesh TwoSideOnion, ThreeSideOnion, FourSideOnion, FiveSideOnion, SixSideOnion, SevenSideOnion, EightSideOnion;
         public static Item OnionItem;
         public static AnimationClip PluckAnim;
@@ -1022,6 +1046,7 @@ namespace LethalMin
             Ghost = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/PikminGhost.prefab");
             PmanPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/Pikmin Manager.prefab");
             CounterPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/Counter.prefab");
+            NoticeZone = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/PikminNoticeZone.prefab");
 
             // Load sprites
             SaferWafer = AssetLoader.LoadAsset<Sprite>("Assets/LethalminAssets/HUD/Pikmin4/Psafe.png");

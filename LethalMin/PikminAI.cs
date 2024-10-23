@@ -124,6 +124,7 @@ namespace LethalMin
         public PikminDamager? EnemyDamager;
         public NetworkTransform? transform2;
         public bool IsDrowing, IsLeaderOnElevator, HasCustomScripts;
+        public bool IsWhistled;
         float KnockBackBuffer, AttackTimer;
         bool ShouldDoKBcheck;
         float SnapToBuffer, SnapToBuffer2;
@@ -217,6 +218,7 @@ namespace LethalMin
         Vector3 MineshaftMainEntrancePosition;
         NetworkVariable<bool> newIsMoving = new NetworkVariable<bool>(false);
         bool IsCallingCLOSFI;
+        GameObject NoticeColider;
         #endregion
 
 
@@ -242,6 +244,7 @@ namespace LethalMin
             }
             transform2 = GetComponent<NetworkTransform>();
             PminColider = transform.Find("PikminColision").gameObject;
+            NoticeColider = transform.Find("WhistleDetection").gameObject;
 
             // Immediate initializations
             GROW_TIME = UnityEngine.Random.Range(30, 659);
@@ -460,6 +463,78 @@ namespace LethalMin
             transform.Find("MapDot/MapDot (1)").GetComponent<Renderer>().material.color = PminType.PikminColor;
 
             itemDetectionRange = PminType.ItemDetectionRange;
+
+            if (PminType.soundPack != null && PminType.soundPack.FillEmptyWithDefault)
+            {
+                if (PminType.soundPack.AttackVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.AttackVoiceLine = LethalMin.AttackSFX;
+                }
+                if (PminType.soundPack.BornVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.BornVoiceLine = LethalMin.BornSFX;
+                }
+                if (PminType.soundPack.ExitOnionVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.ExitOnionVoiceLine = LethalMin.ExitOnionSFX;
+                }
+                if (PminType.soundPack.EnterOnionVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.EnterOnionVoiceLine = LethalMin.EnterOnionSFX;
+                }
+                if (PminType.soundPack.ItemNoticeVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.ItemNoticeVoiceLine = LethalMin.ItemNoticeSFX;
+                }
+                if (PminType.soundPack.GhostVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.GhostVoiceLine = LethalMin.GhostSFX;
+                }
+                if (PminType.soundPack.CarryVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.CarryVoiceLine = LethalMin.CarrySFX;
+                }
+                if (PminType.soundPack.LostVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.LostVoiceLine = LethalMin.LostSFX;
+                }
+                if (PminType.soundPack.LiftVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.LiftVoiceLine = new[] { LethalMin.LiftSFX };
+                }
+                if (PminType.soundPack.HurtVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.HurtVoiceLine = new[] { LethalMin.DeadSFX };
+                }
+                if (PminType.soundPack.CrushedVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.CrushedVoiceLine = new[] { LethalMin.DeadSFX };
+                }
+                if (PminType.soundPack.NoticeVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.NoticeVoiceLine = new[] { LethalMin.NoticeSFX };
+                }
+                if (PminType.soundPack.ThrowVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.ThrowVoiceLine = new[] { LethalMin.ThrowSFX };
+                }
+                if (PminType.soundPack.HoldVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.HoldVoiceLine = new[] { LethalMin.HoldSFX };
+                }
+                if (PminType.soundPack.YayVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.YayVoiceLine = LethalMin.YaySFX;
+                }
+            }
+            if (PminType.soundPack?.ThrowSFX.Length == 0)
+            {
+                PminType.soundPack.ThrowSFX = LethalMin.PlayerThrowSound;
+            }
+            if (PminType.soundPack?.HitSFX.Length == 0)
+            {
+                PminType.soundPack.HitSFX = LethalMin.RealHitSFX;
+            }
         }
 
         /// <summary>
@@ -528,8 +603,22 @@ namespace LethalMin
         }
         #endregion
 
-
-
+        [ServerRpc(RequireOwnership = false)]
+        public void SetWhistleingPlayerServerRpc(NetworkObjectReference player)
+        {
+            if (player.TryGet(out NetworkObject noticeZoneObject))
+            {
+                PlayerControllerB players = noticeZoneObject.GetComponent<PlayerControllerB>();
+                whistlingPlayer = players;
+                IsWhistled = true;
+            }
+        }
+        [ServerRpc(RequireOwnership = false)]
+        public void SetWhistleingPlayerServerRpc()
+        {
+            whistlingPlayer = null;
+            IsWhistled = false;
+        }
 
 
         #region Core Update Logic
@@ -600,7 +689,11 @@ namespace LethalMin
             agent.ResetPath();
             agent.velocity = Vector3.zero;
 
-            CheckForNearbyPlayers();
+            NoticeColider.name = "WhistleDetection";
+            if (IsWhistled && whistlingPlayer != null)
+            {
+                NoticeInstant(whistlingPlayer);
+            }
 
             if (IdleTimer > 0)
             {
@@ -730,6 +823,7 @@ namespace LethalMin
                 agent.stoppingDistance = 2;
                 agent.SetDestination(targetPlayer.transform.position);
             }
+            NoticeColider.name = "NONE";
             if (HasCustomScripts)
                 OnHandleFollowingStateEnd.Invoke();
         }
@@ -778,6 +872,7 @@ namespace LethalMin
                     agent.SetDestination(transform.position);
                 }
             }
+            NoticeColider.name = "WhistleDetection";
             if (HasCustomScripts)
                 OnHandleDrowningStateEnd.Invoke();
         }
@@ -816,13 +911,17 @@ namespace LethalMin
             //Buffer the state change timer
             if (stateChangeTimer <= 0f)
             {
-                CheckForNearbyPlayers();
+                if (IsWhistled && whistlingPlayer != null)
+                {
+                    NoticeInstant(whistlingPlayer);
+                }
                 stateChangeTimer = stateChangeBuffer;
             }
-            else if (CheckLineOfSightForPlayer(width: 360, range: 3, proximityAwareness: -1))
+            else if (IsWhistled)
             {
                 stateChangeTimer -= Time.deltaTime;
             }
+            NoticeColider.name = "WhistleDetectionWhistle";
             if (HasCustomScripts)
                 OnHandleWorkingStateEnd.Invoke();
         }
@@ -876,6 +975,7 @@ namespace LethalMin
                     EnemyAttacking = null;
                 }
             }
+            NoticeColider.name = "WhistleDetectionWhistle";
             if (HasCustomScripts)
                 OnHandleAttackingStateEnd.Invoke();
         }
@@ -1441,55 +1541,6 @@ namespace LethalMin
 
 
         #region Player and Leader Interaction
-        private void CheckForNearbyPlayers()
-        {
-            if (!IsServer) return; // Only run this on the server
-            if (!HasInitalized) { return; }
-            if (HasCustomScripts)
-                OnCheckForNearbyPlayers.Invoke();
-
-            PlayerControllerB nearestPlayer = CheckLineOfSightForPlayer(width: 360, range: 3, proximityAwareness: -1);
-
-            if (nearestPlayer != null)
-            {
-                if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found player {nearestPlayer.name}");
-                // Find the LeaderManager associated with this PlayerControllerB
-                LeaderManager leaderManager = FindLeaderManagerForPlayer(nearestPlayer);
-
-                if (leaderManager != null)
-                {
-                    if (LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found player with leader manager {nearestPlayer.name}");
-                    NetworkObject leaderNetworkObject = leaderManager.GetComponent<NetworkObject>();
-                    if (leaderNetworkObject != null)
-                    {
-                        if (LethalMin.DebugMode)
-                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found player with  Network Object {nearestPlayer.name}");
-                        if (SnapTopPosition != null && CannotEscape) { return; }
-                        if (SnapTopPosition != null && !CannotEscape) { StopCoroutine(SnapTopPosition); SnapTopPosition = null; }
-                        StartCoroutine(DelayedLeaderAssing(leaderNetworkObject));
-                    }
-                    else
-                    {
-                        if (LethalMin.DebugMode)
-                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Player {nearestPlayer.name} does not have a network object!!!");
-                    }
-                }
-                else
-                {
-                    if (LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Player {nearestPlayer.name} does not have a leader manager!!!");
-                }
-            }
-            else
-            {
-                //if(LethalMin.DebugMode)
-                //LethalMin.Logger.LogInfo($"({uniqueDebugId}) No player in line of sight");
-            }
-            if (HasCustomScripts)
-                OnCheckForNearbyPlayersEnd.Invoke();
-        }
 
         IEnumerator DelayedLeaderAssing(NetworkObject leaderNetworkObject)
         {
@@ -1588,9 +1639,23 @@ namespace LethalMin
             if (LethalMin.DebugMode)
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Synced leader with Client!");
         }
-        public bool IsInCallableState()
+        public void NoticeInstant(PlayerControllerB newLeader, bool PlayNoticeAnim = true)
         {
-            return currentBehaviourStateIndex == (int)PState.Idle || currentBehaviourStateIndex == (int)PState.Working || currentBehaviourStateIndex == (int)PState.Attacking;
+            if (currentBehaviourStateIndex == (int)PState.Leaveing) { return; }
+            if (IsDrowing) { return; }
+            if (IsGettingAsinged) { return; }
+            if (!(currentBehaviourStateIndex == (int)PState.Idle ||
+            currentBehaviourStateIndex == (int)PState.Working ||
+             currentBehaviourStateIndex == (int)PState.Attacking))
+            {
+                return;
+            }
+            if (newLeader.disconnectedMidGame)
+            {
+                return;
+            }
+            SetWhistleingPlayerServerRpc();
+            AssignLeader(newLeader, PlayNoticeAnim);
         }
         public void AssignLeader(PlayerControllerB newLeader, bool PlayNoticeAnim = true)
         {

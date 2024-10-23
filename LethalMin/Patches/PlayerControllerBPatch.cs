@@ -164,9 +164,9 @@ namespace LethalMin.Patches
         private static System.Collections.IEnumerator SpawnLeaderManagerWhenReady(PlayerControllerB player)
         {
             // Wait until the player's NetworkObject is spawned
-            while (player.NetworkObject == null || !player.NetworkObject.IsSpawned)
+            while (player.NetworkObject == null || !player.NetworkObject.IsSpawned || PikminHUD.pikminHUDInstance == null) 
             {
-                yield return null;
+                yield return new WaitForSeconds(0.1f);
             }
 
             // Request the server to spawn the LeaderManager

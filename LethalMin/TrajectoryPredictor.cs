@@ -32,7 +32,10 @@ namespace LethalMin
                 LethalMin.Logger.LogWarning("TrajectoryPredictor: Throw origin is not set. Please assign it in the LeaderManager.");
 
             hitMarker = Instantiate(AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/Target.prefab")).transform;
-
+            if (LethalMin.MeshWrapping)
+            {
+                hitMarker.transform.Find("Plane").gameObject.AddComponent<MeshGroundWrapper>();
+            }
             SetTrajectoryVisible(false);
             collidersAndRoomMask = LethalMin.Instance.PikminColideable;
         }

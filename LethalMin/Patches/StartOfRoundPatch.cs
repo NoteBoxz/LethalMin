@@ -18,6 +18,7 @@ namespace LethalMin.Patches
         private static void OnPlayerConnectedClientRpcPostfix()
         {
             PikminManager.Instance.SyncAllPikminItems();
+            PikminManager.Instance.SyncAllWhistles();
         }
 
 

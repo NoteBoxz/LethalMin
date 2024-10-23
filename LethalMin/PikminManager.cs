@@ -417,6 +417,15 @@ namespace LethalMin
                 item.SyncRoot();
             }
         }
+        public void SyncAllWhistles()
+        {
+            if (!IsServer) { return; }
+            WhistleItem[] allWhistleItems = UnityEngine.Object.FindObjectsOfType<WhistleItem>();
+            foreach (WhistleItem item in allWhistleItems)
+            {
+                item.SyncZone();
+            }
+        }
         public void OnGameStarted()
         {
             if (!IsServer) { return; }

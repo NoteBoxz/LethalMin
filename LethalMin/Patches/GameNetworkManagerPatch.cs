@@ -26,6 +26,13 @@ namespace LethalMin.Patches
             GameObject ShipOnionPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipOnion.prefab");
             GameObject AttackerPrefab = LethalMin.PikminAttackerNode;
             GameObject ManeaterPrefab = LethalMin.EaterBehavior;
+            GameObject NoticePrefab = LethalMin.NoticeZone;
+
+            if (NoticePrefab != null)
+            {
+                NoticePrefab.AddComponent<NoticeZone>();
+                NetworkManager.Singleton.AddNetworkPrefab(NoticePrefab);
+            }
 
             if (ManeaterPrefab != null)
             {

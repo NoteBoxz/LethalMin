@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Collections;
 using System.Linq;
 using System;
+using Unity.Netcode.Components;
 
 namespace LethalMin
 {
@@ -37,6 +38,7 @@ namespace LethalMin
         [SerializeField] private float rowSpacing = 0.5f;
         [SerializeField] private int pikminPerRow = 5;
         private Dictionary<PikminType, List<PikminAI>> pikminByType = new Dictionary<PikminType, List<PikminAI>>();
+        private NoticeZone noticeZoneInstance;
         #endregion
 
         #region Initialization
@@ -50,6 +52,42 @@ namespace LethalMin
             InitializeHoldPosition();
             InitializeInputAction();
             StartCoroutine(CheckBooleanValueCoroutine());
+            InitalizeNoticeZonesServerRpc(new NetworkObjectReference(NetworkObject));
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void InitalizeNoticeZonesServerRpc(NetworkObjectReference leaderRef)
+        {
+            if (leaderRef.TryGet(out NetworkObject leaderObject))
+            {
+                LeaderManager leader = leaderObject.GetComponent<LeaderManager>();
+                if (noticeZoneInstance == null)
+                {
+                    GameObject NZ = Instantiate(LethalMin.NoticeZone, leader.Controller.transform);
+                    noticeZoneInstance = NZ.GetComponent<NoticeZone>();
+                    noticeZoneInstance.leader = leader.Controller;
+                    noticeZoneInstance.NetworkObject.Spawn();
+                    noticeZoneInstance.transform.SetParent(leader.Controller.transform);
+                }
+                SyncNoticeZoneClientRpc(new NetworkObjectReference(noticeZoneInstance.NetworkObject), leaderRef);
+            }
+        }
+
+        [ClientRpc]
+        private void SyncNoticeZoneClientRpc(NetworkObjectReference noticeZoneRef, NetworkObjectReference leaderRef)
+        {
+            if (noticeZoneRef.TryGet(out NetworkObject noticeZoneObject) && leaderRef.TryGet(out NetworkObject leaderObject))
+            {
+                NoticeZone noticeZone = noticeZoneObject.GetComponent<NoticeZone>();
+                LeaderManager leader = leaderObject.GetComponent<LeaderManager>();
+                if (noticeZone != null)
+                {
+                    leader.noticeZoneInstance = noticeZone;
+                    noticeZone.leader = leader.Controller;
+                    noticeZone.name = $"{leader.Controller.name}'s NoticeZone";
+                    Destroy(noticeZone.GetComponent<MeshRenderer>());
+                }
+            }
         }
 
         private void InitializeController()
@@ -349,7 +387,9 @@ namespace LethalMin
 
         public void LateUpdate()
         {
-
+            if(noticeZoneInstance != null){
+                noticeZoneInstance.transform.localScale = new Vector3(LethalMin.PlayerNoticeRange, LethalMin.PlayerNoticeRange, LethalMin.PlayerNoticeRange);
+            }
             if (showDebugCubes)
             {
                 UpdateDebugCubes();
@@ -767,7 +807,7 @@ namespace LethalMin
         {
             foreach (PikminAI pikmin in pikminToRemove)
             {
-                RemovePikminServerRpc(new NetworkObjectReference(pikmin.NetworkObject),false);
+                RemovePikminServerRpc(new NetworkObjectReference(pikmin.NetworkObject), false);
                 DismissPikminClientRpc(new NetworkObjectReference(pikmin.NetworkObject));
                 yield return new WaitForSeconds(0.02f);
             }
@@ -799,7 +839,7 @@ namespace LethalMin
                 PikminHUD.pikminHUDInstance.UpdateHUD();
             }
         }
-    
+
         [ServerRpc(RequireOwnership = false)]
         public void RemoveAllPikminServerRpc(bool SetState = true)
         {
@@ -818,7 +858,7 @@ namespace LethalMin
             {
                 if (pikmin != null && pikmin.NetworkObject != null)
                 {
-                    RemovePikminServerRpc(new NetworkObjectReference(pikmin.NetworkObject),false);
+                    RemovePikminServerRpc(new NetworkObjectReference(pikmin.NetworkObject), false);
                     pikmin.targetPlayer = null;
                     pikmin.currentLeader = null;
                     pikmin.currentLeaderNetworkObject = null;

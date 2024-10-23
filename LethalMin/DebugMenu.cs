@@ -25,6 +25,11 @@ namespace LethalMin
 
         private void Update()
         {
+            Vector3 pos = Vector3.zero;
+            if(StartOfRound.Instance.localPlayerController.transform.position != null)
+            {
+                pos = StartOfRound.Instance.localPlayerController.transform.position;
+            }
             foreach (var className in debugItems.Keys.ToList())
             {
                 if (debugItems[className].Count == 0)
@@ -34,7 +39,7 @@ namespace LethalMin
                 }
                 debugItems[className] = debugItems[className]
                     .Where(item => item.gameObject != null)
-                    .OrderBy(item => Vector3.Distance(item.gameObject.transform.position, StartOfRound.Instance.localPlayerController.transform.position))
+                    .OrderBy(item => Vector3.Distance(item.gameObject.transform.position, pos))
                     .ToList();
             }
             if (showDebugMenu)

@@ -2,18 +2,15 @@ using UnityEngine.InputSystem;
 using UnityEngine;
 using System.Collections;
 using Unity.Netcode;
-using System.Collections.Generic;
 using GameNetcodeStuff;
-
 
 namespace LethalMin
 {
     public class WhistleItem : GrabbableObject
     {
-        public GameObject WhistleZone;
+        public NoticeZone noticeZone;
 
         [SerializeField] private float whistleZoneRadius = 5f;
-        [SerializeField] private float whistleZoneHeight = 0.1f;
         [SerializeField] private float whistleZoneOffset = 20f;
         [SerializeField] private float maxRaycastDistance = 20f;
 
@@ -27,7 +24,6 @@ namespace LethalMin
         [SerializeField] private float maxWhistleZoneRadius = 15f;
         [SerializeField] private float tweenDuration = 0.5f;
         private Coroutine tweenCoroutine;
-        private Coroutine WhistleCoroutine;
         public LineRenderer lineRenderer;
         [SerializeField] private int linePoints = 10;
         [SerializeField] private float lineWidth = 0.1f;
@@ -36,29 +32,33 @@ namespace LethalMin
         private Transform EndPoint;
         private AudioSource aud;
         [SerializeField] private Animator anim;
-        public override void EquipItem()
-        {
-            base.EquipItem();
-        }
+
         public override void Start()
         {
             base.Start();
+            SetupComponents();
+            SetupInputActions();
+            SetupLineRenderer();
+            SetupTooltips();
+
+            if (IsServer)
+            {
+                InitializeWhistleServerRpc();
+            }
+        }
+
+        private void SetupComponents()
+        {
             anim = GetComponentInChildren<Animator>();
             aud = GetComponent<AudioSource>();
             EndPoint = transform.Find("mesh/EndPoint");
-            WhistleZone = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            WhistleZone.GetComponent<Collider>().enabled = false;
-            Renderer whistleZoneRenderer = WhistleZone.GetComponent<Renderer>();
-            whistleZoneRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            whistleZoneRenderer.receiveShadows = false;
-            whistleZoneRenderer.material = LethalMin.lineMaterial;
-            lineMaterial = LethalMin.lineMaterial;
-            WhistleZone.transform.SetParent(null);
             collidersAndRoomMask = LethalMin.Instance.PikminColideable;
             DissSFX = LethalMin.DissSFX;
-            WhistleZone.SetActive(false);
+            lineMaterial = LethalMin.lineMaterial;
+        }
 
-            // Create and set up the custom input action
+        private void SetupInputActions()
+        {
             whistleAction = new InputAction("Whistle", InputActionType.Button, LethalMin.WhisleAction);
             whistleAction.started += ctx => OnWhistleStarted();
             whistleAction.performed += ctx => OnWhistlePerformed();
@@ -68,15 +68,24 @@ namespace LethalMin
             removeAllPikminAction = new InputAction("Dismiss", InputActionType.Button, LethalMin.DismissAction);
             removeAllPikminAction.started += ctx => OnDismiss();
             removeAllPikminAction.Enable();
+        }
 
-            // Set up LineRenderer
+        private void SetupLineRenderer()
+        {
+            lineRenderer = GetComponent<LineRenderer>();
+            if (lineRenderer == null)
+            {
+                lineRenderer = gameObject.AddComponent<LineRenderer>();
+            }
             lineRenderer.positionCount = linePoints;
             lineRenderer.startWidth = lineWidth;
             lineRenderer.endWidth = lineWidth;
             lineRenderer.material = lineMaterial;
             lineRenderer.enabled = false;
+        }
 
-
+        private void SetupTooltips()
+        {
             if (whistleAction.controls.Count > 0)
             {
                 string buttonName = whistleAction.controls[0].displayName;
@@ -96,42 +105,35 @@ namespace LethalMin
             {
                 itemProperties.toolTips[1] = "Dismiss: [Not Bound]";
             }
-
-            // Call the server RPC to initialize the whistle on all clients
-            if (IsServer)
-            {
-                InitializeWhistleServerRpc();
-            }
         }
+
         [ServerRpc(RequireOwnership = false)]
         private void InitializeWhistleServerRpc()
         {
-            InitializeWhistleClientRpc();
+            LethalMin.Logger.LogInfo("InitializeWhistleServerRpc");
+            GameObject noticeZoneObj = Instantiate(LethalMin.NoticeZone);
+            noticeZone = noticeZoneObj.GetComponent<NoticeZone>();
+            noticeZone.NetworkObject.Spawn();
+            noticeZone.gameObject.SetActive(false);
+            InitializeWhistleClientRpc(noticeZone.NetworkObject);
+        }
+
+        public void SyncZone()
+        {
+            if (IsServer && noticeZone.NetworkObject != null)
+            {
+                InitializeWhistleClientRpc(noticeZone.NetworkObject);
+            }
         }
         [ClientRpc]
-        private void InitializeWhistleClientRpc()
+        private void InitializeWhistleClientRpc(NetworkObjectReference noticeZoneRef)
         {
-            if (!IsServer)
-                InitializeWhistle();
+            if (noticeZoneRef.TryGet(out NetworkObject noticeZoneObj))
+            {
+                noticeZone = noticeZoneObj.GetComponent<NoticeZone>();
+                noticeZone.gameObject.SetActive(false);
+            }
         }
-        private void InitializeWhistle()
-        {
-            WhistleZone = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            WhistleZone.GetComponent<Collider>().enabled = false;
-            Renderer whistleZoneRenderer = WhistleZone.GetComponent<Renderer>();
-            whistleZoneRenderer.material = LethalMin.lineMaterial;
-            whistleZoneRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            whistleZoneRenderer.receiveShadows = false;
-            WhistleZone.transform.SetParent(null);
-            WhistleZone.SetActive(false);
-
-            lineRenderer.positionCount = linePoints;
-            lineRenderer.startWidth = lineWidth;
-            lineRenderer.endWidth = lineWidth;
-            lineRenderer.material = LethalMin.lineMaterial;
-            lineRenderer.enabled = false;
-        }
-
 
         private IEnumerator TweenWhistleZoneRadius(float startRadius, float endRadius)
         {
@@ -142,260 +144,232 @@ namespace LethalMin
                 float t = Mathf.Clamp01(elapsedTime / tweenDuration);
                 float currentRadius = Mathf.Lerp(startRadius, endRadius, t);
                 whistleZoneRadius = currentRadius;
+                UpdateWhistleZoneScale();
                 yield return null;
             }
             whistleZoneRadius = endRadius;
+            UpdateWhistleZoneScale();
         }
-        // IEnumerator WhistleTimer()
-        // {
-        //     aud.Play();
-        //     yield return new WaitForSeconds(WhistleSFX.length);
-        //     OnWhistleCanceled();
-        // }
+
+        private void UpdateWhistleZoneScale()
+        {
+            if (noticeZone != null)
+            {
+                noticeZone.transform.localScale = new Vector3(whistleZoneRadius, whistleZoneRadius, whistleZoneRadius);
+            }
+        }
+
         private void OnWhistleStarted()
         {
-            if (playerCamera == null || playerHeldBy == null || !isHeld || isPocketed)
-            {
-                return;
-            }
-            if (base.IsOwner)
+            if (!CanWhistle()) return;
+            if (IsOwner)
             {
                 anim.SetBool("whistleing", true);
-                tweenCoroutine = StartCoroutine(TweenWhistleZoneRadius(minWhistleZoneRadius, maxWhistleZoneRadius));
-                aud.volume = LethalMin.WhistleVolume;
-                aud.Play();
-                //WhistleCoroutine = StartCoroutine(WhistleTimer());
+                PlayWhistleServerRpc();
             }
         }
-        // In WhistleItem.cs
+
+        public override void GrabItem()
+        {
+            base.GrabItem();
+            noticeZone.SetLeaderOnServerRpc(new NetworkObjectReference(playerHeldBy.NetworkObject));
+        }
+
+        [ServerRpc]
+        private void PlayWhistleServerRpc()
+        {
+            PlayWhistleClientRpc();
+        }
+
+        [ClientRpc]
+        private void PlayWhistleClientRpc()
+        {
+            aud.volume = LethalMin.WhistleVolume;
+            aud.Play();
+        }
 
         private void OnDismiss()
         {
-            if (playerCamera == null || playerHeldBy == null || !isHeld || isPocketed)
+            if (!CanWhistle()) return;
+
+            if (IsOwner)
             {
-                return;
-            }
-            if (base.IsOwner)
-            {
+                anim.SetTrigger("diss");
+                PlayDismissSoundServerRpc();
                 LeaderManager[] allLeaderManagers = FindObjectsOfType<LeaderManager>();
                 foreach (LeaderManager lm in allLeaderManagers)
                 {
                     if (lm.Controller == playerHeldBy)
                     {
-                        anim.SetTrigger("diss");
-                        float loudness = 1f;
-                        aud.PlayOneShot(DissSFX, loudness);
-                        WalkieTalkie.TransmitOneShotAudio(aud, DissSFX, loudness);
-                        if (!LethalMin.LethaDogs2Value)
-                            RoundManager.Instance.PlayAudibleNoise(WhistleZone.transform.position, maxWhistleZoneRadius, 1, 1, isInElevator && StartOfRound.Instance.hangarDoorsClosed);
-
-                        // Call the new method to dismiss Pikmin
                         lm.DismissAllExceptSelectedTypeServerRpc();
                     }
                 }
             }
         }
+
+        [ServerRpc]
+        private void PlayDismissSoundServerRpc()
+        {
+            PlayDismissSoundClientRpc();
+        }
+
+        [ClientRpc]
+        private void PlayDismissSoundClientRpc()
+        {
+            float loudness = 1f;
+            aud.PlayOneShot(DissSFX, loudness);
+            WalkieTalkie.TransmitOneShotAudio(aud, DissSFX, loudness);
+            if (!LethalMin.LethaDogs2Value)
+                RoundManager.Instance.PlayAudibleNoise(noticeZone.transform.position, maxWhistleZoneRadius, 1, 1, isInElevator && StartOfRound.Instance.hangarDoorsClosed);
+        }
+
         private void OnWhistlePerformed()
         {
-            if (playerCamera == null || playerHeldBy == null || !isHeld || isPocketed)
-            {
-                return;
-            }
-            if (base.IsOwner)
-            {
-                isWhistling = true;
-                WhistleZone.SetActive(true);
-                lineRenderer.enabled = true;
+            if (!CanWhistle()) return;
 
-                if (aud != null)
-                {
-                    aud.volume = LethalMin.WhistleVolume;
-                    if (!LethalMin.LethaDogs2Value)
-                        RoundManager.Instance.PlayAudibleNoise(WhistleZone.transform.position, maxWhistleZoneRadius, 1, 1, isInElevator && StartOfRound.Instance.hangarDoorsClosed);
-
-                    if (playerHeldBy != null)
-                    {
-                        playerHeldBy.timeSinceMakingLoudNoise = 0f;
-                    }
-                }
+            if (IsOwner)
+            {
+                SetWhistlingStateServerRpc(true);
             }
         }
 
         private void OnWhistleCanceled()
         {
-            if (playerCamera == null || playerHeldBy == null || !isHeld || isPocketed)
+            if (!CanWhistle()) return;
+            if (IsOwner)
             {
-                return;
-            }
-            if (base.IsOwner)
-            {
-                anim.SetBool("whistleing", false);
-                aud.Stop();
-                isWhistling = false;
-                lineRenderer.enabled = false;
-                if (tweenCoroutine != null)
-                {
-                    StopCoroutine(tweenCoroutine);
-
-                }
-                if (WhistleCoroutine != null)
-                {
-                    StopCoroutine(WhistleCoroutine);
-                }
+                SetWhistlingStateServerRpc(false);
             }
         }
-        IEnumerator CheckForPikminInWhistleZone()
-        {
-            // Get all colliders within the whistle zone radius
-            Collider[] colliders = Physics.OverlapSphere(WhistleZone.transform.position, whistleZoneRadius);
 
-            foreach (Collider collider in colliders)
-            {
-                if (collider == null) { continue; }
-                if (collider.name != "PikminColision") { continue; }
-                yield return new WaitForSeconds(0.01f);
-                // Check if the collider belongs to a PikminAI
-                PikminAI pikminAI = collider.GetComponentInParent<PikminAI>();
-                if (pikminAI != null && pikminAI.IsInCallableState() && !pikminAI.CannotEscape)
-                {
-                    // Assign the LeaderManager from the player holding the whistle to the Pikmin
-                    if (playerHeldBy != null)
-                    {
-                        pikminAI.AssignLeader(playerHeldBy);
-                    }
-                }
-                else if (pikminAI != null && pikminAI.IsDrowing)
-                {
-                    if (!IsServer)
-                    {
-                        if (pikminAI.whistlingPlayer == null)
-                            SavePikminServerRpc(new NetworkObjectReference(pikminAI.NetworkObject), new NetworkObjectReference(playerHeldBy.NetworkObject));
-                    }
-                    else
-                    {
-                        pikminAI.whistlingPlayer = playerHeldBy;
-                    }
-                }
-            }
+        [ServerRpc]
+        private void SetWhistlingStateServerRpc(bool state)
+        {
+            isWhistling = state;
+            SetWhistlingStateClientRpc(state);
         }
-        [ServerRpc(RequireOwnership = false)]
-        public void SavePikminServerRpc(NetworkObjectReference Pikref, NetworkObjectReference Playref)
+
+        [ClientRpc]
+        private void SetWhistlingStateClientRpc(bool state)
         {
-            if (Pikref.TryGet(out NetworkObject Pobj) && Playref.TryGet(out NetworkObject Plobj))
+            isWhistling = state;
+            if (noticeZone != null)
             {
-                Pobj.GetComponent<PikminAI>().whistlingPlayer = Plobj.GetComponent<PlayerControllerB>();
+                noticeZone.gameObject.SetActive(state);
+                noticeZone.IsActive = state;
+                noticeZone.InstantNotice = true;
             }
-        }
-        private void UpdateWhistleZonePosition()
-        {
-            if (playerCamera == null || playerHeldBy == null)
+            lineRenderer.enabled = state;
+            anim.SetBool("whistleing", state);
+
+            if (state)
             {
-                return;
-            }
+                aud.volume = LethalMin.WhistleVolume;
+                if (!LethalMin.LethaDogs2Value && noticeZone != null)
+                    RoundManager.Instance.PlayAudibleNoise(noticeZone.transform.position, maxWhistleZoneRadius, 1, 1, isInElevator && StartOfRound.Instance.hangarDoorsClosed);
 
-            // Calculate the ray from the camera
-            Ray cameraRay = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-            Vector3 rayDirection = cameraRay.direction;
-
-            // Calculate the position in front of the camera
-            Vector3 startPosition = playerCamera.transform.position;
-            Vector3 endPosition = startPosition + rayDirection * whistleZoneOffset;
-
-            // Raycast from the camera position towards the end position
-            if (Physics.Raycast(startPosition, rayDirection, out RaycastHit hit, whistleZoneOffset, collidersAndRoomMask))
-            {
-                // If we hit something, place the whistle zone at the hit point
-                WhistleZone.transform.position = hit.point + hit.normal * (whistleZoneHeight / 2);
+                if (playerHeldBy != null)
+                {
+                    playerHeldBy.timeSinceMakingLoudNoise = 0f;
+                }
+                tweenCoroutine = StartCoroutine(TweenWhistleZoneRadius(minWhistleZoneRadius, maxWhistleZoneRadius));
             }
             else
             {
-                // If we didn't hit anything, do a downward raycast from the end position
-                if (Physics.Raycast(endPosition, Vector3.down, out hit, maxRaycastDistance, collidersAndRoomMask))
+                aud.Stop();
+                if (tweenCoroutine != null)
                 {
-                    WhistleZone.transform.position = hit.point + hit.normal * (whistleZoneHeight / 2);
-                }
-                else
-                {
-                    // If we still didn't hit anything, just use the end position
-                    WhistleZone.transform.position = endPosition;
+                    StopCoroutine(tweenCoroutine);
                 }
             }
         }
+
+        private void UpdateWhistleZonePosition()
+        {
+            if (playerCamera == null || playerHeldBy == null || noticeZone == null) return;
+
+            Ray cameraRay = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+            Vector3 rayDirection = cameraRay.direction;
+            Vector3 startPosition = playerCamera.transform.position;
+            Vector3 endPosition = startPosition + rayDirection * whistleZoneOffset;
+
+            if (Physics.Raycast(startPosition, rayDirection, out RaycastHit hit, whistleZoneOffset, collidersAndRoomMask))
+            {
+                noticeZone.transform.position = hit.point + hit.normal * 0.05f;
+            }
+            else if (Physics.Raycast(endPosition, Vector3.down, out hit, maxRaycastDistance, collidersAndRoomMask))
+            {
+                noticeZone.transform.position = hit.point + hit.normal * 0.05f;
+            }
+            else
+            {
+                noticeZone.transform.position = endPosition;
+            }
+        }
+
         private void UpdateLineRenderer()
         {
-            if (lineRenderer == null || WhistleZone == null) return;
+            if (lineRenderer == null || noticeZone == null) return;
 
             Vector3 startPoint = EndPoint.position;
-            Vector3 endPoint = WhistleZone.transform.position;
+            Vector3 endPoint = noticeZone.transform.position;
 
             for (int i = 0; i < linePoints; i++)
             {
                 float t = i / (float)(linePoints - 1);
                 Vector3 point = Vector3.Lerp(startPoint, endPoint, t);
-
-                // Add a slight arc to the line
                 float arc = Mathf.Sin(t * Mathf.PI) * 0.5f;
                 point += Vector3.up * arc;
-
                 lineRenderer.SetPosition(i, point);
             }
         }
+
         public override void Update()
         {
             base.Update();
-            WhistleZone.SetActive(isWhistling);
-            if (lineRenderer == null)
-            {
-                lineRenderer = GetComponent<LineRenderer>();
-                if (lineRenderer == null)
-                {
-                    lineRenderer = gameObject.AddComponent<LineRenderer>();
-                    lineRenderer.positionCount = linePoints;
-                    lineRenderer.startWidth = lineWidth;
-                    lineRenderer.endWidth = lineWidth;
-                    lineRenderer.material = lineMaterial;
-                    lineRenderer.enabled = false;
-                }
-            }
-            lineRenderer.enabled = isWhistling;
             playerCamera = playerHeldBy == null ? Camera.main : playerHeldBy.gameplayCamera;
-            WhistleZone.transform.localScale = new Vector3(whistleZoneRadius, whistleZoneRadius, whistleZoneRadius);
-            if (isWhistling && base.IsOwner && isHeld && !isPocketed)
+            if (IsServer)
+            {
+                maxRaycastDistance = LethalMin.WhisRange;
+                minWhistleZoneRadius = LethalMin.WhisMin;
+                maxWhistleZoneRadius = LethalMin.WhisMax;
+            }
+            if (isWhistling && isHeld && !isPocketed)
             {
                 UpdateWhistleZonePosition();
-                StartCoroutine(CheckForPikminInWhistleZone());
                 UpdateLineRenderer();
             }
             else if (isWhistling && (!isHeld || isPocketed))
             {
-                isWhistling = false;
-                lineRenderer.enabled = false;
+                SetWhistlingStateServerRpc(false);
             }
         }
-        private void OnDestroy()
+
+        private bool CanWhistle()
         {
+            return playerCamera != null && playerHeldBy != null && isHeld && !isPocketed;
+        }
+
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
             if (tweenCoroutine != null)
             {
                 StopCoroutine(tweenCoroutine);
             }
-            if (WhistleCoroutine != null)
+            if (noticeZone != null && IsServer)
             {
-                StopCoroutine(WhistleCoroutine);
+                noticeZone.NetworkObject.Despawn();
             }
-            if (WhistleZone != null)
-            {
-                Destroy(WhistleZone);
-            }
-
-            // Disable and dispose of the input action
             if (whistleAction != null)
             {
                 whistleAction.Disable();
                 whistleAction.Dispose();
             }
-            if (lineRenderer != null)
+            if (removeAllPikminAction != null)
             {
-                Destroy(lineRenderer);
+                removeAllPikminAction.Disable();
+                removeAllPikminAction.Dispose();
             }
         }
     }
