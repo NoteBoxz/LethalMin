@@ -2518,9 +2518,10 @@ namespace LethalMin
                 if (LethalMin.GoToCar)
                 {
                     GetNearestCar();
+                    Vector3 shippos = StartOfRound.Instance.insideShipPositions[UnityEngine.Random.Range(0, StartOfRound.Instance.insideShipPositions.Length)].position;
                     //Check if the car is closer than the ship
                     if (TargetCar != null && TargetCarPos != null &&
-                    Vector3.Distance(transform.position, TargetCar.transform.position) < Vector3.Distance(transform.position, targetScrapPosition)
+                    Vector3.Distance(transform.position, TargetCar.transform.position) < Vector3.Distance(transform.position, shippos)
                     && TargetCar.backDoorOpen)
                     {
                         targetScrapPosition = TargetCarPos.transform.position;
