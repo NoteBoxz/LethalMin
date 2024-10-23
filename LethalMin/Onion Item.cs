@@ -67,8 +67,8 @@ namespace LethalMin
         public override void Update()
         {
             base.Update();
-            if (playerHeldBy != null && !playerHeldBy.isInsideFactory && !Spawning 
-            || isInShipRoom && !Spawning 
+            if (playerHeldBy != null && !playerHeldBy.isInsideFactory && !Spawning
+            || isInShipRoom && !Spawning
             || isInElevator && !Spawning)
             {
                 Spawning = true;
@@ -94,10 +94,7 @@ namespace LethalMin
                 playerHeldBy.DropAllHeldItemsAndSync();
             }
 
-            if (playerHeldBy != null && !playerHeldBy.isInsideFactory
-            || isInShipRoom
-            || isInElevator)
-                SpawnOnionClientRpc(type.OnionTypeID);
+            SpawnOnionClientRpc(type.OnionTypeID);
         }
         [ClientRpc]
         private void SpawnOnionClientRpc(int typeId)
