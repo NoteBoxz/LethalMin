@@ -126,6 +126,10 @@ namespace LethalMin
                 {
                     pikminAI.whistlingPlayer = leader;
                     pikminAI.IsWhistled = true;
+                    if(InstantNotice)
+                    {
+                        pikminAI.NoticeInstant(leader, true);
+                    }
                 }
             }
         }
