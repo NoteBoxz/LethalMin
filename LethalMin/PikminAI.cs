@@ -1388,6 +1388,7 @@ namespace LethalMin
 
             if (LethalMin.SpeedMultiplier != 1)
             {
+                LethalMin.Logger.LogInfo($"Adjusting speed multiplier to {LethalMin.SpeedMultiplier}");
                 for (int i = 0; i < PlantSpeeds.Length; i++)
                 {
                     PlantSpeeds[i] = PminType.Speeds[i] * LethalMin.SpeedMultiplier;
@@ -1396,6 +1397,7 @@ namespace LethalMin
             }
             else if (HasMultipliedSpeed)
             {
+                LethalMin.Logger.LogInfo("Resetting speed multiplier");
                 for (int i = 0; i < PlantSpeeds.Length; i++)
                 {
                     PlantSpeeds[i] = PminType.Speeds[i];
@@ -2928,11 +2930,11 @@ namespace LethalMin
             if (!HasInitalized) { return; }
             if (PminType.soundPack == null)
             {
-                PlaySFX(ref LethalMin.LiftSFX, true, false, 0.5f);
+                PlaySFX(ref LethalMin.LiftSFX, true, false, 0.35f);
             }
             else
             {
-                PlaySFX(ref PminType.soundPack.LiftVoiceLine, true, false, 0.5f);
+                PlaySFX(ref PminType.soundPack.LiftVoiceLine, true, false, 0.35f);
             }
         }
 

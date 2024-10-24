@@ -2,6 +2,8 @@
 Fix Pikmin Path finding when carrying items. 
 Fix Pikmin Studder when carrying items. 
 Fixed pikmin item fraction. (done)
+Fix Whistle Scan Node while held.
 Add in Attack Multiplier.
 Add in Speed Multiplier. (done)
+Add in Pikmin Scan Node Disable config.
 Make Carrying sound volumes Dynamic.

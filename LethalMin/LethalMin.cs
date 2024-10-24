@@ -237,7 +237,7 @@ namespace LethalMin
             LethalHydro = Config.Bind("Enemy AI", "Make Hydrogere kill pikmin", false, "Makes the Hydrogere slime thing insta-kill pikmin");
             LethaDogs = Config.Bind("Enemy AI", "Make Enemies deaf to Pikmin", false, "Makes Enemie unable to hear pikmin when throwning or carrying");
             LethaDogs2 = Config.Bind("Enemy AI", "Make Enemies deaf to Whistle", false, "Makes Enemies unable to hear whistle when whistleing Pikmin");
-            LethalBugsConfig = Config.Bind("Enemy AI", "Make Hoarding Bugs eat Pikmin", false, "Makes Hoarding Bugs attack Pikmin if a pikmin attempts to grab it's");
+            LethalBugsConfig = Config.Bind("Enemy AI", "Make Hoarding Bugs eat Pikmin", false, "Makes Hoarding Bugs attack Pikmin if a pikmin attempts to grab it's scrap");
             BeesShockCountConfig = Config.Bind("Enemy AI", "Bee Shock Count", 3, "The max ammount of bees that can shock a pikmin at a time");
             BeeChase = Config.Bind("Enemy AI", "Make bees chase Pikmin", false, "Makes Bees chase Pikmin when their hive goes missing");
 
