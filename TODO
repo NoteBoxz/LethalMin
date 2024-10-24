@@ -8,6 +8,8 @@ Add in Pikmin Scan Node Disable config. (done)
 Make Carrying sound volumes Dynamic. (done)
 
 (V0.1.2)
+Figure out how to run 2 instances of the game at once
 Fix Notice Zone Lag.
 Add in LCBettersaves Compatability.
 Add in Input Utils Compatabilty. 
+Add in LethalModDataLib Compatabilty.
