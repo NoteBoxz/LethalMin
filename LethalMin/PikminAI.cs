@@ -3552,8 +3552,9 @@ namespace LethalMin
             rb.detectCollisions = false;
             rb.velocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
-            rb.constraints = RigidbodyConstraints.FreezeAll;
-            rb.interpolation = RigidbodyInterpolation.None;
+            rb.constraints = RigidbodyConstraints.None;
+            rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
             rb.Sleep();
 
             // Disable agent updates

@@ -51,6 +51,6 @@ namespace LethalMin
 		public bool HasBeenRegistered;
 
 		[HideInInspector]
-		public string version = "0.1.2";
+		public string version = "0.1.3";
 	}
 }

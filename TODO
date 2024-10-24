@@ -11,8 +11,12 @@ Make Carrying sound volumes Dynamic. (done)
 Fixed null refernce when plucking pikmin while Scan Node is disabled. (done)
 
 (V0.1.3)
+Fix SnapPikminToPosition Method
+
+(V0.1.4)
 Figure out how to run 2 instances of the game at once
 Fix Notice Zone Lag.
+Redo Item Pathfinding system.
 Add in LCBettersaves Compatability.
 Add in Input Utils Compatabilty. 
 Add in LethalModDataLib Compatabilty.
