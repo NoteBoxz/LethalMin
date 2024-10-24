@@ -1,6 +1,5 @@
 (V0.1.1)
-Fix Pikmin Path finding when carrying items. 
-Fix Pikmin Studder when carrying items. 
+Fix Pikmin Path finding.
 Fixed pikmin item fraction. (done)
 Fix Whistle Scan Node while held.
 Add in Attack Multiplier.
