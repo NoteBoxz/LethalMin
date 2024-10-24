@@ -36,9 +36,10 @@ Use [EvaisaDev's UnityNetcodePatcher](https://github.com/EvaisaDev/UnityNetcodeP
 
 ### Missing Script Fix
 If the example PikminType and or SoundPack says somthing about a missing script, then do this:
+1. Deleat the old PikminType and SoundPack scriptable objects.
 1. Right click in the folder in unity.
-2. Click: Create -> LethalMin -> PikminType, and Create -> LethalMin -> Pikmin Sound pack.
-3. then go up to the settings icon next to the small (?) icon in the inspector, click presets, and select the preset for each scriptable asset.
+2. Click: Create -> LethalMin -> PikminType, and Create -> LethalMin -> Pikmin Sound pack. To create new PikminType and SoundPack scriptable objects.
+3. with the PikminType/or SoundPack selected. go up to the settings icon next to the small (?) icon in the inspector aboved the open button, click presets, and select the preset for each scriptable asset.
 
 ### Type Set-up
 1. Go into Blender or your preferred 3D modeling application and create and animate your Pikmin's 3D model.
