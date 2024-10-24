@@ -144,6 +144,7 @@ namespace LethalMin
         public static bool MeshWrapping;
         public static float WhisRange,WhisMin,WhisMax;
         public static float PlayerNoticeRange;
+        public static float SpeedMultiplier;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
         public static ConfigEntry<bool> SkipPluckAnimation, FF, Smartmin, Smartermin, OnlyMainV, OnlyExitV, Pattack,
@@ -157,7 +158,7 @@ namespace LethalMin
         public static ConfigEntry<float> Pscale, Sscale, ChaseR, PCPX, PCPY, PCPZ, PCRX, PCRY, PCRZ, PCScale,
          PCPCountX, PCPCountY, PCPCountZ, PCRCCountX, PCRCCountY, PCRCCountZ, PCScaleCount, FallTimer, CounterOffset,
          NoticeTimer, BarberR, OnionSpawnChance, SproutSpawnChance, IndoorSpawnChance, WhistleVolumeConfig,
-         ManagerRefreshRateC,WhistleRange,WhistleMinRaidus,WhistleMaxRadius,PlayerNR;
+         ManagerRefreshRateC,WhistleRange,WhistleMinRaidus,WhistleMaxRadius,PlayerNR,SpeedMultiplierConfig;
 
         public static ConfigEntry<int> MechBurnLimmitConfig, JesterDiet, ThumperDiet, GiantDiet, BarberDiet, ManeaterDiet, SpideDiet,
         JesterBuffer, ThumperBuffer, SpiderBuffer, BeesShockCountConfig, ManeaterBuffer, MaxMin
@@ -300,6 +301,7 @@ namespace LethalMin
             WhistleMinRaidus = Config.Bind("`Cheats`", "Whistle Min Radius", 1f, "The min radius at which the whistle can be heard");
             WhistleMaxRadius = Config.Bind("`Cheats`", "Whistle Max Radius", 15f, "The max radius at which the whistle can be heard");
             PlayerNR = Config.Bind("`Cheats`", "Player Notice Range", 1.5f, "The distance between a player and a pikmin at which the pikmin will notice the player");
+            SpeedMultiplierConfig = Config.Bind("`Cheats`", "Speed Multiplier", 1f, "The multiplies the pikmin's speed by this value");
 
             FFOM = Config.Bind("LethalMon", "Make Pikmin Attack Leaders Tammed Enemy", false, "Makes Pikmin attack the leaders Pokémon");
             FFM = Config.Bind("LethalMon", "Make Pikmin Attack Tammed Enemies", false, "Makes Pikmin attack any Tamed Enemies");
@@ -645,6 +647,7 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(WhistleMinRaidus, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(WhistleMaxRadius, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(PlayerNR, false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SpeedMultiplierConfig, false));
 
 
             // Lethal Mon            

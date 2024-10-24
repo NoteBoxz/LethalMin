@@ -1385,7 +1385,8 @@ namespace LethalMin
                 IsOnUpperLevel = false;
                 IsOnLowerLevel = false;
             }
-
+            if (LethalMin.SpeedMultiplier != 1)
+                agent.speed = agent.speed * LethalMin.SpeedMultiplier;
         }
         #endregion
 
@@ -1644,7 +1645,7 @@ namespace LethalMin
             if (currentBehaviourStateIndex == (int)PState.Leaveing) { return; }
             if (IsDrowing) { return; }
             if (IsGettingAsinged) { return; }
-            if(CannotEscape) { return; }
+            if (CannotEscape) { return; }
             if (!(currentBehaviourStateIndex == (int)PState.Idle ||
             currentBehaviourStateIndex == (int)PState.Working ||
              currentBehaviourStateIndex == (int)PState.Attacking))
