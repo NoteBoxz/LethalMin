@@ -106,7 +106,7 @@ namespace LethalMin
             PikminOnItem = PikminOnItemList.Count + Mathf.Max(0, (PurplesOnItemList.Count * 10) - PurplesOnItemList.Count);
             if (PikminOnItem < PikminNeedOnItem)
             {
-                PikminOn.color = new Color(basecolor.r + 0.1f, basecolor.b - 0.1f, basecolor.g - 0.1f);
+                PikminOn.color = new Color(basecolor.r - 0.1f, basecolor.b - 0.1f, basecolor.g - 0.1f);
             }
             else
             {
