@@ -145,6 +145,8 @@ namespace LethalMin
         public static float WhisRange,WhisMin,WhisMax;
         public static float PlayerNoticeRange;
         public static float SpeedMultiplier;
+        public static float DamageMultiplier;
+        public static bool ScanMin;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
         public static ConfigEntry<bool> SkipPluckAnimation, FF, Smartmin, Smartermin, OnlyMainV, OnlyExitV, Pattack,
@@ -153,12 +155,13 @@ namespace LethalMin
         CustomOnionAllowed, LethalWhistle, LethalLandmines, AllToPItems, LimmitItemGrab, AllowOnionFuseConfig,
         LethalManEaterConfig, CalmableManeaterConfig, Rasisium, NotFormidableOak, LethalTurrentsC, InvinciMin,
         StrudyMin, UselessblueMin, DebugM, FunniMode, PassiveToManEaterConfig, FFOM, FFM, TeleEle, TeleCarie,
-        TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF,NoPowerSpawn,MWon;
+        TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF,NoPowerSpawn,MWon,ScanablePikmin;
 
         public static ConfigEntry<float> Pscale, Sscale, ChaseR, PCPX, PCPY, PCPZ, PCRX, PCRY, PCRZ, PCScale,
          PCPCountX, PCPCountY, PCPCountZ, PCRCCountX, PCRCCountY, PCRCCountZ, PCScaleCount, FallTimer, CounterOffset,
          NoticeTimer, BarberR, OnionSpawnChance, SproutSpawnChance, IndoorSpawnChance, WhistleVolumeConfig,
-         ManagerRefreshRateC,WhistleRange,WhistleMinRaidus,WhistleMaxRadius,PlayerNR,SpeedMultiplierConfig;
+         ManagerRefreshRateC,WhistleRange,WhistleMinRaidus,WhistleMaxRadius,PlayerNR,SpeedMultiplierConfig,
+         DamageMultiplierConfig;
 
         public static ConfigEntry<int> MechBurnLimmitConfig, JesterDiet, ThumperDiet, GiantDiet, BarberDiet, ManeaterDiet, SpideDiet,
         JesterBuffer, ThumperBuffer, SpiderBuffer, BeesShockCountConfig, ManeaterBuffer, MaxMin
@@ -215,6 +218,7 @@ namespace LethalMin
             PikminDefaultAvoidanceTypeConfig = Config.Bind("Pikmin", "Default Avoidance Type", ObstacleAvoidanceType.LowQualityObstacleAvoidance, "The default obstacle avoidance type for Pikmin");
             PikminCarryingAvoidanceTypeConfig = Config.Bind("Pikmin", "Carrying Avoidance Type", ObstacleAvoidanceType.NoObstacleAvoidance, "The obstacle avoidance type for Pikmin when carrying items");
             NoPowerSpawn = Config.Bind("Pikmin", "Disable Natual Spawning", false, "Makes it so Pikmin won't spawn in from Lethal Company's spawn system");
+            ScanablePikmin = Config.Bind("Pikmin", "Make Pikmin Scanable", true, "Makes it so Pikmin can be scanned");
 
             LethalSpiderConfig = Config.Bind("Enemy AI", "Make Spider eat Pikmin", true, "Makes Spider eat Pikmin that are too close to the spider");
             LethalJesterConfig = Config.Bind("Enemy AI", "Make Jester eat Pikmin", true, "Makes Jester eat Pikmin when opened");
@@ -302,6 +306,7 @@ namespace LethalMin
             WhistleMaxRadius = Config.Bind("`Cheats`", "Whistle Max Radius", 15f, "The max radius at which the whistle can be heard");
             PlayerNR = Config.Bind("`Cheats`", "Player Notice Range", 1.5f, "The distance between a player and a pikmin at which the pikmin will notice the player");
             SpeedMultiplierConfig = Config.Bind("`Cheats`", "Speed Multiplier", 1f, "The multiplies the pikmin's speed by this value");
+            DamageMultiplierConfig = Config.Bind("`Cheats`", "Damage Multiplier", 1f, "The multiplies the pikmin's damage by this value");
 
             FFOM = Config.Bind("LethalMon", "Make Pikmin Attack Leaders Tammed Enemy", false, "Makes Pikmin attack the leaders Pokémon");
             FFM = Config.Bind("LethalMon", "Make Pikmin Attack Tammed Enemies", false, "Makes Pikmin attack any Tamed Enemies");
@@ -313,6 +318,8 @@ namespace LethalMin
 
 
             #region Setting Config values
+            DamageMultiplier = DamageMultiplierConfig.Value;
+            ScanMin = ScanablePikmin.Value;
             SpeedMultiplier = SpeedMultiplierConfig.Value;
             PlayerNoticeRange = PlayerNR.Value;
             WhisRange = WhistleRange.Value;
@@ -427,6 +434,8 @@ namespace LethalMin
 
             #region Setting Config Events
             // Add SettingChanged events for all configs
+            DamageMultiplierConfig.SettingChanged += (_, _) => DamageMultiplier = DamageMultiplierConfig.Value;
+            ScanablePikmin.SettingChanged += (_, _) => ScanMin = ScanablePikmin.Value;
             SpeedMultiplierConfig.SettingChanged += (_, _) => SpeedMultiplier = SpeedMultiplierConfig.Value;
             PlayerNR.SettingChanged += (_, _) => PlayerNoticeRange = PlayerNR.Value;
             WhistleRange.SettingChanged += (_, _) => WhisRange = WhistleRange.Value;
@@ -556,6 +565,7 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new EnumDropDownConfigItem<ObstacleAvoidanceType>(PikminDefaultAvoidanceTypeConfig, false));
             LethalConfigManager.AddConfigItem(new EnumDropDownConfigItem<ObstacleAvoidanceType>(PikminCarryingAvoidanceTypeConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(NoPowerSpawn, true));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(ScanablePikmin, false));
 
 
             // Controls
@@ -650,6 +660,7 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(WhistleMaxRadius, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(PlayerNR, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SpeedMultiplierConfig, false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(DamageMultiplierConfig, false));
 
 
             // Lethal Mon            

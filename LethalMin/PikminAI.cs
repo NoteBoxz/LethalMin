@@ -219,6 +219,7 @@ namespace LethalMin
         NetworkVariable<bool> newIsMoving = new NetworkVariable<bool>(false);
         bool IsCallingCLOSFI;
         GameObject NoticeColider;
+        [SerializeField] private GameObject scanNode;
         #endregion
 
 
@@ -245,6 +246,7 @@ namespace LethalMin
             transform2 = GetComponent<NetworkTransform>();
             PminColider = transform.Find("PikminColision").gameObject;
             NoticeColider = transform.Find("WhistleDetection").gameObject;
+            scanNode = transform.Find("ScanNode").gameObject;
 
             // Immediate initializations
             GROW_TIME = UnityEngine.Random.Range(30, 659);
@@ -265,6 +267,12 @@ namespace LethalMin
             rb = GetComponent<Rigidbody>();
             rb.isKinematic = true;
             rb.useGravity = false;
+            rb.detectCollisions = false;
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.constraints = RigidbodyConstraints.FreezeAll;
+            rb.interpolation = RigidbodyInterpolation.None;
+            rb.Sleep();
 
             // Agent components
             InitalUR = agent.updateRotation;
@@ -693,6 +701,11 @@ namespace LethalMin
             if (IsWhistled && whistlingPlayer != null)
             {
                 NoticeInstant(whistlingPlayer);
+            }
+            else if (IsWhistled)
+            {
+                IsWhistled = false;
+                whistlingPlayer = null;
             }
 
             if (IdleTimer > 0)
@@ -1388,7 +1401,6 @@ namespace LethalMin
 
             if (LethalMin.SpeedMultiplier != 1)
             {
-                LethalMin.Logger.LogInfo($"Adjusting speed multiplier to {LethalMin.SpeedMultiplier}");
                 for (int i = 0; i < PlantSpeeds.Length; i++)
                 {
                     PlantSpeeds[i] = PminType.Speeds[i] * LethalMin.SpeedMultiplier;
@@ -1397,13 +1409,14 @@ namespace LethalMin
             }
             else if (HasMultipliedSpeed)
             {
-                LethalMin.Logger.LogInfo("Resetting speed multiplier");
                 for (int i = 0; i < PlantSpeeds.Length; i++)
                 {
                     PlantSpeeds[i] = PminType.Speeds[i];
                 }
                 HasMultipliedSpeed = false;
             }
+
+            scanNode.SetActive(LethalMin.ScanMin);
         }
         bool HasMultipliedSpeed;
         #endregion
@@ -2798,6 +2811,13 @@ namespace LethalMin
             isHeld = false;
             rb.isKinematic = false;
             rb.useGravity = true;
+            rb.detectCollisions = true;
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.constraints = RigidbodyConstraints.None;
+            rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+            rb.WakeUp();
             Pcollider.enabled = true;
             if (IsServer && currentLeader != null) { currentLeader.RemovePikminServerRpc(new NetworkObjectReference(NetworkObject)); }
             EnemyAttacking = null;
@@ -2928,13 +2948,26 @@ namespace LethalMin
         public void ReqeustLiftSFXClientRpc()
         {
             if (!HasInitalized) { return; }
+
+            float baseVolume = 0.45f;
+            float scalingFactor = 1f;
+
+            if (targetItem != null && targetItem.PikminOnItemList.Count > 1)
+            {
+                // Calculate a scaling factor based on the number of Pikmin
+                scalingFactor = Mathf.Sqrt(1f / targetItem.PikminOnItemList.Count);
+            }
+
+            // Apply the scaling factor to the base volume
+            float adjustedVolume = baseVolume * scalingFactor;
+
             if (PminType.soundPack == null)
             {
-                PlaySFX(ref LethalMin.LiftSFX, true, false, 0.35f);
+                PlaySFX(ref LethalMin.LiftSFX, true, false, adjustedVolume);
             }
             else
             {
-                PlaySFX(ref PminType.soundPack.LiftVoiceLine, true, false, 0.35f);
+                PlaySFX(ref PminType.soundPack.LiftVoiceLine, true, false, adjustedVolume);
             }
         }
 
@@ -3084,6 +3117,12 @@ namespace LethalMin
                 agent.updatePosition = false;
                 rb.isKinematic = true;
                 rb.useGravity = false;
+                rb.detectCollisions = false;
+                rb.velocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+                rb.constraints = RigidbodyConstraints.FreezeAll;
+                rb.interpolation = RigidbodyInterpolation.None;
+                rb.Sleep();
                 Pcollider.enabled = false;
                 LethalMin.Logger.LogInfo("Set Trigger");
                 SetTriggerClientRpc("Aim");
@@ -3099,6 +3138,13 @@ namespace LethalMin
                 agent.updatePosition = false;
                 rb.isKinematic = false;
                 rb.useGravity = true;
+                rb.detectCollisions = true;
+                rb.velocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+                rb.constraints = RigidbodyConstraints.None;
+                rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+                rb.interpolation = RigidbodyInterpolation.Interpolate;
+                rb.WakeUp();
                 Pcollider.enabled = true;
             }
         }
@@ -3289,6 +3335,12 @@ namespace LethalMin
             rb.useGravity = false;
             Pcollider.enabled = false;
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+            rb.detectCollisions = false;
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.constraints = RigidbodyConstraints.FreezeAll;
+            rb.interpolation = RigidbodyInterpolation.None;
+            rb.Sleep();
             rb.excludeLayers = 0;
 
             // Resets Agent
@@ -3453,6 +3505,14 @@ namespace LethalMin
                 else
                 {
                     rb.isKinematic = true;
+                    rb.useGravity = false;
+                    Pcollider.enabled = false;
+                    rb.detectCollisions = false;
+                    rb.velocity = Vector3.zero;
+                    rb.angularVelocity = Vector3.zero;
+                    rb.constraints = RigidbodyConstraints.FreezeAll;
+                    rb.interpolation = RigidbodyInterpolation.None;
+                    rb.Sleep();
                     agent.updatePosition = InitialUP;
                     agent.updateRotation = InitalUR;
                 }
@@ -3489,6 +3549,12 @@ namespace LethalMin
             rb.isKinematic = true;
             rb.useGravity = false;
             Pcollider.enabled = false;
+            rb.detectCollisions = false;
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.constraints = RigidbodyConstraints.FreezeAll;
+            rb.interpolation = RigidbodyInterpolation.None;
+            rb.Sleep();
 
             // Disable agent updates
             agent.updatePosition = false;
@@ -3552,6 +3618,13 @@ namespace LethalMin
             rb.isKinematic = false;
             rb.useGravity = true;
             Pcollider.enabled = true;
+            rb.detectCollisions = true;
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.constraints = RigidbodyConstraints.None;
+            rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+            rb.WakeUp();
 
             // Disable agent updates
             agent.updatePosition = false;
@@ -3609,6 +3682,13 @@ namespace LethalMin
             rb.isKinematic = false;
             rb.useGravity = true;
             Pcollider.enabled = true;
+            rb.detectCollisions = true;
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.constraints = RigidbodyConstraints.None;
+            rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+            rb.WakeUp();
 
             // Disable agent updates
             agent.updatePosition = false;

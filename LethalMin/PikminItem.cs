@@ -21,6 +21,7 @@ namespace LethalMin
         public CaveDwellerAI ManEater;
         private NetworkObject rootNetworkObject;
         [IDebuggable.Debug] Vector3 ObjectPosition;
+        Color basecolor;
 
         #region Unity Lifecycle Methods
         public void Start()
@@ -67,6 +68,8 @@ namespace LethalMin
                 // Re-assign references
                 PikminOn = Counter.transform.Find("Text (TMP) (2)").GetComponent<TMP_Text>();
                 PikminNeed = Counter.transform.Find("Text (TMP)").GetComponent<TMP_Text>();
+
+                basecolor = PikminOn.color;
             }
             else
             {
@@ -103,7 +106,11 @@ namespace LethalMin
             PikminOnItem = PikminOnItemList.Count + Mathf.Max(0, (PurplesOnItemList.Count * 10) - PurplesOnItemList.Count);
             if (PikminOnItem < PikminNeedOnItem)
             {
-                PikminOn.color = new Color(PikminOn.color.r + 0.1f, PikminOn.color.b - 0.1f, PikminOn.color.g - 0.1f);
+                PikminOn.color = new Color(basecolor.r + 0.1f, basecolor.b - 0.1f, basecolor.g - 0.1f);
+            }
+            else
+            {
+                PikminOn.color = basecolor;
             }
             if (PikminOnItem >= PikminNeedOnItem)
             {
@@ -481,6 +488,7 @@ namespace LethalMin
                 Root.startFallingPosition = Root.transform.parent.InverseTransformPoint(ObjectPosition);
                 Root.targetFloorPosition = Root.transform.parent.InverseTransformPoint(targetFloorPosition);
                 Root.floorYRot = -1;
+                Root.transform.localScale = Root.originalScale;
                 Root.DiscardItemFromEnemy();
                 isParented = false;
                 if (firstPikminG != null && firstPikminG.IsInShip)

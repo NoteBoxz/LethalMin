@@ -167,9 +167,9 @@ namespace LethalMin
         {
             if (NormalizeDamage)
             {
-                return DamageAmmount / 100 * DamageMultiplier;
+                return DamageAmmount / 100 * DamageMultiplier * LethalMin.DamageMultiplier;
             }
-            return DamageAmmount * DamageMultiplier;
+            return DamageAmmount * DamageMultiplier * LethalMin.DamageMultiplier;
         }
         [HideInInspector]
         public PikminMeshData MeshData;

@@ -1,8 +1,11 @@
 (V0.1.1)
-Fix Pikmin Path finding.
+Fix Pikmin Path finding. (done)
 Fixed pikmin item fraction. (done)
-Fix Whistle Scan Node while held.
-Add in Attack Multiplier.
+Fix Whistle Scan Node while held. (done)
+Add in Attack Multiplier. (done)
 Add in Speed Multiplier. (done)
-Add in Pikmin Scan Node Disable config.
-Make Carrying sound volumes Dynamic.
+Add in Pikmin Scan Node Disable config. (done)
+Make Carrying sound volumes Dynamic. (done)
+
+(V0.1.2)
+Fix Notice Zone Lag.

@@ -32,7 +32,7 @@ namespace LethalMin
         private Transform EndPoint;
         private AudioSource aud;
         [SerializeField] private Animator anim;
-
+        [SerializeField] private GameObject scanNode;
         public override void Start()
         {
             base.Start();
@@ -45,6 +45,7 @@ namespace LethalMin
             {
                 InitializeWhistleServerRpc();
             }
+            scanNode = transform.Find("ScanNode").gameObject;
         }
 
         private void SetupComponents()
@@ -344,6 +345,12 @@ namespace LethalMin
             {
                 SetWhistlingStateServerRpc(false);
             }
+        }
+
+        public override void LateUpdate()
+        {
+            base.LateUpdate();
+            scanNode.SetActive(!isHeld || !isHeldByEnemy);
         }
 
         private bool CanWhistle()
