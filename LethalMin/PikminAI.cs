@@ -1387,6 +1387,7 @@ namespace LethalMin
             }
             if (LethalMin.SpeedMultiplier != 1)
                 agent.speed = agent.speed * LethalMin.SpeedMultiplier;
+            
         }
         #endregion
 
