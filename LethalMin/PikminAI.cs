@@ -457,7 +457,7 @@ namespace LethalMin
             }
             LocalAnim = Mesh.transform.Find(PminType.AnimPath).GetComponent<Animator>();
             Mesh.transform.Find(PminType.AnimPath).gameObject.AddComponent<PikminAnimEvents>().AI = this;
-            GetComponentInChildren<ScanNodeProperties>().headerText = $"{PminType.GetName()}";
+            GetComponentInChildren<ScanNodeProperties>(true).headerText = $"{PminType.GetName()}";
 
             PlantSpeeds = new float[PminType.Speeds.Length];
             for (int i = 0; i < PminType.Speeds.Length; i++)
