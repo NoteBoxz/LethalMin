@@ -50,6 +50,7 @@ namespace LethalMin
         public bool HideMeshOnStart;
         private float movementThreshold = 0.15f; // Adjust this value to fine-tune movement detection
         public float[] PlantSpeeds = { 7, 10, 15 }; // these are auto changed when the Pikmin type is initalized, but I kept them here for now
+        public float[] BasePlantSpeeds = { 7, 10, 15 };
         private float GROW_TIME = 10f; // this used to be a const but I changed for RNG purposes
         public int GrowStage;
         public float GrowTimer;
@@ -535,6 +536,8 @@ namespace LethalMin
             {
                 PminType.soundPack.HitSFX = LethalMin.RealHitSFX;
             }
+
+            BasePlantSpeeds = PlantSpeeds;
         }
 
         /// <summary>
@@ -1385,9 +1388,14 @@ namespace LethalMin
                 IsOnUpperLevel = false;
                 IsOnLowerLevel = false;
             }
+
             if (LethalMin.SpeedMultiplier != 1)
-                agent.speed = agent.speed * LethalMin.SpeedMultiplier;
-            
+            {
+                for (int i = 0; i < PlantSpeeds.Length; i++)
+                {
+                    PlantSpeeds[i] = BasePlantSpeeds[i] * LethalMin.SpeedMultiplier;
+                }
+            }
         }
         #endregion
 
