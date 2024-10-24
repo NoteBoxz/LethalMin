@@ -101,6 +101,10 @@ namespace LethalMin
             PikminNeed.text = PikminNeedOnItem.ToString();
             PikminOn.text = PikminOnItem.ToString();
             PikminOnItem = PikminOnItemList.Count + Mathf.Max(0, (PurplesOnItemList.Count * 10) - PurplesOnItemList.Count);
+            if (PikminOnItem < PikminNeedOnItem)
+            {
+                PikminOn.color = new Color(PikminOn.color.r + 0.1f, PikminOn.color.b - 0.1f, PikminOn.color.g - 0.1f);
+            }
             if (PikminOnItem >= PikminNeedOnItem)
             {
                 if (!isParented)
