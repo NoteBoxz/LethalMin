@@ -313,6 +313,7 @@ namespace LethalMin
 
 
             #region Setting Config values
+            SpeedMultiplier = SpeedMultiplierConfig.Value;
             PlayerNoticeRange = PlayerNR.Value;
             WhisRange = WhistleRange.Value;
             WhisMin = WhistleMinRaidus.Value;
@@ -426,6 +427,7 @@ namespace LethalMin
 
             #region Setting Config Events
             // Add SettingChanged events for all configs
+            SpeedMultiplierConfig.SettingChanged += (_, _) => SpeedMultiplier = SpeedMultiplierConfig.Value;
             PlayerNR.SettingChanged += (_, _) => PlayerNoticeRange = PlayerNR.Value;
             WhistleRange.SettingChanged += (_, _) => WhisRange = WhistleRange.Value;
             WhistleMinRaidus.SettingChanged += (_, _) => WhisMin = WhistleMinRaidus.Value;
