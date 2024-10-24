@@ -34,6 +34,12 @@ Use [EvaisaDev's UnityNetcodePatcher](https://github.com/EvaisaDev/UnityNetcodeP
 6. Put everything that will be used for your Pikmin type into one folder.
 7. With the folder selected, go to AssetBundle and create a new one. Name it something like "MyPikminType.lethalmin".
 
+### Missing Script Fix
+If the example PikminType and or SoundPack says somthing about a missing script, then do this:
+1. Right click in the folder in unity.
+2. Click: Create -> LethalMin -> PikminType, and Create -> LethalMin -> Pikmin Sound pack.
+3. then go up to the settings icon next to the small (?) icon in the inspector, click presets, and select the preset for each scriptable asset.
+
 ### Type Set-up
 1. Go into Blender or your preferred 3D modeling application and create and animate your Pikmin's 3D model.
 2. Import the model and set it up in Unity.
