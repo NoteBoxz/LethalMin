@@ -701,11 +701,16 @@ namespace LethalMin
             if (IsWhistled && whistlingPlayer != null)
             {
                 NoticeInstant(whistlingPlayer);
+                return;
             }
             else if (IsWhistled)
             {
                 IsWhistled = false;
                 whistlingPlayer = null;
+            }
+            if(currentLeader != null)
+            {
+                NoticeInstant(currentLeader.Controller);
             }
 
             if (IdleTimer > 0)

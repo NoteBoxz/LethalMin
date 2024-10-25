@@ -84,7 +84,7 @@ namespace LethalMin
                 {
                     leader.noticeZoneInstance = noticeZone;
                     noticeZone.leader = leader.Controller;
-                    noticeZone.name = $"{leader.Controller.name}'s NoticeZone";
+                    noticeZone.name = $"{leader.Controller.playerUsername}'s NoticeZone";
                     Destroy(noticeZone.GetComponent<MeshRenderer>());
                 }
             }

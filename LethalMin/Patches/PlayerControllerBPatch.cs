@@ -19,11 +19,12 @@ namespace LethalMin.Patches
         private static bool isCustomAnimationPlaying = false;
 
         [HarmonyPatch("Start")]
+        [HarmonyPatch("OnEnable")]
         [HarmonyPostfix]
-        private static void StartPostfix(PlayerControllerB __instance)
+        private static void StartOnEnablePostfix(PlayerControllerB __instance)
         {
             SetupDanceAnimation(__instance);
-            if (!__instance.IsOwner) return; // Only proceed for the local player
+            if (!__instance.IsServer) return; // Only proceed for the local player
 
             if (leaderManagerPrefab == null)
             {
@@ -34,18 +35,13 @@ namespace LethalMin.Patches
                     return;
                 }
             }
-
+            if (__instance.GetComponentInChildren<LeaderManager>() != null)
+            {
+                LethalMin.Logger.LogInfo($"LeaderManager already exists for player: {__instance.playerUsername}");
+                return;
+            }
             // Request the server to spawn the LeaderManager
             __instance.StartCoroutine(SpawnLeaderManagerWhenReady(__instance));
-
-            //SetupCustomInput(__instance);
-        }
-
-        [HarmonyPatch("PlaceGrabbableObject")]
-        [HarmonyPostfix]
-        private static void PlaceGrabbableObjectPostfix(GrabbableObject __instance)
-        {
-            LethalMin.Logger.LogInfo($"Placed {__instance.itemProperties.name}");
         }
 
         private static void SetupDanceAnimation(PlayerControllerB player)
@@ -160,11 +156,11 @@ namespace LethalMin.Patches
                 isCustomAnimationPlaying = false;
             }
         }
-      
+
         private static System.Collections.IEnumerator SpawnLeaderManagerWhenReady(PlayerControllerB player)
         {
             // Wait until the player's NetworkObject is spawned
-            while (player.NetworkObject == null || !player.NetworkObject.IsSpawned || PikminHUD.pikminHUDInstance == null) 
+            while (player.NetworkObject == null || !player.NetworkObject.IsSpawned || PikminHUD.pikminHUDInstance == null)
             {
                 yield return new WaitForSeconds(0.1f);
             }
@@ -187,6 +183,7 @@ namespace LethalMin.Patches
                         if (leaderManager != null)
                         {
                             leaderManager.Controller = player;
+                            leaderManager.gameObject.name = $"LeaderManager_{player.playerUsername}";
                         }
 
                         // Parent the LeaderManager to the player

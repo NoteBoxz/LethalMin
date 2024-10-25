@@ -166,6 +166,7 @@ namespace LethalMin
             script.PreDefinedType = true;
             script.PminType = LethalMin.GetPikminTypeById(pikminTypeId);
             script.inSpecialAnimation = true;
+            script.TargetOnion = this;
             StartCoroutine(waitForInitalizePik(PikObj.GetComponent<PikminAI>(), PlaObj.GetComponent<PlayerControllerB>(), delay));
         }
 

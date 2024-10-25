@@ -40,19 +40,7 @@ namespace LethalMin
                 PikminAI pikmin = other.GetComponentInParent<PikminAI>();
                 if (pikmin != null && !pikmin.IsDying)// && !pikmin.IsWhistled && pikmin.whistlingPlayer != leader)
                 {
-                    if (IsServer)
-                    {
-                        pikmin.IsWhistled = true;
-                        pikmin.whistlingPlayer = leader;
-                    }
-                    else
-                    {
-                        pikmin.SetWhistleingPlayerServerRpc(new NetworkObjectReference(leader?.NetworkObject));
-                    }
-                    if (InstantNotice)
-                    {
-                        pikmin.NoticeInstant(leader, true);
-                    }
+                    StartCoroutine(CheckForPikminInWhistleZone());
                 }
             }
             if (other.name == "WhistleDetectionWhistle" && InstantNotice)
@@ -110,10 +98,19 @@ namespace LethalMin
                 StartCoroutine(CheckForPikminInWhistleZone());
             }
         }
+        private float CalculateRadius()
+        {
+            Vector3 scale = transform.lossyScale;
+            // If it's scaled non-uniformly, this will use the largest dimension
+            return Mathf.Max(scale.x, scale.y, scale.z) / 2f;
+        }
         IEnumerator CheckForPikminInWhistleZone()
         {
+            // Calculate the radius dynamically
+            float radius = CalculateRadius();
+
             // Get all colliders within the whistle zone radius
-            Collider[] colliders = Physics.OverlapSphere(transform.position, transform.localScale.x);
+            Collider[] colliders = Physics.OverlapSphere(transform.position, radius);
 
             foreach (Collider collider in colliders)
             {
@@ -122,11 +119,11 @@ namespace LethalMin
                 yield return new WaitForSeconds(0.01f);
                 // Check if the collider belongs to a PikminAI
                 PikminAI pikminAI = collider.GetComponentInParent<PikminAI>();
-                if (pikminAI != null && !pikminAI.CannotEscape && !pikminAI.IsWhistled && pikminAI.whistlingPlayer != leader)
+                if (pikminAI != null && !pikminAI.CannotEscape)
                 {
                     pikminAI.whistlingPlayer = leader;
                     pikminAI.IsWhistled = true;
-                    if(InstantNotice)
+                    if (InstantNotice)
                     {
                         pikminAI.NoticeInstant(leader, true);
                     }

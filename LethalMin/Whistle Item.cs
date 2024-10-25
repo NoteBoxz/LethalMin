@@ -285,13 +285,26 @@ namespace LethalMin
                 }
             }
         }
+        private Quaternion syncedCameraRotation;
+        private float syncInterval = 0.05f;
+        private float lastSyncTime;
+        [ServerRpc]
+        private void SyncCameraRotationServerRpc(Quaternion rotation)
+        {
+            syncedCameraRotation = rotation;
+            SyncCameraRotationClientRpc(rotation);
+        }
 
+        [ClientRpc]
+        private void SyncCameraRotationClientRpc(Quaternion rotation)
+        {
+            syncedCameraRotation = rotation;
+        }
         private void UpdateWhistleZonePosition()
         {
-            if (playerCamera == null || playerHeldBy == null || noticeZone == null) return;
+            if (playerHeldBy == null || noticeZone == null) return;
 
-            Ray cameraRay = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-            Vector3 rayDirection = cameraRay.direction;
+            Vector3 rayDirection = IsOwner ? playerCamera.transform.forward : syncedCameraRotation * Vector3.forward;
             Vector3 startPosition = playerCamera.transform.position;
             Vector3 endPosition = startPosition + rayDirection * whistleZoneOffset;
 
@@ -330,12 +343,23 @@ namespace LethalMin
         {
             base.Update();
             playerCamera = playerHeldBy == null ? Camera.main : playerHeldBy.gameplayCamera;
+
             if (IsServer)
             {
                 maxRaycastDistance = LethalMin.WhisRange;
                 minWhistleZoneRadius = LethalMin.WhisMin;
                 maxWhistleZoneRadius = LethalMin.WhisMax;
             }
+
+            if (IsOwner && isHeld && !isPocketed)
+            {
+                if (Time.time - lastSyncTime > syncInterval)
+                {
+                    SyncCameraRotationServerRpc(playerCamera.transform.rotation);
+                    lastSyncTime = Time.time;
+                }
+            }
+
             if (isWhistling && isHeld && !isPocketed)
             {
                 UpdateWhistleZonePosition();
