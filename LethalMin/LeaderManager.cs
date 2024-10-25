@@ -387,7 +387,8 @@ namespace LethalMin
 
         public void LateUpdate()
         {
-            if(noticeZoneInstance != null){
+            if (noticeZoneInstance != null)
+            {
                 noticeZoneInstance.transform.localScale = new Vector3(LethalMin.PlayerNoticeRange, LethalMin.PlayerNoticeRange, LethalMin.PlayerNoticeRange);
             }
             if (showDebugCubes)
@@ -730,7 +731,7 @@ namespace LethalMin
                 LethalMin.Logger.LogMessage("Added pikmin to server....");
         }
 
-        [ServerRpc]
+        [ServerRpc(RequireOwnership = false)]
         public void RemovePikminServerRpc(NetworkObjectReference pikminRef, bool SyncList = true)
         {
             if (LethalMin.DebugMode)
@@ -872,6 +873,47 @@ namespace LethalMin
             }
 
             SyncPikminListClientRpc(GetPikminNetworkReferences());
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void RemoveAllPikminServerRpc(NetworkObjectReference[] refs, bool SetState = true)
+        {
+            if (LethalMin.DebugMode)
+                LethalMin.Logger.LogMessage("Removing all Pikmin from leader...");
+
+            StartCoroutine(RemoveDelayed(refs, SetState));
+
+            if (LethalMin.DebugMode)
+                LethalMin.Logger.LogMessage("All Pikmin removed from leader.");
+        }
+        IEnumerator RemoveDelayed(NetworkObjectReference[] refs, bool SetState = true)
+        {
+            List<PikminAI> pikminToRemove = new List<PikminAI>();
+            foreach (var item in refs)
+            {
+                if (item.TryGet(out NetworkObject pikminObject))
+                {
+                    PikminAI pikmin = pikminObject.GetComponent<PikminAI>();
+                    if (pikmin!= null)
+                        pikminToRemove.Add(pikmin);
+                }
+            }
+            foreach (PikminAI pikmin in pikminToRemove)
+            {
+                if (pikmin != null && pikmin.NetworkObject != null)
+                {
+                    RemovePikminServerRpc(new NetworkObjectReference(pikmin.NetworkObject), false);
+                    pikmin.targetPlayer = null;
+                    pikmin.currentLeader = null;
+                    pikmin.currentLeaderNetworkObject = null;
+                    pikmin.agent.updateRotation = false;
+                    if (SetState)
+                        pikmin.SwitchToBehaviourClientRpc((int)PState.Idle);
+                }
+                yield return new WaitForSeconds(0.02f);
+            }
+
+            SyncPikminListClientRpc(refs);
         }
 
         private NetworkObjectReference[] GetPikminNetworkReferences()

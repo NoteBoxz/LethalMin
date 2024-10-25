@@ -174,26 +174,41 @@ namespace LethalMin
         [ServerRpc(RequireOwnership = false)]
         public virtual void ReturnPikminToOnionServerRpc(PikminData[] pikminDataArray, NetworkObjectReference LeaderRef)
         {
+            Dictionary<ulong, PikminAI> pikminToReturn = new Dictionary<ulong, PikminAI>();
+            List<NetworkObjectReference> pikminRefs = new List<NetworkObjectReference>();
+
             foreach (PikminData pikminData in pikminDataArray)
             {
-                pikminInOnion.Add(new OnionPikmin { GrowStage = pikminData.GrowStage, PikminTypeID = pikminData.PikminTypeID });
-
                 NetworkObject pikminNetObj = FindNetworkObjectById(pikminData.NetworkObjectId);
                 if (pikminNetObj != null)
                 {
                     PikminAI pikmin = pikminNetObj.GetComponent<PikminAI>();
-                    if (pikmin != null)
-                    {
-                        pikmin.SwitchToBehaviourClientRpc((int)PState.Leaveing);
-                    }
-                    else
-                    {
-                        LethalMin.Logger.LogWarning($"PikminAI component not found on NetworkObject with ID {pikminData.NetworkObjectId}");
-                    }
+                    pikminToReturn.Add(pikminData.NetworkObjectId, pikmin);
+                    pikminRefs.Add(new NetworkObjectReference(pikminNetObj));
+                }
+            }
+            
+            if (LeaderRef.TryGet(out NetworkObject leaderNetObj))
+            {
+                PlayerControllerB leader = leaderNetObj.GetComponent<PlayerControllerB>();
+                if (leader != null)
+                {
+                    leader.GetComponentInChildren<LeaderManager>().RemoveAllPikminServerRpc(pikminRefs.ToArray(), false);
+                }
+            }
+
+            foreach (PikminData pikminData in pikminDataArray)
+            {
+                pikminInOnion.Add(new OnionPikmin { GrowStage = pikminData.GrowStage, PikminTypeID = pikminData.PikminTypeID });
+
+                PikminAI pikmin = pikminToReturn[pikminData.NetworkObjectId];
+                if (pikmin != null)
+                {
+                    pikmin.SwitchToBehaviourClientRpc((int)PState.Leaveing);
                 }
                 else
                 {
-                    LethalMin.Logger.LogWarning($"NetworkObject with ID {pikminData.NetworkObjectId} not found");
+                    LethalMin.Logger.LogWarning($"PikminAI component not found on NetworkObject with ID {pikminData.NetworkObjectId}");
                 }
             }
 

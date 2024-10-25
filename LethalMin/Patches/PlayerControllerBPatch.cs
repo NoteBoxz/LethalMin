@@ -175,6 +175,8 @@ namespace LethalMin.Patches
                 {
                     try
                     {
+                        leaderManagerInstance.gameObject.name = $"LeaderManager_{player.playerUsername}";
+
                         // Spawn the NetworkObject with ownership set to the player
                         networkObject.SpawnWithOwnership(player.NetworkObject.OwnerClientId);
 
@@ -183,7 +185,6 @@ namespace LethalMin.Patches
                         if (leaderManager != null)
                         {
                             leaderManager.Controller = player;
-                            leaderManager.gameObject.name = $"LeaderManager_{player.playerUsername}";
                         }
 
                         // Parent the LeaderManager to the player
