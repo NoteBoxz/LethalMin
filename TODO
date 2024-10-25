@@ -1,5 +1,7 @@
 Make file save self destruct after game over.
-Fix multiplayer modded onions.
+Fix multiplayer modded moons.
+Fix bee errors.
+Fix hoarder bug erros.
 Redo Item Pathfinding system.
 Add in LCBettersaves Compatability.
 Add in Input Utils Compatabilty. 
