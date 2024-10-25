@@ -1,5 +1,7 @@
-Figure out how to run 2 instances of the game at once
-Fix Notice Zone Lag.
+Fix Pikmin dying to already detonated exsplosions.
+Make file save self destruct after game over.
+Fix multiplayer modded onions.
+Add
 Redo Item Pathfinding system.
 Add in LCBettersaves Compatability.
 Add in Input Utils Compatabilty. 

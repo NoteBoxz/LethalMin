@@ -26,7 +26,7 @@ namespace LethalMin
         private void Update()
         {
             Vector3 pos = Vector3.zero;
-            if(StartOfRound.Instance.localPlayerController.transform.position != null)
+            if(StartOfRound.Instance.localPlayerController != null)
             {
                 pos = StartOfRound.Instance.localPlayerController.transform.position;
             }
