@@ -109,14 +109,17 @@ namespace LethalMin
         }
         private void CheckAndDespawnIfParentDestroyed()
         {
+            if (!IsServer)
+            {
+                return;
+            }
             if (NetworkObject != null && NetworkObject.IsSpawned)
             {
                 if (transform.parent == null || transform.parent.gameObject == null)
                 {
                     // Parent has been destroyed, despawn this NetworkObject
                     if (IsServer)
-                        NetworkObject.Despawn();
-                    Destroy(gameObject);
+                        NetworkObject.Despawn(true);
                     LethalMin.Logger.LogInfo($"EaterBehavior despawned due to destroyed parent");
                 }
             }

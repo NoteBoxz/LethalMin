@@ -33,14 +33,17 @@ namespace LethalMin
 
         private void CheckAndDespawnIfParentDestroyed()
         {
+            if (!IsServer)
+            {
+                return;
+            }
             if (NetworkObject != null && NetworkObject.IsSpawned)
             {
                 if (transform.parent == null || transform.parent.gameObject == null)
                 {
                     // Parent has been destroyed, despawn this NetworkObject
                     if (IsServer)
-                        NetworkObject.Despawn();
-                    Destroy(gameObject);
+                        NetworkObject.Despawn(true);
                     LethalMin.Logger.LogInfo($"Pikminitem despawned due to destroyed parent");
                 }
             }
@@ -83,7 +86,7 @@ namespace LethalMin
                 if (Root == null && isInitialized)
                 {
                     Destroy(Counter);
-                    NetworkObject.Despawn();
+                    NetworkObject.Despawn(true);
                     Destroy(gameObject);
                 }
                 CheckIfGrabbed();

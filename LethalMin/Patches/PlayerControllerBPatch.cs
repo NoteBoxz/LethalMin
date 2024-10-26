@@ -293,5 +293,13 @@ namespace LethalMin.Patches
 
             return controller.animationClips.Any(clip => clip.name == clipName);
         }
+
+
+        [HarmonyPatch("KillPlayerServerRpc")]
+        [HarmonyPrefix]
+        private static void KillAndRemovePrefix(PlayerControllerB __instance)
+        {
+            __instance.GetComponentInChildren<LeaderManager>()?.RemoveAllPikminServerRpc();
+        }
     }
 }

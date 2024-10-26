@@ -263,7 +263,7 @@ namespace LethalMin
         [ServerRpc(RequireOwnership = false)]
         private void DespawnSproutServerRpc()
         {
-            NetworkObject.Despawn();
+            NetworkObject.Despawn(true);
             Destroy(gameObject);
         }
     }

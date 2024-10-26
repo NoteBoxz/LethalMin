@@ -12,6 +12,12 @@ namespace LethalMin
     {
         [IDebuggable.Debug] public OnionType type;
 
+        [SerializeField] private GameObject scanNode;
+        public override void Start()
+        {
+            base.Start();
+            scanNode = transform.Find("ScanNode").gameObject;
+        }
         public void Initialize(OnionType onionType)
         {
             LethalMin.Logger.LogInfo($"Syncing Onion type {onionType.TypeName} on server");
@@ -75,6 +81,11 @@ namespace LethalMin
                 isInFactory = false;
                 StartCoroutine(SpawnIn());
             }
+        }
+        public override void LateUpdate()
+        {
+            base.LateUpdate();
+            scanNode.SetActive(!isHeld && !isHeldByEnemy);
         }
         IEnumerator SpawnIn()
         {
@@ -150,8 +161,7 @@ namespace LethalMin
             {
                 LethalMin.Logger.LogInfo($"Destroying {onionType.TypeName} Onion item");
                 if (IsServer && NetworkObject.IsSpawned)
-                    NetworkObject.Despawn();
-                Destroy(gameObject);
+                    NetworkObject.Despawn(true);
             }
         }
 

@@ -9,9 +9,24 @@ namespace LethalMin.Patches
     {
         [HarmonyPatch("DeleteFile")]
         [HarmonyPostfix]
-        private static void DeleteLethalMinSaveFile(DeleteFileButton __instance)
+        public static void DeleteLethalMinSaveFile(DeleteFileButton __instance)
         {
             int fileToDelete = __instance.fileToDelete;
+            string lethalMinSaveFileName = GetLethalMinSaveFileName(fileToDelete);
+            string lethalMinSaveFilePath = Path.Combine(Application.persistentDataPath, lethalMinSaveFileName);
+
+            if (File.Exists(lethalMinSaveFilePath))
+            {
+                File.Delete(lethalMinSaveFilePath);
+                LethalMin.Logger.LogMessage($"Deleted LethalMin save file: {lethalMinSaveFileName}");
+            }
+            else
+            {
+                LethalMin.Logger.LogMessage($"LethalMin save file not found: {lethalMinSaveFileName}");
+            }
+        }
+        public static void DeleteLethalMinSaveFile(int fileToDelete)
+        {
             string lethalMinSaveFileName = GetLethalMinSaveFileName(fileToDelete);
             string lethalMinSaveFilePath = Path.Combine(Application.persistentDataPath, lethalMinSaveFileName);
 

@@ -135,6 +135,7 @@ namespace LethalMin
         public float AttackBuffer;
         int KnockBackResistance = 3;
         public Animator IdleGlowAnim;
+        public bool IsLeftBehind;
 
         //because vector3.distance will never work because the pikmin can never reach the onion on the Y axis.
         private float HorizontalDistance(Vector3 a, Vector3 b)
@@ -708,7 +709,7 @@ namespace LethalMin
                 IsWhistled = false;
                 whistlingPlayer = null;
             }
-            if(currentLeader != null)
+            if (currentLeader != null)
             {
                 NoticeInstant(currentLeader.Controller);
             }
@@ -1226,11 +1227,11 @@ namespace LethalMin
                 CallingHandleItemCarying = false;
             }
 
-            if (currentBehaviourStateIndex == (int)PState.Leaveing && TargetOnion != null)
+            if (currentBehaviourStateIndex == (int)PState.Leaveing)
             {
-                if (TargetOnion == null)
+                if (TargetOnion == null || IsLeftBehind)
                 {
-                    agent.SetDestination(randoVect);
+                    agent.SetDestination(new Vector3(randoVect.x, transform.position.y, randoVect.z));
                 }
                 else
                 {
@@ -2280,6 +2281,13 @@ namespace LethalMin
                     continue;
                 }
 
+                if (LethalMin.GetParsedPickupBlacklist().Contains(pikminItem.Root.itemProperties.itemName))
+                {
+                    //if(LethalMin.DebugMode)
+                    //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Item {item.name} is blacklisted. Skipping.");
+                    continue;
+                }
+
                 if (pikminItem.Root.isInShipRoom && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
                 {
                     //if(LethalMin.DebugMode)
@@ -3254,7 +3262,9 @@ namespace LethalMin
             //Check if enemy is a pikmin
             || LethalMin.PassiveToManEater && Enemy.enemyType.enemyName == LethalMin.ManeaterName && Enemy.GetComponent<CaveDwellerAI>().babyContainer.activeSelf
             //Maneater Checks
-            || !Enemy.enemyType.canDie || !PminType.CanLatchOnToEnemies || LethalMin.IsDependencyLoaded("LethalMon") && LETHALMON_CantAttack(Enemy);
+            || !Enemy.enemyType.canDie || !PminType.CanLatchOnToEnemies || LethalMin.IsDependencyLoaded("LethalMon") && LETHALMON_CantAttack(Enemy)
+            //Blacklist Checks
+            || LethalMin.GetParsedAttackBlacklist().Contains(Enemy.enemyType.enemyName);
         }
         public bool LETHALMON_CantAttack(EnemyAI Enemy)
         {
@@ -3771,8 +3781,7 @@ namespace LethalMin
             else
             {
                 if (IsServer)
-                    NetworkObject.Despawn();
-                Destroy(gameObject);
+                    NetworkObject.Despawn(true);
             }
         }
 
@@ -3904,8 +3913,7 @@ namespace LethalMin
             else
             {
                 if (IsServer)
-                    NetworkObject.Despawn();
-                Destroy(gameObject);
+                    NetworkObject.Despawn(true);
             }
         }
         #endregion

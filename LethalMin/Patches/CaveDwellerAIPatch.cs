@@ -111,9 +111,8 @@ namespace LethalMin.Patches
             __instance.GetComponentInChildren<PikminItem>().RemoveAllPikminAndUnparent(new Vector3(5, 5, 5));
             if (__instance.IsServer)
             {
-                __instance.GetComponentInChildren<PikminItem>().NetworkObject.Despawn();
+                __instance.GetComponentInChildren<PikminItem>().NetworkObject.Despawn(true);
             }
-            GameObject.Destroy(__instance.GetComponentInChildren<PikminItem>().gameObject);
         }
         [HarmonyPatch("ScareBabyClientRpc")]
         [HarmonyPrefix]

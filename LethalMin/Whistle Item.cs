@@ -60,15 +60,30 @@ namespace LethalMin
 
         private void SetupInputActions()
         {
-            whistleAction = new InputAction("Whistle", InputActionType.Button, LethalMin.WhisleAction);
-            whistleAction.started += ctx => OnWhistleStarted();
-            whistleAction.performed += ctx => OnWhistlePerformed();
-            whistleAction.canceled += ctx => OnWhistleCanceled();
-            whistleAction.Enable();
+            if (!LethalMin.IsUsingInputUtils())
+            {
+                whistleAction = new InputAction("Whistle", InputActionType.Button, LethalMin.WhisleAction);
+                whistleAction.started += ctx => OnWhistleStarted();
+                whistleAction.performed += ctx => OnWhistlePerformed();
+                whistleAction.canceled += ctx => OnWhistleCanceled();
+                whistleAction.Enable();
 
-            removeAllPikminAction = new InputAction("Dismiss", InputActionType.Button, LethalMin.DismissAction);
-            removeAllPikminAction.started += ctx => OnDismiss();
-            removeAllPikminAction.Enable();
+                removeAllPikminAction = new InputAction("Dismiss", InputActionType.Button, LethalMin.DismissAction);
+                removeAllPikminAction.started += ctx => OnDismiss();
+                removeAllPikminAction.Enable();
+            }
+            else
+            {
+                whistleAction = LethalMin.InputClassInstace.Whistle;
+                whistleAction.started += ctx => OnWhistleStarted();
+                whistleAction.performed += ctx => OnWhistlePerformed();
+                whistleAction.canceled += ctx => OnWhistleCanceled();
+                whistleAction.Enable();
+
+                removeAllPikminAction = LethalMin.InputClassInstace.Dismiss;
+                removeAllPikminAction.started += ctx => OnDismiss();
+                removeAllPikminAction.Enable();
+            }
         }
 
         private void SetupLineRenderer()
@@ -374,7 +389,7 @@ namespace LethalMin
         public override void LateUpdate()
         {
             base.LateUpdate();
-            scanNode.SetActive(!isHeld || !isHeldByEnemy);
+            scanNode.SetActive(!isHeld && !isHeldByEnemy);
         }
 
         private bool CanWhistle()
@@ -391,7 +406,7 @@ namespace LethalMin
             }
             if (noticeZone != null && IsServer)
             {
-                noticeZone.NetworkObject.Despawn();
+                noticeZone.NetworkObject.Despawn(true);
             }
             if (whistleAction != null)
             {

@@ -19,6 +19,7 @@ using LethalLib.Extras;
 using LethalMin.Patches;
 using System.Text;
 using UnityEngine.AI;
+using UnityEngine.InputSystem;
 
 namespace LethalMin
 {
@@ -30,12 +31,13 @@ namespace LethalMin
     }
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     [BepInDependency("evaisa.lethallib")]
+    [BepInDependency("LethalMon", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("twig.latecompany", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("ainavt.lc.lethalconfig", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("dev.kittenji.NavMeshInCompany", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("me.swipez.melonloader.morecompany", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("MaxWasUnavailable.LethalModDataLib", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("LethalMon", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("com.rune580.LethalCompanyInputUtils", BepInDependency.DependencyFlags.SoftDependency)]
     public class LethalMin : BaseUnityPlugin
     {
         public static LethalMin Instance { get; private set; } = null!;
@@ -47,6 +49,9 @@ namespace LethalMin
         public static string SwitchBackwawrdsAction;
         public static string WhisleAction;
         public static string DismissAction;
+
+        public static InputClass InputClassInstace = null!;
+
         public static string ManeaterName = "Maneater";
         public static EnemyType pikminEnemyType = null!;
         private static TerminalNode pikminTerminalNode = null!;
@@ -62,6 +67,33 @@ namespace LethalMin
         public static Dictionary<int, OnionFuseRules> RegisteredFuseRules = new Dictionary<int, OnionFuseRules>();
         public LayerMask PikminColideable = 1107298561 | (1 << 28);
         public static AssetBundleLoader Loader = null!;
+
+        public static bool IsUsingModLib()
+        {
+            return IsDependencyLoaded("MaxWasUnavailable.LethalModDataLib");
+        }
+
+        public static bool IsUsingInputUtils()
+        {
+            return IsDependencyLoaded("com.rune580.LethalCompanyInputUtils");
+        }
+
+        public static List<string> GetParsedAttackBlacklist()
+        {
+            if(string.IsNullOrEmpty(AttackBlacklist))
+            {
+                return new List<string>();
+            }
+            return AttackBlacklist.Split(',').ToList();
+        }
+        public static List<string> GetParsedPickupBlacklist()
+        {
+            if(string.IsNullOrEmpty(PickupBlacklist))
+            {
+                return new List<string>();
+            }
+            return PickupBlacklist.Split(',').ToList();
+        }
 
         #region  Config Variables
         public static bool CustomOnionAllowedValue;
@@ -142,11 +174,13 @@ namespace LethalMin
         public static bool DontNatualSpawn;
         public static ObstacleAvoidanceType PikminDefultAvoidanceType, PikminCarryingAvoidanceType;
         public static bool MeshWrapping;
-        public static float WhisRange,WhisMin,WhisMax;
+        public static float WhisRange, WhisMin, WhisMax;
         public static float PlayerNoticeRange;
         public static float SpeedMultiplier;
         public static float DamageMultiplier;
         public static bool ScanMin;
+        public static bool PurgeAfterFire;
+        public static string AttackBlacklist, PickupBlacklist;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
         public static ConfigEntry<bool> SkipPluckAnimation, FF, Smartmin, Smartermin, OnlyMainV, OnlyExitV, Pattack,
@@ -155,12 +189,12 @@ namespace LethalMin
         CustomOnionAllowed, LethalWhistle, LethalLandmines, AllToPItems, LimmitItemGrab, AllowOnionFuseConfig,
         LethalManEaterConfig, CalmableManeaterConfig, Rasisium, NotFormidableOak, LethalTurrentsC, InvinciMin,
         StrudyMin, UselessblueMin, DebugM, FunniMode, PassiveToManEaterConfig, FFOM, FFM, TeleEle, TeleCarie,
-        TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF,NoPowerSpawn,MWon,ScanablePikmin;
+        TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF, NoPowerSpawn, MWon, ScanablePikmin, CanShipEjectFromShip;
 
         public static ConfigEntry<float> Pscale, Sscale, ChaseR, PCPX, PCPY, PCPZ, PCRX, PCRY, PCRZ, PCScale,
          PCPCountX, PCPCountY, PCPCountZ, PCRCCountX, PCRCCountY, PCRCCountZ, PCScaleCount, FallTimer, CounterOffset,
          NoticeTimer, BarberR, OnionSpawnChance, SproutSpawnChance, IndoorSpawnChance, WhistleVolumeConfig,
-         ManagerRefreshRateC,WhistleRange,WhistleMinRaidus,WhistleMaxRadius,PlayerNR,SpeedMultiplierConfig,
+         ManagerRefreshRateC, WhistleRange, WhistleMinRaidus, WhistleMaxRadius, PlayerNR, SpeedMultiplierConfig,
          DamageMultiplierConfig;
 
         public static ConfigEntry<int> MechBurnLimmitConfig, JesterDiet, ThumperDiet, GiantDiet, BarberDiet, ManeaterDiet, SpideDiet,
@@ -168,7 +202,8 @@ namespace LethalMin
         , WhistlePrice, ContianerPrice, ItemRequireSubracter;
 
         public static ConfigEntry<string> throwActionConfig, switchForwardConfig,
-        switchBackwardsConfig, whistleActionConfig, dismissActionConfig;
+        switchBackwardsConfig, whistleActionConfig, dismissActionConfig,
+        AttackBlackListConfig, PickupBlacklistConfig;
         public static ConfigEntry<ObstacleAvoidanceType> PikminDefaultAvoidanceTypeConfig;
         public static ConfigEntry<ObstacleAvoidanceType> PikminCarryingAvoidanceTypeConfig;
         #endregion
@@ -186,6 +221,17 @@ namespace LethalMin
             if (IsDependencyLoaded("ainavt.lc.lethalconfig"))
                 BindLCconfigs();
 
+            if (IsUsingInputUtils())
+            {
+                Logger.LogInfo("InputUtils detected, binding input class");
+                BindInputClass();
+            }
+
+            if (IsUsingModLib())
+            {
+                Logger.LogInfo("LethalModDataLib detected, using that for save data");
+            }
+
             // load everything third
             LoadPikminAssets();
 
@@ -196,6 +242,9 @@ namespace LethalMin
 
             Logger.LogInfo($"{MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} has loaded!");
         }
+
+
+        public void BindInputClass() { InputClassInstace = new InputClass(); }
 
         public void BindConfig()
         {
@@ -219,6 +268,8 @@ namespace LethalMin
             PikminCarryingAvoidanceTypeConfig = Config.Bind("Pikmin", "Carrying Avoidance Type", ObstacleAvoidanceType.NoObstacleAvoidance, "The obstacle avoidance type for Pikmin when carrying items");
             NoPowerSpawn = Config.Bind("Pikmin", "Disable Natual Spawning", false, "Makes it so Pikmin won't spawn in from Lethal Company's spawn system");
             ScanablePikmin = Config.Bind("Pikmin", "Make Pikmin Scanable", true, "Makes it so Pikmin can be scanned");
+            AttackBlackListConfig = Config.Bind("Pikmin", "Attack Blacklist", "Roaming Locust,Manticoil", "The list of enemy names that pikmin can't attack (separated by commas, no spaces in between) (item1,item2,item3...)");
+            PickupBlacklistConfig = Config.Bind("Pikmin", "Pickup Blacklist", "", "The list of item names that pikmin can't pickup (separated by commas, no spaces in between) (item1,item2,item3...)");
 
             LethalSpiderConfig = Config.Bind("Enemy AI", "Make Spider eat Pikmin", true, "Makes Spider eat Pikmin that are too close to the spider");
             LethalJesterConfig = Config.Bind("Enemy AI", "Make Jester eat Pikmin", true, "Makes Jester eat Pikmin when opened");
@@ -307,6 +358,7 @@ namespace LethalMin
             PlayerNR = Config.Bind("`Cheats`", "Player Notice Range", 1.5f, "The distance between a player and a pikmin at which the pikmin will notice the player");
             SpeedMultiplierConfig = Config.Bind("`Cheats`", "Speed Multiplier", 1f, "The multiplies the pikmin's speed by this value");
             DamageMultiplierConfig = Config.Bind("`Cheats`", "Damage Multiplier", 1f, "The multiplies the pikmin's damage by this value");
+            CanShipEjectFromShip = Config.Bind("`Cheats`", "Purge save after fire", true, "Deleats the save file after the players have been fired. (DOES NOT WORK WITH LethalModDataLib YET!!!)");
 
             FFOM = Config.Bind("LethalMon", "Make Pikmin Attack Leaders Tammed Enemy", false, "Makes Pikmin attack the leaders Pokémon");
             FFM = Config.Bind("LethalMon", "Make Pikmin Attack Tammed Enemies", false, "Makes Pikmin attack any Tamed Enemies");
@@ -318,6 +370,9 @@ namespace LethalMin
 
 
             #region Setting Config values
+            AttackBlacklist = AttackBlackListConfig.Value;
+            PickupBlacklist = PickupBlacklistConfig.Value;
+            PurgeAfterFire = CanShipEjectFromShip.Value;
             DamageMultiplier = DamageMultiplierConfig.Value;
             ScanMin = ScanablePikmin.Value;
             SpeedMultiplier = SpeedMultiplierConfig.Value;
@@ -434,6 +489,9 @@ namespace LethalMin
 
             #region Setting Config Events
             // Add SettingChanged events for all configs
+            AttackBlackListConfig.SettingChanged += (_, _) => AttackBlacklist = AttackBlackListConfig.Value;
+            PickupBlacklistConfig.SettingChanged += (_, _) => PickupBlacklist = PickupBlacklistConfig.Value;
+            CanShipEjectFromShip.SettingChanged += (_, _) => PurgeAfterFire = CanShipEjectFromShip.Value;
             DamageMultiplierConfig.SettingChanged += (_, _) => DamageMultiplier = DamageMultiplierConfig.Value;
             ScanablePikmin.SettingChanged += (_, _) => ScanMin = ScanablePikmin.Value;
             SpeedMultiplierConfig.SettingChanged += (_, _) => SpeedMultiplier = SpeedMultiplierConfig.Value;
@@ -566,6 +624,8 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new EnumDropDownConfigItem<ObstacleAvoidanceType>(PikminCarryingAvoidanceTypeConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(NoPowerSpawn, true));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(ScanablePikmin, false));
+            LethalConfigManager.AddConfigItem(new TextInputFieldConfigItem(AttackBlackListConfig, false));
+            LethalConfigManager.AddConfigItem(new TextInputFieldConfigItem(PickupBlacklistConfig, false));
 
 
             // Controls
@@ -661,6 +721,7 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(PlayerNR, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SpeedMultiplierConfig, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(DamageMultiplierConfig, false));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(CanShipEjectFromShip, true));
 
 
             // Lethal Mon            
@@ -955,7 +1016,7 @@ namespace LethalMin
         OnionMeunOpen, OnionMeunClose, PikAdd, PikSub, PurpSlam;
         public static AudioClip[] PlayerThrowSound, RealHitSFX;
         public static GameObject PikminObjectPrefab, OnionPrefab, OnionItemPrefab, leaderManagerPrefab,
-         WhistlePrefab, PmanPrefab, ManeaterScriptContainer, IdelGlowPrefab, EaterBehavior,NoticeZone;
+         WhistlePrefab, PmanPrefab, ManeaterScriptContainer, IdelGlowPrefab, EaterBehavior, NoticeZone;
         public static Mesh TwoSideOnion, ThreeSideOnion, FourSideOnion, FiveSideOnion, SixSideOnion, SevenSideOnion, EightSideOnion;
         public static Item OnionItem;
         public static AnimationClip PluckAnim;

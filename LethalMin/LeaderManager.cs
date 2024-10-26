@@ -148,19 +148,35 @@ namespace LethalMin
         {
             if (isPlayer)
             {
-                throwAction = new InputAction("Throw");
-                throwAction.AddBinding(LethalMin.ThrowAction);
-                throwAction.performed += OnThrowStarted;
-                throwAction.canceled += OnThrowCanceled;
-                throwAction.Enable();
-                switchPikminTypeAction = new InputAction("SwitchPikminType");
-                switchPikminTypeAction.AddBinding(LethalMin.SwitchForwardAction);
-                switchPikminTypeAction.canceled += OnSwitchPikminType;
-                switchPikminTypeAction.Enable();
-                switchPikminPrevTypeAction = new InputAction("SwitchPikminTypeBack");
-                switchPikminPrevTypeAction.AddBinding(LethalMin.SwitchBackwawrdsAction);
-                switchPikminPrevTypeAction.canceled += OnSwitchPrevPikminType;
-                switchPikminPrevTypeAction.Enable();
+                if (!LethalMin.IsUsingInputUtils())
+                {
+                    throwAction = new InputAction("Throw");
+                    throwAction.AddBinding(LethalMin.ThrowAction);
+                    throwAction.performed += OnThrowStarted;
+                    throwAction.canceled += OnThrowCanceled;
+                    throwAction.Enable();
+                    switchPikminTypeAction = new InputAction("SwitchPikminType");
+                    switchPikminTypeAction.AddBinding(LethalMin.SwitchForwardAction);
+                    switchPikminTypeAction.canceled += OnSwitchPikminType;
+                    switchPikminTypeAction.Enable();
+                    switchPikminPrevTypeAction = new InputAction("SwitchPikminTypeBack");
+                    switchPikminPrevTypeAction.AddBinding(LethalMin.SwitchBackwawrdsAction);
+                    switchPikminPrevTypeAction.canceled += OnSwitchPrevPikminType;
+                    switchPikminPrevTypeAction.Enable();
+                }
+                else
+                {
+                    throwAction = LethalMin.InputClassInstace.Throw;
+                    throwAction.performed += OnThrowStarted;
+                    throwAction.canceled += OnThrowCanceled;
+                    throwAction.Enable();
+                    switchPikminTypeAction = LethalMin.InputClassInstace.SwitchRight;
+                    switchPikminTypeAction.canceled += OnSwitchPikminType;
+                    switchPikminTypeAction.Enable();
+                    switchPikminPrevTypeAction = LethalMin.InputClassInstace.SwitchLeft;
+                    switchPikminPrevTypeAction.canceled += OnSwitchPrevPikminType;
+                    switchPikminPrevTypeAction.Enable();
+                }
             }
         }
         #endregion
@@ -894,7 +910,7 @@ namespace LethalMin
                 if (item.TryGet(out NetworkObject pikminObject))
                 {
                     PikminAI pikmin = pikminObject.GetComponent<PikminAI>();
-                    if (pikmin!= null)
+                    if (pikmin != null)
                         pikminToRemove.Add(pikmin);
                 }
             }

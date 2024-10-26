@@ -9,17 +9,17 @@ namespace LethalMin.Patches
 public class ShipTeleporterPatch
 {
     [HarmonyPostfix]
-    [HarmonyPatch("TeleportPlayerOutClientRpc")]
+    [HarmonyPatch("TeleportPlayerOutServerRpc")]
     static void AfterTeleportPlayerOut(int playerObj, Vector3 teleportPos)
     {
         TeleportPikminToPlayer(playerObj, teleportPos);
     }
 
     [HarmonyPostfix]
-    [HarmonyPatch("TeleportPlayerBodyOutClientRpc")]
+    [HarmonyPatch("TeleportPlayerOutServerRpc")]
     static void AfterTeleportPlayerBodyOut(int playerObj, Vector3 teleportPos)
     {
-        TeleportPikminToPlayer(playerObj, teleportPos);
+        //TeleportPikminToPlayer(playerObj, teleportPos);
     }
 
     static void TeleportPikminToPlayer(int playerObj, Vector3 teleportPos)
@@ -53,13 +53,7 @@ public class ShipTeleporterPatch
                 Vector3 pikminTeleportPos = teleportPos + offset;
 
                 // Teleport the pikmin
-                pikmin.transform.position = pikminTeleportPos;
-
-                // If the pikmin has a NavMeshAgent, update its position
-                if (pikmin.agent != null)
-                {
-                    pikmin.agent.Warp(pikminTeleportPos);
-                }
+                pikmin.agent.Warp(pikminTeleportPos);
 
                 // Update pikmin state if necessary
                 pikmin.isOutside = !player.isInsideFactory;

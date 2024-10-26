@@ -30,6 +30,16 @@ namespace LethalMin.Patches
             GameObject.FindAnyObjectByType<PikminHUD>().RefreshLeaderScript();
         }
 
+        [HarmonyPatch("FirePlayersAfterDeadlineClientRpc")]
+        [HarmonyPostfix]
+        public static void PurgeSave()
+        {
+            if (NetworkManager.Singleton.IsServer && LethalMin.PurgeAfterFire)
+            {
+                DeleteFileButtonPatch.DeleteLethalMinSaveFile(GameNetworkManager.Instance.saveFileNum);
+            }
+        }
+
         [HarmonyPatch("Start")]
         [HarmonyPostfix]
         private static void Imp2()
@@ -53,16 +63,24 @@ namespace LethalMin.Patches
         {
             if (NetworkManager.Singleton.IsServer)
                 PikminManager.Instance.SyncEndgameDataServerRpc();
-        
+
             PikminManager.Instance.DespawnSprouts();
+            if (LethalMin.IsUsingModLib())
+            {
+                LethalMin.Logger.LogMessage("Using ModLib, saving EZOnion data.");
+                PikminManager.Instance.SaveEZOnionData();
+            }
         }
 
         [HarmonyPatch("SetShipReadyToLand")]
         [HarmonyPostfix]
         private static void SaveOnions()
         {
-            PikminManager.Instance.FuseOnions();    
-            PikminManager.Instance.SaveOnionData();
+            PikminManager.Instance.FuseOnions();
+            if (!LethalMin.IsUsingModLib())
+            {
+                PikminManager.Instance.SaveOnionData();
+            }
             PikminManager.Instance.StartCoroutine(PikminManager.Instance.DespawnOnions());
             GameObject.FindAnyObjectByType<PikminHUD>().UpdateHUD();
         }
