@@ -359,7 +359,7 @@ namespace LethalMin
             PlayerNR = Config.Bind("`Cheats`", "Player Notice Range", 1.5f, "The distance between a player and a pikmin at which the pikmin will notice the player");
             SpeedMultiplierConfig = Config.Bind("`Cheats`", "Speed Multiplier", 1f, "The multiplies the pikmin's speed by this value");
             DamageMultiplierConfig = Config.Bind("`Cheats`", "Damage Multiplier", 1f, "The multiplies the pikmin's damage by this value");
-            CanShipEjectFromShip = Config.Bind("`Cheats`", "Purge save after fire", true, "Deleats the save file after the players have been fired. (DOES NOT WORK WITH LethalModDataLib YET!!!)");
+            CanShipEjectFromShip = Config.Bind("`Cheats`", "Purge save after fire", true, "Deleats the save file after the players have been fired.");
 
             FFOM = Config.Bind("LethalMon", "Make Pikmin Attack Leaders Tammed Enemy", false, "Makes Pikmin attack the leaders Pokémon");
             FFM = Config.Bind("LethalMon", "Make Pikmin Attack Tammed Enemies", false, "Makes Pikmin attack any Tamed Enemies");

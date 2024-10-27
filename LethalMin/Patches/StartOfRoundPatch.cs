@@ -36,7 +36,20 @@ namespace LethalMin.Patches
         {
             if (NetworkManager.Singleton.IsServer && LethalMin.PurgeAfterFire)
             {
-                DeleteFileButtonPatch.DeleteLethalMinSaveFile(GameNetworkManager.Instance.saveFileNum);
+                if (LethalMin.IsUsingModLib())
+                {
+                    OnionEzSaveData NewSaveData = new OnionEzSaveData();
+                    NewSaveData.Load();
+                    NewSaveData.OnionsCollected = new List<int>();
+                    NewSaveData.OnionsFused = new Dictionary<int, int[]>();
+                    NewSaveData.PikminStored = new List<OnionPikminStorage>();
+                    NewSaveData.PikminLeftLastRound = 0;
+                    NewSaveData.Save();
+                }
+                else
+                {
+                    DeleteFileButtonPatch.DeleteLethalMinSaveFile(GameNetworkManager.Instance.saveFileNum);
+                }
             }
         }
 
