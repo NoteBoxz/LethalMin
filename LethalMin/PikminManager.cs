@@ -1023,6 +1023,8 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo($"Pikmin left: {newSaveData.PikminLeftLastRound} Onion: {onion.GetPikminCount()}");
             }
 
+            LethalMin.Logger.LogInfo($"IsStoredNull = {newSaveData.PikminStored == null}");
+
             newSaveData.Save();
 
             IsSaving = false;

@@ -353,7 +353,7 @@ namespace LethalMin
             ItemRequireSubracter = Config.Bind("`Cheats`", "Pikmin Needed Per-item subtraction", 0, "Subtracts the ammount of pikmin needed per item");
             DebugM = Config.Bind("`Cheats`", "Debug Mode", false, "q");
             FunniMode = Config.Bind("`Cheats`", "Funni Onion", false, "Funni Onion");
-            WhistleRange = Config.Bind("`Cheats`", "Whistle Range", 5f, "The range at which the whistle can reach");
+            WhistleRange = Config.Bind("`Cheats`", "Whistle Range", 20f, "The range at which the whistle can reach");
             WhistleMinRaidus = Config.Bind("`Cheats`", "Whistle Min Radius", 1f, "The min radius at which the whistle can be heard");
             WhistleMaxRadius = Config.Bind("`Cheats`", "Whistle Max Radius", 15f, "The max radius at which the whistle can be heard");
             PlayerNR = Config.Bind("`Cheats`", "Player Notice Range", 1.5f, "The distance between a player and a pikmin at which the pikmin will notice the player");

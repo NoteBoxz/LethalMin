@@ -42,6 +42,10 @@ namespace LethalMin
                 if (_SaveDataWithLibType != null)
                 {
                     _instance = Activator.CreateInstance(_SaveDataWithLibType);
+                    SetData("OnionsCollected", new List<int>());
+                    SetData("OnionsFused", new Dictionary<int, int[]>());
+                    SetData("PikminStored", new List<OnionPikminStorage>());
+                    SetData("PikminLeftLastRound", 0);
                 }
                 else
                 {
@@ -93,7 +97,7 @@ namespace LethalMin
                 if (value == null)
                 {
                     LethalMin.Logger.LogWarning($"Value of property {propertyName} is null");
-                    return default(T);
+                    return CreateNewInstance<T>();
                 }
                 return (T)value;
             }
@@ -107,6 +111,34 @@ namespace LethalMin
                 }
                 return (T)field.GetValue(this);
             }
+        }
+        private T CreateNewInstance<T>()
+        {
+            if (typeof(T) == typeof(List<int>))
+            {
+                LethalMin.Logger.LogInfo("Creating new instance of List<int>");
+                return (T)(object)new List<int>();
+            }
+            if (typeof(T) == typeof(Dictionary<int, int[]>))
+            {
+                LethalMin.Logger.LogInfo("Creating new instance of Dictionary<int, int[]>");
+                return (T)(object)new Dictionary<int, int[]>();
+            }
+            if (typeof(T) == typeof(List<OnionPikminStorage>))
+            {
+                LethalMin.Logger.LogInfo("Creating new instance of List<OnionPikminStorage>");
+                return (T)(object)new List<OnionPikminStorage>();
+            }
+            if (typeof(T) == typeof(int))
+            {
+                LethalMin.Logger.LogInfo("Creating new instance of int");
+                return (T)(object)0;
+            }
+
+            // Add more types as needed
+
+            LethalMin.Logger.LogWarning($"No matching type found for {typeof(T)}, returning default value");
+            return default(T);
         }
 
         private void SetData<T>(string propertyName, T value)
