@@ -332,7 +332,6 @@ namespace LethalMin
 
             StartCoroutine(WaitToCheckForMineshaft());
 
-            LethalMin.Logger.LogInfo(GameNetworkManager.Instance.currentSaveFileName);
             yield return null;  // Wait another frame
         }
 

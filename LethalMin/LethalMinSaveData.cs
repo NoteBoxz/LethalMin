@@ -25,7 +25,7 @@ namespace LethalMin
     {
         private static bool _isUtilsLoaded;
         private static Type _SaveDataWithLibType;
-        private static object _instance;
+        private object _instance;
 
         // Local storage for when mod library is not loaded
         private List<int> _onionsCollected = new List<int>();
@@ -33,16 +33,24 @@ namespace LethalMin
         private List<OnionPikminStorage> _pikminStored = new List<OnionPikminStorage>();
         private int _pikminLeftLastRound;
 
-        static OnionEzSaveData()
+        OnionEzSaveData()
         {
             _isUtilsLoaded = LethalMin.IsUsingModLib();
             if (_isUtilsLoaded)
             {
-                _SaveDataWithLibType = Type.GetType("LethalMin.LethalMinSaveDataWithLib");
+                _SaveDataWithLibType = Type.GetType("LethalMinSaveDataWithLib");
                 if (_SaveDataWithLibType != null)
                 {
                     _instance = Activator.CreateInstance(_SaveDataWithLibType);
                 }
+                else
+                {
+                    LethalMin.Logger.LogError("Failed to find LethalMinSaveDataWithLib type.");
+                }
+            }
+            else
+            {
+                LethalMin.Logger.LogInfo("ModLib not loaded, using local storage.");
             }
         }
 
@@ -74,12 +82,30 @@ namespace LethalMin
         {
             if (_isUtilsLoaded && _instance != null)
             {
+                LethalMin.Logger.LogInfo($"Attempting to get property {propertyName}");
                 PropertyInfo property = _SaveDataWithLibType.GetProperty(propertyName);
-                return (T)property.GetValue(_instance);
+                if (property == null)
+                {
+                    LethalMin.Logger.LogError($"Property {propertyName} not found in LethalMinSaveDataWithLib");
+                    return default(T);
+                }
+                object value = property.GetValue(_instance);
+                if (value == null)
+                {
+                    LethalMin.Logger.LogWarning($"Value of property {propertyName} is null");
+                    return default(T);
+                }
+                return (T)value;
             }
             else
             {
-                return (T)this.GetType().GetField($"_{propertyName.ToLower()}", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
+                FieldInfo field = this.GetType().GetField($"_{propertyName.ToLower()}", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (field == null)
+                {
+                    LethalMin.Logger.LogError($"Field _{propertyName.ToLower()} not found in OnionEzSaveData");
+                    return default(T);
+                }
+                return (T)field.GetValue(this);
             }
         }
 

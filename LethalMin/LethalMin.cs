@@ -950,6 +950,10 @@ namespace LethalMin
                 {
                     Logger.LogWarning("Pikmin type with ID " + type.OnionTypeID + " " + type.TypeName + " has a different version than the mod " + $"({MyPluginInfo.PLUGIN_VERSION})" + ", this may cause issues!");
                 }
+                if(type.TypesCanHold.Length == 0)
+                {
+                    Logger.LogWarning("Onion type with ID " + type.OnionTypeID + " " + type.TypeName + " has no types that can hold it!");
+                }
                 if (type.SpawnInAsItem)
                 {
                     SpawnableOnionTypes.Add(type.OnionTypeID, type);
@@ -1407,7 +1411,7 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
                 }
                 else
                 {
-                    Logger.LogInfo("LethalMon not detected. Skipping FilterEnemyTypesPatch.");
+                    //Logger.LogInfo("LethalMon not detected. Skipping FilterEnemyTypesPatch.");
                 }
             }
             catch (Exception e)
@@ -1430,13 +1434,13 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
             }
             catch (ReflectionTypeLoadException e)
             {
-                Logger.LogError("ReflectionTypeLoadException caught while getting types. Some types will be skipped.");
+                Logger.LogWarning("ReflectionTypeLoadException caught while getting types. Some types will be skipped.");
                 foreach (var loaderException in e.LoaderExceptions)
                 {
-                    Logger.LogError($"Loader Exception: {loaderException.Message}");
+                    Logger.LogWarning($"Loader Exception: {loaderException.Message}");
                     if (loaderException is FileNotFoundException fileNotFound)
                     {
-                        Logger.LogError($"Could not load file: {fileNotFound.FileName}");
+                        Logger.LogWarning($"Could not load file: {fileNotFound.FileName}");
                     }
                 }
                 return e.Types.Where(t => t != null).ToArray();
@@ -1459,21 +1463,7 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
 
         private void NetcodePatcher()
         {
-            Type[] types;
-            try
-            {
-                types = Assembly.GetExecutingAssembly().GetTypes();
-            }
-            catch (ReflectionTypeLoadException e)
-            {
-                Logger.LogError("ReflectionTypeLoadException caught in NetcodePatcher. Some types will be skipped.");
-                foreach (var loaderException in e.LoaderExceptions)
-                {
-                    Logger.LogError($"Loader Exception: {loaderException.Message}");
-                }
-                types = e.Types.Where(t => t != null).ToArray();
-            }
-
+            Type[] types = GetTypesWithErrorHandling();
             foreach (var type in types)
             {
                 try
@@ -1491,17 +1481,17 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
                         }
                         catch (Exception methodException)
                         {
-                            Logger.LogError($"Error invoking method {method.Name} in type {type.FullName}: {methodException.Message}");
+                            Logger.LogWarning($"Error invoking method {method.Name} in type {type.FullName}: {methodException.Message}");
                             if (methodException.InnerException != null)
                             {
-                                Logger.LogError($"Inner exception: {methodException.InnerException.Message}");
+                                Logger.LogWarning($"Inner exception: {methodException.InnerException.Message}");
                             }
                         }
                     }
                 }
                 catch (Exception typeException)
                 {
-                    Logger.LogError($"Error processing type {type.FullName}: {typeException.Message}");
+                    Logger.LogWarning($"Error processing type {type.FullName}: {typeException.Message}");
                 }
             }
 
