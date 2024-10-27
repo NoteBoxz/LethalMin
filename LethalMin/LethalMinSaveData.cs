@@ -33,7 +33,7 @@ namespace LethalMin
         private List<OnionPikminStorage> _pikminStored = new List<OnionPikminStorage>();
         private int _pikminLeftLastRound;
 
-        OnionEzSaveData()
+        public OnionEzSaveData()
         {
             _isUtilsLoaded = LethalMin.IsUsingModLib();
             if (_isUtilsLoaded)
