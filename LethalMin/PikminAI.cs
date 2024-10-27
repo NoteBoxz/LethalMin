@@ -1716,7 +1716,7 @@ namespace LethalMin
             }
             if (HasCustomScripts)
                 OnAssignLeaderServerRpc.Invoke();
-            PlayerControllerB newLeader = null;
+            PlayerControllerB newLeader = null!;
             leaderref.TryGet(out NetworkObject LeaderOBJ);
             if (LeaderOBJ != null)
                 newLeader = LeaderOBJ.GetComponent<PlayerControllerB>();
@@ -1756,17 +1756,14 @@ namespace LethalMin
                         if (LethalMin.DebugMode)
                             LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found player with  Network Object {newLeader.name}");
                         SyncLeaderServerRpc(leaderNetworkObject, PlayNoticeAnim);
-                        //if(LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Switching states...");
+                        
                         if (targetItem != null)
-                            RemoveFromItemServerRpc();
+                            ReleaseItemServerRpc();
 
 
                         agent.updatePosition = InitialUP;
                         agent.updateRotation = InitalUR;
                         SwitchToBehaviourClientRpc((int)PState.Following);
-                        //if(LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Switched state!");
                     }
                     else
                     {
