@@ -1,25 +1,37 @@
-using LethalCompanyInputUtils.Api;
-using LethalCompanyInputUtils.BindingPathEnums;
 using UnityEngine.InputSystem;
+using System;
 
-public class InputClass : LcInputActions
+public class InputClass
 {
-    [InputAction(KeyboardControl.Num4, Name = "Throw")]
-    public InputAction Throw { get; set; }
+    private static bool _isUtilsLoaded;
+    private static Type _inputClassWithUtilsType;
+    private static object _instance;
 
-    
-    [InputAction(MouseControl.LeftButton, Name = "Whistle")]
-    public InputAction Whistle { get; set; }
+    static InputClass()
+    {
+        _isUtilsLoaded = LethalMin.LethalMin.IsUsingInputUtils();
+        if (_isUtilsLoaded)
+        {
+            _inputClassWithUtilsType = Type.GetType("InputClassWithUtils");
+            if (_inputClassWithUtilsType != null)
+            {
+                _instance = Activator.CreateInstance(_inputClassWithUtilsType);
+            }
+        }
+    }
 
+    public InputAction Throw => GetInputAction("Throw");
+    public InputAction Whistle => GetInputAction("Whistle");
+    public InputAction Dismiss => GetInputAction("Dismiss");
+    public InputAction SwitchLeft => GetInputAction("SwitchLeft");
+    public InputAction SwitchRight => GetInputAction("SwitchRight");
 
-    [InputAction(MouseControl.MiddleButton, Name = "Dismiss")]
-    public InputAction Dismiss { get; set; }
-
-
-    [InputAction(KeyboardControl.Num2, Name = "SwitchL")]
-    public InputAction SwitchLeft { get; set; }
-
-    
-    [InputAction(KeyboardControl.Num3, Name = "SwitchR")]
-    public InputAction SwitchRight { get; set; }
+    private InputAction GetInputAction(string name)
+    {
+        if (_isUtilsLoaded && _instance != null)
+        {
+            return (InputAction)_inputClassWithUtilsType.GetProperty(name).GetValue(_instance);
+        }
+        return new InputAction(name);
+    }
 }

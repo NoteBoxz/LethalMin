@@ -816,7 +816,7 @@ namespace LethalMin
         {
             if (LethalMin.IsUsingModLib())
             {
-                PLLR.Value = saveDataEz.PikminLeftLastRound;
+                PLLR.Value = ezSaveData.PikminLeftLastRound;
             }
             else
             {
@@ -851,7 +851,7 @@ namespace LethalMin
 
         #region Save and Load
         public OnionSaveData saveData = null;
-        public InstancedOnionEzSaveData saveDataEz = new InstancedOnionEzSaveData();
+        public OnionEzSaveData ezSaveData = null;
         public List<int> CollectedOnions;
 
         public string GetSaveFileName()
@@ -882,6 +882,7 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo($"Added {type.TypeName} Onion to collected list.");
             }
         }
+
 
         public void SaveOnionData()
         {
@@ -955,14 +956,15 @@ namespace LethalMin
             IsSaving = false;
             LethalMin.Logger.LogMessage("Onion data saved successfully.");
         }
-
         public void SaveEZOnionData()
         {
             if (!IsServer) { return; }
             IsSaving = true;
             // Load existing save data
+            OnionEzSaveData existingSaveData = LoadExistingEzSaveData();
+            OnionEzSaveData newSaveData = new OnionEzSaveData();
             Onion[] onions = FindObjectsOfType<Onion>();
-            InstancedOnionEzSaveData newSaveData = new InstancedOnionEzSaveData();
+
             // Save collected onions and fused onions
             newSaveData.OnionsCollected = CollectedOnions;
             newSaveData.OnionsFused = FusedOnions;
@@ -993,10 +995,10 @@ namespace LethalMin
                     }
                     LethalMin.Logger.LogInfo($"Saved {item.Value.TypeName} Onion data from current game state. Total Pikmin: {filteredPikmin.Length}");
                 }
-                else if (saveDataEz.OnionsCollected.Contains(onionTypeId))
+                else if (existingSaveData.OnionsCollected.Contains(onionTypeId))
                 {
                     // Use existing data if the onion is not present in the current game
-                    var existingPikminStorage = saveDataEz.PikminStored.FirstOrDefault(storage => storage.ID == onionTypeId);
+                    var existingPikminStorage = existingSaveData.PikminStored.FirstOrDefault(storage => storage.ID == onionTypeId);
                     if (existingPikminStorage.Pikmin != null)
                     {
                         OnionPikmin[] filteredPikmin = existingPikminStorage.Pikmin.Where(p => item.Value.TypesCanHold.Any(t => t.PikminTypeID == p.PikminTypeID)).ToArray();
@@ -1021,7 +1023,7 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo($"Pikmin left: {newSaveData.PikminLeftLastRound} Onion: {onion.GetPikminCount()}");
             }
 
-            newSaveData.ConvertFromInstanced();
+            newSaveData.Save();
 
             IsSaving = false;
             LethalMin.Logger.LogMessage("Onion data saved successfully.");
@@ -1036,7 +1038,12 @@ namespace LethalMin
             }
             return new OnionSaveData();
         }
-
+        private OnionEzSaveData LoadExistingEzSaveData()
+        {
+            OnionEzSaveData NewSaveData = new OnionEzSaveData();
+            NewSaveData.Load();
+            return NewSaveData;
+        }
         public void LoadOnionData()
         {
             if (File.Exists(SaveFilePath))
@@ -1081,15 +1088,17 @@ namespace LethalMin
 
         public void LoadEZOnionData()
         {
-            saveDataEz = OnionEzSaveData.ConvertToInstanced();
-
-            CollectedOnions = saveDataEz.OnionsCollected;
-            FusedOnions = saveDataEz.OnionsFused;
+            //Load ez save
+            ezSaveData = new OnionEzSaveData();
+            ezSaveData.Load();
+            
+            CollectedOnions = ezSaveData.OnionsCollected;
+            FusedOnions = ezSaveData.OnionsFused;
 
             if (FindObjectOfType<DualOnion>() != null)
             {
                 var OnionInstace = FindObjectOfType<DualOnion>();
-                var pikminStorage = saveDataEz.PikminStored.FirstOrDefault(storage => storage.ID == OnionInstace.type.OnionTypeID);
+                var pikminStorage = ezSaveData.PikminStored.FirstOrDefault(storage => storage.ID == OnionInstace.type.OnionTypeID);
                 if (pikminStorage.Pikmin != null)
                 {
                     OnionInstace.SyncPikminListServerRpc(pikminStorage.Pikmin);
@@ -1429,9 +1438,9 @@ namespace LethalMin
                     }
                 }
             }
-            else if (LethalMin.IsUsingModLib() && saveDataEz != null && CollectedOnions.Count > 0)
+            else if (LethalMin.IsUsingModLib() && ezSaveData != null && CollectedOnions.Count > 0)
             {
-                foreach (int onionId in saveDataEz.OnionsCollected)
+                foreach (int onionId in ezSaveData.OnionsCollected)
                 {
                     if (!handledOnions.Contains(onionId) && LethalMin.RegisteredOnionTypes.ContainsKey(onionId))
                     {
@@ -1488,7 +1497,7 @@ namespace LethalMin
                 var pikminStorage = new OnionPikminStorage();
                 if (LethalMin.IsUsingModLib())
                 {
-                    pikminStorage = saveDataEz.PikminStored.FirstOrDefault(storage => storage.ID == onionType.OnionTypeID);
+                    pikminStorage = ezSaveData.PikminStored.FirstOrDefault(storage => storage.ID == onionType.OnionTypeID);
                 }
                 else
                 {
@@ -1547,7 +1556,7 @@ namespace LethalMin
                 {
                     if (LethalMin.IsUsingModLib())
                     {
-                        pikminStorage.Add(saveDataEz.PikminStored.FirstOrDefault(storage => storage.ID == ID));
+                        pikminStorage.Add(ezSaveData.PikminStored.FirstOrDefault(storage => storage.ID == ID));
                     }
                     else
                     {
@@ -1755,7 +1764,7 @@ namespace LethalMin
 
             if (LethalMin.IsUsingModLib())
             {
-                for (int i = 1; i <= saveDataEz.OnionsCollected.Count; i++) // Assuming we're looking for up to 3 spawn points
+                for (int i = 1; i <= ezSaveData.OnionsCollected.Count; i++) // Assuming we're looking for up to 3 spawn points
                 {
                     GameObject spawnPoint = GameObject.Find($"ONION_SPAWN_POINT_{i}");
                     if (spawnPoint != null)

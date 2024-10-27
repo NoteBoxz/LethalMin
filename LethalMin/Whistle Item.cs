@@ -362,6 +362,7 @@ namespace LethalMin
             if (IsServer)
             {
                 maxRaycastDistance = LethalMin.WhisRange;
+                whistleZoneOffset = LethalMin.WhisRange;
                 minWhistleZoneRadius = LethalMin.WhisMin;
                 maxWhistleZoneRadius = LethalMin.WhisMax;
             }

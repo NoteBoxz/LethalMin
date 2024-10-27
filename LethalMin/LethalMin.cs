@@ -20,6 +20,7 @@ using LethalMin.Patches;
 using System.Text;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;
+using System.IO;
 
 namespace LethalMin
 {
@@ -80,7 +81,7 @@ namespace LethalMin
 
         public static List<string> GetParsedAttackBlacklist()
         {
-            if(string.IsNullOrEmpty(AttackBlacklist))
+            if (string.IsNullOrEmpty(AttackBlacklist))
             {
                 return new List<string>();
             }
@@ -88,7 +89,7 @@ namespace LethalMin
         }
         public static List<string> GetParsedPickupBlacklist()
         {
-            if(string.IsNullOrEmpty(PickupBlacklist))
+            if (string.IsNullOrEmpty(PickupBlacklist))
             {
                 return new List<string>();
             }
@@ -268,7 +269,7 @@ namespace LethalMin
             PikminCarryingAvoidanceTypeConfig = Config.Bind("Pikmin", "Carrying Avoidance Type", ObstacleAvoidanceType.NoObstacleAvoidance, "The obstacle avoidance type for Pikmin when carrying items");
             NoPowerSpawn = Config.Bind("Pikmin", "Disable Natual Spawning", false, "Makes it so Pikmin won't spawn in from Lethal Company's spawn system");
             ScanablePikmin = Config.Bind("Pikmin", "Make Pikmin Scanable", true, "Makes it so Pikmin can be scanned");
-            AttackBlackListConfig = Config.Bind("Pikmin", "Attack Blacklist", "Roaming Locust,Manticoil", "The list of enemy names that pikmin can't attack (separated by commas, no spaces in between) (item1,item2,item3...)");
+            AttackBlackListConfig = Config.Bind("Pikmin", "Attack Blacklist", "Docile Locust Bees,Manticoil", "The list of enemy names that pikmin can't attack (separated by commas, no spaces in between) (item1,item2,item3...)");
             PickupBlacklistConfig = Config.Bind("Pikmin", "Pickup Blacklist", "", "The list of item names that pikmin can't pickup (separated by commas, no spaces in between) (item1,item2,item3...)");
 
             LethalSpiderConfig = Config.Bind("Enemy AI", "Make Spider eat Pikmin", true, "Makes Spider eat Pikmin that are too close to the spider");
@@ -1365,27 +1366,86 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
 
             Logger.LogDebug("Patching...");
 
-            // Patch everything except FilterEnemyTypesPatch
-            var types = Assembly.GetExecutingAssembly().GetTypes()
-                .Where(type => type != typeof(FilterEnemyTypesPatch));
+            try
+            {
+                // Get all types from the executing assembly
+                Type[] types = GetTypesWithErrorHandling();
 
-            foreach (var type in types)
-            {
-                Harmony.PatchAll(type);
-            }
+                // Patch everything except FilterEnemyTypesPatch
+                foreach (var type in types.Where(t => t != typeof(FilterEnemyTypesPatch)))
+                {
+                    try
+                    {
+                        Harmony.PatchAll(type);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogError($"Error patching type {type.FullName}: {e.Message}");
+                        if (e.InnerException != null)
+                        {
+                            Logger.LogError($"Inner exception: {e.InnerException.Message}");
+                        }
+                    }
+                }
 
-            // Only patch FilterEnemyTypesPatch if LethalMon is loaded
-            if (IsDependencyLoaded("LethalMon"))  // Replace with actual LethalMon GUID
-            {
-                Logger.LogInfo("LethalMon detected. Patching FilterEnemyTypesPatch.");
-                Harmony.PatchAll(typeof(FilterEnemyTypesPatch));
+                // Only patch FilterEnemyTypesPatch if LethalMon is loaded
+                if (IsDependencyLoaded("LethalMon"))  // Replace with actual LethalMon GUID
+                {
+                    Logger.LogInfo("LethalMon detected. Patching FilterEnemyTypesPatch.");
+                    try
+                    {
+                        Harmony.PatchAll(typeof(FilterEnemyTypesPatch));
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogError($"Error patching FilterEnemyTypesPatch: {e.Message}");
+                        if (e.InnerException != null)
+                        {
+                            Logger.LogError($"Inner exception: {e.InnerException.Message}");
+                        }
+                    }
+                }
+                else
+                {
+                    Logger.LogInfo("LethalMon not detected. Skipping FilterEnemyTypesPatch.");
+                }
             }
-            else
+            catch (Exception e)
             {
-                //Logger.LogInfo("LethalMon not detected. Skipping FilterEnemyTypesPatch.");
+                Logger.LogError($"Error during patching process: {e.Message}");
+                if (e.InnerException != null)
+                {
+                    Logger.LogError($"Inner exception: {e.InnerException.Message}");
+                }
             }
 
             Logger.LogDebug("Finished patching!");
+        }
+
+        private static Type[] GetTypesWithErrorHandling()
+        {
+            try
+            {
+                return Assembly.GetExecutingAssembly().GetTypes();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                Logger.LogError("ReflectionTypeLoadException caught while getting types. Some types will be skipped.");
+                foreach (var loaderException in e.LoaderExceptions)
+                {
+                    Logger.LogError($"Loader Exception: {loaderException.Message}");
+                    if (loaderException is FileNotFoundException fileNotFound)
+                    {
+                        Logger.LogError($"Could not load file: {fileNotFound.FileName}");
+                    }
+                }
+                return e.Types.Where(t => t != null).ToArray();
+            }
+            catch (Exception e)
+            {
+                Logger.LogError($"Unexpected error while getting types: {e.Message}");
+                return new Type[0];
+            }
         }
 
         internal static void Unpatch()
@@ -1399,19 +1459,53 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
 
         private void NetcodePatcher()
         {
-            var types = Assembly.GetExecutingAssembly().GetTypes();
+            Type[] types;
+            try
+            {
+                types = Assembly.GetExecutingAssembly().GetTypes();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                Logger.LogError("ReflectionTypeLoadException caught in NetcodePatcher. Some types will be skipped.");
+                foreach (var loaderException in e.LoaderExceptions)
+                {
+                    Logger.LogError($"Loader Exception: {loaderException.Message}");
+                }
+                types = e.Types.Where(t => t != null).ToArray();
+            }
+
             foreach (var type in types)
             {
-                var methods = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-                foreach (var method in methods)
+                try
                 {
-                    var attributes = method.GetCustomAttributes(typeof(RuntimeInitializeOnLoadMethodAttribute), false);
-                    if (attributes.Length > 0)
+                    var methods = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                    foreach (var method in methods)
                     {
-                        method.Invoke(null, null);
+                        try
+                        {
+                            var attributes = method.GetCustomAttributes(typeof(RuntimeInitializeOnLoadMethodAttribute), false);
+                            if (attributes.Length > 0)
+                            {
+                                method.Invoke(null, null);
+                            }
+                        }
+                        catch (Exception methodException)
+                        {
+                            Logger.LogError($"Error invoking method {method.Name} in type {type.FullName}: {methodException.Message}");
+                            if (methodException.InnerException != null)
+                            {
+                                Logger.LogError($"Inner exception: {methodException.InnerException.Message}");
+                            }
+                        }
                     }
                 }
+                catch (Exception typeException)
+                {
+                    Logger.LogError($"Error processing type {type.FullName}: {typeException.Message}");
+                }
             }
+
+            Logger.LogInfo("NetcodePatcher completed.");
         }
     }
 }

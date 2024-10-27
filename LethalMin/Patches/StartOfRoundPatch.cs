@@ -65,11 +65,6 @@ namespace LethalMin.Patches
                 PikminManager.Instance.SyncEndgameDataServerRpc();
 
             PikminManager.Instance.DespawnSprouts();
-            if (LethalMin.IsUsingModLib())
-            {
-                LethalMin.Logger.LogMessage("Using ModLib, saving EZOnion data.");
-                PikminManager.Instance.SaveEZOnionData();
-            }
         }
 
         [HarmonyPatch("SetShipReadyToLand")]
@@ -77,7 +72,12 @@ namespace LethalMin.Patches
         private static void SaveOnions()
         {
             PikminManager.Instance.FuseOnions();
-            if (!LethalMin.IsUsingModLib())
+            if (LethalMin.IsUsingModLib())
+            {
+                LethalMin.Logger.LogMessage("Using ModLib, saving EZOnion data.");
+                PikminManager.Instance.SaveEZOnionData();
+            }
+            else
             {
                 PikminManager.Instance.SaveOnionData();
             }

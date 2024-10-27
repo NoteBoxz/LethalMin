@@ -11,6 +11,10 @@ namespace LethalMin.Patches
         [HarmonyPostfix]
         public static void DeleteLethalMinSaveFile(DeleteFileButton __instance)
         {
+            if (LethalMin.IsUsingModLib())
+            {
+                return;
+            }
             int fileToDelete = __instance.fileToDelete;
             string lethalMinSaveFileName = GetLethalMinSaveFileName(fileToDelete);
             string lethalMinSaveFilePath = Path.Combine(Application.persistentDataPath, lethalMinSaveFileName);
@@ -27,6 +31,10 @@ namespace LethalMin.Patches
         }
         public static void DeleteLethalMinSaveFile(int fileToDelete)
         {
+            if (LethalMin.IsUsingModLib())
+            {
+                return;
+            }
             string lethalMinSaveFileName = GetLethalMinSaveFileName(fileToDelete);
             string lethalMinSaveFilePath = Path.Combine(Application.persistentDataPath, lethalMinSaveFileName);
 

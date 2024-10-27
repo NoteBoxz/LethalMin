@@ -10,6 +10,7 @@ using Unity.Netcode.Components;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Events;
 using LethalMon.Behaviours;
+using LethalModDataLib.Helpers;
 
 namespace LethalMin
 {
@@ -331,6 +332,7 @@ namespace LethalMin
 
             StartCoroutine(WaitToCheckForMineshaft());
 
+            LethalMin.Logger.LogInfo(GameNetworkManager.Instance.currentSaveFileName);
             yield return null;  // Wait another frame
         }
 

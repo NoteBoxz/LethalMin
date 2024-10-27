@@ -4,6 +4,8 @@ using Unity.Netcode;
 using Newtonsoft.Json;
 using LethalModDataLib.Attributes;
 using LethalModDataLib.Enums;
+using LethalModDataLib.Base;
+using System.Reflection;
 namespace LethalMin
 {
     [Serializable]
@@ -19,51 +21,107 @@ namespace LethalMin
         public int PikminLeftLastRound;
     }
 
-    public static class OnionEzSaveData
+    public class OnionEzSaveData
     {
-        //EzSave
-        [ModData(SaveWhen.OnAutoSave, LoadWhen.OnLoad, SaveLocation.CurrentSave, ResetWhen.OnGameOver)]
-        public static List<int> OnionsCollected = new List<int>();
+        private static bool _isUtilsLoaded;
+        private static Type _SaveDataWithLibType;
+        private static object _instance;
 
+        // Local storage for when mod library is not loaded
+        private List<int> _onionsCollected = new List<int>();
+        private Dictionary<int, int[]> _onionsFused = new Dictionary<int, int[]>();
+        private List<OnionPikminStorage> _pikminStored = new List<OnionPikminStorage>();
+        private int _pikminLeftLastRound;
 
-        [ModData(SaveWhen.OnAutoSave, LoadWhen.OnLoad, SaveLocation.CurrentSave, ResetWhen.OnGameOver)]
-        public static Dictionary<int, int[]> OnionsFused = new Dictionary<int, int[]>();
-
-
-        [ModData(SaveWhen.OnAutoSave, LoadWhen.OnLoad, SaveLocation.CurrentSave, ResetWhen.OnGameOver)]
-        public static List<OnionPikminStorage> PikminStored = new List<OnionPikminStorage>();
-
-
-        [ModData(SaveWhen.OnAutoSave, LoadWhen.OnLoad, SaveLocation.CurrentSave, ResetWhen.OnGameOver)]
-        public static int PikminLeftLastRound;
-
-        public static InstancedOnionEzSaveData ConvertToInstanced()
+        static OnionEzSaveData()
         {
-            return new InstancedOnionEzSaveData()
+            _isUtilsLoaded = LethalMin.IsUsingModLib();
+            if (_isUtilsLoaded)
             {
-                OnionsCollected = OnionsCollected,
-                OnionsFused = OnionsFused,
-                PikminStored = PikminStored,
-                PikminLeftLastRound = PikminLeftLastRound
-            };
+                _SaveDataWithLibType = Type.GetType("LethalMin.LethalMinSaveDataWithLib");
+                if (_SaveDataWithLibType != null)
+                {
+                    _instance = Activator.CreateInstance(_SaveDataWithLibType);
+                }
+            }
         }
-    }
-    public class InstancedOnionEzSaveData
-    {
-        public List<int> OnionsCollected = new List<int>();
 
-        public Dictionary<int, int[]> OnionsFused = new Dictionary<int, int[]>();
-
-        public List<OnionPikminStorage> PikminStored = new List<OnionPikminStorage>();
-
-        public int PikminLeftLastRound;
-
-        public void ConvertFromInstanced()
+        public List<int> OnionsCollected
         {
-            OnionEzSaveData.OnionsCollected = OnionsCollected;
-            OnionEzSaveData.OnionsFused = OnionsFused;
-            OnionEzSaveData.PikminStored = PikminStored;
-            OnionEzSaveData.PikminLeftLastRound = PikminLeftLastRound;
+            get => GetData<List<int>>("OnionsCollected");
+            set => SetData("OnionsCollected", value);
+        }
+
+        public Dictionary<int, int[]> OnionsFused
+        {
+            get => GetData<Dictionary<int, int[]>>("OnionsFused");
+            set => SetData("OnionsFused", value);
+        }
+
+        public List<OnionPikminStorage> PikminStored
+        {
+            get => GetData<List<OnionPikminStorage>>("PikminStored");
+            set => SetData("PikminStored", value);
+        }
+
+        public int PikminLeftLastRound
+        {
+            get => GetData<int>("PikminLeftLastRound");
+            set => SetData("PikminLeftLastRound", value);
+        }
+
+        private T GetData<T>(string propertyName)
+        {
+            if (_isUtilsLoaded && _instance != null)
+            {
+                PropertyInfo property = _SaveDataWithLibType.GetProperty(propertyName);
+                return (T)property.GetValue(_instance);
+            }
+            else
+            {
+                return (T)this.GetType().GetField($"_{propertyName.ToLower()}", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
+            }
+        }
+
+        private void SetData<T>(string propertyName, T value)
+        {
+            if (_isUtilsLoaded && _instance != null)
+            {
+                PropertyInfo property = _SaveDataWithLibType.GetProperty(propertyName);
+                property.SetValue(_instance, value);
+            }
+            else
+            {
+                this.GetType().GetField($"_{propertyName.ToLower()}", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(this, value);
+            }
+        }
+
+        public void Save()
+        {
+            if (_isUtilsLoaded && _instance != null)
+            {
+                MethodInfo saveMethod = _SaveDataWithLibType.GetMethod("Save");
+                saveMethod.Invoke(_instance, null);
+            }
+            else
+            {
+                // Implement local save logic here if needed
+                LethalMin.Logger.LogInfo("Local save not implemented");
+            }
+        }
+
+        public void Load()
+        {
+            if (_isUtilsLoaded && _instance != null)
+            {
+                MethodInfo loadMethod = _SaveDataWithLibType.GetMethod("Load");
+                loadMethod.Invoke(_instance, null);
+            }
+            else
+            {
+                // Implement local load logic here if needed
+                LethalMin.Logger.LogInfo("Local load not implemented");
+            }
         }
     }
 
