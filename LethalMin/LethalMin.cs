@@ -722,7 +722,7 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(PlayerNR, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SpeedMultiplierConfig, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(DamageMultiplierConfig, false));
-            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(CanShipEjectFromShip, true));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(CanShipEjectFromShip, false));
 
 
             // Lethal Mon            

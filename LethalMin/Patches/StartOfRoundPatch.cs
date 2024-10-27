@@ -30,7 +30,7 @@ namespace LethalMin.Patches
             GameObject.FindAnyObjectByType<PikminHUD>().RefreshLeaderScript();
         }
 
-        [HarmonyPatch("FirePlayersAfterDeadlineClientRpc")]
+        [HarmonyPatch("EndPlayersFiredSequenceClientRpc")]
         [HarmonyPostfix]
         public static void PurgeSave()
         {
@@ -38,6 +38,7 @@ namespace LethalMin.Patches
             {
                 if (LethalMin.IsUsingModLib())
                 {
+                    LethalMin.Logger.LogInfo($"Purging save data.");
                     OnionEzSaveData NewSaveData = new OnionEzSaveData();
                     NewSaveData.Load();
                     NewSaveData.OnionsCollected = new List<int>();
@@ -48,6 +49,7 @@ namespace LethalMin.Patches
                 }
                 else
                 {
+                    LethalMin.Logger.LogInfo($"Purging save data. Save file number: {GameNetworkManager.Instance.saveFileNum}");
                     DeleteFileButtonPatch.DeleteLethalMinSaveFile(GameNetworkManager.Instance.saveFileNum);
                 }
             }
