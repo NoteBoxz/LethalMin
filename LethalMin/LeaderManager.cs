@@ -324,11 +324,21 @@ namespace LethalMin
 
         private PikminAI GetNearestPikminOfType(PikminType type)
         {
-            PikminAI nearest = null;
+            PikminAI nearest = null!;
             float nearestDistance = float.MaxValue;
+
+            if(followingPikmin == null || followingPikmin.Count == 0)
+            {
+                return null!;
+            }
 
             foreach (PikminAI pikmin in followingPikmin)
             {
+                if(pikmin == null || pikmin.PminType == null)
+                {
+                    LethalMin.Logger.LogWarning("PikminAI or PikminType is null!");
+                    continue;
+                }
                 if (pikmin.PminType == type)
                 {
                     float distance = Vector3.Distance(Controller.transform.position, pikmin.transform.position);
