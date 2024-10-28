@@ -1,9 +1,8 @@
 (0.1)
-Fix non whistle bug.
+Fix non whistle bug. Fix non throwing bug.
 Redo Item Pathfinding system.
 Fix remenats issue.
 Fix pikmin pathing to seemingly random positions?
-Fix non throwing bug. 
 Fix bee errors.
 Fix hoarder bug errors.
 (0.2)

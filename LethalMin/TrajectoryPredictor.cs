@@ -130,8 +130,37 @@ namespace LethalMin
 
         public void SetTrajectoryVisible(bool visible)
         {
-            trajectoryLine.enabled = visible;
-            hitMarker.gameObject.SetActive(visible);
+            if (trajectoryLine == null)
+            {
+                if (GetComponent<LineRenderer>() != null)
+                {
+                    trajectoryLine = GetComponent<LineRenderer>();
+                    SetupLineRenderer();
+                    LethalMin.Logger.LogWarning("TrajectoryPredictor: LineRenderer was not set. assinging it in the LeaderManager.");
+                }
+                else
+                {
+                    LethalMin.Logger.LogError("TrajectoryPredictor: LineRenderer not found. Cannot set trajectory visibility.");
+                }
+            }
+            else
+            {
+                trajectoryLine.enabled = visible;
+            }
+            // add the same checks for hitMarker
+            if (hitMarker == null)
+            {
+                hitMarker = Instantiate(AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/Target.prefab")).transform;
+                if (LethalMin.MeshWrapping)
+                {
+                    hitMarker.transform.Find("Plane").gameObject.AddComponent<MeshGroundWrapper>();
+                }
+                LethalMin.Logger.LogWarning("TrajectoryPredictor: Hit marker was not set. assinging it in the LeaderManager.");
+            }
+            else
+            {
+                hitMarker.gameObject.SetActive(visible);
+            }
             //LethalMin.Logger.LogInfo($"Trajectory visibility set to: {visible}"); // Add this line for debugging
         }
     }

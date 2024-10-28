@@ -405,10 +405,6 @@ namespace LethalMin
             {
                 StopCoroutine(tweenCoroutine);
             }
-            if (noticeZone != null && IsServer)
-            {
-                noticeZone.NetworkObject.Despawn(true);
-            }
             if (whistleAction != null)
             {
                 whistleAction.Disable();
@@ -418,6 +414,10 @@ namespace LethalMin
             {
                 removeAllPikminAction.Disable();
                 removeAllPikminAction.Dispose();
+            }
+            if (noticeZone != null && IsServer)
+            {
+                noticeZone.NetworkObject.Despawn(true);
             }
         }
     }

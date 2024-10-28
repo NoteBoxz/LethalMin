@@ -76,17 +76,59 @@ namespace LethalMin
         [ClientRpc]
         private void SyncNoticeZoneClientRpc(NetworkObjectReference noticeZoneRef, NetworkObjectReference leaderRef)
         {
-            if (noticeZoneRef.TryGet(out NetworkObject noticeZoneObject) && leaderRef.TryGet(out NetworkObject leaderObject))
+            try
             {
-                NoticeZone noticeZone = noticeZoneObject.GetComponent<NoticeZone>();
-                LeaderManager leader = leaderObject.GetComponent<LeaderManager>();
-                if (noticeZone != null)
+                if (!noticeZoneRef.TryGet(out NetworkObject noticeZoneObject))
                 {
-                    leader.noticeZoneInstance = noticeZone;
-                    noticeZone.leader = leader.Controller;
-                    noticeZone.name = $"{leader.Controller.playerUsername}'s NoticeZone";
-                    Destroy(noticeZone.GetComponent<MeshRenderer>());
+                    LethalMin.Logger.LogError("Failed to get NoticeZone NetworkObject");
+                    return;
                 }
+
+                if (!leaderRef.TryGet(out NetworkObject leaderObject))
+                {
+                    LethalMin.Logger.LogError("Failed to get Leader NetworkObject");
+                    return;
+                }
+
+                NoticeZone noticeZone = noticeZoneObject.GetComponent<NoticeZone>();
+                if (noticeZone == null)
+                {
+                    LethalMin.Logger.LogError("NoticeZone component not found on NetworkObject");
+                    return;
+                }
+
+                LeaderManager leader = leaderObject.GetComponent<LeaderManager>();
+                if (leader == null)
+                {
+                    LethalMin.Logger.LogError("LeaderManager component not found on NetworkObject");
+                    return;
+                }
+
+                if (leader.Controller == null)
+                {
+                    LethalMin.Logger.LogError("Controller is null on LeaderManager");
+                    return;
+                }
+
+                leader.noticeZoneInstance = noticeZone;
+                noticeZone.leader = leader.Controller;
+                noticeZone.name = $"{leader.Controller.playerUsername}'s NoticeZone";
+
+                MeshRenderer meshRenderer = noticeZone.GetComponent<MeshRenderer>();
+                if (meshRenderer != null)
+                {
+                    Destroy(meshRenderer);
+                }
+                else
+                {
+                    LethalMin.Logger.LogWarning("MeshRenderer not found on NoticeZone");
+                }
+
+                LethalMin.Logger.LogInfo("SyncNoticeZoneClientRpc completed successfully");
+            }
+            catch (Exception e)
+            {
+                LethalMin.Logger.LogError($"Exception in SyncNoticeZoneClientRpc: {e.Message}\nStack Trace: {e.StackTrace}");
             }
         }
 

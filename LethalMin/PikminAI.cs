@@ -696,7 +696,10 @@ namespace LethalMin
 
             agent.stoppingDistance = 0;
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
-            agent.ResetPath();
+            if (agent.isOnNavMesh)
+            {
+                agent.ResetPath();
+            }
             agent.velocity = Vector3.zero;
 
             NoticeColider.name = "WhistleDetection";
@@ -1597,8 +1600,8 @@ namespace LethalMin
             }
             EnemyAttacking = null;
             SwitchToBehaviourClientRpc((int)PState.Following);
-            //if(LethalMin.DebugMode)
-            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Switched state!");
+            if (LethalMin.DebugMode)
+                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Switched state!");
         }
 
         [ServerRpc]
@@ -1756,7 +1759,7 @@ namespace LethalMin
                         if (LethalMin.DebugMode)
                             LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found player with  Network Object {newLeader.name}");
                         SyncLeaderServerRpc(leaderNetworkObject, PlayNoticeAnim);
-                        
+
                         if (targetItem != null)
                             ReleaseItemServerRpc();
 
@@ -3119,7 +3122,8 @@ namespace LethalMin
         [ClientRpc]
         public void SetComponentsForAimingClientRpc(bool isAiming)
         {
-            LethalMin.Logger.LogInfo(isAiming);
+            if (LethalMin.DebugMode)
+                LethalMin.Logger.LogInfo(isAiming);
             if (isAiming)
             {
                 isHeldOrThrown = true;
@@ -3135,7 +3139,8 @@ namespace LethalMin
                 rb.interpolation = RigidbodyInterpolation.Interpolate;
                 rb.Sleep();
                 Pcollider.enabled = false;
-                LethalMin.Logger.LogInfo("Set Trigger");
+                if (LethalMin.DebugMode)
+                    LethalMin.Logger.LogInfo("Set Trigger");
                 SetTriggerClientRpc("Aim");
                 PlayAnimClientRpc("Hold");
                 ReqeustHoldSFXClientRpc();
