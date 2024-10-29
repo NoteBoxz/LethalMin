@@ -2796,7 +2796,7 @@ namespace LethalMin
         private bool IsPathPossible(Vector3 destination)
         {
             NavMeshPath path = new NavMeshPath();
-            if (NavMesh.CalculatePath(transform.position, destination, agent.areaMask, path))
+            if (NavMesh.CalculatePath(agent.nextPosition, destination, agent.areaMask, path))
             {
                 if (path.status == NavMeshPathStatus.PathComplete)
                 {
@@ -2810,7 +2810,7 @@ namespace LethalMin
             }
             else
             {
-                LethalMin.Logger.LogWarning($"({uniqueDebugId}) Failed to calculate path to destination: {destination}");
+                LethalMin.Logger.LogWarning($"({uniqueDebugId}) Failed to calculate path to destination: {destination} from {agent.nextPosition}");
                 return false;
             }
         }
