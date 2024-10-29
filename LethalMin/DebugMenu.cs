@@ -26,7 +26,7 @@ namespace LethalMin
         private void Update()
         {
             Vector3 pos = Vector3.zero;
-            if(StartOfRound.Instance.localPlayerController != null)
+            if (StartOfRound.Instance.localPlayerController != null)
             {
                 pos = StartOfRound.Instance.localPlayerController.transform.position;
             }
@@ -154,11 +154,13 @@ namespace LethalMin
                             foreach (var item in instance.items)
                             {
                                 string value = "N/A";
+                                object rawValue = null;
                                 try
                                 {
-                                    value = item.field != null
-                                        ? (item.field.GetValue(item.target)?.ToString() ?? "null")
-                                        : (item.property.GetValue(item.target)?.ToString() ?? "null");
+                                    rawValue = item.field != null
+                                        ? item.field.GetValue(item.target)
+                                        : item.property.GetValue(item.target);
+                                    value = rawValue?.ToString() ?? "null";
                                 }
                                 catch (Exception e)
                                 {
@@ -167,6 +169,11 @@ namespace LethalMin
 
                                 GUI.Label(new Rect(10, classYOffset, MenuWidth - 90, 20), $"{item.name}: {value}");
                                 classYOffset += 25;
+
+                                if (rawValue != null && (rawValue is System.Collections.IEnumerable) && !(rawValue is string))
+                                {
+                                    RenderListOrArray(rawValue, ref classYOffset, MenuWidth - 90);
+                                }
                             }
 
                             classYOffset += 10;
@@ -192,6 +199,29 @@ namespace LethalMin
                 height += 30 + (instance.items.Count * 25) + 10;
             }
             return height;
+        }
+        private void RenderListOrArray(object value, ref float classYOffset, float width)
+        {
+            if (value == null) return;
+
+            var enumerable = value as System.Collections.IEnumerable;
+            if (enumerable == null) return;
+
+            int index = 0;
+            foreach (var item in enumerable)
+            {
+                GUI.Label(new Rect(20, classYOffset, width - 100, 20), $"[{index}]: {item?.ToString() ?? "null"}");
+                classYOffset += 25;
+                index++;
+
+                // Limit the number of items displayed to prevent overwhelming the UI
+                if (index >= 10)
+                {
+                    GUI.Label(new Rect(20, classYOffset, width - 100, 20), "...");
+                    classYOffset += 25;
+                    break;
+                }
+            }
         }
     }
 }

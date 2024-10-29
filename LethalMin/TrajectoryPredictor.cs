@@ -132,36 +132,54 @@ namespace LethalMin
         {
             if (trajectoryLine == null)
             {
-                if (GetComponent<LineRenderer>() != null)
+                if (GetComponent<LineRenderer>() == null)
                 {
-                    trajectoryLine = GetComponent<LineRenderer>();
-                    SetupLineRenderer();
-                    LethalMin.Logger.LogWarning("TrajectoryPredictor: LineRenderer was not set. assinging it in the LeaderManager.");
+                    LethalMin.Logger.LogWarning("TrajectoryPredictor: LineRenderer not found. Cannot set trajectory visibility.");
                 }
                 else
                 {
-                    LethalMin.Logger.LogError("TrajectoryPredictor: LineRenderer not found. Cannot set trajectory visibility.");
+                    trajectoryLine = GetComponent<LineRenderer>();
+                    SetupLineRenderer();
+                    LethalMin.Logger.LogWarning("TrajectoryPredictor: LineRenderer was not set. Assigning it now.");
                 }
             }
             else
             {
                 trajectoryLine.enabled = visible;
             }
-            // add the same checks for hitMarker
+
             if (hitMarker == null)
             {
-                hitMarker = Instantiate(AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/Target.prefab")).transform;
-                if (LethalMin.MeshWrapping)
+                GameObject hitMarkerPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/Target.prefab");
+                if (hitMarkerPrefab == null)
                 {
-                    hitMarker.transform.Find("Plane").gameObject.AddComponent<MeshGroundWrapper>();
+                    LethalMin.Logger.LogWarning("TrajectoryPredictor: Hit marker prefab not found. Cannot set hit marker visibility.");
                 }
-                LethalMin.Logger.LogWarning("TrajectoryPredictor: Hit marker was not set. assinging it in the LeaderManager.");
+                else
+                {
+                    hitMarker = Instantiate(hitMarkerPrefab).transform;
+                }
+                if (LethalMin.MeshWrapping && hitMarker != null)
+                {
+                    Transform planeTransform = hitMarker.Find("Plane");
+                    if (planeTransform != null)
+                    {
+                        planeTransform.gameObject.AddComponent<MeshGroundWrapper>();
+                    }
+                    else
+                    {
+                        LethalMin.Logger.LogWarning("TrajectoryPredictor: 'Plane' not found in hit marker. MeshGroundWrapper not added.");
+                    }
+                }
+                LethalMin.Logger.LogWarning("TrajectoryPredictor: Hit marker was not set. Assigning it now.");
             }
             else
             {
                 hitMarker.gameObject.SetActive(visible);
             }
-            //LethalMin.Logger.LogInfo($"Trajectory visibility set to: {visible}"); // Add this line for debugging
+
+            //if (LethalMin.DebugMode)
+                //LethalMin.Logger.LogInfo($"Trajectory visibility set to: {visible}");
         }
     }
 }

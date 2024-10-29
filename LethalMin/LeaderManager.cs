@@ -12,33 +12,33 @@ using Unity.Netcode.Components;
 
 namespace LethalMin
 {
-    public class LeaderManager : NetworkBehaviour
+    public class LeaderManager : NetworkBehaviour, IDebuggable
     {
         #region Fields and Properties
-        public PlayerControllerB Controller { get; set; }
-        public List<PikminAI> followingPikmin = new List<PikminAI>();
-        private TrajectoryPredictor trajectoryPredictor;
+        [IDebuggable.Debug] public PlayerControllerB Controller { get; set; }
+        [IDebuggable.Debug] public List<PikminAI> followingPikmin = new List<PikminAI>();
+        [IDebuggable.Debug] private TrajectoryPredictor trajectoryPredictor;
 
-        private PikminAI selectedPikmin;
-        private bool isAiming;
+        [IDebuggable.Debug] private PikminAI selectedPikmin;
+        [IDebuggable.Debug] private bool isAiming;
         private bool isPlayer;
-        private bool isHoldingThrowButton = false;
+        [IDebuggable.Debug] private bool isHoldingThrowButton = false;
         private float currentThrowForce;
 
         private InputAction throwAction;
 
         private InputAction switchPikminTypeAction, switchPikminPrevTypeAction;
 
-        private Transform throwOrigin;
-        private Transform holdPosition;
-        private Camera mainCamera;
+        [IDebuggable.Debug] private Transform throwOrigin;
+        [IDebuggable.Debug] private Transform holdPosition;
+        [IDebuggable.Debug] private Camera mainCamera;
         public List<PikminType> AvailableTypes { get; private set; } = new List<PikminType>();
-        public int CurTypeSelectionIndex { get; private set; } = 0;
+        [IDebuggable.Debug] public int CurTypeSelectionIndex { get; private set; } = 0;
         [SerializeField] private float columnSpacing = 1.5f;
         [SerializeField] private float rowSpacing = 0.5f;
         [SerializeField] private int pikminPerRow = 5;
         private Dictionary<PikminType, List<PikminAI>> pikminByType = new Dictionary<PikminType, List<PikminAI>>();
-        private NoticeZone noticeZoneInstance;
+        [IDebuggable.Debug] private NoticeZone noticeZoneInstance;
         #endregion
 
         #region Initialization
@@ -53,6 +53,8 @@ namespace LethalMin
             InitializeInputAction();
             StartCoroutine(CheckBooleanValueCoroutine());
             InitalizeNoticeZonesServerRpc(new NetworkObjectReference(NetworkObject));
+            if (Controller != null)
+                name = $"LeaderManager_{Controller.playerUsername}";
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -194,28 +196,36 @@ namespace LethalMin
                 {
                     throwAction = new InputAction("Throw");
                     throwAction.AddBinding(LethalMin.ThrowAction);
+                    throwAction.performed -= OnThrowStarted;
+                    throwAction.canceled -= OnThrowCanceled;
                     throwAction.performed += OnThrowStarted;
                     throwAction.canceled += OnThrowCanceled;
                     throwAction.Enable();
                     switchPikminTypeAction = new InputAction("SwitchPikminType");
                     switchPikminTypeAction.AddBinding(LethalMin.SwitchForwardAction);
+                    switchPikminTypeAction.canceled -= OnSwitchPikminType;
                     switchPikminTypeAction.canceled += OnSwitchPikminType;
                     switchPikminTypeAction.Enable();
                     switchPikminPrevTypeAction = new InputAction("SwitchPikminTypeBack");
                     switchPikminPrevTypeAction.AddBinding(LethalMin.SwitchBackwawrdsAction);
+                    switchPikminPrevTypeAction.canceled -= OnSwitchPrevPikminType;
                     switchPikminPrevTypeAction.canceled += OnSwitchPrevPikminType;
                     switchPikminPrevTypeAction.Enable();
                 }
                 else
                 {
                     throwAction = LethalMin.InputClassInstace.Throw;
+                    throwAction.performed -= OnThrowStarted;
+                    throwAction.canceled -= OnThrowCanceled;
                     throwAction.performed += OnThrowStarted;
                     throwAction.canceled += OnThrowCanceled;
                     throwAction.Enable();
                     switchPikminTypeAction = LethalMin.InputClassInstace.SwitchRight;
+                    switchPikminTypeAction.canceled -= OnSwitchPikminType;
                     switchPikminTypeAction.canceled += OnSwitchPikminType;
                     switchPikminTypeAction.Enable();
                     switchPikminPrevTypeAction = LethalMin.InputClassInstace.SwitchLeft;
+                    switchPikminPrevTypeAction.canceled -= OnSwitchPrevPikminType;
                     switchPikminPrevTypeAction.canceled += OnSwitchPrevPikminType;
                     switchPikminPrevTypeAction.Enable();
                 }
@@ -327,14 +337,15 @@ namespace LethalMin
             PikminAI nearest = null!;
             float nearestDistance = float.MaxValue;
 
-            if(followingPikmin == null || followingPikmin.Count == 0)
+            if (followingPikmin == null || followingPikmin.Count == 0)
             {
+                LethalMin.Logger.LogWarning("FollowingPikmin list is empty!");
                 return null!;
             }
 
             foreach (PikminAI pikmin in followingPikmin)
             {
-                if(pikmin == null || pikmin.PminType == null)
+                if (pikmin == null || pikmin.PminType == null)
                 {
                     LethalMin.Logger.LogWarning("PikminAI or PikminType is null!");
                     continue;
@@ -372,7 +383,7 @@ namespace LethalMin
             }
             else
             {
-                //LethalMin.Logger.LogWarning("No Pikmin available to throw or NetworkObject is null.");
+                LethalMin.Logger.LogWarning("No Pikmin available to throw or NetworkObject is null.");
                 isHoldingThrowButton = false;
                 isAiming = false;
             }
@@ -398,6 +409,11 @@ namespace LethalMin
             }
             isHoldingThrowButton = false;
             isAiming = false;
+            if (trajectoryPredictor == null)
+            {
+                LethalMin.Logger.LogWarning("Trjectory Predictor is null!");
+                return;
+            }
             trajectoryPredictor.SetTrajectoryVisible(false);
         }
 
@@ -450,6 +466,11 @@ namespace LethalMin
                     LethalMin.Logger.LogFatal(gameObject.name + " hates pikmin :(");
                     Destroy(gameObject);
                 }
+            }
+            if (followingPikmin.Count > 0 && throwAction != null && (!throwAction.enabled || !switchPikminTypeAction.enabled || !switchPikminTypeAction.enabled))
+            {
+                LethalMin.Logger.LogWarning($"({name}) Re-enabling actions");
+                InitializeInputAction();
             }
         }
 

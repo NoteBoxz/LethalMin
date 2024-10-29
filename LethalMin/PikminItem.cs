@@ -44,7 +44,7 @@ namespace LethalMin
                     // Parent has been destroyed, despawn this NetworkObject
                     if (IsServer)
                         NetworkObject.Despawn(true);
-                    LethalMin.Logger.LogInfo($"Pikminitem despawned due to destroyed parent");
+                    LethalMin.Logger.LogInfo($"Pikminitem {name} despawned due to destroyed parent");
                 }
             }
         }
@@ -87,7 +87,7 @@ namespace LethalMin
                 {
                     Destroy(Counter);
                     NetworkObject.Despawn(true);
-                    Destroy(gameObject);
+                    return;
                 }
                 CheckIfGrabbed();
             }
@@ -124,8 +124,17 @@ namespace LethalMin
             }
             else if (isParented && IsServer)
             {
-                Vector3 targetFloorPosition = RoundManager.Instance.RandomlyOffsetPosition(Root.GetItemFloorPosition(), 1.2f, 0.4f);
-                UnparentItemServerRpc(targetFloorPosition);
+                if (Root != null && RoundManager.Instance != null)
+                {
+                    Vector3 targetFloorPosition = RoundManager.Instance.RandomlyOffsetPosition(Root.GetItemFloorPosition(), 1.2f, 0.4f);
+                    UnparentItemServerRpc(targetFloorPosition);
+                }
+                else
+                {
+                    // Handle the case where Root or RoundManager.Instance is null
+                    LethalMin.Logger.LogWarning("Root or RoundManager.Instance is null in PikminItem.Update()");
+                    // You might want to set a default position or skip the unparenting in this case
+                }
             }
             if (!isInitialized || Root == null)
             {
@@ -162,6 +171,13 @@ namespace LethalMin
                 }
                 SFXInterval = 0.5f;
             }
+        }
+
+        [ClientRpc]
+        public void DestoryCounterOnClientRpc()
+        {
+            if (Counter != null)
+                Destroy(Counter);
         }
         #endregion
 

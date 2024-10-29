@@ -63,24 +63,34 @@ namespace LethalMin
             if (!LethalMin.IsUsingInputUtils())
             {
                 whistleAction = new InputAction("Whistle", InputActionType.Button, LethalMin.WhisleAction);
+                whistleAction.started -= ctx => OnWhistleStarted();
+                whistleAction.performed -= ctx => OnWhistlePerformed();
+                whistleAction.canceled -= ctx => OnWhistleCanceled();
+
                 whistleAction.started += ctx => OnWhistleStarted();
                 whistleAction.performed += ctx => OnWhistlePerformed();
                 whistleAction.canceled += ctx => OnWhistleCanceled();
                 whistleAction.Enable();
 
                 removeAllPikminAction = new InputAction("Dismiss", InputActionType.Button, LethalMin.DismissAction);
+                removeAllPikminAction.started -= ctx => OnDismiss();
                 removeAllPikminAction.started += ctx => OnDismiss();
                 removeAllPikminAction.Enable();
             }
             else
             {
                 whistleAction = LethalMin.InputClassInstace.Whistle;
+                whistleAction.started -= ctx => OnWhistleStarted();
+                whistleAction.performed -= ctx => OnWhistlePerformed();
+                whistleAction.canceled -= ctx => OnWhistleCanceled();
+
                 whistleAction.started += ctx => OnWhistleStarted();
                 whistleAction.performed += ctx => OnWhistlePerformed();
                 whistleAction.canceled += ctx => OnWhistleCanceled();
                 whistleAction.Enable();
 
                 removeAllPikminAction = LethalMin.InputClassInstace.Dismiss;
+                removeAllPikminAction.started -= ctx => OnDismiss();
                 removeAllPikminAction.started += ctx => OnDismiss();
                 removeAllPikminAction.Enable();
             }
@@ -384,6 +394,11 @@ namespace LethalMin
             else if (isWhistling && (!isHeld || isPocketed))
             {
                 SetWhistlingStateServerRpc(false);
+            }
+            if (isHeld && (!whistleAction.enabled || !removeAllPikminAction.enabled))
+            {
+                LethalMin.Logger.LogWarning("WhistleItem: Input actions were disabled, re-enabling them");
+                SetupInputActions();
             }
         }
 

@@ -182,15 +182,18 @@ public class HUDManagerPatch
                     break;
                 case 1:
                     Raised2.text = $"{raisedCount}";
-                    PminPlayerSlot2.SetActive(StartOfRound.Instance.allPlayerScripts[i].isPlayerControlled);
+                    PminPlayerSlot2.SetActive(StartOfRound.Instance.allPlayerScripts[i].isPlayerControlled ||
+                     !StartOfRound.Instance.allPlayerScripts[i].isPlayerControlled && StartOfRound.Instance.allPlayerScripts[i].isPlayerDead);
                     break;
                 case 2:
                     Raised3.text = $"{raisedCount}";
-                    PminPlayerSlot3.SetActive(StartOfRound.Instance.allPlayerScripts[i].isPlayerControlled);
+                    PminPlayerSlot3.SetActive(StartOfRound.Instance.allPlayerScripts[i].isPlayerControlled ||
+                     !StartOfRound.Instance.allPlayerScripts[i].isPlayerControlled && StartOfRound.Instance.allPlayerScripts[i].isPlayerDead);
                     break;
                 case 3:
                     Raised4.text = $"{raisedCount}";
-                    PminPlayerSlot4.SetActive(StartOfRound.Instance.allPlayerScripts[i].isPlayerControlled);
+                    PminPlayerSlot4.SetActive(StartOfRound.Instance.allPlayerScripts[i].isPlayerControlled ||
+                     !StartOfRound.Instance.allPlayerScripts[i].isPlayerControlled && StartOfRound.Instance.allPlayerScripts[i].isPlayerDead);
                     break;
             }
         }
