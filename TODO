@@ -1,11 +1,10 @@
 (0.1)
-Fix non whistle bug. Fix non throwing bug.
 Redo Item Pathfinding system.
 Fix remenats issue.
-Fix pikmin pathing to seemingly random positions?
+Fix Client Side dropped inputs
 Fix bee errors.
 Fix hoarder bug errors.
-Fix Client Side dropped inputs
+Fix pikmin pathing to seemingly random positions?
 (0.2)
 Make onions produce sprouts
 Make API mod

@@ -28,6 +28,47 @@ namespace LethalMin
         Posisened,
     }
 
+    public struct ItemTarget
+    {
+        public string Name;
+        public bool relivent;
+        public int Score;
+        public Transform Transform;
+        public Vector3 Position;
+
+        public ItemTarget(string name, Vector3 position, int score)
+        {
+            Name = name;
+            Position = position;
+            Score = score;
+            Transform = null!;
+            relivent = true;
+        }
+
+        public ItemTarget(string name, Transform transform, int score)
+        {
+            Name = name;
+            Transform = transform;
+            Score = score;
+            Position = Vector3.zero;
+            relivent = true;
+        }
+
+
+        public bool CanPathToOnNavMesh()
+        {
+            NavMeshPath path;
+            path = new NavMeshPath();
+            return NavMesh.CalculatePath(Position, Transform.position, NavMesh.AllAreas, path) && path.status == NavMeshPathStatus.PathComplete;
+        }
+        public Vector3 GetPos()
+        {
+            if (Transform != null)
+                return Transform.position;
+            return Position;
+        }
+    }
+
     public class PikminAI : EnemyAI, IDebuggable
     {
         #region Fields and Properties
@@ -288,7 +329,7 @@ namespace LethalMin
 
             // Defer some initializations
             StartCoroutine(LateInitialize());
-
+            StartCoroutine(ShowMeshFailSafe());
         }
         private IEnumerator LateInitialize()
         {
@@ -333,6 +374,16 @@ namespace LethalMin
             StartCoroutine(WaitToCheckForMineshaft());
 
             yield return null;  // Wait another frame
+        }
+        private IEnumerator ShowMeshFailSafe()
+        {
+            yield return new WaitForSeconds(3.5f);
+            if (Mesh == null)
+            {
+                LethalMin.Logger.LogWarning($"Pikmin {uniqueDebugId} has no mesh, this should not happen");
+                Mesh = transform.Find("PikminMesh").gameObject;
+            }
+            ToggleMeshVisibility(true);
         }
 
         IEnumerator WaitToCheckForMineshaft()
@@ -2379,6 +2430,8 @@ namespace LethalMin
                     LethalMin.Logger.LogInfo($"({uniqueDebugId}) Called grab item");
             }
         }
+
+        [IDebuggable.Debug] private List<ItemTarget> targets = new List<ItemTarget>();
         private void HandleItemCarrying()
         {
             if (targetItem == null || targetItem.Root == null)
@@ -2445,6 +2498,7 @@ namespace LethalMin
                     // This is the first Pikmin, responsible for moving the item
                     if (!HasFoundCaryTarget)
                     {
+                        GetItemTargetWIP();
                         GetItemTarget();
                     }
                     if (CarryingItemTo == "CaveDweller")
@@ -2646,14 +2700,148 @@ namespace LethalMin
             }
             targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
         }
+
+        private void GetItemTargetWIP()
+        {
+            List<ItemTarget> possibleTargets = new List<ItemTarget>();
+
+            // CaveDweller target
+            if (targetItem.GetComponentInParent<CaveDwellerPhysicsProp>() != null)
+            {
+                Transform targetPos = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
+                possibleTargets.Add(new ItemTarget("CaveDweller", targetPos, 100)); // High priority
+            }
+
+            // Ship target (outside and not in Company Building)
+            if (isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
+            {
+                Vector3 shipPos = StartOfRound.Instance.insideShipPositions[UnityEngine.Random.Range(0, StartOfRound.Instance.insideShipPositions.Length)].position;
+                possibleTargets.Add(new ItemTarget("Ship", shipPos, 80));
+            }
+
+            // Car target
+            if (LethalMin.GoToCar && isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
+            {
+                GetNearestCar();
+                if (TargetCar != null && TargetCarPos != null && TargetCar.backDoorOpen)
+                {
+                    possibleTargets.Add(new ItemTarget("Car", TargetCarPos.transform.position, 90)); // Higher priority than ship
+                }
+            }
+
+            // Company Building counter
+            if (isOutside && RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding")
+            {
+                Vector3 counterPos = GameObject.FindObjectOfType<DepositItemsDesk>().triggerCollider.transform.position;
+                possibleTargets.Add(new ItemTarget("Counter", counterPos, 80));
+            }
+
+            // Main entrance and fire exit
+            if (!MineshaftInside)
+            {
+                Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
+                Vector3 adjustedMainEntrancePos = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
+                possibleTargets.Add(new ItemTarget("Main", adjustedMainEntrancePos, 70));
+
+                Vector3 fireExitPosition = FindNearestFireExit();
+                if (fireExitPosition != Vector3.zero)
+                {
+                    possibleTargets.Add(new ItemTarget("FireExit", fireExitPosition, LethalMin.OnlyExit ? 75 : 65));
+                }
+            }
+
+            // Mineshaft specific targets
+            if (MineshaftInside)
+            {
+                if (IsOnUpperLevel)
+                {
+                    Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
+                    Vector3 adjustedMainEntrancePos = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
+                    possibleTargets.Add(new ItemTarget("Main(Mineshaft)", adjustedMainEntrancePos, 70));
+                }
+                else
+                {
+                    Vector3 elevatorPos = RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint.position;
+                    possibleTargets.Add(new ItemTarget("Elevator", elevatorPos, 70));
+
+                    Vector3 fireExitPosition = FindNearestFireExit();
+                    if (fireExitPosition != Vector3.zero)
+                    {
+                        possibleTargets.Add(new ItemTarget("FireExit(Mineshaft)", fireExitPosition, LethalMin.OnlyExit ? 75 : 65));
+                    }
+                }
+            }
+
+            // Sort targets by score and find the highest scoring pathable target
+            possibleTargets = possibleTargets.OrderByDescending(t => t.Score).ToList();
+            targets = possibleTargets;
+            foreach (var target in possibleTargets)
+            {
+                if (IsPathPossible(target.Position))
+                {
+                    // targetScrapPosition = target.Position;
+                    // CarryingItemTo = target.Name;
+                    // HasFoundCaryTarget = true;
+                    // targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
+
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Selected target: {target.Name} at {target.GetPos()} with score of {target.Score}");
+
+                    return;
+                }
+            }
+
+            // If no pathable target found
+            LethalMin.Logger.LogWarning($"({uniqueDebugId}) No pathable target found.");
+        }
         private bool IsPathPossible(Vector3 destination)
         {
             NavMeshPath path = new NavMeshPath();
-            if (NavMesh.CalculatePath(transform.position, destination, NavMesh.AllAreas, path))
+            if (NavMesh.CalculatePath(transform.position, destination, agent.areaMask, path))
             {
-                return path.status == NavMeshPathStatus.PathComplete;
+                if (path.status == NavMeshPathStatus.PathComplete)
+                {
+                    return true;
+                }
+                else
+                {
+                    LogPathStatus(path);
+                    return false;
+                }
             }
-            return false;
+            else
+            {
+                LethalMin.Logger.LogWarning($"({uniqueDebugId}) Failed to calculate path to destination: {destination}");
+                return false;
+            }
+        }
+
+        private void LogPathStatus(NavMeshPath path)
+        {
+            string statusMessage = $"({uniqueDebugId}) Path status: {path.status}. ";
+
+            if (path.status == NavMeshPathStatus.PathPartial)
+            {
+                statusMessage += "Path is partial. ";
+                Vector3 lastPoint = path.corners[path.corners.Length - 1];
+                statusMessage += $"Last reachable point: {lastPoint}. ";
+
+                // Check for obstacles near the last point
+                Collider[] obstacles = Physics.OverlapSphere(lastPoint, 1f);
+                if (obstacles.Length > 0)
+                {
+                    statusMessage += "Possible obstacles: ";
+                    foreach (Collider obstacle in obstacles)
+                    {
+                        statusMessage += $"{obstacle.gameObject.name}, ";
+                    }
+                }
+            }
+            else if (path.status == NavMeshPathStatus.PathInvalid)
+            {
+                statusMessage += "Path is invalid. Possible reasons: No NavMesh, destination off NavMesh, or unreachable area.";
+            }
+
+            LethalMin.Logger.LogWarning(statusMessage);
         }
         private Quaternion CalculateYAxisRotation(Vector3 targetPosition)
         {
