@@ -10,7 +10,6 @@ using Unity.Netcode.Components;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Events;
 using LethalMon.Behaviours;
-using LethalModDataLib.Helpers;
 
 namespace LethalMin
 {
@@ -131,7 +130,6 @@ namespace LethalMin
         float InShipBuffer;
         [IDebuggable.Debug] public bool IsInShip, CallingHandleItemCarying;
         [IDebuggable.Debug] public string? CarryingItemTo;
-        public Vector3 targetScrapPosition = Vector3.zero; // For now, move towards (0, 0, 0)
         Quaternion targetCarryRotaion = Quaternion.identity;
         bool PlayingEnter;
         private const float teleportDelay = 1f; // 1 second delay
@@ -2061,7 +2059,7 @@ namespace LethalMin
             //Check if near counter at company bulding
             if (RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding")
             {
-                Vector3 counterPos = targetScrapPosition = GameObject.FindObjectOfType<DepositItemsDesk>().triggerCollider.transform.position;
+                Vector3 counterPos = GameObject.FindObjectOfType<DepositItemsDesk>().triggerCollider.transform.position;
                 if (Vector3.Distance(position, counterPos) <= thresholdB)
                 {
                     return true;
@@ -2671,7 +2669,6 @@ namespace LethalMin
                 else if (HasManEater)
                 {
                     LethalMin.Logger.LogInfo($"({uniqueDebugId}) Skipping other targets because of CaveDweller");
-                    targetScrapPosition = target.Position;
                     CarryingItemTo = target.Name;
                     HasFoundCaryTarget = true;
                     targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
@@ -2680,9 +2677,8 @@ namespace LethalMin
 
                 // Check if the target is a maneater and if the current maneater is not the same as the target
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Possible target: {target.Name} at {target.GetPos()} with score of {target.Score}");
-                if (IsPathPossible(target.Position) || target.Name == "Ship" || target.Name == "Car")
+                if (IsPathPossible(target.Position) || target.Name == "Ship" || target.Name == "Car" || target.Name == "Counter")
                 {
-                    targetScrapPosition = target.Position;
                     CarryingItemTo = target.Name;
                     HasFoundCaryTarget = true;
                     targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
@@ -2697,7 +2693,6 @@ namespace LethalMin
             possibleTargets.Insert(0, Qtarget);
             CurTargets = possibleTargets;
 
-            targetScrapPosition = Qtarget.Position;
             CarryingItemTo = Qtarget.Name;
             HasFoundCaryTarget = true;
             targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
@@ -2771,7 +2766,7 @@ namespace LethalMin
             // Find the nearest NavMesh point to the destination
             Vector3 finalDestination = FindNearestNavMeshPoint(destination);
 
-            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Calculating path to {finalDestination}");
+            //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Calculating path to {finalDestination}");
 
             agent.CalculatePath(finalDestination, path);
             if (log)
@@ -2805,9 +2800,9 @@ namespace LethalMin
                 {
                     InShipBuffer += Time.deltaTime;
                 }
-                if (HasArrivedAtDestonation(0.5f, targetScrapPosition) && CarryingItemTo != "CaveDweller"
+                if (HasArrivedAtDestonation(0.5f, CurTargets[0].GetPos()) && CarryingItemTo != "CaveDweller"
                 || (IsInShip && InShipBuffer >= PminType.DropItemInShipBuffer)
-                || HasArrivedAtDestonation(0, targetScrapPosition) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                || HasArrivedAtDestonation(0, CurTargets[0].GetPos()) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Ship");
@@ -2819,8 +2814,8 @@ namespace LethalMin
             }
             else if (isOutside && RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding")
             {
-                if (HasArrivedAtDestonation(2.5f, targetScrapPosition) && CarryingItemTo != "CaveDweller"
-                || HasArrivedAtDestonation(0f, targetScrapPosition) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                if (HasArrivedAtDestonation(2.5f, CurTargets[0].GetPos()) && CarryingItemTo != "CaveDweller"
+                || HasArrivedAtDestonation(0f, CurTargets[0].GetPos()) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Counter");
@@ -2831,8 +2826,8 @@ namespace LethalMin
             }
             else if (!MineshaftInside || MineshaftInside && !IsOnLowerLevel)
             {
-                if (HasArrivedAtDestonation(4, targetScrapPosition) && CarryingItemTo != "CaveDweller"
-                || HasArrivedAtDestonation(0, targetScrapPosition) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                if (HasArrivedAtDestonation(4, CurTargets[0].GetPos()) && CarryingItemTo != "CaveDweller"
+                || HasArrivedAtDestonation(0, CurTargets[0].GetPos()) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at MainEntrance");
@@ -2843,8 +2838,8 @@ namespace LethalMin
             }
             else
             {
-                if (HasArrivedAtDestonation(0.5f, targetScrapPosition) && CarryingItemTo != "CaveDweller"
-                || HasArrivedAtDestonation(0f, targetScrapPosition) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                if (HasArrivedAtDestonation(0.5f, CurTargets[0].GetPos()) && CarryingItemTo != "CaveDweller"
+                || HasArrivedAtDestonation(0f, CurTargets[0].GetPos()) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Elevator");
@@ -3037,6 +3032,7 @@ namespace LethalMin
 
         private void GetItemTargetLEGACY()
         {
+            Vector3 targetScrapPosition = targetItem.transform.position;
             if (targetItem.GetComponentInParent<CaveDwellerPhysicsProp>() != null)
             {
                 if (previousLeader == null)
