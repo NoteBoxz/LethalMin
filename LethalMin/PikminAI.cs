@@ -2520,7 +2520,7 @@ namespace LethalMin
                     targetItem.Root.transform.position = transform.position;
 
                     RefeshItemTargets();
-                    
+
                     if (CurTargets[0].Name != "???")
                         CheckToDropItem();
                 }
@@ -2572,11 +2572,14 @@ namespace LethalMin
 
             var Qtarget = new ItemTarget("???", targetPos2, 0);
 
+            bool HasManEater = false;
+
             // CaveDweller target
             if (targetItem.GetComponentInParent<CaveDwellerPhysicsProp>() != null)
             {
                 Transform targetPos = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
                 possibleTargets.Add(new ItemTarget("CaveDweller", targetPos, 100)); // High priority
+                HasManEater = true;
             }
 
             // Ship target (outside and not in Company Building)
@@ -2606,7 +2609,7 @@ namespace LethalMin
             }
 
             // Main entrance and fire exit
-            if (!MineshaftInside)
+            if (!MineshaftInside && !isOutside)
             {
                 Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
                 Vector3 adjustedMainEntrancePos = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
@@ -2616,11 +2619,8 @@ namespace LethalMin
                 Vector3 fireExitPosition = FindNearestFireExit();
                 if (fireExitPosition != Vector3.zero && !LethalMin.OnlyMain)
                 {
-                    if (Vector3.Distance(transform.position, fireExitPosition) > Vector3.Distance(transform.position, mainEntrancePosition))
-                    {
-                        possibleTargets.Add(new ItemTarget("FireExit", fireExitPosition, LethalMin.OnlyExit ? 75 : 65));
-                    }
-                    else if (LethalMin.OnlyExit)
+                    if (Vector3.Distance(transform.position, fireExitPosition) < Vector3.Distance(transform.position, mainEntrancePosition) ||
+                    LethalMin.OnlyExit)
                     {
                         possibleTargets.Add(new ItemTarget("FireExit", fireExitPosition, 75));
                     }
@@ -2628,7 +2628,7 @@ namespace LethalMin
             }
 
             // Mineshaft specific targets
-            if (MineshaftInside)
+            if (MineshaftInside && !isOutside)
             {
                 if (IsOnUpperLevel)
                 {
@@ -2645,11 +2645,8 @@ namespace LethalMin
                     Vector3 fireExitPosition = FindNearestFireExit();
                     if (fireExitPosition != Vector3.zero && !LethalMin.OnlyMain)
                     {
-                        if (Vector3.Distance(transform.position, fireExitPosition) > Vector3.Distance(transform.position, elevatorPos))
-                        {
-                            possibleTargets.Add(new ItemTarget("FireExit(Mineshaft)", fireExitPosition, LethalMin.OnlyExit ? 75 : 65));
-                        }
-                        else if (LethalMin.OnlyExit)
+                        if (Vector3.Distance(transform.position, fireExitPosition) < Vector3.Distance(transform.position, elevatorPos) ||
+                            LethalMin.OnlyExit)
                         {
                             possibleTargets.Add(new ItemTarget("FireExit(Mineshaft)", fireExitPosition, 75));
                         }
@@ -2662,11 +2659,28 @@ namespace LethalMin
             CurTargets = possibleTargets;
             foreach (var target in possibleTargets)
             {
+                //Skip Null target
                 if (target.Name == "???")
                     continue;
 
+                // Skip targets that are not the maneater if the maneater is found
+                if (HasManEater && target.Name != "CaveDweller")
+                {
+                    continue;
+                }
+                else if (HasManEater)
+                {
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Skipping other targets because of CaveDweller");
+                    targetScrapPosition = target.Position;
+                    CarryingItemTo = target.Name;
+                    HasFoundCaryTarget = true;
+                    targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
+                    return;
+                }
+
+                // Check if the target is a maneater and if the current maneater is not the same as the target
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Possible target: {target.Name} at {target.GetPos()} with score of {target.Score}");
-                if (IsPathPossible(target.Position))
+                if (IsPathPossible(target.Position) || target.Name == "Ship" || target.Name == "Car")
                 {
                     targetScrapPosition = target.Position;
                     CarryingItemTo = target.Name;
