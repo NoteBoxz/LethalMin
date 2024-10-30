@@ -1,12 +1,14 @@
-(0.1)
+(0.1.x)
 Redo Item Pathfinding system.
 Fix remenats issue.
 Fix Client Side dropped inputs.
 Fix bee errors.
 Fix hoarder bug errors.
 Optimize Pikmin Script.
+Fix buggy player animation.
 Fix pikmin pathing to seemingly random positions?
-(0.2)
+
+(0.2.x)
 Make onions produce sprouts.
 Make Unity API mod.
 Add in poisoning.

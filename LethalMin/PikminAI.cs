@@ -377,7 +377,7 @@ namespace LethalMin
         }
         private IEnumerator ShowMeshFailSafe()
         {
-            yield return new WaitForSeconds(3.5f);
+            yield return new WaitForSeconds(3.5f + enemyRandom.Next(0, 2));
             if (Mesh == null)
             {
                 LethalMin.Logger.LogWarning($"Pikmin {uniqueDebugId} has no mesh, this should not happen");
@@ -2294,7 +2294,7 @@ namespace LethalMin
             if (HasCustomScripts)
                 OnCheckLineOfSightForItem.Invoke();
             IsCallingCLOSFI = true;
-            GameObject closestItem = null;
+            GameObject closestItem = null!;
             float closestDistance = float.MaxValue;
 
             //if(LethalMin.DebugMode)
@@ -2431,7 +2431,10 @@ namespace LethalMin
             }
         }
 
-        [IDebuggable.Debug] private List<ItemTarget> targets = new List<ItemTarget>();
+        public List<ItemTarget> CurTargets = new List<ItemTarget>();
+
+        [IDebuggable.Debug]
+        public List<string> CurTargetNames => CurTargets.Select(x => x.Name).ToList();
         private void HandleItemCarrying()
         {
             if (targetItem == null || targetItem.Root == null)
@@ -2498,83 +2501,28 @@ namespace LethalMin
                     // This is the first Pikmin, responsible for moving the item
                     if (!HasFoundCaryTarget)
                     {
-                        GetItemTargetWIP();
+                        InitalCirclePos = transform.position;
                         GetItemTarget();
                     }
-                    if (CarryingItemTo == "CaveDweller")
-                    {
-                        if (previousLeader == null)
-                            targetScrapPosition = StartOfRound.Instance.localPlayerController.transform.position;
-                        if (previousLeader != null)
-                            targetScrapPosition = previousLeader.transform.position;
-                    }
-                    if (CarryingItemTo == "Car")
-                    {
-                        if (TargetCarPos != null)
-                            targetScrapPosition = TargetCarPos.transform.position;
-                    }
 
-                    agent.SetDestination(targetScrapPosition);
+                    if (CurTargets[0].Name == "???")
+                    {
+                        MoveInCircles();
+                    }
+                    else
+                    {
+                        agent.SetDestination(CurTargets[0].GetPos());
+                    }
                     agent.updateRotation = false;
                     transform.rotation = targetCarryRotaion;
 
                     // Move the item along with the Pikmin
                     targetItem.Root.transform.position = transform.position;
 
-                    if (isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
-                    {
-                        if (IsInShip || IsInCar)
-                        {
-                            InShipBuffer += Time.deltaTime;
-                        }
-                        if (HasArrivedAtDestonation(0.5f, targetScrapPosition) && CarryingItemTo != "CaveDweller"
-                        || (IsInShip && InShipBuffer >= PminType.DropItemInShipBuffer)
-                        || HasArrivedAtDestonation(0, targetScrapPosition) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
-                        {
-                            if (LethalMin.DebugMode)
-                                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Ship");
-                            InShipBuffer = 0;
-                            targetItem.HandleArrivedClientRpc();
-                            targetItem.RemoveAllPikminAndUnparent();
-                            CallingHandleItemCarying = false;
-                        }
-                    }
-                    else if (isOutside && RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding")
-                    {
-                        if (HasArrivedAtDestonation(2.5f, targetScrapPosition) && CarryingItemTo != "CaveDweller"
-                        || HasArrivedAtDestonation(0f, targetScrapPosition) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
-                        {
-                            if (LethalMin.DebugMode)
-                                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Counter");
-                            targetItem.HandleArrivedClientRpc();
-                            targetItem.RemoveAllPikminAndUnparent();
-                            CallingHandleItemCarying = false;
-                        }
-                    }
-                    else if (!MineshaftInside || MineshaftInside && !IsOnLowerLevel)
-                    {
-                        if (HasArrivedAtDestonation(4, targetScrapPosition) && CarryingItemTo != "CaveDweller"
-                        || HasArrivedAtDestonation(0, targetScrapPosition) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
-                        {
-                            if (LethalMin.DebugMode)
-                                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at MainEntrance");
-                            targetItem.HandleArrivedClientRpc();
-                            targetItem.RemoveAllPikminAndUnparent();
-                            CallingHandleItemCarying = false;
-                        }
-                    }
-                    else
-                    {
-                        if (HasArrivedAtDestonation(0.5f, targetScrapPosition) && CarryingItemTo != "CaveDweller"
-                        || HasArrivedAtDestonation(0f, targetScrapPosition) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
-                        {
-                            if (LethalMin.DebugMode)
-                                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Elevator");
-                            targetItem.HandleArrivedClientRpc();
-                            targetItem.RemoveAllPikminAndUnparent();
-                            CallingHandleItemCarying = false;
-                        }
-                    }
+                    RefeshItemTargets();
+                    
+                    if (CurTargets[0].Name != "???")
+                        CheckToDropItem();
                 }
                 else
                 {
@@ -2599,111 +2547,30 @@ namespace LethalMin
             }
         }
 
-        private void GetItemTarget()
+        private float circleRadius = 2f;
+        private float circleSpeed = 2f;
+        private float currentAngle = 0f;
+        private Vector3 InitalCirclePos;
+        private void MoveInCircles()
         {
-            if (targetItem.GetComponentInParent<CaveDwellerPhysicsProp>() != null)
-            {
-                if (previousLeader == null)
-                    targetScrapPosition = StartOfRound.Instance.localPlayerController.transform.position;
-                if (previousLeader != null)
-                    targetScrapPosition = previousLeader.transform.position;
-                if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Player Pos at {targetScrapPosition}");
-                CarryingItemTo = "CaveDweller";
-                HasFoundCaryTarget = true;
-                return;
-            }
-            if (isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
-            {
-                if (LethalMin.GoToCar)
-                {
-                    GetNearestCar();
-                    Vector3 shippos = StartOfRound.Instance.insideShipPositions[UnityEngine.Random.Range(0, StartOfRound.Instance.insideShipPositions.Length)].position;
-                    //Check if the car is closer than the ship
-                    if (TargetCar != null && TargetCarPos != null &&
-                    Vector3.Distance(transform.position, TargetCar.transform.position) < Vector3.Distance(transform.position, shippos)
-                    && TargetCar.backDoorOpen)
-                    {
-                        targetScrapPosition = TargetCarPos.transform.position;
-                        if (LethalMin.DebugMode)
-                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Car Pos at {targetScrapPosition}");
-                        CarryingItemTo = "Car";
-                        HasFoundCaryTarget = true;
-                        return;
-                    }
-                }
-                targetScrapPosition = StartOfRound.Instance.insideShipPositions[UnityEngine.Random.Range(0, StartOfRound.Instance.insideShipPositions.Length)].position;
-                if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Ship Pos at {targetScrapPosition}");
-                CarryingItemTo = "Ship";
-                HasFoundCaryTarget = true;
-            }
-            else if (isOutside && RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding")
-            {
-                targetScrapPosition = GameObject.FindObjectOfType<DepositItemsDesk>().triggerCollider.transform.position;
-                if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Counter Pos at {targetScrapPosition}");
-                CarryingItemTo = "Counter";
-                HasFoundCaryTarget = true;
-            }
-            else if (!MineshaftInside)
-            {
-                Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
-                Vector3 fireExitPosition = FindNearestFireExit();
+            currentAngle += circleSpeed * Time.deltaTime;
+            float x = Mathf.Cos(currentAngle) * circleRadius;
+            float z = Mathf.Sin(currentAngle) * circleRadius;
 
-                if (LethalMin.OnlyExit && fireExitPosition != Vector3.zero
-                || !LethalMin.OnlyMain && fireExitPosition != Vector3.zero
-                && Vector3.Distance(transform.position, fireExitPosition) < Vector3.Distance(transform.position, mainEntrancePosition))
-                {
-                    targetScrapPosition = fireExitPosition;
-                    if (LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Fire Exit Pos at {targetScrapPosition}");
-                    CarryingItemTo = "FireExit";
-                }
-                else
-                {
-                    targetScrapPosition = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
-                    if (LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Main Entrance Pos at {targetScrapPosition}");
-                    CarryingItemTo = "Main";
-                }
-                HasFoundCaryTarget = true;
-            }
-            else if (MineshaftInside && IsOnUpperLevel)
-            {
-                Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
-                targetScrapPosition = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
-                if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Main Entrance Pos at {targetScrapPosition}");
-                CarryingItemTo = "Main(Mineshaft)";
-            }
-            else
-            {
-                Vector3 fireExitPosition = FindNearestFireExit();
-                targetScrapPosition = RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint.position;
-                if (LethalMin.OnlyExit && fireExitPosition != Vector3.zero
-                || !LethalMin.OnlyMain && Vector3.Distance(transform.position, fireExitPosition) <
-                 Vector3.Distance(transform.position, RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint.position))
-                {
-                    targetScrapPosition = fireExitPosition;
-                    if (LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Fire Exit Pos at {targetScrapPosition}");
-                    CarryingItemTo = "FireExit (Mineshaft)";
-                }
-                else
-                {
-                    if (LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Elevator Pos at {targetScrapPosition}");
-                    CarryingItemTo = "Elevator";
-                    HasFoundCaryTarget = true;
-                }
-            }
-            targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
+            Vector3 circlePosition = InitalCirclePos + new Vector3(x, 0, z);
+            agent.SetDestination(circlePosition);
+
+            // Move the item along with the Pikmin
+            targetItem.Root.transform.position = transform.position;
         }
 
-        private void GetItemTargetWIP()
+        private void GetItemTarget()
         {
             List<ItemTarget> possibleTargets = new List<ItemTarget>();
+
+            Transform targetPos2 = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
+
+            var Qtarget = new ItemTarget("???", targetPos2, 0);
 
             // CaveDweller target
             if (targetItem.GetComponentInParent<CaveDwellerPhysicsProp>() != null)
@@ -2722,8 +2589,10 @@ namespace LethalMin
             // Car target
             if (LethalMin.GoToCar && isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
             {
+                Vector3 shipPos = StartOfRound.Instance.insideShipPositions[UnityEngine.Random.Range(0, StartOfRound.Instance.insideShipPositions.Length)].position;
                 GetNearestCar();
-                if (TargetCar != null && TargetCarPos != null && TargetCar.backDoorOpen)
+                if (TargetCar != null && TargetCarPos != null && TargetCar.backDoorOpen
+                 && Vector3.Distance(transform.position, TargetCar.transform.position) < Vector3.Distance(transform.position, shipPos))
                 {
                     possibleTargets.Add(new ItemTarget("Car", TargetCarPos.transform.position, 90)); // Higher priority than ship
                 }
@@ -2741,12 +2610,20 @@ namespace LethalMin
             {
                 Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
                 Vector3 adjustedMainEntrancePos = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
-                possibleTargets.Add(new ItemTarget("Main", adjustedMainEntrancePos, 70));
+                if (!LethalMin.OnlyExit)
+                    possibleTargets.Add(new ItemTarget("Main", adjustedMainEntrancePos, 70));
 
                 Vector3 fireExitPosition = FindNearestFireExit();
-                if (fireExitPosition != Vector3.zero)
+                if (fireExitPosition != Vector3.zero && !LethalMin.OnlyMain)
                 {
-                    possibleTargets.Add(new ItemTarget("FireExit", fireExitPosition, LethalMin.OnlyExit ? 75 : 65));
+                    if (Vector3.Distance(transform.position, fireExitPosition) > Vector3.Distance(transform.position, mainEntrancePosition))
+                    {
+                        possibleTargets.Add(new ItemTarget("FireExit", fireExitPosition, LethalMin.OnlyExit ? 75 : 65));
+                    }
+                    else if (LethalMin.OnlyExit)
+                    {
+                        possibleTargets.Add(new ItemTarget("FireExit", fireExitPosition, 75));
+                    }
                 }
             }
 
@@ -2757,7 +2634,8 @@ namespace LethalMin
                 {
                     Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
                     Vector3 adjustedMainEntrancePos = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
-                    possibleTargets.Add(new ItemTarget("Main(Mineshaft)", adjustedMainEntrancePos, 70));
+                    if (!LethalMin.OnlyExit)
+                        possibleTargets.Add(new ItemTarget("Main(Mineshaft)", adjustedMainEntrancePos, 70));
                 }
                 else
                 {
@@ -2765,24 +2643,35 @@ namespace LethalMin
                     possibleTargets.Add(new ItemTarget("Elevator", elevatorPos, 70));
 
                     Vector3 fireExitPosition = FindNearestFireExit();
-                    if (fireExitPosition != Vector3.zero)
+                    if (fireExitPosition != Vector3.zero && !LethalMin.OnlyMain)
                     {
-                        possibleTargets.Add(new ItemTarget("FireExit(Mineshaft)", fireExitPosition, LethalMin.OnlyExit ? 75 : 65));
+                        if (Vector3.Distance(transform.position, fireExitPosition) > Vector3.Distance(transform.position, elevatorPos))
+                        {
+                            possibleTargets.Add(new ItemTarget("FireExit(Mineshaft)", fireExitPosition, LethalMin.OnlyExit ? 75 : 65));
+                        }
+                        else if (LethalMin.OnlyExit)
+                        {
+                            possibleTargets.Add(new ItemTarget("FireExit(Mineshaft)", fireExitPosition, 75));
+                        }
                     }
                 }
             }
 
             // Sort targets by score and find the highest scoring pathable target
             possibleTargets = possibleTargets.OrderByDescending(t => t.Score).ToList();
-            targets = possibleTargets;
+            CurTargets = possibleTargets;
             foreach (var target in possibleTargets)
             {
+                if (target.Name == "???")
+                    continue;
+
+                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Possible target: {target.Name} at {target.GetPos()} with score of {target.Score}");
                 if (IsPathPossible(target.Position))
                 {
-                    // targetScrapPosition = target.Position;
-                    // CarryingItemTo = target.Name;
-                    // HasFoundCaryTarget = true;
-                    // targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
+                    targetScrapPosition = target.Position;
+                    CarryingItemTo = target.Name;
+                    HasFoundCaryTarget = true;
+                    targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
 
                     LethalMin.Logger.LogInfo($"({uniqueDebugId}) Selected target: {target.Name} at {target.GetPos()} with score of {target.Score}");
 
@@ -2791,30 +2680,166 @@ namespace LethalMin
             }
 
             // If no pathable target found
-            LethalMin.Logger.LogWarning($"({uniqueDebugId}) No pathable target found.");
+            possibleTargets.Insert(0, Qtarget);
+            CurTargets = possibleTargets;
+
+            targetScrapPosition = Qtarget.Position;
+            CarryingItemTo = Qtarget.Name;
+            HasFoundCaryTarget = true;
+            targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
+
+            LethalMin.Logger.LogWarning($"({uniqueDebugId}) No pathable target found!");
         }
-        private bool IsPathPossible(Vector3 destination)
+        private void RefeshItemTargets()
         {
-            NavMeshPath path = new NavMeshPath();
-            if (NavMesh.CalculatePath(agent.nextPosition, destination, agent.areaMask, path))
+            //Exclude the ??? target name from the list before doing the return check
+            if (CurTargets[0].Name == "???")
             {
-                if (path.status == NavMeshPathStatus.PathComplete)
+                //Check if any other targets are pathable
+                for (int i = 0; i < CurTargets.Count; i++)
+                {
+                    var target = CurTargets[i];
+                    if (target.Name != "???")
+                    {
+                        if (IsPathPossible(target.Position))
+                        {
+                            CurTargets.RemoveAt(i);
+                            CurTargets.Insert(0, target);
+                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Moved target {target.Name} to the top of the list");
+                            return;
+                        }
+                    }
+                }
+            }
+            ItemTarget[] targets = CurTargets.Where(t => t.Name != "???").ToArray();
+            if (targets.Length == 0 || targets.Length == 1)
+            {
+                return;
+            }
+            //We'll be modifying the targetList so we'll need to use a regular for loop to avoid concurrent modification
+            for (int i = 0; i < CurTargets.Count; i++)
+            {
+                var target = CurTargets[i];
+                if (target.Equals(CurTargets[0]) || target.Name == "???")
+                {
+                    continue;
+                }
+                // Move the target to the top of the list if it's pathable and closer than the current top target
+                if (IsPathPossible(target.Position, false))
+                {
+                    float distanceToCurrentTarget = Vector3.Distance(transform.position, CurTargets[0].Position);
+                    float distanceToNewTarget = Vector3.Distance(transform.position, target.Position);
+
+                    if (distanceToNewTarget < distanceToCurrentTarget)
+                    {
+                        CurTargets.RemoveAt(i);
+                        CurTargets.Insert(0, target);
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Moved target {target.Name} to the top of the list");
+                        break;
+                    }
+                }
+            }
+        }
+        private bool IsPathPossible(Vector3 destination, bool log = true, bool AllowPartiallyBlocked = false)
+        {
+            Vector3 FindNearestNavMeshPoint(Vector3 targetPosition, float maxDistance = 5f)
+            {
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(targetPosition, out hit, maxDistance, NavMesh.AllAreas))
+                {
+                    return hit.position;
+                }
+                return targetPosition;
+            }
+
+            var path = new NavMeshPath();
+
+            // Find the nearest NavMesh point to the destination
+            Vector3 finalDestination = FindNearestNavMeshPoint(destination);
+
+            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Calculating path to {finalDestination}");
+
+            agent.CalculatePath(finalDestination, path);
+            if (log)
+                LogPathStatus(path);
+
+            if (path.status == NavMeshPathStatus.PathComplete)
+            {
+                return true;
+            }
+            else if (path.status == NavMeshPathStatus.PathPartial)
+            {
+                if (AllowPartiallyBlocked)
                 {
                     return true;
                 }
                 else
                 {
-                    LogPathStatus(path);
                     return false;
                 }
             }
             else
             {
-                LethalMin.Logger.LogWarning($"({uniqueDebugId}) Failed to calculate path to destination: {destination} from {agent.nextPosition}");
                 return false;
             }
         }
-
+        private void CheckToDropItem()
+        {
+            if (isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
+            {
+                if (IsInShip || IsInCar)
+                {
+                    InShipBuffer += Time.deltaTime;
+                }
+                if (HasArrivedAtDestonation(0.5f, targetScrapPosition) && CarryingItemTo != "CaveDweller"
+                || (IsInShip && InShipBuffer >= PminType.DropItemInShipBuffer)
+                || HasArrivedAtDestonation(0, targetScrapPosition) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                {
+                    if (LethalMin.DebugMode)
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Ship");
+                    InShipBuffer = 0;
+                    targetItem.HandleArrivedClientRpc();
+                    targetItem.RemoveAllPikminAndUnparent();
+                    CallingHandleItemCarying = false;
+                }
+            }
+            else if (isOutside && RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding")
+            {
+                if (HasArrivedAtDestonation(2.5f, targetScrapPosition) && CarryingItemTo != "CaveDweller"
+                || HasArrivedAtDestonation(0f, targetScrapPosition) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                {
+                    if (LethalMin.DebugMode)
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Counter");
+                    targetItem.HandleArrivedClientRpc();
+                    targetItem.RemoveAllPikminAndUnparent();
+                    CallingHandleItemCarying = false;
+                }
+            }
+            else if (!MineshaftInside || MineshaftInside && !IsOnLowerLevel)
+            {
+                if (HasArrivedAtDestonation(4, targetScrapPosition) && CarryingItemTo != "CaveDweller"
+                || HasArrivedAtDestonation(0, targetScrapPosition) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                {
+                    if (LethalMin.DebugMode)
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at MainEntrance");
+                    targetItem.HandleArrivedClientRpc();
+                    targetItem.RemoveAllPikminAndUnparent();
+                    CallingHandleItemCarying = false;
+                }
+            }
+            else
+            {
+                if (HasArrivedAtDestonation(0.5f, targetScrapPosition) && CarryingItemTo != "CaveDweller"
+                || HasArrivedAtDestonation(0f, targetScrapPosition) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                {
+                    if (LethalMin.DebugMode)
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Elevator");
+                    targetItem.HandleArrivedClientRpc();
+                    targetItem.RemoveAllPikminAndUnparent();
+                    CallingHandleItemCarying = false;
+                }
+            }
+        }
         private void LogPathStatus(NavMeshPath path)
         {
             string statusMessage = $"({uniqueDebugId}) Path status: {path.status}. ";
@@ -2841,7 +2866,7 @@ namespace LethalMin
                 statusMessage += "Path is invalid. Possible reasons: No NavMesh, destination off NavMesh, or unreachable area.";
             }
 
-            LethalMin.Logger.LogWarning(statusMessage);
+            LethalMin.Logger.LogMessage(statusMessage);
         }
         private Quaternion CalculateYAxisRotation(Vector3 targetPosition)
         {
@@ -2865,7 +2890,8 @@ namespace LethalMin
                 // Check if it's a fire exit (entrance ID is not 0)
                 if (entrance.entranceId != 0)
                 {
-                    allExits.Add(entrance);
+                    if (IsPathPossible(entrance.transform.position, true, true))
+                        allExits.Add(entrance);
                 }
             }
 
@@ -2992,6 +3018,111 @@ namespace LethalMin
             HasPlayedLift = false;
             CanGrabItems = false;
         }
+
+
+
+        private void GetItemTargetLEGACY()
+        {
+            if (targetItem.GetComponentInParent<CaveDwellerPhysicsProp>() != null)
+            {
+                if (previousLeader == null)
+                    targetScrapPosition = StartOfRound.Instance.localPlayerController.transform.position;
+                if (previousLeader != null)
+                    targetScrapPosition = previousLeader.transform.position;
+                if (LethalMin.DebugMode)
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Player Pos at {targetScrapPosition}");
+                CarryingItemTo = "CaveDweller";
+                HasFoundCaryTarget = true;
+                return;
+            }
+            if (isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
+            {
+                if (LethalMin.GoToCar)
+                {
+                    GetNearestCar();
+                    Vector3 shippos = StartOfRound.Instance.insideShipPositions[UnityEngine.Random.Range(0, StartOfRound.Instance.insideShipPositions.Length)].position;
+                    //Check if the car is closer than the ship
+                    if (TargetCar != null && TargetCarPos != null &&
+                    Vector3.Distance(transform.position, TargetCar.transform.position) < Vector3.Distance(transform.position, shippos)
+                    && TargetCar.backDoorOpen)
+                    {
+                        targetScrapPosition = TargetCarPos.transform.position;
+                        if (LethalMin.DebugMode)
+                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Car Pos at {targetScrapPosition}");
+                        CarryingItemTo = "Car";
+                        HasFoundCaryTarget = true;
+                        return;
+                    }
+                }
+                targetScrapPosition = StartOfRound.Instance.insideShipPositions[UnityEngine.Random.Range(0, StartOfRound.Instance.insideShipPositions.Length)].position;
+                if (LethalMin.DebugMode)
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Ship Pos at {targetScrapPosition}");
+                CarryingItemTo = "Ship";
+                HasFoundCaryTarget = true;
+            }
+            else if (isOutside && RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding")
+            {
+                targetScrapPosition = GameObject.FindObjectOfType<DepositItemsDesk>().triggerCollider.transform.position;
+                if (LethalMin.DebugMode)
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Counter Pos at {targetScrapPosition}");
+                CarryingItemTo = "Counter";
+                HasFoundCaryTarget = true;
+            }
+            else if (!MineshaftInside)
+            {
+                Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
+                Vector3 fireExitPosition = FindNearestFireExit();
+
+                if (LethalMin.OnlyExit && fireExitPosition != Vector3.zero
+                || !LethalMin.OnlyMain && fireExitPosition != Vector3.zero
+                && Vector3.Distance(transform.position, fireExitPosition) < Vector3.Distance(transform.position, mainEntrancePosition))
+                {
+                    targetScrapPosition = fireExitPosition;
+                    if (LethalMin.DebugMode)
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Fire Exit Pos at {targetScrapPosition}");
+                    CarryingItemTo = "FireExit";
+                }
+                else
+                {
+                    targetScrapPosition = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
+                    if (LethalMin.DebugMode)
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Main Entrance Pos at {targetScrapPosition}");
+                    CarryingItemTo = "Main";
+                }
+                HasFoundCaryTarget = true;
+            }
+            else if (MineshaftInside && IsOnUpperLevel)
+            {
+                Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
+                targetScrapPosition = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
+                if (LethalMin.DebugMode)
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Main Entrance Pos at {targetScrapPosition}");
+                CarryingItemTo = "Main(Mineshaft)";
+            }
+            else
+            {
+                Vector3 fireExitPosition = FindNearestFireExit();
+                targetScrapPosition = RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint.position;
+                if (LethalMin.OnlyExit && fireExitPosition != Vector3.zero
+                || !LethalMin.OnlyMain && Vector3.Distance(transform.position, fireExitPosition) <
+                 Vector3.Distance(transform.position, RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint.position))
+                {
+                    targetScrapPosition = fireExitPosition;
+                    if (LethalMin.DebugMode)
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Fire Exit Pos at {targetScrapPosition}");
+                    CarryingItemTo = "FireExit (Mineshaft)";
+                }
+                else
+                {
+                    if (LethalMin.DebugMode)
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Elevator Pos at {targetScrapPosition}");
+                    CarryingItemTo = "Elevator";
+                    HasFoundCaryTarget = true;
+                }
+            }
+            targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
+        }
+
 
         #endregion
 
