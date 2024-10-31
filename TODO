@@ -1,10 +1,9 @@
 (0.1.x)
-Fix remenats issue.
 Fix Client Side dropped inputs.
 Fix bee errors.
 Fix hoarder bug errors.
+Fix remenats issue.
 Optimize Pikmin Script.
-Fix buggy player animation.
 Fix pikmin pathing to seemingly random positions?
 
 (0.2.x)
@@ -13,3 +12,4 @@ Make Unity API mod.
 Add in poisoning.
 Make Pikmin get stuck in hydrogear.
 Redo PikminOnItem system.
+Fix buggy player animation.

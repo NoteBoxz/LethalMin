@@ -33,7 +33,7 @@ namespace LethalMin
         [HideInInspector]
         public int FuseID;
         [HideInInspector]
-        public string version = "0.1.11";
+        public string version = "0.1.12";
 
         /// <summary>
         /// Checks if an onion can fuse with the given OnionType.

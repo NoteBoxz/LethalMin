@@ -93,7 +93,7 @@ namespace LethalMin.Patches
             //playerAnimator.SetTrigger("SA_PullLever");
 
             // Revert back to the original controller after the animation finishes
-            player.StartCoroutine(RevertToOriginalController(playerAnimator, originalController, danceAnimation.length + CustomLengthOffset));
+            player.StartCoroutine(RevertToOriginalController(player, playerAnimator, originalController, danceAnimation.length + CustomLengthOffset));
 
             isCustomAnimationPlaying = true;
         }
@@ -122,7 +122,7 @@ namespace LethalMin.Patches
             playerAnimator.runtimeAnimatorController = overrideController;
 
             // Revert back to the original controller after the animation finishes
-            player.StartCoroutine(RevertToOriginalController(playerAnimator, originalController, danceAnimation.length + CustomLengthOffset));
+            player.StartCoroutine(RevertToOriginalController(player, playerAnimator, originalController, danceAnimation.length + CustomLengthOffset));
 
             isCustomAnimationPlaying = true;
         }
@@ -132,17 +132,19 @@ namespace LethalMin.Patches
             LethalMin.Logger.LogInfo("Reverted");
             animator.runtimeAnimatorController = originalController;
             isCustomAnimationPlaying = false;
-            animator.Play("Idle1");
         }
 
-        private static System.Collections.IEnumerator RevertToOriginalController(Animator animator, RuntimeAnimatorController originalController, float delay)
+        private static System.Collections.IEnumerator RevertToOriginalController(PlayerControllerB Player, Animator animator, RuntimeAnimatorController originalController, float delay)
         {
             LethalMin.Logger.LogInfo($"Reverting after {delay}");
             yield return new WaitForSeconds(delay);
             LethalMin.Logger.LogInfo("Reverted");
             animator.runtimeAnimatorController = originalController;
             isCustomAnimationPlaying = false;
-            animator.Play("Idle1");
+            Player.playerBodyAnimator.SetBool("Walking", true);
+            yield return new WaitForSeconds(0.1f);
+            if (!Player.isWalking)
+                Player.playerBodyAnimator.SetBool("Walking", false);
         }
 
         [HarmonyPatch("Update")]
@@ -156,7 +158,9 @@ namespace LethalMin.Patches
                 LethalMin.Logger.LogInfo("Auto Reverted");
                 __instance.playerBodyAnimator.runtimeAnimatorController = originalController;
                 isCustomAnimationPlaying = false;
-                __instance.playerBodyAnimator.Play("Idle1");
+                __instance.playerBodyAnimator.SetBool("Walking", true);
+                if (!__instance.isWalking)
+                    __instance.playerBodyAnimator.SetBool("Walking", false);
             }
         }
 
