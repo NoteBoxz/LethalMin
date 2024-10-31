@@ -2570,14 +2570,18 @@ namespace LethalMin
 
             var Qtarget = new ItemTarget("???", targetPos2, 0);
 
-            bool HasManEater = false;
 
             // CaveDweller target
             if (targetItem.GetComponentInParent<CaveDwellerPhysicsProp>() != null)
             {
                 Transform targetPos = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
                 possibleTargets.Add(new ItemTarget("CaveDweller", targetPos, 100)); // High priority
-                HasManEater = true;
+                CurTargets = possibleTargets;
+                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Skipping other targets because of CaveDweller");
+                CarryingItemTo = "CaveDweller";
+                HasFoundCaryTarget = true;
+                targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
+                return;
             }
 
             // Ship target (outside and not in Company Building)
@@ -2660,20 +2664,6 @@ namespace LethalMin
                 //Skip Null target
                 if (target.Name == "???")
                     continue;
-
-                // Skip targets that are not the maneater if the maneater is found
-                if (HasManEater && target.Name != "CaveDweller")
-                {
-                    continue;
-                }
-                else if (HasManEater)
-                {
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Skipping other targets because of CaveDweller");
-                    CarryingItemTo = target.Name;
-                    HasFoundCaryTarget = true;
-                    targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
-                    return;
-                }
 
                 // Check if the target is a maneater and if the current maneater is not the same as the target
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Possible target: {target.Name} at {target.GetPos()} with score of {target.Score}");
@@ -2769,7 +2759,7 @@ namespace LethalMin
             //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Calculating path to {finalDestination}");
 
             agent.CalculatePath(finalDestination, path);
-            if (log)
+            if (log && LethalMin.DebugMode)
                 LogPathStatus(path);
 
             if (path.status == NavMeshPathStatus.PathComplete)

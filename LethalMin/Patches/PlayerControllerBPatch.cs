@@ -132,6 +132,7 @@ namespace LethalMin.Patches
             LethalMin.Logger.LogInfo("Reverted");
             animator.runtimeAnimatorController = originalController;
             isCustomAnimationPlaying = false;
+            animator.Play("Idle1");
         }
 
         private static System.Collections.IEnumerator RevertToOriginalController(Animator animator, RuntimeAnimatorController originalController, float delay)
@@ -141,6 +142,7 @@ namespace LethalMin.Patches
             LethalMin.Logger.LogInfo("Reverted");
             animator.runtimeAnimatorController = originalController;
             isCustomAnimationPlaying = false;
+            animator.Play("Idle1");
         }
 
         [HarmonyPatch("Update")]
@@ -154,6 +156,7 @@ namespace LethalMin.Patches
                 LethalMin.Logger.LogInfo("Auto Reverted");
                 __instance.playerBodyAnimator.runtimeAnimatorController = originalController;
                 isCustomAnimationPlaying = false;
+                __instance.playerBodyAnimator.Play("Idle1");
             }
         }
 
