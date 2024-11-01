@@ -343,11 +343,16 @@ namespace LethalMin
                 return null!;
             }
 
+            LethalMin.Logger.LogInfo($"Finding nearest Pikmin of type {type.GetName()}... (Total: {followingPikmin.Count})");
             foreach (PikminAI pikmin in followingPikmin)
             {
                 if (pikmin == null || pikmin.PminType == null)
                 {
                     LethalMin.Logger.LogWarning("PikminAI or PikminType is null!");
+                    continue;
+                }
+                if (pikmin.IsThrown)
+                {
                     continue;
                 }
                 if (pikmin.PminType == type)
@@ -360,18 +365,27 @@ namespace LethalMin
                     }
                 }
             }
-
+            LethalMin.Logger.LogInfo($"Nearest Pikmin of type {type.GetName()}: {nearest.name} ({nearestDistance:F2} units)");
             return nearest;
         }
 
 
-        private void OnDestroy()
+        public override void OnDestroy()
         {
+            base.OnDestroy();
             StopAllCoroutines();
         }
-
+        public bool IsWaitingForThrowResponce;
+        Coroutine IsHoldingThrowButtonFailSafe = null!;
         private void OnThrowStarted(InputAction.CallbackContext context)
         {
+            if (IsWaitingForThrowResponce)
+            {
+                LethalMin.Logger.LogWarning("OnThrowStarted: Buffering Input");
+                StartCoroutine(ThrowStartedBuffer());
+                return;
+            }
+            LethalMin.Logger.LogInfo($"Throw started.");
             isHoldingThrowButton = true;
             isAiming = true;
             selectedPikmin = GetNearestPikminOfType(GetCurrentSelectedType());
@@ -389,50 +403,67 @@ namespace LethalMin
             }
         }
 
-        private void OnThrowCanceled(InputAction.CallbackContext context)
+        IEnumerator ThrowStartedBuffer()
         {
-            if (!IsServer)
-            {
-                // StartCoroutine(DelayThrow());
-                // return;
-            }
-            if (selectedPikmin != null && selectedPikmin.NetworkObject != null)
-            {
-                Vector3 cameraForward = mainCamera.transform.forward;
-                ThrowPikminServerRpc(selectedPikmin.NetworkObject, cameraForward);
-                SetPikminComponentsForAiming(selectedPikmin, false);
-            }
-            else
-            {
-                if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogWarning("No Pikmin selected or NetworkObject is null when attempting to throw.");
-            }
-            isHoldingThrowButton = false;
-            isAiming = false;
-            if (trajectoryPredictor == null)
-            {
-                LethalMin.Logger.LogWarning("Trjectory Predictor is null!");
-                return;
-            }
-            trajectoryPredictor.SetTrajectoryVisible(false);
+            yield return new WaitUntil(() => !IsWaitingForThrowResponce);
+            OnThrowStarted(new InputAction.CallbackContext());
         }
 
-        IEnumerator DelayThrow()
+        private void OnThrowCanceled(InputAction.CallbackContext context)
         {
-            yield return new WaitForSeconds(0.01f);
+            if (IsWaitingForThrowResponce)
+            {
+                LethalMin.Logger.LogWarning("OnThrowCancled: Buffering Input");
+                StartCoroutine(ThrowCanceledBuffer());
+                return;
+            }
+            if (IsHoldingThrowButtonFailSafe != null)
+            {
+                StopCoroutine(IsHoldingThrowButtonFailSafe);
+            }
+            IsWaitingForThrowResponce = true;
+            IsHoldingThrowButtonFailSafe = StartCoroutine(HoldingThrowButtonFailSafe());
             if (selectedPikmin != null && selectedPikmin.NetworkObject != null)
             {
-                Vector3 cameraForward = mainCamera.transform.forward;
-                ThrowPikminServerRpc(selectedPikmin.NetworkObject, cameraForward);
+                Vector3 cameraForward = Controller.gameplayCamera.transform.forward;
+                selectedPikmin.ThrowPikminServerRpc(throwOrigin.transform.position, cameraForward, selectedPikmin.ThrowForce, NetworkObject);
                 SetPikminComponentsForAiming(selectedPikmin, false);
+                RemovePikminServerRpc(selectedPikmin.NetworkObject);
+                LethalMin.Logger.LogInfo($"Throw Initated.");
             }
             else
             {
                 LethalMin.Logger.LogWarning("No Pikmin selected or NetworkObject is null when attempting to throw.");
+                IsWaitingForThrowResponce = false;
+                if (IsHoldingThrowButtonFailSafe != null)
+                {
+                    StopCoroutine(IsHoldingThrowButtonFailSafe);
+                }
             }
+
             isHoldingThrowButton = false;
             isAiming = false;
-            trajectoryPredictor.SetTrajectoryVisible(false);
+
+
+            if (trajectoryPredictor != null)
+            {
+                trajectoryPredictor.SetTrajectoryVisible(false);
+            }
+            else
+            {
+                LethalMin.Logger.LogWarning("Trjectory Predictor is null!");
+            }
+        }
+        IEnumerator ThrowCanceledBuffer()
+        {
+            yield return new WaitUntil(() => !IsWaitingForThrowResponce);
+            OnThrowCanceled(new InputAction.CallbackContext());
+        }
+        IEnumerator HoldingThrowButtonFailSafe()
+        {
+            yield return new WaitForSeconds(1f);
+            LethalMin.Logger.LogWarning("HoldingThrowButtonFailSafe: Cancelling throw.");
+            IsWaitingForThrowResponce = false;
         }
         #endregion
 
@@ -1046,53 +1077,6 @@ namespace LethalMin
         #endregion
 
         #region Pikmin Throwing
-        [ServerRpc(RequireOwnership = false)]
-        private void ThrowPikminServerRpc(NetworkObjectReference pikminRef, Vector3 cameraForward, ServerRpcParams serverRpcParams = default)
-        {
-            if (pikminRef.TryGet(out NetworkObject pikminObject))
-            {
-                PikminAI pikmin = pikminObject.GetComponent<PikminAI>();
-                if (pikmin != null)
-                {
-                    ulong clientId = serverRpcParams.Receive.SenderClientId;
-                    PlayerControllerB player = null;
-
-                    foreach (var palyer in StartOfRound.Instance.allPlayerScripts)
-                    {
-                        if (palyer.actualClientId == clientId)
-                        {
-                            player = palyer;
-                            break;
-                        }
-                    }
-
-                    if (player != null)
-                    {
-                        Vector3 throwPosition = player.transform.position + player.transform.forward + player.transform.up;
-                        Vector3 throwForward = cameraForward; // Use the camera's forward vector
-                        float throwForce = pikmin.ThrowForce;
-
-                        // Calculate the rotation based on the throw direction
-                        Quaternion throwRotation = Quaternion.LookRotation(throwForward);
-
-                        pikmin.transform.position = throwOrigin.transform.position;
-                        pikmin.transform.rotation = throwRotation;
-                        pikmin.rb.position = throwOrigin.transform.position;
-                        pikmin.rb.rotation = throwRotation;
-                        pikmin.ThrowPikminClientRpc(throwOrigin.transform.position, throwForward, throwForce, throwRotation);
-                        RemovePikminServerRpc(pikminRef);
-                        pikmin.SetComponentsForAimingClientRpc(false);
-
-                        // Start the rotation easing
-                        pikmin.StartRotationEasingClientRpc();
-                    }
-                    else
-                    {
-                        LethalMin.Logger.LogError($"Failed to find PlayerControllerB for client ID: {clientId}");
-                    }
-                }
-            }
-        }
 
         [ServerRpc(RequireOwnership = false)]
         private void SetPikminComponentsForAimingServerRpc(NetworkObjectReference pikminRef, bool isAiming)

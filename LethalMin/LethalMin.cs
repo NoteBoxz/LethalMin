@@ -182,6 +182,7 @@ namespace LethalMin
         public static bool ScanMin;
         public static bool PurgeAfterFire;
         public static string AttackBlacklist, PickupBlacklist;
+        public static int HoarderBugEatBuffer,HoarderBugEatLimmit;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
         public static ConfigEntry<bool> SkipPluckAnimation, FF, Smartmin, Smartermin, OnlyMainV, OnlyExitV, Pattack,
@@ -200,7 +201,7 @@ namespace LethalMin
 
         public static ConfigEntry<int> MechBurnLimmitConfig, JesterDiet, ThumperDiet, GiantDiet, BarberDiet, ManeaterDiet, SpideDiet,
         JesterBuffer, ThumperBuffer, SpiderBuffer, BeesShockCountConfig, ManeaterBuffer, MaxMin
-        , WhistlePrice, ContianerPrice, ItemRequireSubracter;
+        , WhistlePrice, ContianerPrice, ItemRequireSubracter, HBDiet, HBBuffer;
 
         public static ConfigEntry<string> throwActionConfig, switchForwardConfig,
         switchBackwardsConfig, whistleActionConfig, dismissActionConfig,
@@ -293,9 +294,11 @@ namespace LethalMin
             LethalHydro = Config.Bind("Enemy AI", "Make Hydrogere kill pikmin", false, "Makes the Hydrogere slime thing insta-kill pikmin");
             LethaDogs = Config.Bind("Enemy AI", "Make Enemies deaf to Pikmin", false, "Makes Enemie unable to hear pikmin when throwning or carrying");
             LethaDogs2 = Config.Bind("Enemy AI", "Make Enemies deaf to Whistle", false, "Makes Enemies unable to hear whistle when whistleing Pikmin");
-            LethalBugsConfig = Config.Bind("Enemy AI", "Make Hoarding Bugs eat Pikmin", false, "Makes Hoarding Bugs attack Pikmin if a pikmin attempts to grab it's scrap");
+            LethalBugsConfig = Config.Bind("Enemy AI", "Make Hoarding Bugs eat Pikmin", true, "Makes Hoarding Bugs attack Pikmin if a pikmin attempts to grab it's scrap");
             BeesShockCountConfig = Config.Bind("Enemy AI", "Bee Shock Count", 3, "The max ammount of bees that can shock a pikmin at a time");
             BeeChase = Config.Bind("Enemy AI", "Make bees chase Pikmin", false, "Makes Bees chase Pikmin when their hive goes missing");
+            HBDiet = Config.Bind("Enemy AI", "Hoarding Bug Eat Limmit", 1, "The max ammount of Hoarding Bugs can eat at a time");
+            HBBuffer = Config.Bind("Enemy AI", "Hoarding Bug Eat Buffer", 2, "The max ammount time after eating that the Hoarding Bug can eat again");
 
             PCPX = Config.Bind("HUD", "PikminSelected(XPos)", 262.78f, "The X position of the selected pikmin UI element");
             PCPY = Config.Bind("HUD", "PikminSelected(YPos)", -106f, "The Y position of the selected pikmin UI element");
@@ -371,6 +374,8 @@ namespace LethalMin
 
 
             #region Setting Config values
+            HoarderBugEatBuffer = HBBuffer.Value;
+            HoarderBugEatLimmit = HBDiet.Value;
             AttackBlacklist = AttackBlackListConfig.Value;
             PickupBlacklist = PickupBlacklistConfig.Value;
             PurgeAfterFire = CanShipEjectFromShip.Value;
@@ -490,6 +495,8 @@ namespace LethalMin
 
             #region Setting Config Events
             // Add SettingChanged events for all configs
+            HBBuffer.SettingChanged += (_, _) => HoarderBugEatBuffer = HBBuffer.Value;
+            HBDiet.SettingChanged += (_, _) => HoarderBugEatLimmit = HBDiet.Value;
             AttackBlackListConfig.SettingChanged += (_, _) => AttackBlacklist = AttackBlackListConfig.Value;
             PickupBlacklistConfig.SettingChanged += (_, _) => PickupBlacklist = PickupBlacklistConfig.Value;
             CanShipEjectFromShip.SettingChanged += (_, _) => PurgeAfterFire = CanShipEjectFromShip.Value;
@@ -661,6 +668,8 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(LethalBugsConfig, false));
             LethalConfigManager.AddConfigItem(new IntInputFieldConfigItem(BeesShockCountConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(BeeChase, false));
+            LethalConfigManager.AddConfigItem(new IntInputFieldConfigItem(HBDiet, false));
+            LethalConfigManager.AddConfigItem(new IntInputFieldConfigItem(HBBuffer, false));
 
             // Maneater
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(LethalManEaterConfig, false));
@@ -714,7 +723,6 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new IntInputFieldConfigItem(WhistlePrice, false));
             LethalConfigManager.AddConfigItem(new IntInputFieldConfigItem(ContianerPrice, false));
             LethalConfigManager.AddConfigItem(new IntInputFieldConfigItem(ItemRequireSubracter, false));
-            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(DebugM, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(FunniMode, true));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(WhistleRange, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(WhistleMinRaidus, false));
@@ -723,6 +731,7 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SpeedMultiplierConfig, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(DamageMultiplierConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(CanShipEjectFromShip, false));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(DebugM, false));
 
 
             // Lethal Mon            
@@ -950,7 +959,7 @@ namespace LethalMin
                 {
                     Logger.LogWarning("Pikmin type with ID " + type.OnionTypeID + " " + type.TypeName + " has a different version than the mod " + $"({MyPluginInfo.PLUGIN_VERSION})" + ", this may cause issues!");
                 }
-                if(type.TypesCanHold.Length == 0)
+                if (type.TypesCanHold.Length == 0)
                 {
                     Logger.LogWarning("Onion type with ID " + type.OnionTypeID + " " + type.TypeName + " has no types that can hold it!");
                 }

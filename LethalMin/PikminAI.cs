@@ -301,8 +301,6 @@ namespace LethalMin
             rb.isKinematic = true;
             rb.useGravity = false;
             rb.detectCollisions = false;
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
             rb.constraints = RigidbodyConstraints.FreezeAll;
             rb.interpolation = RigidbodyInterpolation.None;
             rb.Sleep();
@@ -2561,7 +2559,7 @@ namespace LethalMin
             Transform targetPos2 = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
 
             var Qtarget = new ItemTarget("???", targetPos2, 0);
-            ItemTarget cartarget = new ItemTarget("Car", TargetCarPos.transform.position, 90);
+            ItemTarget cartarget = new ItemTarget(" ", Vector3.zero, 0);
 
 
             // CaveDweller target
@@ -2682,9 +2680,13 @@ namespace LethalMin
 
             LethalMin.Logger.LogWarning($"({uniqueDebugId}) No pathable target found!");
         }
+        private float lastTargetSwitchTime = 0f;
+        private const float TARGET_SWITCH_COOLDOWN = 2f; // 2 seconds cooldown
+        private const float DISTANCE_THRESHOLD = 0.5f; // 0.5 units threshold
+
         private void RefeshItemTargets()
         {
-            //Exclude the ??? target name from the list before doing the return check
+            // Exclude the ??? target name from the list before doing the return check
             if (CurTargets[0].Name == "???")
             {
                 //Check if any other targets are pathable
@@ -2702,41 +2704,57 @@ namespace LethalMin
                         }
                     }
                 }
-                return;
             }
-            else
-            {
-                return;
-            }
-            // Keeping this unreachable code here just in case.
-            
+
             ItemTarget[] targets = CurTargets.Where(t => t.Name != "???").ToArray();
-            if (targets.Length == 0 || targets.Length == 1)
+            if (targets.Length <= 1)
             {
                 return;
             }
-            //We'll be modifying the targetList so we'll need to use a regular for loop to avoid concurrent modification
-            for (int i = 0; i < CurTargets.Count; i++)
+
+            // Check if enough time has passed since the last target switch
+            if (Time.time - lastTargetSwitchTime < TARGET_SWITCH_COOLDOWN)
+            {
+                return;
+            }
+
+            ItemTarget currentTopTarget = CurTargets[0];
+            ItemTarget bestTarget = currentTopTarget;
+            float bestDistance = Vector3.Distance(transform.position, currentTopTarget.Position);
+
+            for (int i = 1; i < CurTargets.Count; i++)
             {
                 var target = CurTargets[i];
-                if (target.Equals(CurTargets[0]) || target.Name == "???")
+                if (target.Name == "???")
                 {
                     continue;
                 }
-                // Move the target to the top of the list if it's pathable and closer than the current top target
+
                 if (IsPathPossible(target.Position, false))
                 {
-                    float distanceToCurrentTarget = Vector3.Distance(transform.position, CurTargets[0].Position);
                     float distanceToNewTarget = Vector3.Distance(transform.position, target.Position);
 
-                    if (distanceToNewTarget < distanceToCurrentTarget)
+                    // Add a slight preference for the current top target
+                    if (target.Equals(currentTopTarget))
                     {
-                        CurTargets.RemoveAt(i);
-                        CurTargets.Insert(0, target);
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Moved target {target.Name} to the top of the list");
-                        break;
+                        distanceToNewTarget -= 0.1f;
+                    }
+
+                    if (distanceToNewTarget < bestDistance - DISTANCE_THRESHOLD)
+                    {
+                        bestTarget = target;
+                        bestDistance = distanceToNewTarget;
                     }
                 }
+            }
+
+            // Only switch if the best target is different and significantly closer
+            if (!bestTarget.Equals(currentTopTarget))
+            {
+                CurTargets.Remove(bestTarget);
+                CurTargets.Insert(0, bestTarget);
+                lastTargetSwitchTime = Time.time;
+                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Moved target {bestTarget.Name} to the top of the list");
             }
         }
         private bool IsPathPossible(Vector3 destination, bool log = true, bool AllowPartiallyBlocked = false)
@@ -3131,27 +3149,47 @@ namespace LethalMin
 
 
         #region Aiming and Throwing
-        [ClientRpc]
-        public void ThrowPikminClientRpc(Vector3 startPos, Vector3 throwForward, float force, Quaternion throwRotation)
+        [ServerRpc(RequireOwnership = false)]
+        public void ThrowPikminServerRpc(Vector3 startPos, Vector3 throwForward, float force, NetworkObjectReference target)
         {
+            ThrowPikminClientRpc(startPos, throwForward, force, target);
+        }
+
+        [ClientRpc]
+        public void ThrowPikminClientRpc(Vector3 startPos, Vector3 throwForward, float force, NetworkObjectReference target)
+        {
+            LethalMin.Logger.LogInfo($"{uniqueDebugId} - Throwing Pikmin at {startPos} with force {force}");
+            Quaternion throwRotation = Quaternion.LookRotation(throwForward);
+
+            // move the pikmin to the positions
             rb.position = startPos;
             rb.rotation = throwRotation;
+            transform.position = startPos;
             transform.rotation = throwRotation;
+
+            if (IsServer)
+                GetComponent<NetworkTransform>().Teleport(startPos, throwRotation, transform.localScale);
+
+            //Disable the agent
             agent.updatePosition = false;
             agent.updateRotation = false;
             isHeldOrThrown = true;
             IsThrown = true;
             isHeld = false;
+
+            //Enable Rigibody physics and enable collisions
             rb.isKinematic = false;
             rb.useGravity = true;
             rb.detectCollisions = true;
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
             rb.constraints = RigidbodyConstraints.None;
             rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
+            rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            rb.excludeLayers = ~LethalMin.Instance.PikminColideable;
             rb.WakeUp();
             Pcollider.enabled = true;
+
+            //Clear leader references
             if (IsServer && currentLeader != null) { currentLeader.RemovePikminServerRpc(new NetworkObjectReference(NetworkObject)); }
             EnemyAttacking = null;
             targetPlayer = null;
@@ -3159,17 +3197,26 @@ namespace LethalMin
             currentLeaderNetworkObject = null;
             SetTriggerClientRpc("Thrown");
 
-            rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
-            rb.excludeLayers = ~LethalMin.Instance.PikminColideable;
-
             // Use the provided throwForward vector for the throw direction
             Vector3 throwDirection = throwForward.normalized;
             rb.AddForce(throwDirection * force, ForceMode.Impulse);
 
-            if (LethalMin.DebugMode)
-                LethalMin.Logger.LogInfo($"Force: {throwDirection * force}");
+            SetComponentsForAimingClientRpc(false);
+            StartRotationEasingClientRpc();
+
             SwitchToBehaviourClientRpc((int)PState.Airborn);
             ReqeustThrowSFXClientRpc();
+            
+            LeaderManager targetLeader = null!;
+
+            if (target.TryGet(out NetworkObject targetL))
+            {
+                targetLeader = targetL.GetComponent<LeaderManager>();
+                targetLeader.IsWaitingForThrowResponce = false;
+            }
+
+            if (LethalMin.DebugMode)
+                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Force: {throwDirection * force}");
         }
 
         [ClientRpc]
@@ -3452,8 +3499,6 @@ namespace LethalMin
                 rb.isKinematic = true;
                 rb.useGravity = false;
                 rb.detectCollisions = false;
-                rb.velocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
                 rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
                 rb.interpolation = RigidbodyInterpolation.Interpolate;
                 rb.Sleep();
@@ -3474,8 +3519,6 @@ namespace LethalMin
                 rb.isKinematic = false;
                 rb.useGravity = true;
                 rb.detectCollisions = true;
-                rb.velocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
                 rb.constraints = RigidbodyConstraints.None;
                 rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
                 rb.interpolation = RigidbodyInterpolation.Interpolate;
@@ -3673,8 +3716,6 @@ namespace LethalMin
             Pcollider.enabled = false;
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
             rb.detectCollisions = false;
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
             rb.constraints = RigidbodyConstraints.FreezeAll;
             rb.interpolation = RigidbodyInterpolation.None;
             rb.Sleep();
@@ -3845,8 +3886,6 @@ namespace LethalMin
                     rb.useGravity = false;
                     Pcollider.enabled = false;
                     rb.detectCollisions = false;
-                    rb.velocity = Vector3.zero;
-                    rb.angularVelocity = Vector3.zero;
                     rb.constraints = RigidbodyConstraints.FreezeAll;
                     rb.interpolation = RigidbodyInterpolation.None;
                     rb.Sleep();
@@ -3887,8 +3926,6 @@ namespace LethalMin
             rb.useGravity = false;
             Pcollider.enabled = false;
             rb.detectCollisions = false;
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
             rb.constraints = RigidbodyConstraints.None;
             rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
@@ -3957,8 +3994,6 @@ namespace LethalMin
             rb.useGravity = true;
             Pcollider.enabled = true;
             rb.detectCollisions = true;
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
             rb.constraints = RigidbodyConstraints.None;
             rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
@@ -4021,8 +4056,6 @@ namespace LethalMin
             rb.useGravity = true;
             Pcollider.enabled = true;
             rb.detectCollisions = true;
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
             rb.constraints = RigidbodyConstraints.None;
             rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
