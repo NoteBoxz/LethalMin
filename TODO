@@ -9,6 +9,7 @@ Fix pikmin pathing to seemingly random positions?
 (0.2.x)
 Make onions produce sprouts.
 Make Unity API mod.
+Add in Puffmin.
 Add in poisoning.
 Make Pikmin get stuck in hydrogear.
 Redo PikminOnItem system.

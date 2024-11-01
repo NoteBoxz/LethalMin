@@ -52,14 +52,6 @@ namespace LethalMin
             Position = Vector3.zero;
             relivent = true;
         }
-
-
-        public bool CanPathToOnNavMesh()
-        {
-            NavMeshPath path;
-            path = new NavMeshPath();
-            return NavMesh.CalculatePath(Position, Transform.position, NavMesh.AllAreas, path) && path.status == NavMeshPathStatus.PathComplete;
-        }
         public Vector3 GetPos()
         {
             if (Transform != null)
@@ -2569,6 +2561,7 @@ namespace LethalMin
             Transform targetPos2 = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
 
             var Qtarget = new ItemTarget("???", targetPos2, 0);
+            ItemTarget cartarget = new ItemTarget("Car", TargetCarPos.transform.position, 90);
 
 
             // CaveDweller target
@@ -2599,7 +2592,8 @@ namespace LethalMin
                 if (TargetCar != null && TargetCarPos != null && TargetCar.backDoorOpen
                  && Vector3.Distance(transform.position, TargetCar.transform.position) < Vector3.Distance(transform.position, shipPos))
                 {
-                    possibleTargets.Add(new ItemTarget("Car", TargetCarPos.transform.position, 90)); // Higher priority than ship
+                    cartarget = new ItemTarget("Car", TargetCarPos.transform.position, 90);
+                    possibleTargets.Add(cartarget); // Higher priority than ship
                 }
             }
 
@@ -2664,10 +2658,9 @@ namespace LethalMin
                 //Skip Null target
                 if (target.Name == "???")
                     continue;
-
                 // Check if the target is a maneater and if the current maneater is not the same as the target
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Possible target: {target.Name} at {target.GetPos()} with score of {target.Score}");
-                if (IsPathPossible(target.Position) || target.Name == "Ship" || target.Name == "Car" || target.Name == "Counter")
+                if (IsPathPossible(target.Position) || target.Name == "Ship" && !possibleTargets.Contains(cartarget) || target.Name == "Car" || target.Name == "Counter")
                 {
                     CarryingItemTo = target.Name;
                     HasFoundCaryTarget = true;
@@ -2709,7 +2702,14 @@ namespace LethalMin
                         }
                     }
                 }
+                return;
             }
+            else
+            {
+                return;
+            }
+            // Keeping this unreachable code here just in case.
+            
             ItemTarget[] targets = CurTargets.Where(t => t.Name != "???").ToArray();
             if (targets.Length == 0 || targets.Length == 1)
             {
