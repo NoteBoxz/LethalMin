@@ -27,6 +27,17 @@ namespace LethalMin.Patches
             GameObject AttackerPrefab = LethalMin.PikminAttackerNode;
             GameObject ManeaterPrefab = LethalMin.EaterBehavior;
             GameObject NoticePrefab = LethalMin.NoticeZone;
+            GameObject PuffminPrefab = LethalMin.PuffminPrefab;
+
+            if (PuffminPrefab != null)
+            {
+                PuffminPrefab.AddComponent<PuffminAI>();
+                NetworkManager.Singleton.AddNetworkPrefab(PuffminPrefab);
+            }
+            else
+            {
+                LethalMin.Logger.LogError("Failed to load Puffmin.prefab!");
+            }
 
             if (NoticePrefab != null)
             {

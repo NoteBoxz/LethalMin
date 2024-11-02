@@ -1582,7 +1582,7 @@ namespace LethalMin
         private Vector3 FindTeleportPosition()
         {
             // Try current leader position
-            if (currentLeader != null)
+            if (currentLeader != null && !currentLeader.Controller.isPlayerDead)
             {
                 Vector3 leaderNavMeshPoint = FindNearestNavMeshPoint(currentLeader.transform.position);
                 if (leaderNavMeshPoint != currentLeader.transform.position)
@@ -1592,7 +1592,7 @@ namespace LethalMin
             }
 
             // Try previous leader position (if we have one)
-            if (previousLeader != null)
+            if (previousLeader != null && !previousLeader.Controller.isPlayerDead)
             {
                 Vector3 prevLeaderNavMeshPoint = FindNearestNavMeshPoint(previousLeader.transform.position);
                 if (prevLeaderNavMeshPoint != previousLeader.transform.position)

@@ -59,6 +59,12 @@ namespace LethalMin
                     }
                     pikmin.NoticeInstant(leader, true);
                 }
+                
+                PuffminAI puffmin = other.GetComponentInParent<PuffminAI>();
+                if (puffmin != null && !puffmin.IsDying)
+                {
+                    puffmin.TurnIntoPikmin();
+                }
             }
             if (other.name == "WhistleDetectionWhistle" && !InstantNotice)
             {
