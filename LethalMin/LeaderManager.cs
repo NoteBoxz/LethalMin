@@ -797,6 +797,8 @@ namespace LethalMin
             pikmin.agent.stoppingDistance = 0;
             yield return new WaitForSeconds(0.1f);
             pikmin.agent.Warp(teleportPosition);
+            if (IsServer)
+                pikmin.transform2.Teleport(teleportPosition, pikmin.transform.rotation, pikmin.transform.localScale);
             yield return new WaitForSeconds(0.1f);
             pikmin.agent.stoppingDistance = formerStop;
         }

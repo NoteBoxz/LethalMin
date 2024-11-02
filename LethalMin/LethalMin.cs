@@ -55,8 +55,11 @@ namespace LethalMin
 
         public static string ManeaterName = "Maneater";
         public static EnemyType pikminEnemyType = null!;
+        public static EnemyType puffminEnemyType = null!;
         private static TerminalNode pikminTerminalNode = null!;
         private TerminalKeyword pikminTerminalKeyword = null!;
+        private static TerminalNode puffminTerminalNode = null!;
+        private TerminalKeyword puffminTerminalKeyword = null!;
         public GameObject PikminPrefab = null!;
         public static Dictionary<int, PikminType> RegisteredPikminTypes = new Dictionary<int, PikminType>();
         public static Dictionary<int, PikminType> IndoorTypes = new Dictionary<int, PikminType>();
@@ -182,7 +185,7 @@ namespace LethalMin
         public static bool ScanMin;
         public static bool PurgeAfterFire;
         public static string AttackBlacklist, PickupBlacklist;
-        public static int HoarderBugEatBuffer,HoarderBugEatLimmit;
+        public static int HoarderBugEatBuffer, HoarderBugEatLimmit;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
         public static ConfigEntry<bool> SkipPluckAnimation, FF, Smartmin, Smartermin, OnlyMainV, OnlyExitV, Pattack,
@@ -827,6 +830,7 @@ namespace LethalMin
         {
             if (!type.HasBeenRegistered)
             {
+                //Do Fatal Checks
                 if (type.MeshPrefab == null)
                 {
                     Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no mesh prefab, skipping registration!");
@@ -842,11 +846,8 @@ namespace LethalMin
                     Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " anim path does not contain an animator, skipping registration!");
                     return;
                 }
-                if (type.MeshPrefab.GetComponent<NetworkObject>() == null)
-                {
-                    //Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " mesh prefab has no network object, skipping registration!");;
-                    //return;
-                }
+
+                //Register the type
                 if (type.PikminScripts != null && type.PikminScripts.Length > 0)
                 {
                     GameObject container = LethalMin.pikminPrefab.transform.Find("PikminScriptContainer").gameObject;
@@ -857,14 +858,14 @@ namespace LethalMin
                         LethalMin.Logger.LogInfo("Added " + script.GetType().Name);
                     }
                 }
+
+                //Do Invalid Checks
                 type.PikminTypeID = RegisteredPikminTypes.Count;
                 RegisteredPikminTypes.Add(type.PikminTypeID, type);
                 if (GetMajorMinorVersion(type.version) != GetMajorMinorVersion(MyPluginInfo.PLUGIN_VERSION))
                 {
                     Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has a different version than the mod " + $"({GetMajorMinorVersion(MyPluginInfo.PLUGIN_VERSION)})" + ", this may cause issues!");
                 }
-
-                //Do Invalid Checks
                 if (type.PikminIcon == null)
                 {
                     Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no icon!");
@@ -886,25 +887,20 @@ namespace LethalMin
                 {
                     Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has invalid knockback resistance!");
                 }
-
                 int invalidspeeds = 0;
-
                 foreach (float item in type.Speeds)
                 {
                     if (item == 0)
                         invalidspeeds++;
                 }
-
                 if (invalidspeeds == type.Speeds.Length || type.Speeds.Length == 0)
                 {
                     Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no speed!");
                 }
-
                 if (type.GrowthStagePaths.Length > type.Speeds.Length)
                 {
                     Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has more grow paths than speeds!");
                 }
-
                 if (type.GrowthStagePaths.Length < type.Speeds.Length)
                 {
                     Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has less grow paths than speeds!");
@@ -914,6 +910,7 @@ namespace LethalMin
                     Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has a zero spawn chance multiplier!");
                 }
 
+                //Do spawn checks
                 if (type.SpawnsIndoors)
                 {
                     if (DebugMode)
@@ -938,6 +935,8 @@ namespace LethalMin
                         Logger.LogInfo(" " + type.GetName() + " spawns naturally");
                     NaturalTypes.Add(type.PikminTypeID, type);
                 }
+
+                //Do Finializeations
                 type.MeshData.type = type;
                 type.MeshData.Initalize();
                 UpdateBeastairy();
@@ -1034,6 +1033,7 @@ namespace LethalMin
         public static Mesh TwoSideOnion, ThreeSideOnion, FourSideOnion, FiveSideOnion, SixSideOnion, SevenSideOnion, EightSideOnion;
         public static Item OnionItem;
         public static AnimationClip PluckAnim;
+        public static GameObject PuffminPrefab;
 
         private void LoadPikminAssets()
         {
@@ -1125,6 +1125,9 @@ namespace LethalMin
             OnionItem = AssetLoader.LoadAsset<Item>("Assets/LethalminAssets/Onion/OnionItem.asset");
             PikminObjectPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/PikminItemNode.prefab");
             EaterBehavior = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/ManeaterBehavior.prefab");
+            puffminEnemyType = AssetLoader.LoadAsset<EnemyType>("Assets/LethalminAssets/Puffmin/Puffmin");
+            puffminTerminalNode = AssetLoader.LoadAsset<TerminalNode>("Assets/LethalminAssets/Puffmin/Bestiary/Puffmin TN");
+            puffminTerminalKeyword = AssetLoader.LoadAsset<TerminalKeyword>("Assets/LethalminAssets/Puffmin/Bestiary/Puffmin TK");
 
             // Load UI elements
             KilledUIelement = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/HUD/Pikmin4/KillNleft.prefab");
@@ -1160,6 +1163,7 @@ namespace LethalMin
             SevenSideOnion = AssetLoader.LoadAsset<Mesh>("Assets/LethalminAssets/Onion/Models/SK_stg_Onyon.027.mesh");
             EightSideOnion = AssetLoader.LoadAsset<Mesh>("Assets/LethalminAssets/Onion/Models/SK_stg_Onyon.028.mesh");
 
+            PuffminPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Puffmin/Puffmin.prefab");
         }
 
         static AudioClip[] LoadIncrementalSFX(string baseName, int count)
@@ -1244,6 +1248,22 @@ namespace LethalMin
             Unlockables.RegisterUnlockable(OnionShipItem, ContianerPriceValue, StoreType.ShipUpgrade);
 
             Logger.LogInfo("Faucet registered successfully!");
+
+            // Register the Puffmin enemy with LethalLib, including TerminalNode and TerminalKeyword
+            PuffminAI ai2 = PuffminPrefab.AddComponent<PuffminAI>();
+            //PuffminPrefab.transform.Find("WaterDetector").gameObject.AddComponent<PuffminWaterDetector>().parentScript = PuffminPrefab.GetComponent<PuffminAI>();
+            ai2.enemyType = puffminEnemyType;
+            //ai2.creatureVoice = PuffminPrefab.transform.Find("CreatureVoice").GetComponent<AudioSource>();
+            //ai2.creatureSFX = PuffminPrefab.transform.Find("CreatureSFX").GetComponent<AudioSource>();
+            ai2.eye = PuffminPrefab.transform.Find("Eye");
+            PuffminPrefab.transform.Find("PuffminColision").GetComponent<EnemyAICollisionDetect>().mainScript = ai2;
+            ai2.openDoorSpeedMultiplier = puffminEnemyType.doorSpeedMultiplier;
+
+            ai2.LocalSFX = PuffminPrefab.transform.Find("CreatureSFX").GetComponent<AudioSource>();
+            ai2.LocalVoice = PuffminPrefab.transform.Find("CreatureVoice").GetComponent<AudioSource>();
+            Enemies.RegisterEnemy(puffminEnemyType, 0, Levels.LevelTypes.All, puffminTerminalNode, puffminTerminalKeyword);
+            
+            Logger.LogInfo("Puffmin enemy registered successfully!");
 
             AssetLoader.LoadAsset<PikminType>("Assets/LethalminAssets/Pikmin/Types 2/PurplePikmin.asset").PikminScripts = new[] { new PurplePikmin() };
             PikminType[] RPtypes = new[] {

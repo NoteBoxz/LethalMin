@@ -154,7 +154,7 @@ namespace LethalMin
         MineshaftElevatorController? elevator;
         public EnemyAI? EnemyAttacking;
         public PikminDamager? EnemyDamager;
-        public NetworkTransform? transform2;
+        public NetworkTransform transform2 = null!;
         [IDebuggable.Debug] public bool IsDrowing, IsLeaderOnElevator, HasCustomScripts;
         public bool IsWhistled;
         float KnockBackBuffer, AttackTimer;
@@ -3168,7 +3168,7 @@ namespace LethalMin
             transform.rotation = throwRotation;
 
             if (IsServer)
-                GetComponent<NetworkTransform>().Teleport(startPos, throwRotation, transform.localScale);
+                transform2.Teleport(startPos, throwRotation, transform.localScale);
 
             //Disable the agent
             agent.updatePosition = false;
