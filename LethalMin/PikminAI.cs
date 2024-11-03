@@ -669,6 +669,34 @@ namespace LethalMin
             IsWhistled = false;
         }
 
+        public void TurnIntoPuffmin()
+        {
+            if (!IsServer) { return; }
+            GameObject SproutInstance = Instantiate(LethalMin.pikminPrefab, transform.position, transform.rotation);
+            PuffminAI SproteScript = SproutInstance.GetComponent<PuffminAI>();
+            SproteScript.isOutside = isOutside;
+            SproteScript.PreDefinedType = true;
+            SproteScript.OriginalType = PminType;
+            SproteScript.NetworkObject.Spawn();
+            PikminManager.Instance.SpawnPikminClientRpc(SproteScript.NetworkObject);
+
+            PikminManager.Instance.DespawnPikminClientRpc(NetworkObject);
+        }
+
+        public void TurnIntoPuffmin(EnemyAI enemyAI)
+        {
+            if (!IsServer) { return; }
+            GameObject SproutInstance = Instantiate(LethalMin.pikminPrefab, transform.position, transform.rotation);
+            PuffminAI SproteScript = SproutInstance.GetComponent<PuffminAI>();
+            SproteScript.isOutside = isOutside;
+            SproteScript.PreDefinedType = true;
+            SproteScript.OriginalType = PminType;
+            SproteScript.NetworkObject.Spawn();
+            PikminManager.Instance.SpawnPikminClientRpc(SproteScript.NetworkObject);
+            SproteScript.AssignOwner(enemyAI);
+
+            PikminManager.Instance.DespawnPikminClientRpc(NetworkObject);
+        }
 
         #region Core Update Logic
         public override void DoAIInterval()
@@ -3206,7 +3234,7 @@ namespace LethalMin
 
             SwitchToBehaviourClientRpc((int)PState.Airborn);
             ReqeustThrowSFXClientRpc();
-            
+
             LeaderManager targetLeader = null!;
 
             if (target.TryGet(out NetworkObject targetL))

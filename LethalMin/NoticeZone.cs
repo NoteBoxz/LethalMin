@@ -17,7 +17,9 @@ namespace LethalMin
         public bool IsActive = true;
         public bool InstantNotice = false;
         public bool UseCheckSpher = false;
+        public bool CanConvertPikmin = false;
         public PlayerControllerB? leader;
+        public EnemyAI? enemy;
         [ServerRpc(RequireOwnership = false)]
         public void SetLeaderOnServerRpc(NetworkObjectReference leaderref)
         {
@@ -119,20 +121,35 @@ namespace LethalMin
                 yield return new WaitForSeconds(0.01f);
                 // Check if the collider belongs to a PikminAI
                 PikminAI pikminAI = collider.GetComponentInParent<PikminAI>();
-                if (pikminAI != null && !pikminAI.CannotEscape)
+                if (!CanConvertPikmin)
                 {
-                    pikminAI.whistlingPlayer = leader;
-                    pikminAI.IsWhistled = true;
-                    if (InstantNotice)
+                    if (pikminAI != null && !pikminAI.CannotEscape)
                     {
-                        pikminAI.NoticeInstant(leader, true);
+                        pikminAI.whistlingPlayer = leader;
+                        pikminAI.IsWhistled = true;
+                        if (InstantNotice)
+                        {
+                            pikminAI.NoticeInstant(leader, true);
+                        }
                     }
                 }
-
-                PuffminAI puffmin = collider.GetComponentInParent<PuffminAI>();
-                if (puffmin != null && !puffmin.IsDying)
+                else
                 {
-                    puffmin.TurnIntoPikmin();
+                    if (pikminAI != null && !pikminAI.CannotEscape && !pikminAI.IsDying
+                     && pikminAI.currentBehaviourStateIndex == (int)PState.Idle)
+                    {
+                        pikminAI.TurnIntoPuffmin(enemy);
+                    }
+                }
+                // Check if the collider belongs to a PuffminAI and can be converted
+                if (!CanConvertPikmin)
+                {
+                    PuffminAI puffmin = collider.GetComponentInParent<PuffminAI>();
+                    if (puffmin != null && !puffmin.IsDying &&
+                    (puffmin.currentBehaviourStateIndex == (int)PuffState.attacking || puffmin.currentBehaviourStateIndex == (int)PuffState.idle))
+                    {
+                        puffmin.TurnIntoPikmin();
+                    }
                 }
             }
         }

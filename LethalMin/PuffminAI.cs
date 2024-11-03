@@ -39,10 +39,10 @@ namespace LethalMin
         public bool HasFreeWill = true;
         public PikminType OriginalType = null!;
         public bool IsDying = false;
+        public bool PreDefinedType = false;
         public override void Start()
         {
             enemyRandom = new System.Random(StartOfRound.Instance.randomMapSeed + thisEnemyIndex);
-            OriginalType = LethalMin.RegisteredPikminTypes.Values.ToList()[enemyRandom.Next(0, LethalMin.RegisteredPikminTypes.Count)];
             //Check if any player is null in the Players List
             if (Players.Count == 0 || Players.Any(p => p == null))
                 Players = FindObjectsOfType<PlayerControllerB>().ToList();
@@ -86,6 +86,20 @@ namespace LethalMin
             yield return new WaitForSeconds(0.1f);  // Wait for one frame
             enemyBehaviourStates = new EnemyBehaviourState[Enum.GetValues(typeof(PuffState)).Length];
 
+            if (!PreDefinedType)
+            {
+                if (LethalMin.NaturalTypes.Count == 0)
+                {
+                    LethalMin.Logger.LogWarning("No natural types found, this should not happen");
+                    OriginalType = LethalMin.RegisteredPikminTypes[0];
+                }
+                else
+                {
+                    OriginalType = LethalMin.NaturalTypes[enemyRandom.Next(0, LethalMin.NaturalTypes.Count)];
+                    if (LethalMin.DebugMode)
+                        LethalMin.Logger.LogInfo($"Picked {OriginalType} for ramdo");
+                }
+            }
             yield return null;  // Wait another frame
         }
 
@@ -213,10 +227,10 @@ namespace LethalMin
             PikminAI SproteScript = SproutInstance.GetComponent<PikminAI>();
             SproteScript.isOutside = false;
             SproteScript.NetworkObject.Spawn();
-            PikminManager.Instance.SpawnPikminClientRpc(new NetworkObjectReference(SproteScript.NetworkObject));
-            PikminManager.Instance.CreatePikminClientRPC(new NetworkObjectReference(SproteScript.NetworkObject), OriginalType.PikminTypeID, isOutside);
+            PikminManager.Instance.SpawnPikminClientRpc(SproteScript.NetworkObject);
+            PikminManager.Instance.CreatePikminClientRPC(SproteScript.NetworkObject, OriginalType.PikminTypeID, isOutside);
 
-            NetworkObject.Despawn(true);
+            PikminManager.Instance.DespawnPikminClientRpc(NetworkObject);
         }
 
         public override void Update()
@@ -433,7 +447,7 @@ namespace LethalMin
             if (DoLinecast && closestPlayer != null)
             {
                 RaycastHit hit;
-                if (!Physics.Linecast(position, closestPlayer.transform.position, out hit, 
+                if (!Physics.Linecast(position, closestPlayer.transform.position, out hit,
                 StartOfRound.Instance.collidersAndRoomMaskAndDefault, QueryTriggerInteraction.Ignore))
                 {
                     return closestPlayer;

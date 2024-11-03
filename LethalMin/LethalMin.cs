@@ -1036,7 +1036,7 @@ namespace LethalMin
         public static Mesh TwoSideOnion, ThreeSideOnion, FourSideOnion, FiveSideOnion, SixSideOnion, SevenSideOnion, EightSideOnion;
         public static Item OnionItem;
         public static AnimationClip PluckAnim;
-        public static GameObject PuffminPrefab;
+        public static GameObject PuffminPrefab,POMprefab;
 
         private void LoadPikminAssets()
         {
@@ -1133,6 +1133,7 @@ namespace LethalMin
             puffminEnemyType = AssetLoader.LoadAsset<EnemyType>("Assets/LethalminAssets/Puffmin/Puffmin");
             puffminTerminalNode = AssetLoader.LoadAsset<TerminalNode>("Assets/LethalminAssets/Puffmin/Bestiary/Puffmin TN");
             puffminTerminalKeyword = AssetLoader.LoadAsset<TerminalKeyword>("Assets/LethalminAssets/Puffmin/Bestiary/Puffmin TK");
+            POMprefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Puffmin/PuffminOwnerManager.prefab");
 
             // Load UI elements
             KilledUIelement = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/HUD/Pikmin4/KillNleft.prefab");

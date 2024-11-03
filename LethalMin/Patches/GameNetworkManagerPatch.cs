@@ -28,6 +28,17 @@ namespace LethalMin.Patches
             GameObject ManeaterPrefab = LethalMin.EaterBehavior;
             GameObject NoticePrefab = LethalMin.NoticeZone;
             GameObject PuffminPrefab = LethalMin.PuffminPrefab;
+            GameObject PuffminOwnerManagerPrefab = LethalMin.POMprefab;
+
+            if (PuffminOwnerManagerPrefab != null)
+            {
+                PuffminOwnerManagerPrefab.AddComponent<PuffminOwnerManager>();
+                NetworkManager.Singleton.AddNetworkPrefab(PuffminOwnerManagerPrefab);
+            }
+            else
+            {
+                LethalMin.Logger.LogError("Failed to load PuffminOwnerManager.prefab!");
+            }
 
             if (PuffminPrefab != null)
             {
