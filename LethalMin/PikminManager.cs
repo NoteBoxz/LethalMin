@@ -73,6 +73,13 @@ namespace LethalMin
                 else
                 {
                     RefreshPikminItemsInMapList();
+                    RefreshNonPikminEnemiesList();
+                    RefreshPuffminList();
+                    RefreshPikminList();
+                    RefreshOnionsList();
+                    RefreshCarsList();
+                    RefreshLocks();
+
                     PIOMTimer = LethalMin.ManagerRefreshRate;
                 }
             }
@@ -528,6 +535,8 @@ namespace LethalMin
         private static List<GameObject> _nextNonPikminEnemies = new List<GameObject>();
         private static List<GameObject> _currentPikminEnemies = new List<GameObject>();
         private static List<GameObject> _nextPikminEnemies = new List<GameObject>();
+        public static List<GameObject> _currentPuffminEnemies = new List<GameObject>();
+        public static List<GameObject> _nextPuffminEnemies = new List<GameObject>();
         private static object _listLock = new object();
         public static List<GameObject> PikminItemsExclusion = new List<GameObject>();
         public static Onion[] _currentOnions = new Onion[0];
@@ -536,8 +545,6 @@ namespace LethalMin
         public static void RefreshPikminItemsInMapList()
         {
             _nextPikminItemsInMap.Clear();
-            _nextNonPikminEnemies.Clear();
-            _nextPikminEnemies.Clear();
 
             // Refresh Pikmin Items
             PikminItem[] allGrabbables = UnityEngine.Object.FindObjectsOfType<PikminItem>();
@@ -550,7 +557,10 @@ namespace LethalMin
                     _nextPikminItemsInMap.Add(grabbable.gameObject);
                 }
             }
-
+        }
+        public static void RefreshNonPikminEnemiesList()
+        {
+            _nextNonPikminEnemies.Clear();
             // Refresh Non-Pikmin Enemies
             EnemyAI[] allEnemies = UnityEngine.Object.FindObjectsOfType<EnemyAI>();
             foreach (EnemyAI enemy in allEnemies)
@@ -562,17 +572,20 @@ namespace LethalMin
                     _nextNonPikminEnemies.Add(enemy.gameObject);
                 }
             }
-
+        }
+        public static void RefreshPikminList()
+        {
+            _nextPikminEnemies.Clear();
             // Refresh Pikmin Enemies
-            foreach (EnemyAI enemy in allEnemies)
+            PikminAI[] allEnemies = UnityEngine.Object.FindObjectsOfType<PikminAI>();
+            foreach (PikminAI Pikmin in allEnemies)
             {
-                if (enemy == null) continue;
-                if (enemy.GetComponent<PikminAI>() != null) // Check if it have PikminAI component
-                {
-                    _nextPikminEnemies.Add(enemy.gameObject);
-                }
+                if (Pikmin == null) continue;
+                _nextPikminEnemies.Add(Pikmin.gameObject);
             }
-
+        }
+        public static void RefreshOnionsList()
+        {
             // Refresh Onions
             Onion[] allOnions = UnityEngine.Object.FindObjectsOfType<Onion>();
             if (_currentOnions.Length != allOnions.Length)
@@ -585,7 +598,9 @@ namespace LethalMin
                         item.CheckForOnion(allOnions);
                 }
             }
-
+        }
+        public static void RefreshCarsList()
+        {
             // Refresh Cars
             if (LethalMin.TargetCar)
             {
@@ -596,7 +611,21 @@ namespace LethalMin
                     _currentCars = allCars;
                 }
             }
+        }
+        public static void RefreshPuffminList()
+        {
+            _nextPuffminEnemies.Clear();
+            // Refresh Puffmin Enemies
+            PuffminAI[] allPuffmin = UnityEngine.Object.FindObjectsOfType<PuffminAI>();
+            foreach (PuffminAI puffmin in allPuffmin)
+            {
+                if (puffmin == null) continue;
+                _nextPuffminEnemies.Add(puffmin.gameObject);
+            }
+        }
 
+        public static void RefreshLocks()
+        {
             lock (_listLock)
             {
                 var tempItems = _currentPikminItemsInMap;
@@ -610,9 +639,14 @@ namespace LethalMin
                 var tempPikminEnemies = _currentPikminEnemies;
                 _currentPikminEnemies = _nextPikminEnemies;
                 _nextPikminEnemies = tempPikminEnemies;
+
+                var tempPuffminEnemies = _currentPuffminEnemies;
+                _currentPuffminEnemies = _nextPuffminEnemies;
+                _nextPuffminEnemies = tempPuffminEnemies;
             }
 
-            //LethalMin.Logger.LogInfo($"Refreshed PikminItemsInMap. Current count: {_currentPikminItemsInMap.Count}");
+            LethalMin.Logger.LogInfo($"Refreshed PikminItemsInMap. Current count: {_currentPikminItemsInMap.Count}");
+            LethalMin.Logger.LogInfo($"Refreshed puffminEnemies. Current count: {_currentPuffminEnemies.Count}");
             //LethalMin.Logger.LogInfo($"Refreshed NonPikminEnemies. Current count: {_currentNonPikminEnemies.Count}");
 
             // Call GetPikminItemsInMapList for all Pikmin
@@ -1093,7 +1127,7 @@ namespace LethalMin
             //Load ez save
             ezSaveData = new OnionEzSaveData();
             ezSaveData.Load();
-            
+
             CollectedOnions = ezSaveData.OnionsCollected;
             FusedOnions = ezSaveData.OnionsFused;
 

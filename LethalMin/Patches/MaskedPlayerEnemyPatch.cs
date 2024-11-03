@@ -32,6 +32,9 @@ namespace LethalMin.Patches
                 zone.CanConvertPikmin = true;
                 zone.InstantNotice = true;
                 zone.UseCheckSpher = true;
+                ZoneInstance.GetComponent<Renderer>().material.color = new Color(0.5f, 0f, 0.5f, 0.5f);
+                ZoneInstance.AddComponent<MeshNoiseDistorter>().distortionStrength = 0.25f;
+                zone.enemy = __instance;
                 pom.noticeZone = zone;
             }
         }
@@ -41,6 +44,7 @@ namespace LethalMin.Patches
         private static void DoAIInterval(MaskedPlayerEnemy __instance)
         {
             __instance.GetComponentInChildren<PuffminOwnerManager>().DoWhistle();
+            __instance.GetComponentInChildren<PuffminOwnerManager>().DoThrow();
         }
     }
 }

@@ -118,7 +118,10 @@ namespace LethalMin
             {
                 if (collider == null) { continue; }
                 if (collider.name != "PikminColision" && collider.name != "PuffminColision") { continue; }
+                if (collider.name == "PikminColision" && collider.GetComponentInParent<PikminAI>() == null) { continue; }
+                if (collider.name == "PuffminColision" && collider.GetComponentInParent<PuffminAI>() == null) { continue; }
                 yield return new WaitForSeconds(0.01f);
+
                 // Check if the collider belongs to a PikminAI
                 PikminAI pikminAI = collider.GetComponentInParent<PikminAI>();
                 if (!CanConvertPikmin)
@@ -141,14 +144,27 @@ namespace LethalMin
                         pikminAI.TurnIntoPuffmin(enemy);
                     }
                 }
+
                 // Check if the collider belongs to a PuffminAI and can be converted
+                PuffminAI puffmin = collider.GetComponentInParent<PuffminAI>();
                 if (!CanConvertPikmin)
                 {
-                    PuffminAI puffmin = collider.GetComponentInParent<PuffminAI>();
                     if (puffmin != null && !puffmin.IsDying &&
                     (puffmin.currentBehaviourStateIndex == (int)PuffState.attacking || puffmin.currentBehaviourStateIndex == (int)PuffState.idle))
                     {
                         puffmin.TurnIntoPikmin();
+                    }
+                }
+                else
+                {
+                    if (puffmin != null && !puffmin.IsDying &&
+                    (puffmin.currentBehaviourStateIndex == (int)PuffState.attacking || puffmin.currentBehaviourStateIndex == (int)PuffState.idle))
+                    {
+                        puffmin.HasFreeWill = false;
+                        if (enemy.GetComponentInChildren<PuffminOwnerManager>() != null)
+                        {
+                            enemy.GetComponentInChildren<PuffminOwnerManager>().AddPuffmin(puffmin);
+                        }
                     }
                 }
             }

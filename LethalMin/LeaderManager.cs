@@ -454,7 +454,7 @@ namespace LethalMin
                 LethalMin.Logger.LogWarning("Trjectory Predictor is null!");
             }
         }
-        IEnumerator ThrowCanceledBuffer()
+        public IEnumerator ThrowCanceledBuffer()
         {
             yield return new WaitUntil(() => !IsWaitingForThrowResponce);
             OnThrowCanceled(new InputAction.CallbackContext());

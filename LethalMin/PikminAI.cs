@@ -672,7 +672,7 @@ namespace LethalMin
         public void TurnIntoPuffmin()
         {
             if (!IsServer) { return; }
-            GameObject SproutInstance = Instantiate(LethalMin.pikminPrefab, transform.position, transform.rotation);
+            GameObject SproutInstance = Instantiate(LethalMin.PuffminPrefab, transform.position, transform.rotation);
             PuffminAI SproteScript = SproutInstance.GetComponent<PuffminAI>();
             SproteScript.isOutside = isOutside;
             SproteScript.PreDefinedType = true;
@@ -686,16 +686,27 @@ namespace LethalMin
         public void TurnIntoPuffmin(EnemyAI enemyAI)
         {
             if (!IsServer) { return; }
-            GameObject SproutInstance = Instantiate(LethalMin.pikminPrefab, transform.position, transform.rotation);
+            GameObject SproutInstance = Instantiate(LethalMin.PuffminPrefab, transform.position, transform.rotation);
             PuffminAI SproteScript = SproutInstance.GetComponent<PuffminAI>();
             SproteScript.isOutside = isOutside;
             SproteScript.PreDefinedType = true;
             SproteScript.OriginalType = PminType;
+            SproteScript.HasFreeWill = false;
             SproteScript.NetworkObject.Spawn();
             PikminManager.Instance.SpawnPikminClientRpc(SproteScript.NetworkObject);
-            SproteScript.AssignOwner(enemyAI);
-
-            PikminManager.Instance.DespawnPikminClientRpc(NetworkObject);
+            if (enemyAI.GetComponentInChildren<PuffminOwnerManager>() != null)
+            {
+                enemyAI.GetComponentInChildren<PuffminOwnerManager>().AddPuffmin(SproteScript);
+            }
+            if (IsSpawned)
+            {
+                PikminManager.Instance.DespawnPikminClientRpc(NetworkObject);
+            }
+            else
+            {
+                LethalMin.Logger.LogWarning("Pikmin was not spawned, not despawning");
+                Destroy(gameObject);
+            }
         }
 
         #region Core Update Logic

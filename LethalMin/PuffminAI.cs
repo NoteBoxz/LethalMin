@@ -10,6 +10,7 @@ using Unity.Netcode.Components;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Events;
 using LethalMon.Behaviours;
+using System.Diagnostics;
 
 namespace LethalMin
 {
@@ -25,11 +26,11 @@ namespace LethalMin
         public Animator? LocalAnim;
         public AudioSource? LocalSFX;
         public AudioSource? LocalVoice;
-        public EnemyAI? OwnerAI = null!;
-        public EnemyAI? PrevOwnerAI = null!;
+        [IDebuggable.Debug] public EnemyAI? OwnerAI = null!;
+        [IDebuggable.Debug] public EnemyAI? PrevOwnerAI = null!;
         public Rigidbody rb = null!;
         GameObject? Ghost;
-        public NetworkTransform? transform2;
+        public NetworkTransform? transform2 = null!;
         GameObject? PminColider, scanNode, NoticeColider;
         public float InternalAirbornTimer, AbTimer;
         public System.Random? enemyRandom;
@@ -40,6 +41,8 @@ namespace LethalMin
         public PikminType OriginalType = null!;
         public bool IsDying = false;
         public bool PreDefinedType = false;
+        [IDebuggable.Debug] public bool HasInitalized = false;
+        [IDebuggable.Debug] public string statename = "";
         public override void Start()
         {
             enemyRandom = new System.Random(StartOfRound.Instance.randomMapSeed + thisEnemyIndex);
@@ -75,7 +78,7 @@ namespace LethalMin
             yield return new WaitForSeconds(0.1f);  // Wait for one frame
 
             if (LethalMin.DebugMode)
-                LethalMin.Logger.LogInfo($"Pikmin is now being spawned");
+                LethalMin.Logger.LogInfo($"Puffmin is now being spawned");
 
             Ghost = LethalMin.Ghost;
 
@@ -100,6 +103,8 @@ namespace LethalMin
                         LethalMin.Logger.LogInfo($"Picked {OriginalType} for ramdo");
                 }
             }
+
+            HasInitalized = true;
             yield return null;  // Wait another frame
         }
 
@@ -129,7 +134,6 @@ namespace LethalMin
             if (targetPlayer != null)
             {
                 SwitchToBehaviourClientRpc((int)PuffState.attacking);
-                ToggleColisionMode(false);
                 PrevOwnerAI = OwnerAI;
                 OwnerAI = null;
                 return;
@@ -150,7 +154,6 @@ namespace LethalMin
             if (OwnerAI == null)
             {
                 SwitchToBehaviourClientRpc((int)PuffState.idle);
-                ToggleColisionMode(false);
                 return;
             }
             if (HasFreeWill)
@@ -159,7 +162,6 @@ namespace LethalMin
                 if (targetPlayer != null)
                 {
                     SwitchToBehaviourClientRpc((int)PuffState.attacking);
-                    ToggleColisionMode(false);
                     PrevOwnerAI = OwnerAI;
                     OwnerAI = null;
                     return;
@@ -174,13 +176,12 @@ namespace LethalMin
 
         public void Attacking()
         {
-            if (targetPlayer == null || targetPlayer.isPlayerDead || Vector3.Distance(targetPlayer.transform.position, transform.position) > 20)
+            if (targetPlayer == null || targetPlayer.isPlayerDead || Vector3.Distance(targetPlayer.transform.position, transform.position) > 10)
             {
                 if (PrevOwnerAI != null && !PrevOwnerAI.isEnemyDead)
                 {
                     SwitchToBehaviourClientRpc((int)PuffState.following);
-                    ToggleColisionMode(false);
-                    OwnerAI = PrevOwnerAI;
+                    AssignOwner(PrevOwnerAI);
                     return;
                 }
                 SwitchToBehaviourClientRpc((int)PuffState.idle);
@@ -206,8 +207,10 @@ namespace LethalMin
                 }
                 else
                 {
+                    agent.Warp(rb.position);
                     ToggleColisionMode(false);
                     InternalAirbornTimer = LethalMin.FallTimerValue;
+                    SetTriggerClientRpc("Land");
                     AbTimer = 0;
                     currentBehaviourStateIndex = (int)PuffState.idle;
                 }
@@ -216,6 +219,22 @@ namespace LethalMin
 
         public void AssignOwner(EnemyAI newOwnerAI)
         {
+            if (newOwnerAI == null)
+            {
+                LethalMin.Logger.LogWarning("Tried to assign a null owner to a Puffmin");
+                return;
+            }
+            StartCoroutine(AssignOwnerCoroutine(newOwnerAI));
+        }
+        private IEnumerator AssignOwnerCoroutine(EnemyAI newOwnerAI)
+        {
+            yield return new WaitUntil(() => HasInitalized);
+            LethalMin.Logger.LogInfo($"Puffmin assigned to {newOwnerAI.name}");
+            if (newOwnerAI.GetComponentInChildren<PuffminOwnerManager>() != null)
+            {
+                newOwnerAI.GetComponentInChildren<PuffminOwnerManager>().AddPuffmin(this);
+            }
+            LocalVoice.PlayOneShot(LethalMin.NoticeSFX);
             OwnerAI = newOwnerAI;
             SwitchToBehaviourClientRpc((int)PuffState.following);
         }
@@ -230,9 +249,67 @@ namespace LethalMin
             PikminManager.Instance.SpawnPikminClientRpc(SproteScript.NetworkObject);
             PikminManager.Instance.CreatePikminClientRPC(SproteScript.NetworkObject, OriginalType.PikminTypeID, isOutside);
 
-            PikminManager.Instance.DespawnPikminClientRpc(NetworkObject);
+            if (NetworkObject.IsSpawned)
+            {
+                PikminManager.Instance.DespawnPikminClientRpc(NetworkObject);
+            }
+            else
+            {
+                LethalMin.Logger.LogWarning("Puffmin NetworkObject is not spawned");
+                Destroy(gameObject);
+            }
         }
 
+        public void HoldPuffmin(Transform SnapTopPos)
+        {
+            if (IsHeld || IsThrown) { return; }
+            LethalMin.Logger.LogInfo("Puffmin is being held");
+            this.SnapTopPos = SnapTopPos;
+            IsHeld = true;
+            LocalVoice.PlayOneShot(LethalMin.HoldSFX);
+            SetTriggerClientRpc("Hold");
+        }
+        public void ThrowPuffmin(Vector3 StartPos, Vector3 ThrowForward)
+        {
+            if (IsThrown) { return; }
+            LethalMin.Logger.LogInfo("Puffmin is being thrown");
+            LocalVoice.Stop();
+            LocalVoice.PlayOneShot(LethalMin.ThrowSFX);
+            IsThrown = true;
+            IsHeld = false;
+            SnapTopPos = null!;
+            if (OwnerAI != null && OwnerAI.GetComponentInChildren<PuffminOwnerManager>() != null)
+            {
+                OwnerAI.GetComponentInChildren<PuffminOwnerManager>().RemovePuffmin(this);
+            }
+
+            transform.position = StartPos;
+            transform.rotation = Quaternion.LookRotation(ThrowForward);
+            transform2.Teleport(transform.position, transform.rotation, transform.localScale);
+
+            ToggleColisionMode(true);
+
+            rb.AddForce(ThrowForward * 20, ForceMode.Impulse);
+            //rb.AddForce(Vector3.up * 5, ForceMode.Impulse);
+
+            SetTriggerClientRpc("Throw");
+            SwitchToBehaviourClientRpc((int)PuffState.airborn);
+        }
+        public void OnCollisionEnter(Collision collision)
+        {
+            if (IsThrown && IsThrown)
+            {
+                SetTriggerClientRpc("Land");
+                agent.Warp(rb.position);
+                ToggleColisionMode(false);
+                SwitchToBehaviourClientRpc((int)PuffState.idle);
+                IsThrown = false;
+                IsHeld = false;
+                LethalMin.Logger.LogInfo($"Puffmin landed on {collision.collider.name}");
+            }
+        }
+        Transform SnapTopPos = null!;
+        bool HasStartedSnapTo = false;
         public override void Update()
         {
             base.Update();
@@ -240,6 +317,23 @@ namespace LethalMin
             {
                 return;
             }
+            if (SnapTopPos != null)
+            {
+                if (!HasStartedSnapTo)
+                {
+                    ToggleColisionMode(false, true);
+                    HasStartedSnapTo = true;
+                }
+                transform.position = SnapTopPos.position;
+                transform.rotation = SnapTopPos.rotation;
+            }
+            else if (HasStartedSnapTo)
+            {
+                if (!IsThrown)
+                    ToggleColisionMode(false);
+                HasStartedSnapTo = false;
+            }
+            statename = $"{currentBehaviourStateIndex} - {((PuffState)currentBehaviourStateIndex).ToString()}";
         }
 
         public void LateUpdate()
@@ -318,6 +412,13 @@ namespace LethalMin
         }
         public void ToggleColisionMode(bool RbMode, bool DisableBoth = false)
         {
+            // StackTrace stackTrace = new StackTrace(true);
+            // StackFrame callingFrame = stackTrace.GetFrame(1); // Get the frame of the calling method
+            // string callingMethod = callingFrame.GetMethod().Name;
+            // int lineNumber = callingFrame.GetFileLineNumber();
+
+            // LethalMin.Logger.LogInfo($"ToggleColisionMode called from {callingMethod} at line {lineNumber}");
+            // LethalMin.Logger.LogInfo($"Toggling Colision Mode to {RbMode} - {DisableBoth}");
             if (DisableBoth)
             {
                 agent.updatePosition = false;
