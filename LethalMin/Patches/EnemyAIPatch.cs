@@ -16,8 +16,12 @@ namespace LethalMin.Patches
         [HarmonyPostfix]
         public static void StarDamage(EnemyAI __instance)
         {
-            if (__instance.enemyType != LethalMin.pikminEnemyType && __instance.enemyType.canDie)
+            if (__instance.enemyType != null && __instance.enemyType != LethalMin.puffminEnemyType &&
+                __instance.enemyType != LethalMin.pikminEnemyType && __instance.enemyType.canDie
+            )
+            {
                 __instance.gameObject.AddComponent<PikminDamager>().RootScript = __instance;
+            }
         }
     }
 }

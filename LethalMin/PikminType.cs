@@ -68,7 +68,9 @@ namespace LethalMin
         public bool IsResistantToCrushing;
 
         [Tooltip("Whether the pikmin is resistant to exsplosions")]
-        public bool IsresistantToExsplosions;
+        public bool IsresistantToExplosions;
+
+        public bool IsResistantToPoision;
 
         [Tooltip("Whether the pikmin can latch on to enemies")]
         public bool CanLatchOnToEnemies = true;

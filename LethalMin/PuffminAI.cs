@@ -49,6 +49,7 @@ namespace LethalMin
             base.Start();
 
             transform2 = GetComponent<NetworkTransform>();
+            LocalAnim = GetComponentInChildren<Animator>();
             PminColider = transform.Find("PuffminColision").gameObject;
             NoticeColider = transform.Find("WhistleDetection").gameObject;
             scanNode = transform.Find("ScanNode").gameObject;
@@ -111,6 +112,7 @@ namespace LethalMin
             if (targetPlayer != null)
             {
                 SwitchToBehaviourClientRpc((int)PuffState.attacking);
+                ToggleColisionMode(false);
                 PrevOwnerAI = OwnerAI;
                 OwnerAI = null;
                 return;
@@ -131,6 +133,7 @@ namespace LethalMin
             if (OwnerAI == null)
             {
                 SwitchToBehaviourClientRpc((int)PuffState.idle);
+                ToggleColisionMode(false);
                 return;
             }
             if (HasFreeWill)
@@ -139,6 +142,7 @@ namespace LethalMin
                 if (targetPlayer != null)
                 {
                     SwitchToBehaviourClientRpc((int)PuffState.attacking);
+                    ToggleColisionMode(false);
                     PrevOwnerAI = OwnerAI;
                     OwnerAI = null;
                     return;
@@ -157,8 +161,9 @@ namespace LethalMin
             {
                 if (PrevOwnerAI != null && !PrevOwnerAI.isEnemyDead)
                 {
-                    OwnerAI = PrevOwnerAI;
                     SwitchToBehaviourClientRpc((int)PuffState.following);
+                    ToggleColisionMode(false);
+                    OwnerAI = PrevOwnerAI;
                     return;
                 }
                 SwitchToBehaviourClientRpc((int)PuffState.idle);
@@ -232,6 +237,7 @@ namespace LethalMin
         public override void OnCollideWithPlayer(Collider other)
         {
             base.OnCollideWithPlayer(other);
+            LethalMin.Logger.LogInfo("Puffmin collided with player");
             if (other.gameObject.GetComponent<PlayerControllerB>() != null)
             {
                 SetTriggerClientRpc("AttackStanding");

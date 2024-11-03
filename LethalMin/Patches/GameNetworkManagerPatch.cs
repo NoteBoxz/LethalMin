@@ -31,7 +31,6 @@ namespace LethalMin.Patches
 
             if (PuffminPrefab != null)
             {
-                PuffminPrefab.AddComponent<PuffminAI>();
                 NetworkManager.Singleton.AddNetworkPrefab(PuffminPrefab);
             }
             else

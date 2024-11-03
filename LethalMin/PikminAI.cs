@@ -3863,7 +3863,7 @@ namespace LethalMin
         public override void HitFromExplosion(float distance)
         {
             base.HitFromExplosion(distance);
-            if (Invincible || PminType.IsresistantToExsplosions) { return; }
+            if (Invincible || PminType.IsresistantToExplosions) { return; }
             ApplyKnockbackServerRpc(new Vector3(-distance, -distance, -distance), true, false, 3);
         }
         public void UnSnapPikmin(bool DestorySnapToPos = false, bool UsePhysics = false, bool ResetToInitial = true)

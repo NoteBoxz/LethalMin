@@ -21,6 +21,7 @@ using System.Text;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;
 using System.IO;
+using LethalMin.Library;
 
 namespace LethalMin
 {
@@ -40,6 +41,7 @@ namespace LethalMin
     [BepInDependency("MaxWasUnavailable.LethalModDataLib", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.rune580.LethalCompanyInputUtils", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("SellBodies", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("NoteBoxz.LethalMinLibrary", BepInDependency.DependencyFlags.SoftDependency)]
     public class LethalMin : BaseUnityPlugin
     {
         public static LethalMin Instance { get; private set; } = null!;
@@ -1126,7 +1128,7 @@ namespace LethalMin
             OnionItem = AssetLoader.LoadAsset<Item>("Assets/LethalminAssets/Onion/OnionItem.asset");
             PikminObjectPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/PikminItemNode.prefab");
             EaterBehavior = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/ManeaterBehavior.prefab");
-            puffminEnemyType = AssetLoader.LoadAsset<EnemyType>("Assets/LethalminAssets/Puffmin/Puffmin");
+            puffminEnemyType = AssetLoader.LoadAsset<EnemyType>("Assets/LethalminAssets/Puffmin/Puffmin.asset");
             puffminTerminalNode = AssetLoader.LoadAsset<TerminalNode>("Assets/LethalminAssets/Puffmin/Bestiary/Puffmin TN");
             puffminTerminalKeyword = AssetLoader.LoadAsset<TerminalKeyword>("Assets/LethalminAssets/Puffmin/Bestiary/Puffmin TK");
 
@@ -1222,7 +1224,7 @@ namespace LethalMin
             //ai.creatureVoice = PikminPrefab.transform.Find("CreatureVoice").GetComponent<AudioSource>();
             //ai.creatureSFX = PikminPrefab.transform.Find("CreatureSFX").GetComponent<AudioSource>();
             ai.eye = PikminPrefab.transform.Find("Eye");
-            pikminPrefab.transform.Find("PikminColision").GetComponent<EnemyAICollisionDetect>().mainScript = ai;
+            pikminPrefab.GetComponentInChildren<EnemyAICollisionDetect>().mainScript = ai;
             ai.openDoorSpeedMultiplier = pikminEnemyType.doorSpeedMultiplier;
 
             ai.LocalSFX = pikminPrefab.transform.Find("CreatureSFX").GetComponent<AudioSource>();
@@ -1257,13 +1259,13 @@ namespace LethalMin
             //ai2.creatureVoice = PuffminPrefab.transform.Find("CreatureVoice").GetComponent<AudioSource>();
             //ai2.creatureSFX = PuffminPrefab.transform.Find("CreatureSFX").GetComponent<AudioSource>();
             ai2.eye = PuffminPrefab.transform.Find("Eye");
-            PuffminPrefab.transform.Find("PuffminColision").GetComponent<EnemyAICollisionDetect>().mainScript = ai2;
+            PuffminPrefab.GetComponentInChildren<EnemyAICollisionDetect>().mainScript = ai2;
             ai2.openDoorSpeedMultiplier = puffminEnemyType.doorSpeedMultiplier;
 
             ai2.LocalSFX = PuffminPrefab.transform.Find("CreatureSFX").GetComponent<AudioSource>();
             ai2.LocalVoice = PuffminPrefab.transform.Find("CreatureVoice").GetComponent<AudioSource>();
             Enemies.RegisterEnemy(puffminEnemyType, 0, Levels.LevelTypes.All, puffminTerminalNode, puffminTerminalKeyword);
-            
+
             Logger.LogInfo("Puffmin enemy registered successfully!");
 
             AssetLoader.LoadAsset<PikminType>("Assets/LethalminAssets/Pikmin/Types 2/PurplePikmin.asset").PikminScripts = new[] { new PurplePikmin() };
@@ -1406,8 +1408,18 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
                 Type[] types = GetTypesWithErrorHandling();
 
                 // Patch everything except FilterEnemyTypesPatch
-                foreach (var type in types.Where(t => t != typeof(FilterEnemyTypesPatch)))
+                foreach (var type in types)
                 {
+                    if (!IsDependencyLoaded("NoteBoxz.LethalMinLibrary") && type.Namespace == "LethalMin.Library")
+                    {
+                        Logger.LogMessage($"Skipping Library Namespace Script: {type.FullName}. Because Library is not installed");
+                        continue;
+                    }
+                    if (!IsDependencyLoaded("LethalMon") && type == typeof(FilterEnemyTypesPatch))
+                    {
+                        Logger.LogMessage($"Skipping FilterEnemyTypesPatch script. Because LethalMon is not installed");
+                        continue;
+                    }
                     try
                     {
                         Harmony.PatchAll(type);
@@ -1426,22 +1438,6 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
                 if (IsDependencyLoaded("LethalMon"))  // Replace with actual LethalMon GUID
                 {
                     Logger.LogInfo("LethalMon detected. Patching FilterEnemyTypesPatch.");
-                    try
-                    {
-                        Harmony.PatchAll(typeof(FilterEnemyTypesPatch));
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.LogError($"Error patching FilterEnemyTypesPatch: {e.Message}");
-                        if (e.InnerException != null)
-                        {
-                            Logger.LogError($"Inner exception: {e.InnerException.Message}");
-                        }
-                    }
-                }
-                else
-                {
-                    //Logger.LogInfo("LethalMon not detected. Skipping FilterEnemyTypesPatch.");
                 }
             }
             catch (Exception e)
