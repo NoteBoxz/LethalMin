@@ -1029,7 +1029,7 @@ namespace LethalMin
         public static Dictionary<OnionType, int> PreviousRoundPikminCounts = new Dictionary<OnionType, int>();
         public static Material lineMaterial;
         public static AudioClip WhistleSFX, DissSFX, PlayerPluckSound, PlayerPluckSound2,
-        OnionMeunOpen, OnionMeunClose, PikAdd, PikSub, PurpSlam;
+        OnionMeunOpen, OnionMeunClose, PikAdd, PikSub, PurpSlam,PuffHit;
         public static AudioClip[] PlayerThrowSound, RealHitSFX;
         public static GameObject PikminObjectPrefab, OnionPrefab, OnionItemPrefab, leaderManagerPrefab,
          WhistlePrefab, PmanPrefab, ManeaterScriptContainer, IdelGlowPrefab, EaterBehavior, NoticeZone;
@@ -1087,6 +1087,8 @@ namespace LethalMin
 
             PlayerThrowSound = LoadAudioSet("Assets/LethalminAssets/Pikmin/Audio/Com/Pikmin_Thrown", 3);
 
+            PuffHit = LoadSingleAudioSet("Assets/LethalminAssets/Puffmin/Audio/PuffminHit");
+
             // Load other single audio clips
             WhistleSFX = AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Whisle/Audio/P2_whistle_Olimar.ogg.mp3");
             DissSFX = AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Whisle/Audio/P2_dismiss.ogg");
@@ -1128,7 +1130,7 @@ namespace LethalMin
             OnionItem = AssetLoader.LoadAsset<Item>("Assets/LethalminAssets/Onion/OnionItem.asset");
             PikminObjectPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/PikminItemNode.prefab");
             EaterBehavior = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/ManeaterBehavior.prefab");
-            puffminEnemyType = AssetLoader.LoadAsset<EnemyType>("Assets/LethalminAssets/Puffmin/Puffmin.asset");
+            puffminEnemyType = AssetLoader.LoadAsset<EnemyType>("Assets/LethalminAssets/Puffmin/Puffmin");
             puffminTerminalNode = AssetLoader.LoadAsset<TerminalNode>("Assets/LethalminAssets/Puffmin/Bestiary/Puffmin TN");
             puffminTerminalKeyword = AssetLoader.LoadAsset<TerminalKeyword>("Assets/LethalminAssets/Puffmin/Bestiary/Puffmin TK");
 

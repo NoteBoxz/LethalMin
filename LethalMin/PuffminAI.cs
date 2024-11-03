@@ -42,8 +42,10 @@ namespace LethalMin
         public override void Start()
         {
             enemyRandom = new System.Random(StartOfRound.Instance.randomMapSeed + thisEnemyIndex);
-            OriginalType = LethalMin.RegisteredPikminTypes[enemyRandom.Next(0, LethalMin.RegisteredPikminTypes.Count)];
-
+            OriginalType = LethalMin.RegisteredPikminTypes.Values.ToList()[enemyRandom.Next(0, LethalMin.RegisteredPikminTypes.Count)];
+            //Check if any player is null in the Players List
+            if (Players.Count == 0 || Players.Any(p => p == null))
+                Players = FindObjectsOfType<PlayerControllerB>().ToList();
             InternalAirbornTimer = LethalMin.FallTimerValue;
 
             base.Start();
@@ -53,6 +55,7 @@ namespace LethalMin
             PminColider = transform.Find("PuffminColision").gameObject;
             NoticeColider = transform.Find("WhistleDetection").gameObject;
             scanNode = transform.Find("ScanNode").gameObject;
+            NoticeColider.name = "WhistleDetectionWhistle";
 
             // Because the EnemyAI class uses unnessary methods for moving and syncing position in my case
             moveTowardsDestination = false;
@@ -108,7 +111,7 @@ namespace LethalMin
 
         public void Idle()
         {
-            targetPlayer = CheckLineOfSightForClosestPlayer(360, 20);
+            targetPlayer = CheckLineOfSightForClosestPlayer(360, 5);
             if (targetPlayer != null)
             {
                 SwitchToBehaviourClientRpc((int)PuffState.attacking);
@@ -157,7 +160,7 @@ namespace LethalMin
 
         public void Attacking()
         {
-            if (targetPlayer == null || targetPlayer.isPlayerDead || Vector3.Distance(targetPlayer.transform.position, transform.position) > 45)
+            if (targetPlayer == null || targetPlayer.isPlayerDead || Vector3.Distance(targetPlayer.transform.position, transform.position) > 20)
             {
                 if (PrevOwnerAI != null && !PrevOwnerAI.isEnemyDead)
                 {
@@ -169,7 +172,7 @@ namespace LethalMin
                 SwitchToBehaviourClientRpc((int)PuffState.idle);
                 return;
             }
-            agent.stoppingDistance = 0;
+            agent.stoppingDistance = 0.5f;
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.LowQualityObstacleAvoidance;
             agent.SetDestination(targetPlayer.transform.position);
             agent.speed = 10;
@@ -227,22 +230,46 @@ namespace LethalMin
 
         public void LateUpdate()
         {
-            if (IsServer)
-            {
-                CheckIfOnNavMesh();
-            }
             CheckAnim();
+            if (!IsServer)
+            {
+                return;
+            }
+            CheckIfOnNavMesh();
+            if (!IsHeld && !IsThrown)
+            {
+                PlayerControllerB targetplayer = null!;
+                if (targetplayer = GetClosestPlayer(transform.position, 2))
+                {
+                    if (!IsHitting)
+                    {
+                        IsHitting = true;
+                        StartCoroutine(Hitting(targetplayer));
+                    }
+                }
+            }
+        }
+        bool IsHitting = false;
+        private IEnumerator Hitting(PlayerControllerB targetplayer)
+        {
+            DoHitYellClientRpc();
+            SetTriggerClientRpc("AttackStanding");
+            yield return new WaitForSeconds(0.4f);
+            LethalMin.Logger.LogInfo("Puffmin HIT!!!!");
+            DoHitClientRpc();
+            targetplayer.DamagePlayer(2, false, true, CauseOfDeath.Bludgeoning);
+            IsHitting = false;
         }
 
-        public override void OnCollideWithPlayer(Collider other)
+        [ClientRpc]
+        public void DoHitYellClientRpc()
         {
-            base.OnCollideWithPlayer(other);
-            LethalMin.Logger.LogInfo("Puffmin collided with player");
-            if (other.gameObject.GetComponent<PlayerControllerB>() != null)
-            {
-                SetTriggerClientRpc("AttackStanding");
-                other.gameObject.GetComponent<PlayerControllerB>().DamagePlayer(1, false, true, CauseOfDeath.Bludgeoning);
-            }
+            LocalVoice.PlayOneShot(LethalMin.AttackSFX[enemyRandom.Next(0, LethalMin.AttackSFX.Count())]);
+        }
+        [ClientRpc]
+        public void DoHitClientRpc()
+        {
+            LocalSFX.PlayOneShot(LethalMin.PuffHit);
         }
 
         [ClientRpc]
@@ -293,7 +320,7 @@ namespace LethalMin
                 return;
             }
 
-            if (RbMode)
+            if (!RbMode)
             {
                 agent.updatePosition = true;
                 agent.updateRotation = true;
@@ -388,5 +415,31 @@ namespace LethalMin
             return sourcePosition; // Return original position if no NavMesh point found
         }
 
+        public static List<PlayerControllerB> Players = new List<PlayerControllerB>();
+        public static PlayerControllerB GetClosestPlayer(Vector3 position, float MaxRange, bool DoLinecast = true)
+        {
+            PlayerControllerB closestPlayer = null!;
+            float closestDistance = float.MaxValue;
+            foreach (var player in Players)
+            {
+                if (player == null || player.isPlayerDead) { continue; }
+                float distance = Vector3.Distance(position, player.transform.position);
+                if (distance < closestDistance && distance < MaxRange)
+                {
+                    closestDistance = distance;
+                    closestPlayer = player;
+                }
+            }
+            if (DoLinecast && closestPlayer != null)
+            {
+                RaycastHit hit;
+                if (!Physics.Linecast(position, closestPlayer.transform.position, out hit, 
+                StartOfRound.Instance.collidersAndRoomMaskAndDefault, QueryTriggerInteraction.Ignore))
+                {
+                    return closestPlayer;
+                }
+            }
+            return null!;
+        }
     }
 }
