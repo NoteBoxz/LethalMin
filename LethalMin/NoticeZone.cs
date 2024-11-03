@@ -116,12 +116,10 @@ namespace LethalMin
             {
                 if (collider == null) { continue; }
                 if (collider.name != "PikminColision" && collider.name != "PuffminColision") { continue; }
-                if(collider.GetComponentInParent<PikminAI>() == null) { continue; }
-                if(collider.GetComponentInParent<PufferAI>() == null) { continue; }
                 yield return new WaitForSeconds(0.01f);
                 // Check if the collider belongs to a PikminAI
                 PikminAI pikminAI = collider.GetComponentInParent<PikminAI>();
-                if (!pikminAI.CannotEscape)
+                if (pikminAI != null && !pikminAI.CannotEscape)
                 {
                     pikminAI.whistlingPlayer = leader;
                     pikminAI.IsWhistled = true;
@@ -132,7 +130,7 @@ namespace LethalMin
                 }
 
                 PuffminAI puffmin = collider.GetComponentInParent<PuffminAI>();
-                if (!puffmin.IsDying)
+                if (puffmin != null && !puffmin.IsDying)
                 {
                     puffmin.TurnIntoPikmin();
                 }
