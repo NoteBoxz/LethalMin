@@ -31,6 +31,17 @@ namespace LethalMin
         Pikmin3,
         Pikmin4
     }
+    public enum HazardType
+    {
+        Lethal,
+        Poison,
+        Fire,
+        Electric,
+        Water,
+        Exsplosive,
+        Spore,
+        Crush
+    }
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     [BepInDependency("evaisa.lethallib")]
     [BepInDependency("LethalMon", BepInDependency.DependencyFlags.SoftDependency)]
@@ -745,6 +756,11 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(FFM, false));
         }
 
+        public static bool IsPikminResistantToHazard(PikminType type, HazardType hazard)
+        {
+            return type.HazardsResistantTo.Contains(hazard);
+        }
+        
         public static Color GetColorFromPType(PikminType type)
         {
             return type.PikminColor;
@@ -1029,14 +1045,14 @@ namespace LethalMin
         public static Dictionary<OnionType, int> PreviousRoundPikminCounts = new Dictionary<OnionType, int>();
         public static Material lineMaterial;
         public static AudioClip WhistleSFX, DissSFX, PlayerPluckSound, PlayerPluckSound2,
-        OnionMeunOpen, OnionMeunClose, PikAdd, PikSub, PurpSlam,PuffHit;
+        OnionMeunOpen, OnionMeunClose, PikAdd, PikSub, PurpSlam, PuffHit;
         public static AudioClip[] PlayerThrowSound, RealHitSFX;
         public static GameObject PikminObjectPrefab, OnionPrefab, OnionItemPrefab, leaderManagerPrefab,
          WhistlePrefab, PmanPrefab, ManeaterScriptContainer, IdelGlowPrefab, EaterBehavior, NoticeZone;
         public static Mesh TwoSideOnion, ThreeSideOnion, FourSideOnion, FiveSideOnion, SixSideOnion, SevenSideOnion, EightSideOnion;
         public static Item OnionItem;
         public static AnimationClip PluckAnim;
-        public static GameObject PuffminPrefab,POMprefab;
+        public static GameObject PuffminPrefab, POMprefab;
 
         private void LoadPikminAssets()
         {

@@ -46,5 +46,7 @@ namespace LethalMin.Patches
             __instance.GetComponentInChildren<PuffminOwnerManager>().DoWhistle();
             __instance.GetComponentInChildren<PuffminOwnerManager>().DoThrow();
         }
+
+        
     }
 }

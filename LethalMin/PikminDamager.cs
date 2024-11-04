@@ -8,14 +8,19 @@ using System.Collections;
 using System.Linq;
 namespace LethalMin
 {
-    public class PikminDamager : NetworkBehaviour
+    public class PikminDamager : NetworkBehaviour, IDebuggable
     {
         public float FakeHP;
-        public EnemyAI RootScript;
-        public List<PikminAI> PikminLatchedOn = new List<PikminAI>();
+        public EnemyAI RootScript = null!;
+        [IDebuggable.Debug] public List<PikminAI> PikminLatchedOn = new List<PikminAI>();
 
-        public void Update()
+        public void LateUpdate()
         {
+            if (RootScript == null)
+            {
+                LethalMin.Logger.LogError($"{name}'s RootScript is null!!");
+                enabled = false;
+            }
         }
 
         [ServerRpc(RequireOwnership = false)]

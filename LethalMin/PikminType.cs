@@ -7,6 +7,8 @@ namespace LethalMin
     [CreateAssetMenu(menuName = "LethalMin/PikminType", order = 1)]
     public class PikminType : ScriptableObject
     {
+        [Header("NOTE FROM DEV: If you are seeing this, that probobly means you are createing a PikminType using the base LethalMin mod. "
+        + "This is not recomended, as it requires alot more unnessasy set up. So I recommend using the LethalMinLibrary mod to create custom Pikmin Types instead!")]
         [Header("Distinguishing Information")]
         [Tooltip("The pikmin's color")]
         public Color PikminColor;
@@ -55,22 +57,9 @@ namespace LethalMin
 
 
         [Header("Pikmin Stats")]
-        [Tooltip("Whether the pikmin is resistant to fire")]
-        public bool IsResistantToFire;
-
-        [Tooltip("Whether the pikmin is resistant to electricity")]
-        public bool IsResistantToElectricity;
-
-        [Tooltip("Whether the pikmin is resistant to water")]
-        public bool IsResistantToWater;
-
-        [Tooltip("Whether the pikmin is resistant to crushing")]
-        public bool IsResistantToCrushing;
-
-        [Tooltip("Whether the pikmin is resistant to exsplosions")]
-        public bool IsresistantToExplosions;
-
-        public bool IsResistantToPoision;
+        
+        [Tooltip("The hazards the pikmin is resistant to")]
+        public HazardType[] HazardsResistantTo = new HazardType[0];
 
         [Tooltip("Whether the pikmin can latch on to enemies")]
         public bool CanLatchOnToEnemies = true;
@@ -105,8 +94,11 @@ namespace LethalMin
         [Tooltip("Normalizes the damage the pikmin does when it attacks, (i.e. 5 -> 0.05)")]
         public bool NormalizeDamage;
 
-        [Tooltip("Adds ten pikmin to the number of pikmin carrying the item")]
-        public bool AddTen;
+        [Tooltip("The pikmin's carry strength (i.e. one pikmin with the CarryStrength of 5 will count as 5 pikmin on the item)")]
+        public int CarryStrength = 1;
+
+        [Tooltip("The pikmin's carry speed")]
+        public float CarrySpeed = 1;
 
         [Tooltip("The ammount of distance the pikmin can detect items")]
         public float ItemDetectionRange = 5f;

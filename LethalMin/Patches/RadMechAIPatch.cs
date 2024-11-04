@@ -191,7 +191,7 @@ namespace LethalMin.Patches
                         pikminList.RemoveAt(i);
                         continue;
                     }
-                    if (!pikminList[i].PminType.IsResistantToFire)
+                    if (!LethalMin.IsPikminResistantToHazard(pikminList[i].PminType, HazardType.Fire))
                     {
                         pikminList[i].KillEnemyOnOwnerClient(true);
                         pikminList.RemoveAt(i);
@@ -200,7 +200,7 @@ namespace LethalMin.Patches
             }
             for (int i = 0; i < pikminList.Count; i++)
             {
-                if (!pikminList[i].PminType.IsResistantToFire)
+                if (!LethalMin.IsPikminResistantToHazard(pikminList[i].PminType, HazardType.Fire))
                 {
                     pikminList[i].DeathBuffer = true;
                     pikminList[i].KillEnemyOnOwnerClient();

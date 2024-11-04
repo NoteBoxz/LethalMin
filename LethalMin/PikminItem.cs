@@ -4,6 +4,7 @@ using UnityEngine;
 using Unity.Netcode;
 using GameNetcodeStuff;
 using System.Collections;
+using System;
 
 namespace LethalMin
 {
@@ -13,8 +14,9 @@ namespace LethalMin
         public GameObject Counter;
         public TMP_Text PikminOn, PikminNeed;
         public GrabbableObject Root;
-        public List<PikminAI> PikminOnItemList, PurplesOnItemList;
-        [IDebuggable.Debug] public int PikminOnItem, PikminNeedOnItem, PurpleMultiplier;
+        public List<PikminAI> PikminOnItemList = new List<PikminAI>();
+        [IDebuggable.Debug] public int PikminOnItem, PikminNeedOnItem;
+        public List<int> GrowthStagesOnItem = new List<int>();
         public float SFXInterval = 0.2f;
         private bool isInitialized = false;
         private bool wasGrabbed = false;
@@ -106,7 +108,6 @@ namespace LethalMin
             }
             PikminNeed.text = PikminNeedOnItem.ToString();
             PikminOn.text = PikminOnItem.ToString();
-            PikminOnItem = PikminOnItemList.Count + Mathf.Max(0, (PurplesOnItemList.Count * 10) - PurplesOnItemList.Count);
             if (PikminOnItem < PikminNeedOnItem)
             {
                 PikminOn.color = new Color(basecolor.r - 0.1f, basecolor.b - 0.1f, basecolor.g - 0.1f);
@@ -149,6 +150,20 @@ namespace LethalMin
         {
             ObjectPosition = transform.position;
             CheckAndDespawnIfParentDestroyed();
+
+            if (PikminOnItemList.Count > 0)
+            {
+                PikminOnItem = CalculatePikminOnItems();
+            }
+            else if (PikminOnItemList.Count == 1)
+            {
+                PikminOnItem = PikminOnItemList[0].PminType.CarryStrength;
+            }
+            else
+            {
+                PikminOnItem = 0;
+            }
+
             if (PikminOnItem < PikminNeedOnItem) { return; }
             if (SFXInterval >= 0)
             {
@@ -171,6 +186,16 @@ namespace LethalMin
                 }
                 SFXInterval = 0.5f;
             }
+        }
+
+        private int CalculatePikminOnItems()
+        {
+            int count = 0;
+            foreach (PikminAI pikmin in PikminOnItemList)
+            {
+                count += pikmin.PminType.CarryStrength;
+            }
+            return count;
         }
 
         [ClientRpc]
@@ -726,12 +751,6 @@ namespace LethalMin
 
             if (pikmin != null && !PikminOnItemList.Contains(pikmin))
             {
-                PikminOnItemList.Add(pikmin);
-                if (pikmin.PminType.AddTen)
-                {
-                    PurplesOnItemList.Add(pikmin);
-                }
-                PikminOnItem = PikminOnItemList.Count + Mathf.Max(0, (PurplesOnItemList.Count * 10) - PurplesOnItemList.Count);
                 pikmin.IsOnItem = true;
 
                 // Synchronize with clients
@@ -754,11 +773,6 @@ namespace LethalMin
             if (pikmin != null && !PikminOnItemList.Contains(pikmin))
             {
                 PikminOnItemList.Add(pikmin);
-                if (pikmin.PminType.AddTen)
-                {
-                    PurplesOnItemList.Add(pikmin);
-                }
-                PikminOnItem = PikminOnItemList.Count + Mathf.Max(0, (PurplesOnItemList.Count * 10) - PurplesOnItemList.Count);
                 pikmin.IsOnItem = true;
                 LethalMin.Logger.LogInfo(pikmin + " Grabbed " + name);
             }
@@ -777,11 +791,6 @@ namespace LethalMin
             if (pikmin != null && PikminOnItemList.Contains(pikmin))
             {
                 PikminOnItemList.Remove(pikmin);
-                if (pikmin.PminType.AddTen)
-                {
-                    PurplesOnItemList.Remove(pikmin);
-                }
-                PikminOnItem = PikminOnItemList.Count + Mathf.Max(0, (PurplesOnItemList.Count * 10) - PurplesOnItemList.Count);
                 pikmin.IsOnItem = false;
 
                 // Synchronize with clients
@@ -800,13 +809,25 @@ namespace LethalMin
             if (pikmin != null && PikminOnItemList.Contains(pikmin))
             {
                 PikminOnItemList.Remove(pikmin);
-                if (pikmin.PminType.AddTen)
-                {
-                    PurplesOnItemList.Remove(pikmin);
-                }
-                PikminOnItem = PikminOnItemList.Count + Mathf.Max(0, (PurplesOnItemList.Count * 10) - PurplesOnItemList.Count);
                 pikmin.IsOnItem = false;
             }
+        }
+
+        internal float CalculateSpeed()
+        {
+            float speed = 0;
+
+            if(PikminOnItemList.Count == 0)
+            {
+                return PikminOnItemList[0].PlantSpeeds[PikminOnItemList[0].GrowStage] * 0.75f;
+            }
+
+            foreach (PikminAI pikmin in PikminOnItemList)
+            {
+                speed += pikmin.PlantSpeeds[pikmin.GrowStage] / 2;
+            }
+
+            return speed;
         }
         #endregion
 

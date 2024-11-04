@@ -116,7 +116,7 @@ namespace LethalMin
         {
             yield return new WaitUntil(() => Vector3.Distance(Controller.transform.position, Controller.targetPlayer.transform.position) < 20);
             puffmin.ThrowPuffmin(Controller.eye.position, Controller.transform.forward);
-            yield return new WaitForSeconds(puffmin.enemyRandom.Next(1, 3));
+            yield return new WaitForSeconds(UnityEngine.Random.Range(0, 1.0f));
             isAiming = false;
         }
 

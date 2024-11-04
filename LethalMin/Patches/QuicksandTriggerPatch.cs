@@ -15,7 +15,7 @@ namespace LethalMin.Patches
             if (!__instance.isWater) { return; }
             if (other.name == "PikminColision")
                 targetPikmin = other.GetComponentInParent<PikminAI>();
-            if (targetPikmin != null && targetPikmin.HasInitalized && !targetPikmin.PminType.IsResistantToWater && !targetPikmin.IsDrowing)
+            if (targetPikmin != null && targetPikmin.HasInitalized && !LethalMin.IsPikminResistantToHazard(targetPikmin.PminType, HazardType.Water) && !targetPikmin.IsDrowing)
             {
                 targetPikmin.SetDrowingClientRpc();
                 //LethalMin.Logger.LogInfo($"{targetPikmin.uniqueDebugId} Has entered water!");
@@ -29,7 +29,7 @@ namespace LethalMin.Patches
             if (!__instance.isWater) { return; }
             if (other.name == "PikminColision")
                 targetPikmin = other.GetComponentInParent<PikminAI>();
-            if (targetPikmin != null && targetPikmin.HasInitalized && !targetPikmin.PminType.IsResistantToWater && targetPikmin.IsDrowing)
+            if (targetPikmin != null && targetPikmin.HasInitalized && !LethalMin.IsPikminResistantToHazard(targetPikmin.PminType, HazardType.Water) && targetPikmin.IsDrowing)
             {
                 targetPikmin.StopDrowingClientRpc();
                 //LethalMin.Logger.LogInfo($"{targetPikmin.uniqueDebugId} Has entered water!");

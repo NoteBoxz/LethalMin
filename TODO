@@ -1,13 +1,10 @@
-(0.1.x)
-Fix remenats issue.
-Optimize Pikmin Script.
-Fix pikmin pathing to seemingly random positions?
-
 (0.2.x)
-Make onions produce sprouts.
-Make Unity API mod.
-Add in Puffmin.
-Add in poisoning.
-Make Pikmin get stuck in hydrogear.
-Redo PikminOnItem system.
-Fix buggy player animation.
+Add in Puffmin. (Mostly Done)
+Make onions produce sprouts. (Doing Next)
+Make Unity Library mod. (Just Started)
+Add in poisoning. (Not Started)
+Make Pikmin get stuck in hydrogear. (Not Started)
+Redo PikminOnItem system. (Not Started)
+Fix buggy player animation. (0.2.1)
+Fix remenats issue. (0.2.1)
+Optimize Pikmin Script. (0.2.1)

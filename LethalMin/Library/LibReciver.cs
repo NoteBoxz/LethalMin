@@ -1,3 +1,4 @@
+using System.Linq;
 using LethalMinLibrary;
 using UnityEngine;
 
@@ -5,37 +6,6 @@ namespace LethalMin.Library
 {
     public static class LibReciver
     {
-        public static bool IsPikminResistantToHazard(PikminType type, HazardType hazard)
-        {
-            switch (hazard)
-            {
-                case HazardType.Poision:
-                    if (type.IsResistantToPoision)
-                    {
-                        return true;
-                    }
-                    break;
-                case HazardType.Fire:
-                    if (type.IsResistantToFire)
-                    {
-                        return true;
-                    }
-                    break;
-                case HazardType.Electricity:
-                    if (type.IsResistantToElectricity)
-                    {
-                        return true;
-                    }
-                    break;
-                case HazardType.Exsplosion:
-                    if (type.IsresistantToExplosions)
-                    {
-                        return true;
-                    }
-                    break;
-            }
-            return false;
-        }
         public static void KillPikmin(GameObject pikmin, Transform SnapToTarget, float KillTimer, HazardType[] type)
         {
             PikminAI pikminAI = null!;
@@ -55,7 +25,7 @@ namespace LethalMin.Library
             }
             foreach (var hazard in type)
             {
-                if (IsPikminResistantToHazard(pikminAI.PminType, hazard))
+                if (LethalMin.IsPikminResistantToHazard(pikminAI.PminType, hazard))
                 {
                     return;
                 }
@@ -83,7 +53,7 @@ namespace LethalMin.Library
             }
             foreach (var hazard in type)
             {
-                if (IsPikminResistantToHazard(pikminAI.PminType, hazard))
+                if (LethalMin.IsPikminResistantToHazard(pikminAI.PminType, hazard))
                 {
                     return;
                 }
@@ -110,7 +80,7 @@ namespace LethalMin.Library
             }
             foreach (var hazard in type)
             {
-                if (IsPikminResistantToHazard(pikminAI.PminType, hazard))
+                if (LethalMin.IsPikminResistantToHazard(pikminAI.PminType, hazard))
                 {
                     return;
                 }

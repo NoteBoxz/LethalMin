@@ -43,7 +43,7 @@ namespace LethalMin.Patches
                 if (pikmin != null)
                 {
                     // Check if the Pikmin is Yellow (immune to electricity)
-                    if (pikmin.PminType.IsResistantToElectricity)
+                    if (LethalMin.IsPikminResistantToHazard(pikmin.PminType, HazardType.Electric))
                     {
                         LethalMin.Logger.LogInfo($"Yellow Pikmin {pikmin.name} is immune to lightning!");
                         AffectedPikminAIList.Add(pikmin);

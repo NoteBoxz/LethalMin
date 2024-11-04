@@ -112,7 +112,8 @@ namespace LethalMin.Patches
                 __instance.BeesZap();
                 foreach (var item in MinsInWay)
                 {
-                    if (!item.IsDying && !item.FinnaBeDed && !item.isEnemyDead && !item.isHeld && !item.PminType.IsResistantToElectricity)
+                    if (!item.IsDying && !item.FinnaBeDed && !item.isEnemyDead && 
+                    !item.isHeld && !LethalMin.IsPikminResistantToHazard(item.PminType, HazardType.Electric))
                     {
                         // Calculate knockback direction (away from the turret)
                         Vector3 knockbackDirection = (item.transform.position - __instance.transform.position).normalized;

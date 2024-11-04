@@ -20,11 +20,10 @@ namespace LethalMin
         Following,
         Airborn,
         Working,
-        Drowning,
         Attacking,
         Leaveing,
         Stuck,
-        Posisened,
+        Panic,
     }
 
     public struct ItemTarget
@@ -743,8 +742,11 @@ namespace LethalMin
                 case (int)PState.Airborn:
                     HandleAirbornState();
                     break;
-                case (int)PState.Drowning:
-                    HandleDrowningState();
+                case (int)PState.Stuck:
+                    HandleStuckState();
+                    break;
+                case (int)PState.Panic:
+                    HandlePanicState();
                     break;
                 case (int)PState.Working:
                     HandleWorkingState();
@@ -942,7 +944,7 @@ namespace LethalMin
                 OnHandleAirbornStateEnd.Invoke();
         }
 
-        private void HandleDrowningState()
+        private void HandleStuckState()
         {
             if (HasCustomScripts)
                 OnHandleDrowningState.Invoke();
@@ -976,6 +978,11 @@ namespace LethalMin
             NoticeColider.name = "WhistleDetection";
             if (HasCustomScripts)
                 OnHandleDrowningStateEnd.Invoke();
+        }
+
+        private void HandlePanicState()
+        {
+
         }
 
         private void HandleWorkingState()
@@ -1937,7 +1944,7 @@ namespace LethalMin
         [ClientRpc]
         public void SetDrowingClientRpc()
         {
-            if (PminType.IsResistantToWater) { LethalMin.Logger.LogWarning("Why tf is a pikmin that cannot drown, drowning?????"); return; }
+            if (LethalMin.IsPikminResistantToHazard(PminType, HazardType.Water)) { LethalMin.Logger.LogWarning("Why tf is a pikmin that cannot drown, drowning?????"); return; }
             if (LethalMin.UselessblueMinValue) { return; }
 
             if (HasCustomScripts)
@@ -1966,7 +1973,7 @@ namespace LethalMin
             EnemyAttacking = null;
             UnSnapPikmin();
             drowningTimer = enemyRandom.Next(5, 10);
-            SwitchToBehaviourClientRpc((int)PState.Drowning);
+            SwitchToBehaviourClientRpc((int)PState.Stuck);
             DrowingAud.Play();
             UpdateAnimBoolClientRpc("IsDrowing", true);
             SetTriggerClientRpc("SetDrowning");
@@ -2481,46 +2488,7 @@ namespace LethalMin
                 {
                     // Calculate the adjusted speed
                     float baseSpeed = PlantSpeeds[GrowStage];
-                    float adjustedSpeed;
-
-                    int regularPikminCount = targetItem.PikminOnItemList.Count - targetItem.PurplesOnItemList.Count;
-                    int purplePikminCount = targetItem.PurplesOnItemList.Count;
-                    float totalCarryingPower = regularPikminCount + (purplePikminCount * targetItem.PurpleMultiplier);
-
-                    if (targetItem.PikminNeedOnItem == 1)
-                    {
-                        // For items that only require one pikmin
-                        float baseCarrySpeed = baseSpeed * 0.8f; // Slightly slower speed
-                        float pikminRatio = regularPikminCount / targetItem.PikminNeedOnItem;
-                        float speedBonus = pikminRatio - 1;
-
-                        // Apply purple Pikmin slowdown effect
-                        float purpleSlowdownFactor = 1f - (purplePikminCount * 0.1f); // 10% slowdown per purple Pikmin
-
-                        adjustedSpeed = baseCarrySpeed * (1 + speedBonus) * purpleSlowdownFactor;
-
-                        adjustedSpeed = Mathf.Max(adjustedSpeed, baseSpeed * 0.5f);
-                        // Cap the speed at 200% of the base speed
-                        if (LethalMin.CapCarrySpeed)
-                            adjustedSpeed = Mathf.Min(adjustedSpeed, baseSpeed * 2f);
-                    }
-                    else
-                    {
-                        // For items that require more than one pikmin
-                        float baseCarrySpeed = baseSpeed * 0.5f; // Start at half speed
-                        float pikminRatio = regularPikminCount / targetItem.PikminNeedOnItem;
-                        float speedBonus = pikminRatio - 1;
-
-                        // Apply purple Pikmin slowdown effect
-                        float purpleSlowdownFactor = 1f - (purplePikminCount * 0.1f); // 10% slowdown per purple Pikmin
-
-                        adjustedSpeed = baseCarrySpeed * (1 + speedBonus) * purpleSlowdownFactor;
-
-                        adjustedSpeed = Mathf.Max(adjustedSpeed, baseSpeed * 0.5f);
-                        // Cap the speed at 200% of the base speed
-                        if (LethalMin.CapCarrySpeed)
-                            adjustedSpeed = Mathf.Min(adjustedSpeed, baseSpeed * 2f);
-                    }
+                    float adjustedSpeed = targetItem.CalculateSpeed();
 
                     // Set the agent's speed
                     agent.speed = adjustedSpeed;
@@ -3794,7 +3762,7 @@ namespace LethalMin
             }
             else
             {
-                SwitchToBehaviourClientRpc((int)PState.Drowning);
+                SwitchToBehaviourClientRpc((int)PState.Stuck);
             }
             if (HasCustomScripts)
                 OnLandPikminEnd.Invoke();
@@ -3902,7 +3870,7 @@ namespace LethalMin
         public override void HitFromExplosion(float distance)
         {
             base.HitFromExplosion(distance);
-            if (Invincible || PminType.IsresistantToExplosions) { return; }
+            if (Invincible || LethalMin.IsPikminResistantToHazard(PminType, HazardType.Exsplosive)) { return; }
             ApplyKnockbackServerRpc(new Vector3(-distance, -distance, -distance), true, false, 3);
         }
         public void UnSnapPikmin(bool DestorySnapToPos = false, bool UsePhysics = false, bool ResetToInitial = true)

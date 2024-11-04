@@ -380,7 +380,7 @@ namespace LethalMin
             bool hasFireHazards = level.OutsideEnemies.Any(e => e.enemyType.enemyName.ToLower().Contains("old birds"));
             if (hasFireHazards)
             {
-                var fireResistantTypes = LethalMin.SproutTypes.Values.Where(t => t.IsResistantToFire);
+                var fireResistantTypes = LethalMin.SproutTypes.Values.Where(t => LethalMin.IsPikminResistantToHazard(t, HazardType.Fire));
                 foreach (var type in fireResistantTypes)
                 {
                     typeWeights[type] *= 2f; // Increase chance for fire-resistant Pikmin
@@ -392,7 +392,7 @@ namespace LethalMin
                 level.currentWeather == LevelWeatherType.Rainy || level.currentWeather == LevelWeatherType.Flooded;
             if (hasWaterHazards)
             {
-                var waterResistantTypes = LethalMin.SproutTypes.Values.Where(t => t.IsResistantToWater);
+                var waterResistantTypes = LethalMin.SproutTypes.Values.Where(t => LethalMin.IsPikminResistantToHazard(t, HazardType.Water));
                 foreach (var type in waterResistantTypes)
                 {
                     typeWeights[type] *= 2f; // Increase chance for water-resistant Pikmin
@@ -403,7 +403,7 @@ namespace LethalMin
             bool hasElectricHazards = level.currentWeather == LevelWeatherType.Stormy;
             if (hasElectricHazards)
             {
-                var electricResistantTypes = LethalMin.SproutTypes.Values.Where(t => t.IsResistantToElectricity);
+                var electricResistantTypes = LethalMin.SproutTypes.Values.Where(t => LethalMin.IsPikminResistantToHazard(t, HazardType.Electric));
                 foreach (var type in electricResistantTypes)
                 {
                     typeWeights[type] *= 2f; // Increase chance for electricity-resistant Pikmin
