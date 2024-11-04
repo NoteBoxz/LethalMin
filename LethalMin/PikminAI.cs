@@ -4116,6 +4116,7 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo($"Killed called for {uniqueDebugId}");
             if (Invincible) { return; }
             if (LethalMin.InvinciMinValue) { return; }
+
             if (!IsDying && !DeathBuffer && !destroy)
             {
                 SnapPikminToPosition(null, false, true, 1.5f);
@@ -4123,6 +4124,27 @@ namespace LethalMin
             if (!DeathBuffer && !destroy)
             {
                 return;
+            }
+            if (PminType.DamageDeltUponDeath > 0)
+            {                       
+                Collider[] colliders = Physics.OverlapSphere(transform.position, PminType.DeathDamageRange);
+                foreach (Collider collider in colliders)
+                {
+                    EnemyAI enemyAI = collider.GetComponent<EnemyAI>();
+                    if (enemyAI == null)
+                    {
+                        enemyAI = collider.GetComponentInParent<EnemyAI>();
+                    }
+                    if (enemyAI == null)
+                    {
+                        enemyAI = collider.GetComponentInChildren<EnemyAI>();
+                    }
+                    if (enemyAI != null)
+                    {
+                        if (enemyAI.GetComponentInChildren<PikminDamager>() != null)
+                            enemyAI.GetComponentInChildren<PikminDamager>().HitInAirQoutes(PminType.GetDeathDamage());
+                    }
+                }
             }
             PikminManager.Instance.IncrementPikminKilled();
             base.KillEnemy();

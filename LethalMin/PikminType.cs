@@ -93,6 +93,12 @@ namespace LethalMin
         [Tooltip("The amount of damage the pikmin does when it attacks.")]
         public float DamageAmmount;
 
+        [Tooltip("The amount of damage the pikmin does when it dies.")]
+        public float DamageDeltUponDeath;
+
+        [Tooltip("The ammount of distance between the pikmin and enemies where the enemy will be delt damage from the pikmin upon death.")]
+        public float DeathDamageRange;
+
         [Tooltip("Normalizes the damage the pikmin does when it attacks, (i.e. 5 -> 0.05)")]
         public bool NormalizeDamage;
 
@@ -163,6 +169,14 @@ namespace LethalMin
                 return DamageAmmount / 100 * DamageMultiplier * LethalMin.DamageMultiplier;
             }
             return DamageAmmount * DamageMultiplier * LethalMin.DamageMultiplier;
+        }        
+        public float GetDeathDamage()
+        {
+            if (NormalizeDamage)
+            {
+                return DamageDeltUponDeath / 100 * DamageMultiplier * LethalMin.DamageMultiplier;
+            }
+            return DamageDeltUponDeath * DamageMultiplier * LethalMin.DamageMultiplier;
         }
         [HideInInspector]
         public PikminMeshData MeshData;
