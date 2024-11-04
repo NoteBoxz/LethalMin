@@ -27,32 +27,33 @@ namespace LethalMin.Patches
                 if (__instance.IsSpawned)
                 {
                     LethalMin.Logger.LogInfo("SellBodiesFixed body item detected, adding PikminItem");
-                    CreatePikminItem(__instance);
+                    CreatePikminItem(__instance, true).SetIsBodyClientRpc();
                 }
                 else
                 {
                     LethalMin.Logger.LogInfo("SellBodiesFixed body item detected, adding WaitForSpawn component");
                     // Add a component to wait for the object to be spawned
-                    __instance.gameObject.AddComponent<WaitForSpawn>().Initialize(__instance);
+                    __instance.gameObject.AddComponent<WaitForSpawn>().Initialize(__instance, true, true);
                 }
             }
         }
 
 
-        public static void CreatePikminItem(GrabbableObject grabbableObject)
+        public static PikminItem CreatePikminItem(GrabbableObject grabbableObject, bool overrideGrabbableCheck = false)
         {
             if (!LethalMin.AllItemsToP && grabbableObject.IsServer && grabbableObject.grabbableToEnemies
-            || LethalMin.AllItemsToP && grabbableObject.IsServer && grabbableObject.grabbable)
+            || LethalMin.AllItemsToP && grabbableObject.IsServer && grabbableObject.grabbable
+            || overrideGrabbableCheck)
             {
                 if (grabbableObject.GetComponent<CaveDwellerPhysicsProp>() != null)
-                    return;
+                    return null!;
                 PikminItem[] Pims = GameObject.FindObjectsOfType<PikminItem>();
                 foreach (var item in Pims)
                 {
                     if (item.Root == grabbableObject)
                     {
                         LethalMin.Logger.LogWarning($"{grabbableObject.itemProperties.name} already has a pikmin node!");
-                        return;
+                        return null!;
                     }
                 }
                 GameObject PikminObjectPrefab = LethalMin.PikminObjectPrefab;
@@ -67,12 +68,14 @@ namespace LethalMin.Patches
                     PikminObjectPrefabInstance.name = grabbableObject.name + "(PikminNode)";
                     PikminObjectPrefabInstance.transform.position = grabbableObject.transform.position;
                     PikminObjectPrefabInstance.transform.SetParent(grabbableObject.transform);
+                    return pikminItem;
                 }
                 else
                 {
                     LethalMin.Logger.LogError($"NetworkObject component not found on PikminItemNode for {grabbableObject.name}");
                 }
             }
+            return null!;
         }
 
         public static NetworkObject GetPhysicsRegionOfDroppedObject(GrabbableObject grabbableObject, out Vector3 hitPoint)
@@ -113,17 +116,24 @@ namespace LethalMin.Patches
     public class WaitForSpawn : MonoBehaviour
     {
         private GrabbableObject grabbableObject;
+        private bool or;
+        public bool SetDeadBody;
 
-        public void Initialize(GrabbableObject obj)
+        public void Initialize(GrabbableObject obj, bool overrideGC = false, bool SDB = false)
         {
             grabbableObject = obj;
+            or = overrideGC;
+            SetDeadBody = SDB;
         }
 
         private void Update()
         {
             if (grabbableObject != null && grabbableObject.IsSpawned)
             {
-                GrabbableObjectPatch.CreatePikminItem(grabbableObject);
+                if (SetDeadBody)
+                    GrabbableObjectPatch.CreatePikminItem(grabbableObject, true).SetIsBodyClientRpc();
+                else
+                    GrabbableObjectPatch.CreatePikminItem(grabbableObject, or);
                 Destroy(this); // Remove this component once we've created the PikminItem
             }
         }

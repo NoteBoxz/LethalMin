@@ -106,6 +106,7 @@ namespace LethalMin.Patches
             if (PikminManager.Instance == null)
             {
                 GameObject pikminManagerObject = UnityEngine.Object.Instantiate(LethalMin.PmanPrefab);
+                pikminManagerObject.name = "Pikmin Manager";
                 pikminManagerObject.GetComponent<NetworkObject>().Spawn();
                 LethalMin.Logger.LogInfo("PikminManager created and spawned across the network!");
             }

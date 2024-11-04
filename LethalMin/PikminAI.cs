@@ -651,62 +651,6 @@ namespace LethalMin
         }
         #endregion
 
-        [ServerRpc(RequireOwnership = false)]
-        public void SetWhistleingPlayerServerRpc(NetworkObjectReference player)
-        {
-            if (player.TryGet(out NetworkObject noticeZoneObject))
-            {
-                PlayerControllerB players = noticeZoneObject.GetComponent<PlayerControllerB>();
-                whistlingPlayer = players;
-                IsWhistled = true;
-            }
-        }
-        [ServerRpc(RequireOwnership = false)]
-        public void SetWhistleingPlayerServerRpc()
-        {
-            whistlingPlayer = null;
-            IsWhistled = false;
-        }
-
-        public void TurnIntoPuffmin()
-        {
-            if (!IsServer) { return; }
-            GameObject SproutInstance = Instantiate(LethalMin.PuffminPrefab, transform.position, transform.rotation);
-            PuffminAI SproteScript = SproutInstance.GetComponent<PuffminAI>();
-            SproteScript.isOutside = isOutside;
-            SproteScript.PreDefinedType = true;
-            SproteScript.OriginalType = PminType;
-            SproteScript.NetworkObject.Spawn();
-            PikminManager.Instance.SpawnPikminClientRpc(SproteScript.NetworkObject);
-
-            PikminManager.Instance.DespawnPikminClientRpc(NetworkObject);
-        }
-
-        public void TurnIntoPuffmin(EnemyAI enemyAI)
-        {
-            if (!IsServer) { return; }
-            GameObject SproutInstance = Instantiate(LethalMin.PuffminPrefab, transform.position, transform.rotation);
-            PuffminAI SproteScript = SproutInstance.GetComponent<PuffminAI>();
-            SproteScript.isOutside = isOutside;
-            SproteScript.PreDefinedType = true;
-            SproteScript.OriginalType = PminType;
-            SproteScript.HasFreeWill = false;
-            SproteScript.NetworkObject.Spawn();
-            PikminManager.Instance.SpawnPikminClientRpc(SproteScript.NetworkObject);
-            if (enemyAI.GetComponentInChildren<PuffminOwnerManager>() != null)
-            {
-                enemyAI.GetComponentInChildren<PuffminOwnerManager>().AddPuffmin(SproteScript);
-            }
-            if (IsSpawned)
-            {
-                PikminManager.Instance.DespawnPikminClientRpc(NetworkObject);
-            }
-            else
-            {
-                LethalMin.Logger.LogWarning("Pikmin was not spawned, not despawning");
-                Destroy(gameObject);
-            }
-        }
 
         #region Core Update Logic
         public override void DoAIInterval()
@@ -1675,6 +1619,63 @@ namespace LethalMin
 
         #region Player and Leader Interaction
 
+        [ServerRpc(RequireOwnership = false)]
+        public void SetWhistleingPlayerServerRpc(NetworkObjectReference player)
+        {
+            if (player.TryGet(out NetworkObject noticeZoneObject))
+            {
+                PlayerControllerB players = noticeZoneObject.GetComponent<PlayerControllerB>();
+                whistlingPlayer = players;
+                IsWhistled = true;
+            }
+        }
+        [ServerRpc(RequireOwnership = false)]
+        public void SetWhistleingPlayerServerRpc()
+        {
+            whistlingPlayer = null;
+            IsWhistled = false;
+        }
+
+        public void TurnIntoPuffmin()
+        {
+            if (!IsServer) { return; }
+            GameObject SproutInstance = Instantiate(LethalMin.PuffminPrefab, transform.position, transform.rotation);
+            PuffminAI SproteScript = SproutInstance.GetComponent<PuffminAI>();
+            SproteScript.isOutside = isOutside;
+            SproteScript.PreDefinedType = true;
+            SproteScript.OriginalType = PminType;
+            SproteScript.NetworkObject.Spawn();
+            PikminManager.Instance.SpawnPikminClientRpc(SproteScript.NetworkObject);
+
+            PikminManager.Instance.DespawnPikminClientRpc(NetworkObject);
+        }
+
+        public void TurnIntoPuffmin(EnemyAI enemyAI)
+        {
+            if (!IsServer) { return; }
+            GameObject SproutInstance = Instantiate(LethalMin.PuffminPrefab, transform.position, transform.rotation);
+            PuffminAI SproteScript = SproutInstance.GetComponent<PuffminAI>();
+            SproteScript.isOutside = isOutside;
+            SproteScript.PreDefinedType = true;
+            SproteScript.OriginalType = PminType;
+            SproteScript.HasFreeWill = false;
+            SproteScript.NetworkObject.Spawn();
+            PikminManager.Instance.SpawnPikminClientRpc(SproteScript.NetworkObject);
+            if (enemyAI.GetComponentInChildren<PuffminOwnerManager>() != null)
+            {
+                enemyAI.GetComponentInChildren<PuffminOwnerManager>().AddPuffmin(SproteScript);
+            }
+            if (IsSpawned)
+            {
+                PikminManager.Instance.DespawnPikminClientRpc(NetworkObject);
+            }
+            else
+            {
+                LethalMin.Logger.LogWarning("Pikmin was not spawned, not despawning");
+                Destroy(gameObject);
+            }
+        }
+
         IEnumerator DelayedLeaderAssing(NetworkObject leaderNetworkObject)
         {
             yield return new WaitForSeconds(0.01f);
@@ -2024,6 +2025,7 @@ namespace LethalMin
 
 
         #region Item Detection and Interaction
+        public bool ShouldDoLethalEscape;
 
         public static void RefreshPikminItemsInMapList()
         {
@@ -2403,15 +2405,32 @@ namespace LethalMin
 
                 //if(LethalMin.DebugMode)
                 //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Performing linecast for item: {item.name}");
-                if (Physics.Linecast(eye.position, item.transform.position, out RaycastHit hit, LethalMin.Instance.PikminColideable))
+                RaycastHit[] hits = Physics.RaycastAll(eye.position, item.transform.position - eye.position, Vector3.Distance(eye.position, item.transform.position), LethalMin.Instance.PikminColideable);
+                bool itemFound = true;
+                foreach (RaycastHit hit in hits)
                 {
-                    if (hit.collider != null && !hit.collider.gameObject.name.Contains("Anomaly") &&
-                        (hit.collider.gameObject.transform.parent == null || !hit.collider.gameObject.transform.parent.name.Contains("Anomaly")))
+                    if (hit.collider != null)
                     {
-                        //if(LethalMin.DebugMode)
-                        //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Linecast blocked for item {item.name} by: {hit.collider.gameObject.name}");
-                        continue;
+                        if (hit.collider.gameObject == item ||
+                            (hit.collider.gameObject.transform.parent != null && hit.collider.gameObject.transform.parent.gameObject == item))
+                        {
+                            itemFound = true;
+                            break;
+                        }
+
+                        if (!hit.collider.gameObject.name.Contains("Anomaly") &&
+                            (hit.collider.gameObject.transform.parent == null || !hit.collider.gameObject.transform.parent.name.Contains("Anomaly")))
+                        {
+                            if (LethalMin.DebugMode)
+                                //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Raycast blocked for item {item.name} by: {hit.collider.gameObject.name}");
+                            itemFound = false;
+                        }
                     }
+                }
+
+                if (!itemFound)
+                {
+                    continue;
                 }
 
                 if (distanceToItem < closestDistance)
@@ -2608,6 +2627,63 @@ namespace LethalMin
                 }
             }
 
+            // Onion Target
+            if (PikminManager._currentOnions.Count() > 0 &&
+                isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
+            {
+                // Determine which onion the pikmin should go to.
+                Onion targetOnion = null;
+                PikminType majorityType = null;
+                PikminType minorityType = null;
+                Dictionary<PikminType, int> typeCounts = new Dictionary<PikminType, int>();
+
+                // Count pikmin types on the carried item
+                foreach (var pikmin in targetItem.PikminOnItemList)
+                {
+                    if (!typeCounts.ContainsKey(pikmin.PminType))
+                    {
+                        typeCounts[pikmin.PminType] = 0;
+                    }
+                    typeCounts[pikmin.PminType]++;
+                }
+
+                // Determine majority and minority types
+                if (typeCounts.Any())
+                {
+                    majorityType = typeCounts.OrderByDescending(kv => kv.Value).First().Key;
+                    minorityType = typeCounts.OrderBy(kv => kv.Value).First().Key;
+                }
+
+                // Case 1: Majority pikmin type's target onion
+                if (majorityType != null && majorityType.TargetOnion != null)
+                {
+                    targetOnion = PikminManager._currentOnions.FirstOrDefault(o => o.type == majorityType.TargetOnion);
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with majority {majorityType.ScientificName} pikmin: {targetOnion?.type}");
+                }
+
+                // Case 2: Minority pikmin type's target onion
+                if (targetOnion == null && minorityType != null && minorityType.TargetOnion != null)
+                {
+                    targetOnion = PikminManager._currentOnions.FirstOrDefault(o => o.type == minorityType.TargetOnion);
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with minority pikmin: {targetOnion?.type}");
+                }
+
+                // Case 3: Onion that needs more pikmin the most
+                if (targetOnion == null)
+                {
+                    targetOnion = PikminManager._currentOnions
+                        .OrderBy(o => o.GetPikminCount())
+                        .FirstOrDefault();
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with least pikmin: {targetOnion?.type}");
+                }
+
+                // Add the target onion to possible targets
+                if (targetOnion != null)
+                {
+                    possibleTargets.Add(new ItemTarget("Onion", targetOnion.transform.position, 100));
+                }
+            }
+
             // Company Building counter
             if (isOutside && RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding")
             {
@@ -2671,7 +2747,8 @@ namespace LethalMin
                     continue;
                 // Check if the target is a maneater and if the current maneater is not the same as the target
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Possible target: {target.Name} at {target.GetPos()} with score of {target.Score}");
-                if (IsPathPossible(target.Position) || target.Name == "Ship" && !possibleTargets.Contains(cartarget) || target.Name == "Car" || target.Name == "Counter")
+                if (IsPathPossible(target.Position) || target.Name == "Onion" || target.Name == "Ship" && !possibleTargets.Contains(cartarget)
+                || target.Name == "Car" || target.Name == "Counter")
                 {
                     CarryingItemTo = target.Name;
                     HasFoundCaryTarget = true;
@@ -2693,6 +2770,7 @@ namespace LethalMin
 
             LethalMin.Logger.LogWarning($"({uniqueDebugId}) No pathable target found!");
         }
+
         private float lastTargetSwitchTime = 0f;
         private const float TARGET_SWITCH_COOLDOWN = 2f; // 2 seconds cooldown
         private const float DISTANCE_THRESHOLD = 0.5f; // 0.5 units threshold
@@ -4127,7 +4205,7 @@ namespace LethalMin
                 return;
             }
             if (PminType.DamageDeltUponDeath > 0)
-            {                       
+            {
                 Collider[] colliders = Physics.OverlapSphere(transform.position, PminType.DeathDamageRange);
                 foreach (Collider collider in colliders)
                 {

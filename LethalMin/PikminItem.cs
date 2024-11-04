@@ -24,6 +24,8 @@ namespace LethalMin
         private NetworkObject rootNetworkObject;
         [IDebuggable.Debug] Vector3 ObjectPosition;
         Color basecolor;
+        public bool CanBeConvertedIntoSprouts;
+        public PikminType FavoredType = null!;
 
         #region Unity Lifecycle Methods
         public void Start()
@@ -448,6 +450,11 @@ namespace LethalMin
             }
         }
 
+        [ClientRpc]
+        public void SetIsBodyClientRpc()
+        {
+            CanBeConvertedIntoSprouts = true;
+        }
         #endregion
 
 
