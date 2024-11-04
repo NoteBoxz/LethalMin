@@ -1180,6 +1180,20 @@ namespace LethalMin
                     if (IsServer)
                         networkObject.Despawn(true);
                 }
+                PuffminAI puffminAI = networkObject.GetComponent<PuffminAI>();
+                if (puffminAI != null)
+                {
+                    if (RoundManager.Instance.SpawnedEnemies.Contains(puffminAI))
+                    {
+                        RoundManager.Instance.SpawnedEnemies.Remove(puffminAI);
+                        if (LethalMin.DebugMode)
+                        {
+                            LethalMin.Logger.LogInfo($"Removed Puffmin {puffminAI.name} from RoundManager");
+                        }
+                    }
+                    if (IsServer)
+                        networkObject.Despawn(true);
+                }
             }
         }
 

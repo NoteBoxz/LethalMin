@@ -1,6 +1,7 @@
 using HarmonyLib;
 using UnityEngine;
 using Unity.Netcode;
+using System.Linq;
 
 namespace LethalMin.Patches
 {
@@ -19,6 +20,21 @@ namespace LethalMin.Patches
             {
                 // Add a component to wait for the object to be spawned
                 __instance.gameObject.AddComponent<WaitForSpawn>().Initialize(__instance);
+            }
+            if (LethalMin.IsDependencyLoaded("Entity378.sellbodies") &&
+                CleaningCompany.Plugin.instance.BodySpawns.Values.ToList().Contains(__instance.itemProperties))
+            {
+                if (__instance.IsSpawned)
+                {
+                    LethalMin.Logger.LogInfo("SellBodiesFixed body item detected, adding PikminItem");
+                    CreatePikminItem(__instance);
+                }
+                else
+                {
+                    LethalMin.Logger.LogInfo("SellBodiesFixed body item detected, adding WaitForSpawn component");
+                    // Add a component to wait for the object to be spawned
+                    __instance.gameObject.AddComponent<WaitForSpawn>().Initialize(__instance);
+                }
             }
         }
 

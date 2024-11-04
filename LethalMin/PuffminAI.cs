@@ -134,8 +134,8 @@ namespace LethalMin
             if (targetPlayer != null)
             {
                 SwitchToBehaviourClientRpc((int)PuffState.attacking);
-                PrevOwnerAI = OwnerAI;
-                OwnerAI = null;
+                if (OwnerAI != null && OwnerAI.GetComponentInChildren<PuffminOwnerManager>() != null)
+                    OwnerAI.GetComponentInChildren<PuffminOwnerManager>().RemovePuffmin(this);
                 return;
             }
 

@@ -51,7 +51,7 @@ namespace LethalMin
     [BepInDependency("me.swipez.melonloader.morecompany", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("MaxWasUnavailable.LethalModDataLib", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.rune580.LethalCompanyInputUtils", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("SellBodies", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("Entity378.sellbodies", BepInDependency.DependencyFlags.SoftDependency)]
     public class LethalMin : BaseUnityPlugin
     {
         public static LethalMin Instance { get; private set; } = null!;

@@ -3856,7 +3856,8 @@ namespace LethalMin
             base.HitEnemy(force, playerWhoHit, playHitSFX, hitID);
             if (Invincible) { return; }
             if (KncockedBack) { return; }
-            if (!LethalMin.FriendlyFire && playerWhoHit != null && playerWhoHit == currentLeader?.Controller)
+            if (!LethalMin.FriendlyFire && playerWhoHit != null && playerWhoHit == currentLeader?.Controller
+            || !LethalMin.FriendlyFire && playerWhoHit != null && playerWhoHit == previousLeader?.Controller && currentBehaviourStateIndex == (int)PState.Attacking)
             {
                 if (LethalMin.DebugMode)
                     LethalMin.Logger.LogInfo($"{uniqueDebugId} was hit by their leader: {playerWhoHit?.name}");
