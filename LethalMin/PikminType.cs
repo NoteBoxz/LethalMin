@@ -7,8 +7,10 @@ namespace LethalMin
     [CreateAssetMenu(menuName = "LethalMin/PikminType", order = 1)]
     public class PikminType : ScriptableObject
     {
-        [Header("NOTE FROM DEV: If you are seeing this, that probobly means you are createing a PikminType using the base LethalMin mod. "
-        + "This is not recomended, as it requires alot more unnessasy set up. So I recommend using the LethalMinLibrary mod to create custom Pikmin Types instead!")]
+        [Header("NOTE FROM DEV: If you are seeing this,"
+        + "\n that probobly means you are createing a PikminType using the base LethalMin mod."
+        + "\n This is not recomended, as it requires alot more unnessasy set up."
+        +"\n So I recommend using the LethalMinLibrary mod to create custom Pikmin Types instead!")]
         [Header("Distinguishing Information")]
         [Tooltip("The pikmin's color")]
         public Color PikminColor;
@@ -96,9 +98,6 @@ namespace LethalMin
 
         [Tooltip("The pikmin's carry strength (i.e. one pikmin with the CarryStrength of 5 will count as 5 pikmin on the item)")]
         public int CarryStrength = 1;
-
-        [Tooltip("The pikmin's carry speed")]
-        public float CarrySpeed = 1;
 
         [Tooltip("The ammount of distance the pikmin can detect items")]
         public float ItemDetectionRange = 5f;

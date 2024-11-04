@@ -751,6 +751,7 @@ namespace LethalMin
 
             if (pikmin != null && !PikminOnItemList.Contains(pikmin))
             {
+                PikminOnItemList.Add(pikmin);
                 pikmin.IsOnItem = true;
 
                 // Synchronize with clients
@@ -813,19 +814,22 @@ namespace LethalMin
             }
         }
 
-        internal float CalculateSpeed()
+        public float CalculateSpeed()
         {
             float speed = 0;
 
-            if(PikminOnItemList.Count == 0)
+            if (PikminOnItemList.Count == 0)
             {
-                return PikminOnItemList[0].PlantSpeeds[PikminOnItemList[0].GrowStage] * 0.75f;
+                return 0; // Changed this to return 0 instead of accessing an empty list
             }
 
             foreach (PikminAI pikmin in PikminOnItemList)
             {
-                speed += pikmin.PlantSpeeds[pikmin.GrowStage] / 2;
+                speed += pikmin.PlantSpeeds[pikmin.GrowStage] / PikminNeedOnItem * 1f;
             }
+
+            // clamp the speed to be a minmum of 1
+            speed = Math.Max(1, speed);
 
             return speed;
         }

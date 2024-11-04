@@ -645,8 +645,8 @@ namespace LethalMin
                 _nextPuffminEnemies = tempPuffminEnemies;
             }
 
-            LethalMin.Logger.LogInfo($"Refreshed PikminItemsInMap. Current count: {_currentPikminItemsInMap.Count}");
-            LethalMin.Logger.LogInfo($"Refreshed puffminEnemies. Current count: {_currentPuffminEnemies.Count}");
+            //LethalMin.Logger.LogInfo($"Refreshed PikminItemsInMap. Current count: {_currentPikminItemsInMap.Count}");
+            //LethalMin.Logger.LogInfo($"Refreshed puffminEnemies. Current count: {_currentPuffminEnemies.Count}");
             //LethalMin.Logger.LogInfo($"Refreshed NonPikminEnemies. Current count: {_currentNonPikminEnemies.Count}");
 
             // Call GetPikminItemsInMapList for all Pikmin

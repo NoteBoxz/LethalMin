@@ -24,7 +24,7 @@ namespace LethalMin.Patches
                 pom.NetworkObject.Spawn();
                 PomInstance.transform.SetParent(__instance.transform);
                 pom.InitializeClientRpc(__instance.NetworkObject);
-                
+
                 GameObject ZoneInstance = GameObject.Instantiate(LethalMin.NoticeZone, __instance.transform);
                 NoticeZone zone = ZoneInstance.GetComponent<NoticeZone>();
                 zone.NetworkObject.Spawn();
@@ -43,10 +43,11 @@ namespace LethalMin.Patches
         [HarmonyPatch("DoAIInterval")]
         private static void DoAIInterval(MaskedPlayerEnemy __instance)
         {
-            __instance.GetComponentInChildren<PuffminOwnerManager>().DoWhistle();
+            if (LethalMin.FindNearestPikmin(__instance.transform.position, 15f, 1).Count > 0 || LethalMin.FindNearestPuffmin(__instance.transform.position, 15f, 1).Count > 0)
+                __instance.GetComponentInChildren<PuffminOwnerManager>().DoWhistle();
             __instance.GetComponentInChildren<PuffminOwnerManager>().DoThrow();
         }
 
-        
+
     }
 }

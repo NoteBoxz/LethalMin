@@ -1427,9 +1427,15 @@ namespace LethalMin
                 transform2.Interpolate = true;
             }
         }
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            LethalMin.Logger.LogInfo("Pikmin {uniqueDebugId} has been spawned");
+        }
         public override void OnNetworkDespawn()
         {
             base.OnNetworkDespawn();
+            LethalMin.Logger.LogInfo("Pikmin {uniqueDebugId} has been despawned");
             if (RoundManager.Instance.SpawnedEnemies.Contains(this))
             {
                 if (LethalMin.DebugMode)

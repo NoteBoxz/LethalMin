@@ -52,7 +52,6 @@ namespace LethalMin
     [BepInDependency("MaxWasUnavailable.LethalModDataLib", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.rune580.LethalCompanyInputUtils", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("SellBodies", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("NoteBoxz.LethalMinLibrary", BepInDependency.DependencyFlags.SoftDependency)]
     public class LethalMin : BaseUnityPlugin
     {
         public static LethalMin Instance { get; private set; } = null!;
@@ -760,7 +759,7 @@ namespace LethalMin
         {
             return type.HazardsResistantTo.Contains(hazard);
         }
-        
+
         public static Color GetColorFromPType(PikminType type)
         {
             return type.PikminColor;
@@ -786,6 +785,24 @@ namespace LethalMin
             return pikminEnemies
                 .Where(gameObject => gameObject != null)
                 .Select(gameObject => gameObject.GetComponent<PikminAI>())
+                .Where(pikmin => pikmin != null && Vector3.Distance(position, pikmin.transform.position) <= maxDistance)
+                .OrderBy(pikmin => Vector3.Distance(position, pikmin.transform.position))
+                .Take(maxCount)
+                .ToList();
+
+        }
+        public static List<PuffminAI> FindNearestPuffmin(Vector3 position, float maxDistance, int maxCount)
+        {
+            var PuffminEnemies = PikminManager._currentPuffminEnemies;
+            if (PuffminEnemies == null || PuffminEnemies.Count == 0)
+            {
+                //Logger.LogWarning("No Pikmin enemies found.");
+                return new List<PuffminAI>();
+            }
+
+            return PuffminEnemies
+                .Where(gameObject => gameObject != null)
+                .Select(gameObject => gameObject.GetComponent<PuffminAI>())
                 .Where(pikmin => pikmin != null && Vector3.Distance(position, pikmin.transform.position) <= maxDistance)
                 .OrderBy(pikmin => Vector3.Distance(position, pikmin.transform.position))
                 .Take(maxCount)
@@ -1415,6 +1432,44 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
         {
             return Chainloader.PluginInfos.ContainsKey(pluginGUID);
         }
+
+        private void NetcodePatcher()
+        {
+            Type[] types = GetTypesWithErrorHandling();
+            foreach (var type in types)
+            {
+                try
+                {
+                    var methods = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                    foreach (var method in methods)
+                    {
+                        try
+                        {
+                            var attributes = method.GetCustomAttributes(typeof(RuntimeInitializeOnLoadMethodAttribute), false);
+                            if (attributes.Length > 0)
+                            {
+                                method.Invoke(null, null);
+                            }
+                        }
+                        catch (Exception methodException)
+                        {
+                            Logger.LogWarning($"Error invoking method {method.Name} in type {type.FullName}: {methodException.Message}");
+                            if (methodException.InnerException != null)
+                            {
+                                Logger.LogWarning($"Inner exception: {methodException.InnerException.Message}");
+                            }
+                        }
+                    }
+                }
+                catch (Exception typeException)
+                {
+                    Logger.LogWarning($"Error processing type {type.FullName}: {typeException.Message}");
+                }
+            }
+
+            Logger.LogInfo("NetcodePatcher completed.");
+        }
+        public static List<Type> LibraryTypes = new List<Type>();
         internal static void Patch()
         {
             Harmony ??= new Harmony(MyPluginInfo.PLUGIN_GUID);
@@ -1429,9 +1484,9 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
                 // Patch everything except FilterEnemyTypesPatch
                 foreach (var type in types)
                 {
-                    if (!IsDependencyLoaded("NoteBoxz.LethalMinLibrary") && type.Namespace == "LethalMin.Library")
+                    if (type.Namespace == "LethalMin.Library")
                     {
-                        Logger.LogMessage($"Skipping Library Namespace Script: {type.FullName}. Because Library is not installed");
+                        LibraryTypes.Add(type);
                         continue;
                     }
                     if (!IsDependencyLoaded("LethalMon") && type == typeof(FilterEnemyTypesPatch))
@@ -1471,6 +1526,25 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
             Logger.LogDebug("Finished patching!");
         }
 
+        public static void PatchLibraryTypes()
+        {
+            Logger.LogMessage("LethalMin Recived Library Call! Patching Library Types...");
+            foreach (var type in LibraryTypes)
+            {
+                try
+                {
+                    Harmony.PatchAll(type);
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError($"Error patching type {type.FullName}: {e.Message}");
+                    if (e.InnerException != null)
+                    {
+                        Logger.LogError($"Inner exception: {e.InnerException.Message}");
+                    }
+                }
+            }
+        }
         private static Type[] GetTypesWithErrorHandling()
         {
             try
@@ -1504,43 +1578,6 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
             Harmony?.UnpatchSelf();
 
             Logger.LogDebug("Finished unpatching!");
-        }
-
-        private void NetcodePatcher()
-        {
-            Type[] types = GetTypesWithErrorHandling();
-            foreach (var type in types)
-            {
-                try
-                {
-                    var methods = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-                    foreach (var method in methods)
-                    {
-                        try
-                        {
-                            var attributes = method.GetCustomAttributes(typeof(RuntimeInitializeOnLoadMethodAttribute), false);
-                            if (attributes.Length > 0)
-                            {
-                                method.Invoke(null, null);
-                            }
-                        }
-                        catch (Exception methodException)
-                        {
-                            Logger.LogWarning($"Error invoking method {method.Name} in type {type.FullName}: {methodException.Message}");
-                            if (methodException.InnerException != null)
-                            {
-                                Logger.LogWarning($"Inner exception: {methodException.InnerException.Message}");
-                            }
-                        }
-                    }
-                }
-                catch (Exception typeException)
-                {
-                    Logger.LogWarning($"Error processing type {type.FullName}: {typeException.Message}");
-                }
-            }
-
-            Logger.LogInfo("NetcodePatcher completed.");
         }
     }
 }
