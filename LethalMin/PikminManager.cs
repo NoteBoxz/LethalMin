@@ -1215,6 +1215,18 @@ namespace LethalMin
                         }
                     }
                 }
+                PuffminAI puffminAI = networkObject.GetComponent<PuffminAI>();
+                if (puffminAI != null)
+                {
+                    if (!RoundManager.Instance.SpawnedEnemies.Contains(puffminAI))
+                    {
+                        RoundManager.Instance.SpawnedEnemies.Add(puffminAI);
+                        if (LethalMin.DebugMode)
+                        {
+                            LethalMin.Logger.LogInfo($"Added Puffmin {puffminAI.name} to RoundManager");
+                        }
+                    }
+                }
             }
         }
 

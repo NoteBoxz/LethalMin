@@ -2403,36 +2403,6 @@ namespace LethalMin
                     continue;
                 }
 
-                //if(LethalMin.DebugMode)
-                //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Performing linecast for item: {item.name}");
-                RaycastHit[] hits = Physics.RaycastAll(eye.position, item.transform.position - eye.position, Vector3.Distance(eye.position, item.transform.position), LethalMin.Instance.PikminColideable);
-                bool itemFound = true;
-                foreach (RaycastHit hit in hits)
-                {
-                    if (hit.collider != null)
-                    {
-                        if (hit.collider.gameObject == item ||
-                            (hit.collider.gameObject.transform.parent != null && hit.collider.gameObject.transform.parent.gameObject == item))
-                        {
-                            itemFound = true;
-                            break;
-                        }
-
-                        if (!hit.collider.gameObject.name.Contains("Anomaly") &&
-                            (hit.collider.gameObject.transform.parent == null || !hit.collider.gameObject.transform.parent.name.Contains("Anomaly")))
-                        {
-                            if (LethalMin.DebugMode)
-                                //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Raycast blocked for item {item.name} by: {hit.collider.gameObject.name}");
-                            itemFound = false;
-                        }
-                    }
-                }
-
-                if (!itemFound)
-                {
-                    continue;
-                }
-
                 if (distanceToItem < closestDistance)
                 {
                     closestItem = item;
@@ -2628,9 +2598,10 @@ namespace LethalMin
             }
 
             // Onion Target
-            if (PikminManager._currentOnions.Count() > 0 &&
+            if (targetItem.CanBeConvertedIntoSprouts && PikminManager._currentOnions.ToList().Count > 0 &&
                 isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
             {
+                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion");
                 // Determine which onion the pikmin should go to.
                 Onion targetOnion = null;
                 PikminType majorityType = null;
@@ -2653,25 +2624,25 @@ namespace LethalMin
                     majorityType = typeCounts.OrderByDescending(kv => kv.Value).First().Key;
                     minorityType = typeCounts.OrderBy(kv => kv.Value).First().Key;
                 }
-
+                List<Onion> UseableOnions = PikminManager._currentOnions.Where(o => o.type.CanCreateSprouts).ToList();
                 // Case 1: Majority pikmin type's target onion
                 if (majorityType != null && majorityType.TargetOnion != null)
                 {
-                    targetOnion = PikminManager._currentOnions.FirstOrDefault(o => o.type == majorityType.TargetOnion);
+                    targetOnion = UseableOnions.FirstOrDefault(o => o.type == majorityType.TargetOnion);
                     LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with majority {majorityType.ScientificName} pikmin: {targetOnion?.type}");
                 }
 
                 // Case 2: Minority pikmin type's target onion
                 if (targetOnion == null && minorityType != null && minorityType.TargetOnion != null)
                 {
-                    targetOnion = PikminManager._currentOnions.FirstOrDefault(o => o.type == minorityType.TargetOnion);
+                    targetOnion = UseableOnions.FirstOrDefault(o => o.type == minorityType.TargetOnion);
                     LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with minority pikmin: {targetOnion?.type}");
                 }
 
                 // Case 3: Onion that needs more pikmin the most
                 if (targetOnion == null)
                 {
-                    targetOnion = PikminManager._currentOnions
+                    targetOnion = UseableOnions
                         .OrderBy(o => o.GetPikminCount())
                         .FirstOrDefault();
                     LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with least pikmin: {targetOnion?.type}");
@@ -2680,6 +2651,7 @@ namespace LethalMin
                 // Add the target onion to possible targets
                 if (targetOnion != null)
                 {
+                    targetItem.CurColor = targetOnion.type.OnionColor;
                     possibleTargets.Add(new ItemTarget("Onion", targetOnion.transform.position, 100));
                 }
             }
@@ -2755,7 +2727,10 @@ namespace LethalMin
                     targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
 
                     LethalMin.Logger.LogInfo($"({uniqueDebugId}) Selected target: {target.Name} at {target.GetPos()} with score of {target.Score}");
-
+                    if (target.Name != "Onion")
+                    {
+                        targetItem.CurColor = targetItem.basecolor;
+                    }
                     return;
                 }
             }
@@ -2895,6 +2870,14 @@ namespace LethalMin
         {
             if (isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
             {
+                if (CarryingItemTo == "Onion" && HorizontalDistance(transform.position, CurTargets[0].GetPos()) < 0.5f)
+                {
+                    if (LethalMin.DebugMode)
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Onion");
+                    targetItem.HandleArrivedClientRpc();
+                    targetItem.RemoveAllPikminAndUnparent();
+                    CallingHandleItemCarying = false;
+                }
                 if (IsInShip || IsInCar)
                 {
                     InShipBuffer += Time.deltaTime;

@@ -162,8 +162,8 @@ namespace LethalMin
                 if (targetPlayer != null)
                 {
                     SwitchToBehaviourClientRpc((int)PuffState.attacking);
-                    PrevOwnerAI = OwnerAI;
-                    OwnerAI = null;
+                    if (OwnerAI != null && OwnerAI.GetComponentInChildren<PuffminOwnerManager>() != null)
+                        OwnerAI.GetComponentInChildren<PuffminOwnerManager>().RemovePuffmin(this);
                     return;
                 }
             }
@@ -216,9 +216,10 @@ namespace LethalMin
                 }
             }
         }
-
+        bool CanBeAssinged = true;
         public void AssignOwner(EnemyAI newOwnerAI)
         {
+            if (!CanBeAssinged) { return; }
             if (newOwnerAI == null)
             {
                 LethalMin.Logger.LogWarning("Tried to assign a null owner to a Puffmin");
@@ -229,7 +230,9 @@ namespace LethalMin
         private IEnumerator AssignOwnerCoroutine(EnemyAI newOwnerAI)
         {
             yield return new WaitUntil(() => HasInitalized);
+            CanBeAssinged = false;
             LethalMin.Logger.LogInfo($"Puffmin assigned to {newOwnerAI.name}");
+
             if (newOwnerAI.GetComponentInChildren<PuffminOwnerManager>() != null)
             {
                 newOwnerAI.GetComponentInChildren<PuffminOwnerManager>().AddPuffmin(this);
@@ -237,6 +240,8 @@ namespace LethalMin
             LocalVoice.PlayOneShot(LethalMin.NoticeSFX);
             OwnerAI = newOwnerAI;
             SwitchToBehaviourClientRpc((int)PuffState.following);
+            yield return new WaitForSeconds(2f);
+            CanBeAssinged = true;
         }
 
         public void TurnIntoPikmin()

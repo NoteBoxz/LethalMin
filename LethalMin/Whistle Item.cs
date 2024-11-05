@@ -395,7 +395,7 @@ namespace LethalMin
             {
                 SetWhistlingStateServerRpc(false);
             }
-            if (isHeld && (!whistleAction.enabled || !removeAllPikminAction.enabled))
+            if (isHeld && !StartOfRound.Instance.localPlayerController.quickMenuManager.isMenuOpen && (!whistleAction.enabled || !removeAllPikminAction.enabled))
             {
                 LethalMin.Logger.LogWarning("WhistleItem: Input actions were disabled, re-enabling them");
                 SetupInputActions();

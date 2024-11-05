@@ -498,7 +498,7 @@ namespace LethalMin
                     Destroy(gameObject);
                 }
             }
-            if (followingPikmin.Count > 0 && throwAction != null && (!throwAction.enabled || !switchPikminTypeAction.enabled || !switchPikminTypeAction.enabled))
+            if (followingPikmin.Count > 0  && !StartOfRound.Instance.localPlayerController.quickMenuManager.isMenuOpen && throwAction != null && (!throwAction.enabled || !switchPikminTypeAction.enabled || !switchPikminTypeAction.enabled))
             {
                 LethalMin.Logger.LogWarning($"({name}) Re-enabling actions");
                 InitializeInputAction();

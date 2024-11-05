@@ -12,7 +12,7 @@ namespace LethalMin
     {
         public GameObject CounterPrefab;
         public GameObject Counter;
-        public TMP_Text PikminOn, PikminNeed;
+        public TMP_Text PikminOn, PikminNeed, Devider;
         public GrabbableObject Root;
         public List<PikminAI> PikminOnItemList = new List<PikminAI>();
         [IDebuggable.Debug] public int PikminOnItem, PikminNeedOnItem;
@@ -23,13 +23,16 @@ namespace LethalMin
         public CaveDwellerAI ManEater;
         private NetworkObject rootNetworkObject;
         [IDebuggable.Debug] Vector3 ObjectPosition;
-        Color basecolor;
+        public Color basecolor;
+        public Color CurColor;
         public bool CanBeConvertedIntoSprouts;
         public PikminType FavoredType = null!;
 
         #region Unity Lifecycle Methods
         public void Start()
         {
+            basecolor = new Color(1, 72 / 255, 0);
+            CurColor = basecolor;
             PikminOnItemList = new List<PikminAI>();
             CounterPrefab = LethalMin.CounterPrefab;
             RespawnCounter();
@@ -73,10 +76,9 @@ namespace LethalMin
                 Counter.AddComponent<LookAtMainCamera>();
 
                 // Re-assign references
-                PikminOn = Counter.transform.Find("Text (TMP) (2)").GetComponent<TMP_Text>();
                 PikminNeed = Counter.transform.Find("Text (TMP)").GetComponent<TMP_Text>();
-
-                basecolor = PikminOn.color;
+                Devider = Counter.transform.Find("Text (TMP) (1)").GetComponent<TMP_Text>();
+                PikminOn = Counter.transform.Find("Text (TMP) (2)").GetComponent<TMP_Text>();
             }
             else
             {
@@ -112,12 +114,14 @@ namespace LethalMin
             PikminOn.text = PikminOnItem.ToString();
             if (PikminOnItem < PikminNeedOnItem)
             {
-                PikminOn.color = new Color(basecolor.r - 0.1f, basecolor.b - 0.1f, basecolor.g - 0.1f);
+                PikminOn.color = Color.Lerp(CurColor, Color.black, 0.5f);
             }
             else
             {
-                PikminOn.color = basecolor;
+                PikminOn.color = CurColor;
             }
+            Devider.color = CurColor;
+            PikminNeed.color = CurColor;
             if (PikminOnItem >= PikminNeedOnItem)
             {
                 if (!isParented)

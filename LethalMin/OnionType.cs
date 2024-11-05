@@ -23,6 +23,9 @@ namespace LethalMin
 		[Tooltip("The types of pikmin that the onion can hold.")]
 		public PikminType[] TypesCanHold;
 
+		[Tooltip("Whether the onion can create sprouts.")]
+		public bool CanCreateSprouts = true;
+
 		[Header("Spawning")]
 		[Tooltip("Whether the onion should spawn in as an item.")]
 		public bool SpawnInAsItem;

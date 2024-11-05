@@ -806,6 +806,7 @@ namespace LethalMin
                 .Where(pikmin => pikmin != null && Vector3.Distance(position, pikmin.transform.position) <= maxDistance)
                 .OrderBy(pikmin => Vector3.Distance(position, pikmin.transform.position))
                 .Take(maxCount)
+                .Where(gameObject => gameObject.GetComponent<PuffminAI>().currentBehaviourStateIndex != (int)PuffState.following)
                 .ToList();
 
         }
