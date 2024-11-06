@@ -487,6 +487,7 @@ namespace LethalMin
         }
         bool IsHitting = false;
 
+        [ClientRpc]
         public void DoHitClientRpc(NetworkObjectReference playerRef, int damage)
         {
             PlayerControllerB targetplayer = null!;
