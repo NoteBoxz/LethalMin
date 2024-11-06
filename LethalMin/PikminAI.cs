@@ -1266,7 +1266,7 @@ namespace LethalMin
                 {
                     agent.SetDestination(new Vector3(randoVect.x, transform.position.y, randoVect.z));
                 }
-                else
+                else if (!IsLeftBehind)
                 {
                     Vector3 targetPosition = TargetOnion.transform.position;
                     float dynamicSpeed = CalculateDynamicSpeed(targetPosition);
@@ -4208,7 +4208,7 @@ namespace LethalMin
                     {
                         enemyAI = collider.GetComponentInChildren<EnemyAI>();
                     }
-                    if (enemyAI != null)
+                    if (enemyAI != null && !CantAttack(enemyAI))
                     {
                         if (enemyAI.GetComponentInChildren<PikminDamager>() != null)
                             enemyAI.GetComponentInChildren<PikminDamager>().HitInAirQoutes(PminType.GetDeathDamage());

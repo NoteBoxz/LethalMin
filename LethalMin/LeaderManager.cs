@@ -25,9 +25,9 @@ namespace LethalMin
         [IDebuggable.Debug] private bool isHoldingThrowButton = false;
         private float currentThrowForce;
 
-        private InputAction throwAction;
+        public InputAction throwAction;
 
-        private InputAction switchPikminTypeAction, switchPikminPrevTypeAction;
+        public InputAction switchPikminTypeAction, switchPikminPrevTypeAction;
 
         [IDebuggable.Debug] private Transform throwOrigin;
         [IDebuggable.Debug] private Transform holdPosition;
@@ -229,6 +229,9 @@ namespace LethalMin
                     switchPikminPrevTypeAction.canceled += OnSwitchPrevPikminType;
                     switchPikminPrevTypeAction.Enable();
                 }
+                PikminHUD.pikminHUDInstance.switchPikminPrevTypeAction = switchPikminPrevTypeAction;
+                PikminHUD.pikminHUDInstance.throwAction = throwAction;
+                PikminHUD.pikminHUDInstance.switchPikminTypeAction = switchPikminTypeAction;
             }
         }
         #endregion
@@ -318,6 +321,7 @@ namespace LethalMin
             {
                 CurTypeSelectionIndex = (CurTypeSelectionIndex + 1) % AvailableTypes.Count;
                 PikminHUD.pikminHUDInstance.UpdateHUD();
+                PikminHUD.pikminHUDInstance.PingPrompts();
             }
         }
 
@@ -329,6 +333,7 @@ namespace LethalMin
                 // Use the total count of available types to ensure proper wrapping
                 CurTypeSelectionIndex = (CurTypeSelectionIndex - 1 + AvailableTypes.Count) % AvailableTypes.Count;
                 PikminHUD.pikminHUDInstance.UpdateHUD();
+                PikminHUD.pikminHUDInstance.PingPrompts();
             }
         }
 
@@ -429,6 +434,7 @@ namespace LethalMin
                 selectedPikmin.ThrowPikminServerRpc(throwOrigin.transform.position, cameraForward, selectedPikmin.ThrowForce, NetworkObject);
                 SetPikminComponentsForAiming(selectedPikmin, false);
                 RemovePikminServerRpc(selectedPikmin.NetworkObject);
+                PikminHUD.pikminHUDInstance.HidePrompts();
                 LethalMin.Logger.LogInfo($"Throw Initated.");
             }
             else
@@ -498,7 +504,7 @@ namespace LethalMin
                     Destroy(gameObject);
                 }
             }
-            if (followingPikmin.Count > 0  && !StartOfRound.Instance.localPlayerController.quickMenuManager.isMenuOpen && throwAction != null && (!throwAction.enabled || !switchPikminTypeAction.enabled || !switchPikminTypeAction.enabled))
+            if (followingPikmin.Count > 0 && !StartOfRound.Instance.localPlayerController.quickMenuManager.isMenuOpen && throwAction != null && (!throwAction.enabled || !switchPikminTypeAction.enabled || !switchPikminTypeAction.enabled))
             {
                 LethalMin.Logger.LogWarning($"({name}) Re-enabling actions");
                 InitializeInputAction();

@@ -28,12 +28,50 @@ namespace LethalMin
         }
 
         [ClientRpc]
-        public void InitializeClientRpc(NetworkObjectReference controller)
+        public void InitalizeRefsClientRpc(NetworkObjectReference zoneRef, NetworkObjectReference POMref, NetworkObjectReference MPEref)
         {
-            controller.TryGet(out NetworkObject NOEcontroller);
-            EnemyAI Econtroller = NOEcontroller.GetComponent<EnemyAI>();
+            NoticeZone zone = null!;
+            EnemyAI __instance = null!;
+            PuffminOwnerManager pom = null!;
 
-            Controller = Econtroller;
+            if (zoneRef.TryGet(out NetworkObject zoneNetworkObject))
+            {
+                zone = zoneNetworkObject.GetComponent<NoticeZone>();
+            }
+            else
+            {
+                LethalMin.Logger.LogError("Could not find the NoticeZone network object.");
+                return;
+            }
+
+            if (POMref.TryGet(out NetworkObject POMNetworkObject))
+            {
+                pom = POMNetworkObject.GetComponent<PuffminOwnerManager>();
+            }
+            else
+            {
+                LethalMin.Logger.LogError("Could not find the PuffminOwnerManager network object.");
+                return;
+            }
+
+            if (MPEref.TryGet(out NetworkObject MPENetworkObject))
+            {
+                __instance = MPENetworkObject.GetComponent<MaskedPlayerEnemy>();
+            }
+            else
+            {
+                LethalMin.Logger.LogError("Could not find the MaskedPlayerEnemy network object.");
+                return;
+            }
+
+            zone.CanConvertPikmin = true;
+            zone.InstantNotice = true;
+            zone.UseCheckSpher = true;
+            zone.gameObject.GetComponent<Renderer>().material.color = new Color(0.5f, 0f, 0.5f, 0.5f);
+            zone.gameObject.AddComponent<MeshNoiseDistorter>().distortionStrength = 0.25f;
+            zone.enemy = __instance;
+            pom.noticeZone = zone;
+            Controller = __instance;
         }
 
         public void AddPuffmin(PuffminAI puffmin)
@@ -132,6 +170,11 @@ namespace LethalMin
             if (isdoingwhistle)
                 return;
 
+            DoWhistleTweenClientRpc();
+        }
+        [ClientRpc]
+        public void DoWhistleTweenClientRpc()
+        {
             tweenCoroutine = StartCoroutine(TweenWhistleZoneRadius(minWhistleZoneRadius, maxWhistleZoneRadius));
         }
         private IEnumerator TweenWhistleZoneRadius(float startRadius, float endRadius)
@@ -213,7 +256,7 @@ namespace LethalMin
             foreach (PuffminAI puffmin in followingPuffmin)
             {
                 if (puffmin.IsHeld) continue;
-                
+
                 puffmin.agent.Warp(Controller.transform.position);
                 puffmin.transform2.Teleport(Controller.transform.position, Controller.transform.rotation, puffmin.transform.localScale);
             }

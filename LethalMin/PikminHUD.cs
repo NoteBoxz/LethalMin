@@ -8,6 +8,7 @@ using System.Collections;
 using System.Linq;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 namespace LethalMin
 {
     public class PikminHUD : MonoBehaviour
@@ -19,6 +20,9 @@ namespace LethalMin
         private RectTransform NextPortRect, CurPortRect, PrevPortRect, PikminSelectedRect;
         private RectTransform PikminCountRect, PikminInSquadRect, PikminInFieldRect, PikminInExsistanceRect;
         public static PikminHUD pikminHUDInstance;
+        private TMP_Text ThrowPrompt, LeftPrompt, RightPrompt;
+        public GameObject WigglePrompt;
+        public CanvasGroup PromptcanvasGroup;
 
         void Awake()
         {
@@ -54,7 +58,18 @@ namespace LethalMin
             PikminInSquadRect = transform.Find("PikminCount/InSquad").GetComponent<RectTransform>();
             PikminInFieldRect = transform.Find("PikminCount/In Field").GetComponent<RectTransform>();
             PikminInExsistanceRect = transform.Find("PikminCount/In Exisistance").GetComponent<RectTransform>();
+
+            WigglePrompt = transform.Find("Prompts/Wiggle").gameObject;
+            PromptcanvasGroup = transform.Find("Prompts/Buttons").GetComponent<CanvasGroup>();
+            ThrowPrompt = transform.Find("Prompts/Buttons/ThrowPrompt").GetComponent<TMP_Text>();
+            LeftPrompt = transform.Find("Prompts/Buttons/SwitchL").GetComponent<TMP_Text>();
+            RightPrompt = transform.Find("Prompts/Buttons/SwitchR").GetComponent<TMP_Text>();
         }
+
+
+        public InputAction throwAction;
+
+        public InputAction switchPikminTypeAction, switchPikminPrevTypeAction;
 
         public void LateUpdate()
         {
@@ -65,6 +80,75 @@ namespace LethalMin
             PikminCountRect.localPosition = new Vector3(LethalMin.PikminCountPosX, LethalMin.PikminCountPosY, LethalMin.PikminCountPosZ);
             PikminCountRect.localRotation = Quaternion.Euler(LethalMin.PikminCountRotX, LethalMin.PikminCountRotY, LethalMin.PikminCountRotZ);
             PikminCountRect.localScale = new Vector3(LethalMin.PikminCountScale, LethalMin.PikminCountScale, LethalMin.PikminCountScale);
+
+
+            if (throwAction.controls.Count > 0)
+            {
+                string buttonName = throwAction.controls[0].displayName;
+                ThrowPrompt.text = "[" + buttonName + "]";
+            }
+            else
+            {
+                ThrowPrompt.text = "???";
+            }
+
+            if (switchPikminTypeAction.controls.Count > 0)
+            {
+                string buttonName = switchPikminTypeAction.controls[0].displayName;
+                RightPrompt.text = "[" + buttonName + "]";
+            }
+            else
+            {
+                RightPrompt.text = "???";
+            }
+
+            if (switchPikminPrevTypeAction.controls.Count > 0)
+            {
+                string buttonName = switchPikminPrevTypeAction.controls[0].displayName;
+                LeftPrompt.text = "[" + buttonName + "]";
+            }
+            else
+            {
+                LeftPrompt.text = "???";
+            }
+        }
+        bool HasThrownMin = false;
+        Coroutine promptRoutine;
+        public void HidePrompts()
+        {
+            if(HasThrownMin){return;}
+            HasThrownMin = true;
+            StartCoroutine(HidePromptsRoutine());
+        }
+        public IEnumerator HidePromptsRoutine()
+        {
+            //tween the canva's group alpha to 0
+            float time = 0;
+            while (time < 1)
+            {
+                time += Time.deltaTime;
+                PromptcanvasGroup.alpha = Mathf.Lerp(1, 0, time);
+                yield return null;
+            }
+            promptRoutine = null!;
+        }
+        public void PingPrompts()
+        {
+            if(!HasThrownMin || promptRoutine != null){return;}
+            promptRoutine = StartCoroutine(PingPromptsRoutine());
+        }
+        public IEnumerator PingPromptsRoutine()
+        {
+            //tween the canva's group alpha to 1
+            float time = 0;
+            while (time < 1)
+            {
+                time += Time.deltaTime;
+                PromptcanvasGroup.alpha = Mathf.Lerp(0, 1, time);
+                yield return null;
+            }
+            yield return new WaitForSeconds(2);
+            StartCoroutine(HidePromptsRoutine());
         }
 
         public float UpdateInterval = 1f;

@@ -80,6 +80,16 @@ namespace LethalMin
                     RefreshCarsList();
                     RefreshLocks();
 
+                    foreach (var item in _currentPuffminEnemies)
+                    {
+                        if (item.GetComponent<PuffminAI>().PlayerLatchedOn == StartOfRound.Instance.localPlayerController)
+                        {
+                            PikminHUD.pikminHUDInstance.WigglePrompt.SetActive(true);
+                            break;
+                        }
+                        PikminHUD.pikminHUDInstance.WigglePrompt.SetActive(false);
+                    }
+
                     PIOMTimer = LethalMin.ManagerRefreshRate;
                 }
             }

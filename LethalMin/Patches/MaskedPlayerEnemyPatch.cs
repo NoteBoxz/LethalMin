@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using LethalMin;
 using System.Collections;
 using System.Diagnostics;
+using Unity.Multiplayer.Tools.MetricTypes;
 
 namespace LethalMin.Patches
 {
@@ -19,23 +20,24 @@ namespace LethalMin.Patches
         {
             if (__instance.IsServer)
             {
+                // Create Owner Manager
                 GameObject PomInstance = GameObject.Instantiate(LethalMin.POMprefab, __instance.transform);
                 PuffminOwnerManager pom = PomInstance.GetComponent<PuffminOwnerManager>();
+
+                // Sync the Owner Manager
                 pom.NetworkObject.Spawn();
                 PomInstance.transform.SetParent(__instance.transform);
-                pom.InitializeClientRpc(__instance.NetworkObject);
 
+                // Create Notice Zone
                 GameObject ZoneInstance = GameObject.Instantiate(LethalMin.NoticeZone, __instance.transform);
                 NoticeZone zone = ZoneInstance.GetComponent<NoticeZone>();
+
+                // Sync the Notice Zone
                 zone.NetworkObject.Spawn();
                 ZoneInstance.transform.SetParent(__instance.transform);
-                zone.CanConvertPikmin = true;
-                zone.InstantNotice = true;
-                zone.UseCheckSpher = true;
-                ZoneInstance.GetComponent<Renderer>().material.color = new Color(0.5f, 0f, 0.5f, 0.5f);
-                ZoneInstance.AddComponent<MeshNoiseDistorter>().distortionStrength = 0.25f;
-                zone.enemy = __instance;
-                pom.noticeZone = zone;
+
+                // Sync the refs
+                pom.InitalizeRefsClientRpc( zone.NetworkObject, pom.NetworkObject, __instance.NetworkObject);
             }
         }
 
@@ -48,7 +50,7 @@ namespace LethalMin.Patches
             {
                 __instance.GetComponentInChildren<PuffminOwnerManager>().DoWhistle();
             }
-            
+
             if (__instance.targetPlayer != null && !__instance.targetPlayer.isPlayerDead)
             {
                 __instance.GetComponentInChildren<PuffminOwnerManager>().DoThrow();
@@ -73,13 +75,6 @@ namespace LethalMin.Patches
         private static void teleportation(MaskedPlayerEnemy __instance)
         {
             __instance.GetComponentInChildren<PuffminOwnerManager>().TeleportPuffminToOwner();
-        }
-
-        [HarmonyPrefix]
-        [HarmonyPatch("OnCollideWithPlayer")]
-        private static bool mothafuker()
-        {
-            return false;
         }
     }
 }

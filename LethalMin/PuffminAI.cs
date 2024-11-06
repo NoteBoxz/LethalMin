@@ -111,6 +111,10 @@ namespace LethalMin
         public override void DoAIInterval()
         {
             base.DoAIInterval();
+            if(IsDying)
+            {
+                return;
+            }
             switch (currentBehaviourStateIndex)
             {
                 case (int)PuffState.idle:
@@ -242,7 +246,7 @@ namespace LethalMin
             {
                 newOwnerAI.GetComponentInChildren<PuffminOwnerManager>().AddPuffmin(this);
             }
-            LocalVoice.PlayOneShot(LethalMin.NoticeSFX);
+            DoNoticeSFXClientRpc();
             OwnerAI = newOwnerAI;
             SwitchToBehaviourClientRpc((int)PuffState.following);
             yield return new WaitForSeconds(2f);
@@ -277,15 +281,14 @@ namespace LethalMin
             LethalMin.Logger.LogInfo("Puffmin is being held");
             this.SnapTopPos = SnapTopPos;
             IsHeld = true;
-            LocalVoice.PlayOneShot(LethalMin.HoldSFX);
+            DoHoldSFXClientRpc();
             SetTriggerClientRpc("Hold");
         }
         public void ThrowPuffmin(Vector3 StartPos, Vector3 ThrowForward)
         {
             if (IsThrown) { return; }
             LethalMin.Logger.LogInfo("Puffmin is being thrown");
-            LocalVoice.Stop();
-            LocalVoice.PlayOneShot(LethalMin.ThrowSFX);
+            DoThrowSFXClientRpc();
             IsThrown = true;
             IsHeld = false;
             SnapTopPos = null!;
@@ -329,12 +332,25 @@ namespace LethalMin
                 SetTriggerClientRpc("Land");
                 agent.Warp(rb.position);
                 ToggleColisionMode(false);
-                PlayerLatchedOn = other.GetComponent<PlayerControllerB>();
+                SyncPlayerLatchedOnClientRpc(other.GetComponent<PlayerControllerB>().NetworkObject);
                 LatchPuffminToPosition(other.transform, true, true);
                 SwitchToBehaviourClientRpc((int)PuffState.attacking);
             }
         }
-        PlayerControllerB PlayerLatchedOn = null!;
+        [ClientRpc]
+        public void SyncPlayerLatchedOnClientRpc(NetworkObjectReference playerRef)
+        {
+            if (playerRef.TryGet(out NetworkObject playerNO))
+            {
+                PlayerLatchedOn = playerNO.GetComponent<PlayerControllerB>();
+            }
+        }
+        [ClientRpc]
+        public void SyncPlayerLatchedOnClientRpc()
+        {
+            PlayerLatchedOn = null!;
+        }
+        public PlayerControllerB PlayerLatchedOn = null!;
         private float wiggleThreshold = 5f; // Degrees of rotation to consider a wiggle
         private float wiggleTimeFrame = 1f; // Timeframe in seconds to detect wiggle
         private float lastWiggleTime = 0f;
@@ -394,7 +410,7 @@ namespace LethalMin
             {
                 SnapTopPos = null!;
                 Destroy(CurTempLatchPoint.gameObject);
-                PlayerLatchedOn = null!;
+                SyncPlayerLatchedOnClientRpc();
             }
         }
         private IEnumerator SetOnCooldown()
@@ -471,6 +487,29 @@ namespace LethalMin
             }
         }
 
+        bool IsHitting = false;
+        private IEnumerator Hitting(PlayerControllerB targetplayer)
+        {
+            DoHitYellClientRpc();
+            SetTriggerClientRpc("AttackStanding");
+            yield return new WaitForSeconds(0.4f);
+            LethalMin.Logger.LogInfo("Puffmin HIT!!!!");
+            DoHitClientRpc();
+            DamagePlayerClientRpc(targetplayer.NetworkObject, 2);
+            IsHitting = false;
+        }
+
+        [ClientRpc]
+        public void DamagePlayerClientRpc(NetworkObjectReference playerRef, int damage)
+        {
+            PlayerControllerB targetplayer = null!;
+            if (playerRef.TryGet(out NetworkObject targetplayerNetworkObject))
+            {
+                targetplayer = targetplayerNetworkObject.GetComponent<PlayerControllerB>();
+            }
+            targetplayer.DamagePlayer(damage, false, true, CauseOfDeath.Bludgeoning);
+        }
+
         public override void HitEnemy(int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false, int hitID = -1)
         {
             base.HitEnemy(force, playerWhoHit, playHitSFX, hitID);
@@ -488,9 +527,7 @@ namespace LethalMin
         [ServerRpc]
         public void ApplyKnockbackServerRpc(Vector3 knockbackForce, bool IsLethal, bool KillOnLanding, float DeathTimer = 0)
         {
-            LethalMin.Logger.LogInfo("Puffmin is being thrown");
-            LocalVoice.Stop();
-            LocalVoice.PlayOneShot(LethalMin.ThrowSFX);
+            LethalMin.Logger.LogInfo("Puffmin is being knocked back");
             IsThrown = true;
             IsKnockedBack = true;
             IsHeld = false;
@@ -557,19 +594,6 @@ namespace LethalMin
             G.GetComponent<AudioSource>().pitch = LocalVoice.pitch;
         }
 
-
-        bool IsHitting = false;
-        private IEnumerator Hitting(PlayerControllerB targetplayer)
-        {
-            DoHitYellClientRpc();
-            SetTriggerClientRpc("AttackStanding");
-            yield return new WaitForSeconds(0.4f);
-            LethalMin.Logger.LogInfo("Puffmin HIT!!!!");
-            DoHitClientRpc();
-            targetplayer.DamagePlayer(2, false, true, CauseOfDeath.Bludgeoning);
-            IsHitting = false;
-        }
-
         [ClientRpc]
         public void DoHitYellClientRpc()
         {
@@ -579,6 +603,22 @@ namespace LethalMin
         public void DoHitClientRpc()
         {
             LocalSFX.PlayOneShot(LethalMin.PuffHit);
+        }
+        [ClientRpc]
+        public void DoNoticeSFXClientRpc()
+        {
+            LocalVoice.PlayOneShot(LethalMin.NoticeSFX);
+        }
+        [ClientRpc]
+        public void DoHoldSFXClientRpc()
+        {
+            LocalVoice.PlayOneShot(LethalMin.HoldSFX);
+        }
+        [ClientRpc]
+        public void DoThrowSFXClientRpc()
+        {
+            LocalVoice.Stop();
+            LocalVoice.PlayOneShot(LethalMin.ThrowSFX);
         }
 
         [ClientRpc]
