@@ -33,7 +33,7 @@ namespace LethalMin
         public NetworkTransform? transform2 = null!;
         GameObject? PminColider, scanNode, NoticeColider;
         public float InternalAirbornTimer, AbTimer;
-        public System.Random? enemyRandom;
+        public System.Random enemyRandom = null!;
         public bool IsHeld, IsThrown;
         NetworkVariable<bool> newIsMoving = new NetworkVariable<bool>(false);
         SphereCollider Pcollider = null!;
@@ -111,7 +111,7 @@ namespace LethalMin
         public override void DoAIInterval()
         {
             base.DoAIInterval();
-            if(IsDying)
+            if (IsDying)
             {
                 return;
             }
@@ -300,7 +300,6 @@ namespace LethalMin
             ToggleColisionMode(true);
 
             rb.AddForce(ThrowForward * 25, ForceMode.Impulse);
-            rb.AddForce(Vector3.up * 5, ForceMode.Impulse);
 
             SetTriggerClientRpc("Throw");
             SwitchToBehaviourClientRpc((int)PuffState.airborn);
@@ -355,6 +354,7 @@ namespace LethalMin
         private float wiggleTimeFrame = 1f; // Timeframe in seconds to detect wiggle
         private float lastWiggleTime = 0f;
         private int WiggleTimes = 0;
+        private int WigglesNeeded = 3;
         private Quaternion lastRotation;
 
         private void DetectWiggle()
@@ -370,7 +370,7 @@ namespace LethalMin
                 {
                     // Player is wiggling
                     WiggleTimes++;
-                    if (WiggleTimes > enemyRandom.Next(10, 30))
+                    if (WiggleTimes > WigglesNeeded)
                     {
                         OnPlayerWiggle();
                         WiggleTimes = 0;
@@ -403,6 +403,7 @@ namespace LethalMin
             //Set the puffmin's parent to the LatchPoint
             CurTempLatchPoint = LatchPoint.transform;
             SnapTopPos = LatchPoint.transform;
+            WigglesNeeded = enemyRandom.Next(15, 60);
         }
         public void UnLatchPuffminToPosition()
         {
@@ -416,7 +417,7 @@ namespace LethalMin
         private IEnumerator SetOnCooldown()
         {
             IsOnCooldown = true;
-            yield return new WaitForSeconds(enemyRandom.Next(2, 7));
+            yield return new WaitForSeconds(enemyRandom.Next(3, 12));
             IsOnCooldown = false;
         }
         Transform CurTempLatchPoint = null!;
@@ -468,8 +469,7 @@ namespace LethalMin
                 {
                     if (!IsHitting)
                     {
-                        IsHitting = true;
-                        StartCoroutine(Hitting(PlayerLatchedOn));
+                        DoHitClientRpc(PlayerLatchedOn.NetworkObject, 1);
                     }
                 }
                 else
@@ -479,35 +479,41 @@ namespace LethalMin
                     {
                         if (!IsHitting)
                         {
-                            IsHitting = true;
-                            StartCoroutine(Hitting(targetplayer));
+                            DoHitClientRpc(targetplayer.NetworkObject, 1);
                         }
                     }
                 }
             }
         }
-
         bool IsHitting = false;
-        private IEnumerator Hitting(PlayerControllerB targetplayer)
-        {
-            DoHitYellClientRpc();
-            SetTriggerClientRpc("AttackStanding");
-            yield return new WaitForSeconds(0.4f);
-            LethalMin.Logger.LogInfo("Puffmin HIT!!!!");
-            DoHitClientRpc();
-            DamagePlayerClientRpc(targetplayer.NetworkObject, 2);
-            IsHitting = false;
-        }
 
-        [ClientRpc]
-        public void DamagePlayerClientRpc(NetworkObjectReference playerRef, int damage)
+        public void DoHitClientRpc(NetworkObjectReference playerRef, int damage)
         {
             PlayerControllerB targetplayer = null!;
             if (playerRef.TryGet(out NetworkObject targetplayerNetworkObject))
             {
                 targetplayer = targetplayerNetworkObject.GetComponent<PlayerControllerB>();
             }
+            else
+            {
+                LethalMin.Logger.LogWarning("Failed to get player from NetworkObjectReference");
+                return;
+            }
+
+            IsHitting = true;
+
+            StartCoroutine(Hitting(targetplayer, damage));
+        }
+
+        private IEnumerator Hitting(PlayerControllerB targetplayer, int damage)
+        {
+            LocalVoice.PlayOneShot(LethalMin.AttackSFX[enemyRandom.Next(0, LethalMin.AttackSFX.Count())]);
+            LocalAnim.SetTrigger("AttackStanding");
+            yield return new WaitForSeconds(0.4f);
+            LethalMin.Logger.LogInfo("Puffmin HIT!!!!");
+            LocalSFX.PlayOneShot(LethalMin.PuffHit);
             targetplayer.DamagePlayer(damage, false, true, CauseOfDeath.Bludgeoning);
+            IsHitting = false;
         }
 
         public override void HitEnemy(int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false, int hitID = -1)
@@ -594,16 +600,6 @@ namespace LethalMin
             G.GetComponent<AudioSource>().pitch = LocalVoice.pitch;
         }
 
-        [ClientRpc]
-        public void DoHitYellClientRpc()
-        {
-            LocalVoice.PlayOneShot(LethalMin.AttackSFX[enemyRandom.Next(0, LethalMin.AttackSFX.Count())]);
-        }
-        [ClientRpc]
-        public void DoHitClientRpc()
-        {
-            LocalSFX.PlayOneShot(LethalMin.PuffHit);
-        }
         [ClientRpc]
         public void DoNoticeSFXClientRpc()
         {
