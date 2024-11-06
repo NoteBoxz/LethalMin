@@ -82,7 +82,7 @@ namespace LethalMin
             PikminCountRect.localScale = new Vector3(LethalMin.PikminCountScale, LethalMin.PikminCountScale, LethalMin.PikminCountScale);
 
 
-            if (throwAction.controls.Count > 0)
+            if (throwAction != null && throwAction.controls.Count > 0)
             {
                 string buttonName = throwAction.controls[0].displayName;
                 ThrowPrompt.text = "[" + buttonName + "]";
@@ -92,7 +92,7 @@ namespace LethalMin
                 ThrowPrompt.text = "???";
             }
 
-            if (switchPikminTypeAction.controls.Count > 0)
+            if (switchPikminTypeAction != null && switchPikminTypeAction.controls.Count > 0)
             {
                 string buttonName = switchPikminTypeAction.controls[0].displayName;
                 RightPrompt.text = "[" + buttonName + "]";
@@ -102,7 +102,7 @@ namespace LethalMin
                 RightPrompt.text = "???";
             }
 
-            if (switchPikminPrevTypeAction.controls.Count > 0)
+            if (switchPikminPrevTypeAction != null && switchPikminPrevTypeAction.controls.Count > 0)
             {
                 string buttonName = switchPikminPrevTypeAction.controls[0].displayName;
                 LeftPrompt.text = "[" + buttonName + "]";

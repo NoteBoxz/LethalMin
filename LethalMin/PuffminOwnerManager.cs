@@ -116,7 +116,7 @@ namespace LethalMin
             followingPuffmin.RemoveAll(puffmin => puffmin == null || puffmin.NetworkObject == null);
             if (followingPuffmin.Count == 0)
             {
-                LethalMin.Logger.LogWarning("No Puffmin available to throw or NetworkObject is null.");
+                //LethalMin.Logger.LogWarning("No Puffmin available to throw or NetworkObject is null.");
                 isAiming = false;
                 return;
             }
