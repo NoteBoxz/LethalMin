@@ -43,11 +43,43 @@ namespace LethalMin.Patches
         [HarmonyPatch("DoAIInterval")]
         private static void DoAIInterval(MaskedPlayerEnemy __instance)
         {
-            if (LethalMin.FindNearestPikmin(__instance.transform.position, 15f, 1).Count > 0 || LethalMin.FindNearestPuffmin(__instance.transform.position, 15f, 1).Count > 0)
+            if (LethalMin.FindNearestIdlePikmin(__instance.transform.position, 15f, 1).Count > 0
+             || LethalMin.FindNearestPuffmin(__instance.transform.position, 15f, 1).Count > 0)
+            {
                 __instance.GetComponentInChildren<PuffminOwnerManager>().DoWhistle();
-            __instance.GetComponentInChildren<PuffminOwnerManager>().DoThrow();
+            }
+            
+            if (__instance.targetPlayer != null && !__instance.targetPlayer.isPlayerDead)
+            {
+                __instance.GetComponentInChildren<PuffminOwnerManager>().DoThrow();
+            }
         }
 
 
+        [HarmonyPostfix]
+        [HarmonyPatch("KillEnemy")]
+        private static void KillEnemy(MaskedPlayerEnemy __instance)
+        {
+            if (!__instance.IsServer) return;
+
+            foreach (var item in __instance.GetComponentInChildren<PuffminOwnerManager>().followingPuffmin)
+            {
+                item.TurnIntoPikmin();
+            }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch("TeleportMaskedEnemyServerRpc")]
+        private static void teleportation(MaskedPlayerEnemy __instance)
+        {
+            __instance.GetComponentInChildren<PuffminOwnerManager>().TeleportPuffminToOwner();
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch("OnCollideWithPlayer")]
+        private static bool mothafuker()
+        {
+            return false;
+        }
     }
 }

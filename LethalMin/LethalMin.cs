@@ -199,6 +199,7 @@ namespace LethalMin
         public static bool PurgeAfterFire;
         public static string AttackBlacklist, PickupBlacklist;
         public static int HoarderBugEatBuffer, HoarderBugEatLimmit;
+        public static bool ConvertPuffminOnDeath;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
         public static ConfigEntry<bool> SkipPluckAnimation, FF, Smartmin, Smartermin, OnlyMainV, OnlyExitV, Pattack,
@@ -207,7 +208,8 @@ namespace LethalMin
         CustomOnionAllowed, LethalWhistle, LethalLandmines, AllToPItems, LimmitItemGrab, AllowOnionFuseConfig,
         LethalManEaterConfig, CalmableManeaterConfig, Rasisium, NotFormidableOak, LethalTurrentsC, InvinciMin,
         StrudyMin, UselessblueMin, DebugM, FunniMode, PassiveToManEaterConfig, FFOM, FFM, TeleEle, TeleCarie,
-        TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF, NoPowerSpawn, MWon, ScanablePikmin, CanShipEjectFromShip;
+        TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF, NoPowerSpawn, MWon, ScanablePikmin, CanShipEjectFromShip,
+        TurnToNormalOnDeath;
 
         public static ConfigEntry<float> Pscale, Sscale, ChaseR, PCPX, PCPY, PCPZ, PCRX, PCRY, PCRZ, PCScale,
          PCPCountX, PCPCountY, PCPCountZ, PCRCCountX, PCRCCountY, PCRCCountZ, PCScaleCount, FallTimer, CounterOffset,
@@ -288,6 +290,8 @@ namespace LethalMin
             ScanablePikmin = Config.Bind("Pikmin", "Make Pikmin Scanable", true, "Makes it so Pikmin can be scanned");
             AttackBlackListConfig = Config.Bind("Pikmin", "Attack Blacklist", "Docile Locust Bees,Manticoil", "The list of enemy names that pikmin can't attack (separated by commas, no spaces in between) (item1,item2,item3...)");
             PickupBlacklistConfig = Config.Bind("Pikmin", "Pickup Blacklist", "", "The list of item names that pikmin can't pickup (separated by commas, no spaces in between) (item1,item2,item3...)");
+
+            TurnToNormalOnDeath = Config.Bind("Puffmin", "Turn Puffmin into Pikmin on Death", false, "Turns a puffmin back to normal when they die");
 
             LethalSpiderConfig = Config.Bind("Enemy AI", "Make Spider eat Pikmin", true, "Makes Spider eat Pikmin that are too close to the spider");
             LethalJesterConfig = Config.Bind("Enemy AI", "Make Jester eat Pikmin", true, "Makes Jester eat Pikmin when opened");
@@ -390,6 +394,7 @@ namespace LethalMin
 
 
             #region Setting Config values
+            ConvertPuffminOnDeath = TurnToNormalOnDeath.Value;
             HoarderBugEatBuffer = HBBuffer.Value;
             HoarderBugEatLimmit = HBDiet.Value;
             AttackBlacklist = AttackBlackListConfig.Value;
@@ -511,6 +516,7 @@ namespace LethalMin
 
             #region Setting Config Events
             // Add SettingChanged events for all configs
+            TurnToNormalOnDeath.SettingChanged += (_, _) => ConvertPuffminOnDeath = TurnToNormalOnDeath.Value;
             HBBuffer.SettingChanged += (_, _) => HoarderBugEatBuffer = HBBuffer.Value;
             HBDiet.SettingChanged += (_, _) => HoarderBugEatLimmit = HBDiet.Value;
             AttackBlackListConfig.SettingChanged += (_, _) => AttackBlacklist = AttackBlackListConfig.Value;
@@ -650,6 +656,10 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(ScanablePikmin, false));
             LethalConfigManager.AddConfigItem(new TextInputFieldConfigItem(AttackBlackListConfig, false));
             LethalConfigManager.AddConfigItem(new TextInputFieldConfigItem(PickupBlacklistConfig, false));
+
+            
+            // Puffmin
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(TurnToNormalOnDeath, false));
 
 
             // Controls
@@ -807,6 +817,24 @@ namespace LethalMin
                 .OrderBy(pikmin => Vector3.Distance(position, pikmin.transform.position))
                 .Take(maxCount)
                 .Where(gameObject => gameObject.GetComponent<PuffminAI>().currentBehaviourStateIndex != (int)PuffState.following)
+                .ToList();
+        }
+        public static List<PikminAI> FindNearestIdlePikmin(Vector3 position, float maxDistance, int maxCount)
+        {
+            var pikminEnemies = PikminManager.GetPikminEnemies();
+            if (pikminEnemies == null || pikminEnemies.Count == 0)
+            {
+                //Logger.LogWarning("No Pikmin enemies found.");
+                return new List<PikminAI>();
+            }
+
+            return pikminEnemies
+                .Where(gameObject => gameObject != null)
+                .Select(gameObject => gameObject.GetComponent<PikminAI>())
+                .Where(pikmin => pikmin != null && Vector3.Distance(position, pikmin.transform.position) <= maxDistance)
+                .OrderBy(pikmin => Vector3.Distance(position, pikmin.transform.position))
+                .Where(gameObject => gameObject.GetComponent<PikminAI>().currentBehaviourStateIndex == (int)PState.Idle)
+                .Take(maxCount)
                 .ToList();
 
         }

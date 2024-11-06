@@ -31,7 +31,7 @@ namespace LethalMin
         #region Unity Lifecycle Methods
         public void Start()
         {
-            basecolor = new Color(1, 72 / 255, 0);
+            basecolor = new Color(1, 0.282352941f, 0);
             CurColor = basecolor;
             PikminOnItemList = new List<PikminAI>();
             CounterPrefab = LethalMin.CounterPrefab;

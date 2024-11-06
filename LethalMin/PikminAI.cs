@@ -1635,10 +1635,12 @@ namespace LethalMin
             whistlingPlayer = null;
             IsWhistled = false;
         }
+        public bool IsTurningIntoPuffmin = false;
 
         public void TurnIntoPuffmin()
         {
-            if (!IsServer) { return; }
+            if (!IsServer || IsTurningIntoPuffmin) { return; }
+            IsTurningIntoPuffmin = true;
             GameObject SproutInstance = Instantiate(LethalMin.PuffminPrefab, transform.position, transform.rotation);
             PuffminAI SproteScript = SproutInstance.GetComponent<PuffminAI>();
             SproteScript.isOutside = isOutside;
@@ -1652,7 +1654,8 @@ namespace LethalMin
 
         public void TurnIntoPuffmin(EnemyAI enemyAI)
         {
-            if (!IsServer) { return; }
+            if (!IsServer || IsTurningIntoPuffmin) { return; }
+            IsTurningIntoPuffmin = true;
             GameObject SproutInstance = Instantiate(LethalMin.PuffminPrefab, transform.position, transform.rotation);
             PuffminAI SproteScript = SproutInstance.GetComponent<PuffminAI>();
             SproteScript.isOutside = isOutside;
@@ -1664,6 +1667,10 @@ namespace LethalMin
             if (enemyAI.GetComponentInChildren<PuffminOwnerManager>() != null)
             {
                 enemyAI.GetComponentInChildren<PuffminOwnerManager>().AddPuffmin(SproteScript);
+            }
+            else
+            {
+                LethalMin.Logger.LogWarning("Failed to find PuffminOwnerManager on enemy");
             }
             if (IsSpawned)
             {
@@ -2651,8 +2658,8 @@ namespace LethalMin
                 // Add the target onion to possible targets
                 if (targetOnion != null)
                 {
-                    targetItem.CurColor = targetOnion.type.OnionColor;
                     possibleTargets.Add(new ItemTarget("Onion", targetOnion.transform.position, 100));
+                    targetItem.CurColor = targetOnion.type.OnionColor;
                 }
             }
 

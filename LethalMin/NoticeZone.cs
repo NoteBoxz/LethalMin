@@ -12,14 +12,14 @@ using Unity.Netcode.Components;
 
 namespace LethalMin
 {
-    public class NoticeZone : NetworkBehaviour
+    public class NoticeZone : NetworkBehaviour, IDebuggable
     {
         public bool IsActive = true;
         public bool InstantNotice = false;
         public bool UseCheckSpher = false;
         public bool CanConvertPikmin = false;
-        public PlayerControllerB? leader;
-        public EnemyAI? enemy;
+        [IDebuggable.Debug] public PlayerControllerB? leader;
+        [IDebuggable.Debug] public EnemyAI? enemy;
         [ServerRpc(RequireOwnership = false)]
         public void SetLeaderOnServerRpc(NetworkObjectReference leaderref)
         {
@@ -117,13 +117,32 @@ namespace LethalMin
             foreach (Collider collider in colliders)
             {
                 if (collider == null) { continue; }
+                if (collider.gameObject == null) { continue; }
+                if (string.IsNullOrEmpty(collider.name)) { continue; }
                 if (collider.name != "PikminColision" && collider.name != "PuffminColision") { continue; }
-                if (collider.name == "PikminColision" && collider.GetComponentInParent<PikminAI>() == null) { continue; }
-                if (collider.name == "PuffminColision" && collider.GetComponentInParent<PuffminAI>() == null) { continue; }
+
                 yield return new WaitForSeconds(0.01f);
 
                 // Check if the collider belongs to a PikminAI
-                PikminAI pikminAI = collider.GetComponentInParent<PikminAI>();
+                if (collider.name == "PikminColision" && collider.gameObject.GetComponentInParent<PikminAI>() != null)
+                {
+                    ProcessPikminInZone(collider.gameObject.GetComponentInParent<PikminAI>());
+                    continue; // Skip to the next collider to avoid duplicate processing if the same PikminAI is in multiple zones
+                }
+
+
+                // Check if the collider belongs to a PuffminAI and can be converteds
+                if (collider.name == "PuffminColision" && collider.gameObject.GetComponentInParent<PuffminAI>() != null)
+                {
+                    ProcessPuffminInZone(collider.gameObject.GetComponentInParent<PuffminAI>());
+                    continue; // Skip to the next collider to avoid duplicate processing if the same PuffminAI is in multiple zones
+                }
+            }
+        }
+        public void ProcessPikminInZone(PikminAI pikminAI)
+        {
+            try
+            {
                 if (!CanConvertPikmin)
                 {
                     if (pikminAI != null && !pikminAI.CannotEscape)
@@ -144,9 +163,16 @@ namespace LethalMin
                         pikminAI.TurnIntoPuffmin(enemy);
                     }
                 }
-
-                // Check if the collider belongs to a PuffminAI and can be converted
-                PuffminAI puffmin = collider.GetComponentInParent<PuffminAI>();
+            }
+            catch (Exception e)
+            {
+                LethalMin.Logger.LogWarning($"An error occurred while processing for Pikmin in the whistle zone:  " + e.ToString());
+            }
+        }
+        public void ProcessPuffminInZone(PuffminAI puffmin)
+        {
+            try
+            {
                 if (!CanConvertPikmin)
                 {
                     if (puffmin != null && !puffmin.IsDying &&
@@ -167,6 +193,10 @@ namespace LethalMin
                         }
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                LethalMin.Logger.LogWarning($"An error occurred while processing for Puffmin in the whistle zone: " + e.ToString());
             }
         }
         public void StopWhistle(PikminAI pikmin)

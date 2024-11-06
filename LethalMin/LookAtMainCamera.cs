@@ -21,7 +21,7 @@ namespace LethalMin
             {
                 mainCamera = StartOfRound.Instance.spectateCamera;
             }
-            if (mainCamera != null)
+            if (mainCamera != null && 2 * transform.position - mainCamera.transform.position != Vector3.zero)
             {
                 transform.LookAt(2 * transform.position - mainCamera.transform.position);
             }

@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Unity.Netcode;
 using UnityEngine;
 namespace LethalMin
 {
-    public class PuffminOwnerManager : NetworkBehaviour
+    public class PuffminOwnerManager : NetworkBehaviour, IDebuggable
     {
         public EnemyAI Controller = null!;
-        public List<PuffminAI> followingPuffmin = new List<PuffminAI>();
+        [IDebuggable.Debug] public List<PuffminAI> followingPuffmin = new List<PuffminAI>();
         [SerializeField] private float whistleZoneRadius = 5f;
         [SerializeField] private float minWhistleZoneRadius = 1f;
         [SerializeField] private float maxWhistleZoneRadius = 10f;
@@ -62,11 +63,11 @@ namespace LethalMin
 
             if (HasInteractedWithPuffmin && isdoingwhistle)
             {
-                UpdateWhistleZonePosition();
+                //UpdateWhistleZonePosition();
             }
             else
             {
-                ResetWhistleZonePosition();
+                //ResetWhistleZonePosition();
             }
             //maxWhistleZoneRadius = LethalMin.WhistleMaxRadius.Value / 2;
         }
@@ -74,6 +75,7 @@ namespace LethalMin
         public bool isAiming = false;
         public void DoThrow()
         {
+            followingPuffmin.RemoveAll(puffmin => puffmin == null || puffmin.NetworkObject == null);
             if (followingPuffmin.Count == 0)
             {
                 LethalMin.Logger.LogWarning("No Puffmin available to throw or NetworkObject is null.");
@@ -114,8 +116,12 @@ namespace LethalMin
         }
         private IEnumerator WaitToThrowPuffmin(PuffminAI puffmin)
         {
-            yield return new WaitUntil(() => Vector3.Distance(Controller.transform.position, Controller.targetPlayer.transform.position) < 20);
+            yield return new WaitUntil(() => Controller.targetPlayer == null
+            || Controller.targetPlayer.isPlayerDead
+            || Vector3.Distance(Controller.transform.position, Controller.targetPlayer.transform.position) < 20);
+
             puffmin.ThrowPuffmin(Controller.eye.position, Controller.transform.forward);
+            RemovePuffmin(puffmin);
             yield return new WaitForSeconds(UnityEngine.Random.Range(0, 1.0f));
             isAiming = false;
         }
@@ -199,6 +205,18 @@ namespace LethalMin
         private void ResetWhistleZonePosition()
         {
             noticeZone.transform.localPosition = Vector3.zero;
+        }
+
+        public void TeleportPuffminToOwner()
+        {
+            followingPuffmin.RemoveAll(puffmin => puffmin == null || puffmin.NetworkObject == null);
+            foreach (PuffminAI puffmin in followingPuffmin)
+            {
+                if (puffmin.IsHeld) continue;
+                
+                puffmin.agent.Warp(Controller.transform.position);
+                puffmin.transform2.Teleport(Controller.transform.position, Controller.transform.rotation, puffmin.transform.localScale);
+            }
         }
 
     }

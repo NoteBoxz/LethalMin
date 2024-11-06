@@ -37,7 +37,7 @@ namespace LethalMin
         public bool IsHeld, IsThrown;
         NetworkVariable<bool> newIsMoving = new NetworkVariable<bool>(false);
         SphereCollider Pcollider = null!;
-        public bool HasFreeWill = true;
+        [IDebuggable.Debug] public bool HasFreeWill = true;
         public PikminType OriginalType = null!;
         public bool IsDying = false;
         public bool PreDefinedType = false;
@@ -176,6 +176,11 @@ namespace LethalMin
 
         public void Attacking()
         {
+            if (SnapTopPos != null)
+            {
+                return;
+            }
+
             if (targetPlayer == null || targetPlayer.isPlayerDead || Vector3.Distance(targetPlayer.transform.position, transform.position) > 10)
             {
                 if (PrevOwnerAI != null && !PrevOwnerAI.isEnemyDead)
@@ -219,7 +224,7 @@ namespace LethalMin
         bool CanBeAssinged = true;
         public void AssignOwner(EnemyAI newOwnerAI)
         {
-            if (!CanBeAssinged) { return; }
+            if (!CanBeAssinged || IsDying) { return; }
             if (newOwnerAI == null)
             {
                 LethalMin.Logger.LogWarning("Tried to assign a null owner to a Puffmin");
@@ -232,7 +237,7 @@ namespace LethalMin
             yield return new WaitUntil(() => HasInitalized);
             CanBeAssinged = false;
             LethalMin.Logger.LogInfo($"Puffmin assigned to {newOwnerAI.name}");
-
+            UnLatchPuffminToPosition();
             if (newOwnerAI.GetComponentInChildren<PuffminOwnerManager>() != null)
             {
                 newOwnerAI.GetComponentInChildren<PuffminOwnerManager>().AddPuffmin(this);
@@ -244,9 +249,11 @@ namespace LethalMin
             CanBeAssinged = true;
         }
 
+        public bool IsTurningIntoPikmin = false;
         public void TurnIntoPikmin()
         {
-            if (!IsServer) { return; }
+            if (!IsServer || IsTurningIntoPikmin) { return; }
+            IsTurningIntoPikmin = true;
             GameObject SproutInstance = Instantiate(LethalMin.pikminPrefab, transform.position, transform.rotation);
             PikminAI SproteScript = SproutInstance.GetComponent<PikminAI>();
             SproteScript.isOutside = false;
@@ -264,10 +271,9 @@ namespace LethalMin
                 Destroy(gameObject);
             }
         }
-
         public void HoldPuffmin(Transform SnapTopPos)
         {
-            if (IsHeld || IsThrown) { return; }
+            if (IsHeld || IsThrown || SnapTopPos != null) { return; }
             LethalMin.Logger.LogInfo("Puffmin is being held");
             this.SnapTopPos = SnapTopPos;
             IsHeld = true;
@@ -283,10 +289,6 @@ namespace LethalMin
             IsThrown = true;
             IsHeld = false;
             SnapTopPos = null!;
-            if (OwnerAI != null && OwnerAI.GetComponentInChildren<PuffminOwnerManager>() != null)
-            {
-                OwnerAI.GetComponentInChildren<PuffminOwnerManager>().RemovePuffmin(this);
-            }
 
             transform.position = StartPos;
             transform.rotation = Quaternion.LookRotation(ThrowForward);
@@ -294,8 +296,8 @@ namespace LethalMin
 
             ToggleColisionMode(true);
 
-            rb.AddForce(ThrowForward * 20, ForceMode.Impulse);
-            //rb.AddForce(Vector3.up * 5, ForceMode.Impulse);
+            rb.AddForce(ThrowForward * 25, ForceMode.Impulse);
+            rb.AddForce(Vector3.up * 5, ForceMode.Impulse);
 
             SetTriggerClientRpc("Throw");
             SwitchToBehaviourClientRpc((int)PuffState.airborn);
@@ -304,15 +306,97 @@ namespace LethalMin
         {
             if (IsThrown && IsThrown)
             {
+                LethalMin.Logger.LogInfo("Puffmin landed");
                 SetTriggerClientRpc("Land");
                 agent.Warp(rb.position);
                 ToggleColisionMode(false);
                 SwitchToBehaviourClientRpc((int)PuffState.idle);
                 IsThrown = false;
                 IsHeld = false;
-                LethalMin.Logger.LogInfo($"Puffmin landed on {collision.collider.name}");
+                IsKnockedBack = false;
             }
         }
+        public override void OnCollideWithPlayer(Collider other)
+        {
+            base.OnCollideWithPlayer(other);
+            if (IsThrown && IsThrown && !IsKnockedBack)
+            {
+                if (other.GetComponent<MaskedPlayerEnemy>() != null)
+                    return;
+                LethalMin.Logger.LogInfo($"Puffmin landed on player {other.name}");
+                IsThrown = false;
+                IsHeld = false;
+                SetTriggerClientRpc("Land");
+                agent.Warp(rb.position);
+                ToggleColisionMode(false);
+                PlayerLatchedOn = other.GetComponent<PlayerControllerB>();
+                LatchPuffminToPosition(other.transform, true, true);
+                SwitchToBehaviourClientRpc((int)PuffState.attacking);
+            }
+        }
+        PlayerControllerB PlayerLatchedOn = null!;
+        private float wiggleThreshold = 5f; // Degrees of rotation to consider a wiggle
+        private float wiggleTimeFrame = 1f; // Timeframe in seconds to detect wiggle
+        private float lastWiggleTime = 0f;
+        private int WiggleTimes = 0;
+        private Quaternion lastRotation;
+
+        private void DetectWiggle()
+        {
+            if (PlayerLatchedOn == null) return;
+
+            Quaternion currentRotation = PlayerLatchedOn.transform.rotation;
+            float angleDifference = Quaternion.Angle(lastRotation, currentRotation);
+
+            if (angleDifference > wiggleThreshold)
+            {
+                if (Time.time - lastWiggleTime < wiggleTimeFrame)
+                {
+                    // Player is wiggling
+                    WiggleTimes++;
+                    if (WiggleTimes > enemyRandom.Next(10, 30))
+                    {
+                        OnPlayerWiggle();
+                        WiggleTimes = 0;
+                    }
+                }
+                lastWiggleTime = Time.time;
+            }
+
+            lastRotation = currentRotation;
+        }
+        private void OnPlayerWiggle()
+        {
+            // Handle the wiggle event, e.g., unlatch the Puffmin
+            Vector3 KnockbackForce = (transform.position - PlayerLatchedOn.transform.position).normalized;
+            PrevOwnerAI = null;
+            UnLatchPuffminToPosition();
+            ApplyKnockbackServerRpc(KnockbackForce, false, false, 3);
+            LethalMin.Logger.LogInfo("Player wiggled enough to unlatch the Puffmin!");
+        }
+
+        public void LatchPuffminToPosition(Transform BaseParent, bool IsLethal, bool IsEscapeable)
+        {
+            //Create a new LatchToPoint Gameobject
+            GameObject LatchPoint = new GameObject("LatchPoint");
+            LatchPoint.transform.position = transform.position;
+            LatchPoint.transform.rotation = transform.rotation;
+            LatchPoint.transform.LookAt(PlayerLatchedOn.gameplayCamera.transform);
+            LatchPoint.transform.SetParent(BaseParent);
+            //Set the puffmin's parent to the LatchPoint
+            CurTempLatchPoint = LatchPoint.transform;
+            SnapTopPos = LatchPoint.transform;
+        }
+        public void UnLatchPuffminToPosition()
+        {
+            if (CurTempLatchPoint != null && SnapTopPos == CurTempLatchPoint)
+            {
+                SnapTopPos = null!;
+                Destroy(CurTempLatchPoint.gameObject);
+                PlayerLatchedOn = null!;
+            }
+        }
+        Transform CurTempLatchPoint = null!;
         Transform SnapTopPos = null!;
         bool HasStartedSnapTo = false;
         public override void Update()
@@ -349,19 +433,124 @@ namespace LethalMin
                 return;
             }
             CheckIfOnNavMesh();
+            if (PlayerLatchedOn != null)
+            {
+                DetectWiggle();
+            }
+            if (!HasFreeWill && currentBehaviourStateIndex == (int)PuffState.following)
+                return;
             if (!IsHeld && !IsThrown)
             {
-                PlayerControllerB targetplayer = null!;
-                if (targetplayer = GetClosestPlayer(transform.position, 2))
+                if (PlayerLatchedOn != null)
                 {
                     if (!IsHitting)
                     {
                         IsHitting = true;
-                        StartCoroutine(Hitting(targetplayer));
+                        StartCoroutine(Hitting(PlayerLatchedOn));
+                    }
+                }
+                else
+                {
+                    PlayerControllerB targetplayer = null!;
+                    if (targetplayer = GetClosestPlayer(transform.position, 2))
+                    {
+                        if (!IsHitting)
+                        {
+                            IsHitting = true;
+                            StartCoroutine(Hitting(targetplayer));
+                        }
                     }
                 }
             }
         }
+
+        public override void HitEnemy(int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false, int hitID = -1)
+        {
+            base.HitEnemy(force, playerWhoHit, playHitSFX, hitID);
+            Vector3 knockbackForce = -transform.forward * force;
+            ApplyKnockbackServerRpc(knockbackForce, true, false, 3);
+        }
+        public override void HitFromExplosion(float distance)
+        {
+            base.HitFromExplosion(distance);
+            ApplyKnockbackServerRpc(new Vector3(-distance, -distance, -distance), true, false, 3);
+        }
+
+        public bool IsKnockedBack;
+
+        [ServerRpc]
+        public void ApplyKnockbackServerRpc(Vector3 knockbackForce, bool IsLethal, bool KillOnLanding, float DeathTimer = 0)
+        {
+            LethalMin.Logger.LogInfo("Puffmin is being thrown");
+            LocalVoice.Stop();
+            LocalVoice.PlayOneShot(LethalMin.ThrowSFX);
+            IsThrown = true;
+            IsKnockedBack = true;
+            IsHeld = false;
+            SnapTopPos = null!;
+            if (OwnerAI == null)
+            {
+                LethalMin.Logger.LogWarning("Puffmin has no owner");
+            }
+            if (OwnerAI != null && OwnerAI.GetComponentInChildren<PuffminOwnerManager>() == null)
+            {
+                LethalMin.Logger.LogWarning("Puffmin owner has no PuffminOwnerManager");
+            }
+
+            if (OwnerAI != null && OwnerAI.GetComponentInChildren<PuffminOwnerManager>() != null)
+            {
+                OwnerAI.GetComponentInChildren<PuffminOwnerManager>().RemovePuffmin(this);
+            }
+            UnLatchPuffminToPosition();
+            transform.rotation = Quaternion.LookRotation(knockbackForce);
+            ToggleColisionMode(true);
+
+            rb.AddForce(knockbackForce, ForceMode.Impulse);
+            rb.AddForce(Vector3.up * 5, ForceMode.Impulse);
+
+            SetTriggerClientRpc("KncockBack");
+            UpdateAnimBoolClientRpc("Ded", IsLethal);
+            SwitchToBehaviourClientRpc((int)PuffState.airborn);
+            if (IsLethal)
+            {
+                StartCoroutine(Die(DeathTimer));
+            }
+        }
+        private IEnumerator Die(float DeathTimer)
+        {
+            IsDying = true;
+            yield return new WaitForSeconds(DeathTimer);
+            if (LethalMin.ConvertPuffminOnDeath)
+            {
+                TurnIntoPikmin();
+            }
+            else
+            {
+                SpawnGhostClientRpc();
+                if (NetworkObject.IsSpawned)
+                {
+                    PikminManager.Instance.DespawnPikminClientRpc(NetworkObject);
+                }
+                else
+                {
+                    LethalMin.Logger.LogWarning("Puffmin NetworkObject is not spawned");
+                    Destroy(gameObject);
+                }
+            }
+        }
+        [ClientRpc]
+        public void SpawnGhostClientRpc()
+        {
+            GameObject G = Instantiate(Ghost, transform.position, Quaternion.identity);
+            if (G.GetComponent<PminGhost>() == null)
+            {
+                G.AddComponent<PminGhost>();
+            }
+            G.GetComponent<PminGhost>().pmintype = OriginalType;
+            G.GetComponent<AudioSource>().pitch = LocalVoice.pitch;
+        }
+
+
         bool IsHitting = false;
         private IEnumerator Hitting(PlayerControllerB targetplayer)
         {
