@@ -43,9 +43,11 @@ namespace LethalMin
         public bool PreDefinedType = false;
         [IDebuggable.Debug] public bool HasInitalized = false;
         [IDebuggable.Debug] public string statename = "";
+        public string DebugID = "";
         public override void Start()
         {
             enemyRandom = new System.Random(StartOfRound.Instance.randomMapSeed + thisEnemyIndex);
+            DebugID = $"Puffmin {thisEnemyIndex}";
             //Check if any player is null in the Players List
             if (Players.Count == 0 || Players.Any(p => p == null))
                 Players = FindObjectsOfType<PlayerControllerB>().ToList();
@@ -78,7 +80,7 @@ namespace LethalMin
             yield return new WaitForSeconds(0.1f);  // Wait for one frame
 
             if (LethalMin.DebugMode)
-                LethalMin.Logger.LogInfo($"Puffmin is now being spawned");
+                LethalMin.Logger.LogInfo($"{DebugID} is now being spawned");
 
             Ghost = LethalMin.Ghost;
 
@@ -231,7 +233,7 @@ namespace LethalMin
             if (!CanBeAssinged || IsDying) { return; }
             if (newOwnerAI == null)
             {
-                LethalMin.Logger.LogWarning("Tried to assign a null owner to a Puffmin");
+                LethalMin.Logger.LogWarning($"Tried to assign a null owner to a {DebugID}");
                 return;
             }
             StartCoroutine(AssignOwnerCoroutine(newOwnerAI));
@@ -240,7 +242,7 @@ namespace LethalMin
         {
             yield return new WaitUntil(() => HasInitalized);
             CanBeAssinged = false;
-            LethalMin.Logger.LogInfo($"Puffmin assigned to {newOwnerAI.name}");
+            LethalMin.Logger.LogInfo($"{DebugID} assigned to {newOwnerAI.name}");
             UnLatchPuffminToPosition();
             if (newOwnerAI.GetComponentInChildren<PuffminOwnerManager>() != null)
             {
@@ -271,14 +273,14 @@ namespace LethalMin
             }
             else
             {
-                LethalMin.Logger.LogWarning("Puffmin NetworkObject is not spawned");
+                LethalMin.Logger.LogWarning("{DebugID} NetworkObject is not spawned");
                 Destroy(gameObject);
             }
         }
         public void HoldPuffmin(Transform SnapTopPos)
         {
             if (IsHeld || IsThrown || SnapTopPos != null) { return; }
-            LethalMin.Logger.LogInfo("Puffmin is being held");
+            LethalMin.Logger.LogInfo("{DebugID} is being held");
             this.SnapTopPos = SnapTopPos;
             IsHeld = true;
             DoHoldSFXClientRpc();
@@ -287,7 +289,7 @@ namespace LethalMin
         public void ThrowPuffmin(Vector3 StartPos, Vector3 ThrowForward)
         {
             if (IsThrown) { return; }
-            LethalMin.Logger.LogInfo("Puffmin is being thrown");
+            LethalMin.Logger.LogInfo("{DebugID} is being thrown");
             DoThrowSFXClientRpc();
             IsThrown = true;
             IsHeld = false;
@@ -308,7 +310,7 @@ namespace LethalMin
         {
             if (IsThrown && IsThrown)
             {
-                LethalMin.Logger.LogInfo("Puffmin landed");
+                LethalMin.Logger.LogInfo("{DebugID} landed");
                 SetTriggerClientRpc("Land");
                 agent.Warp(rb.position);
                 ToggleColisionMode(false);
@@ -325,7 +327,7 @@ namespace LethalMin
             {
                 if (other.GetComponent<MaskedPlayerEnemy>() != null)
                     return;
-                LethalMin.Logger.LogInfo($"Puffmin landed on player {other.name}");
+                LethalMin.Logger.LogInfo($"{DebugID} landed on player {other.name}");
                 IsThrown = false;
                 IsHeld = false;
                 SetTriggerClientRpc("Land");
@@ -460,6 +462,16 @@ namespace LethalMin
             if (PlayerLatchedOn != null)
             {
                 DetectWiggle();
+                if (Vector3.Distance(PlayerLatchedOn.transform.position, transform.position) > 10)
+                {
+                    Vector3 KnockbackForce = (transform.position - PlayerLatchedOn.transform.position).normalized;
+                    PrevOwnerAI = null;
+                    UnLatchPuffminToPosition();
+                    StartCoroutine(SetOnCooldown());
+                    ApplyKnockbackServerRpc(KnockbackForce, false, false, 3);
+                    LethalMin.Logger.LogInfo($"{DebugID} was too far to be latched on!");
+                    PlayerLatchedOn = null!;
+                }
             }
             if (!HasFreeWill && currentBehaviourStateIndex == (int)PuffState.following)
                 return;
@@ -511,7 +523,7 @@ namespace LethalMin
             LocalVoice.PlayOneShot(LethalMin.AttackSFX[enemyRandom.Next(0, LethalMin.AttackSFX.Count())]);
             LocalAnim.SetTrigger("AttackStanding");
             yield return new WaitForSeconds(0.4f);
-            LethalMin.Logger.LogInfo("Puffmin HIT!!!!");
+            LethalMin.Logger.LogInfo("{DebugID} HIT!!!!");
             LocalSFX.PlayOneShot(LethalMin.PuffHit);
             targetplayer.DamagePlayer(damage, false, true, CauseOfDeath.Bludgeoning);
             IsHitting = false;
@@ -534,18 +546,19 @@ namespace LethalMin
         [ServerRpc]
         public void ApplyKnockbackServerRpc(Vector3 knockbackForce, bool IsLethal, bool KillOnLanding, float DeathTimer = 0)
         {
-            LethalMin.Logger.LogInfo("Puffmin is being knocked back");
+            if (IsKnockedBack) { return; }
+            LethalMin.Logger.LogInfo($"{DebugID} is being knocked back");
             IsThrown = true;
             IsKnockedBack = true;
             IsHeld = false;
             SnapTopPos = null!;
             if (OwnerAI == null)
             {
-                LethalMin.Logger.LogWarning("Puffmin has no owner");
+                LethalMin.Logger.LogWarning($"{DebugID} has no owner");
             }
             if (OwnerAI != null && OwnerAI.GetComponentInChildren<PuffminOwnerManager>() == null)
             {
-                LethalMin.Logger.LogWarning("Puffmin owner has no PuffminOwnerManager");
+                LethalMin.Logger.LogWarning($"{DebugID} owner has no PuffminOwnerManager");
             }
 
             if (OwnerAI != null && OwnerAI.GetComponentInChildren<PuffminOwnerManager>() != null)
@@ -584,7 +597,7 @@ namespace LethalMin
                 }
                 else
                 {
-                    LethalMin.Logger.LogWarning("Puffmin NetworkObject is not spawned");
+                    LethalMin.Logger.LogWarning("{DebugID} NetworkObject is not spawned");
                     Destroy(gameObject);
                 }
             }
@@ -742,7 +755,7 @@ namespace LethalMin
             else
             {
                 if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo($"Puffmin found its way back to NavMesh without teleportation");
+                    LethalMin.Logger.LogInfo($"{DebugID} found its way back to NavMesh without teleportation");
             }
 
             isCheckingNavMesh = false;
