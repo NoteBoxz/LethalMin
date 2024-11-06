@@ -173,10 +173,10 @@ namespace LethalMin
             agent.SetDestination(OwnerAI.transform.position);
             agent.speed = 5;
         }
-
+        public bool IsOnCooldown;
         public void Attacking()
         {
-            if (SnapTopPos != null)
+            if (SnapTopPos != null || IsOnCooldown)
             {
                 return;
             }
@@ -371,6 +371,7 @@ namespace LethalMin
             Vector3 KnockbackForce = (transform.position - PlayerLatchedOn.transform.position).normalized;
             PrevOwnerAI = null;
             UnLatchPuffminToPosition();
+            StartCoroutine(SetOnCooldown());
             ApplyKnockbackServerRpc(KnockbackForce, false, false, 3);
             LethalMin.Logger.LogInfo("Player wiggled enough to unlatch the Puffmin!");
         }
@@ -395,6 +396,12 @@ namespace LethalMin
                 Destroy(CurTempLatchPoint.gameObject);
                 PlayerLatchedOn = null!;
             }
+        }
+        private IEnumerator SetOnCooldown()
+        {
+            IsOnCooldown = true;
+            yield return new WaitForSeconds(enemyRandom.Next(2, 7));
+            IsOnCooldown = false;
         }
         Transform CurTempLatchPoint = null!;
         Transform SnapTopPos = null!;
