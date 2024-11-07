@@ -144,10 +144,14 @@ namespace LethalMin
         {
         }
         [ServerRpc(RequireOwnership = false)]
-        public virtual void AddToTypesToSpawnServerRpc(int TypeID)
+        public virtual void AddToTypesToSpawnServerRpc(int TypeID, int Times)
         {
             SpawnTimer = 1;
-            TypesToSpawn.Add(LethalMin.GetPikminTypeById(TypeID));
+            PikminType targettype = LethalMin.GetPikminTypeById(TypeID);
+            for (int i = 0; i < Times; i++)
+            {
+                TypesToSpawn.Add(targettype);
+            }
         }
         // Update the CreatePikminServerRpc method to handle multiple Pikmin types
         [ServerRpc(RequireOwnership = false)]

@@ -1848,28 +1848,15 @@ namespace LethalMin
         {
             List<Vector3> specificSpawnPoints = new List<Vector3>();
 
-            if (LethalMin.IsUsingModLib())
+            for (int i = 1; i < LethalMin.RegisteredOnionTypes.Count; i++) // Assuming we're looking for up to 3 spawn points
             {
-                for (int i = 1; i < ezSaveData.OnionsCollected.Count; i++) // Assuming we're looking for up to 3 spawn points
+                GameObject spawnPoint = GameObject.Find($"ONION_SPAWN_POINT_{i}");
+                if (spawnPoint != null)
                 {
-                    GameObject spawnPoint = GameObject.Find($"ONION_SPAWN_POINT_{i}");
-                    if (spawnPoint != null)
-                    {
-                        specificSpawnPoints.Add(spawnPoint.transform.position);
-                    }
+                    specificSpawnPoints.Add(spawnPoint.transform.position);
                 }
             }
-            else
-            {
-                for (int i = 1; i < saveData.OnionsCollected.Count; i++) // Assuming we're looking for up to 3 spawn points
-                {
-                    GameObject spawnPoint = GameObject.Find($"ONION_SPAWN_POINT_{i}");
-                    if (spawnPoint != null)
-                    {
-                        specificSpawnPoints.Add(spawnPoint.transform.position);
-                    }
-                }
-            }
+
             return specificSpawnPoints;
         }
 

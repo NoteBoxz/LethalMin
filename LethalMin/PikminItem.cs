@@ -906,27 +906,61 @@ namespace LethalMin
 
             // Create an overlay material
             Material glowMaterial = new Material(Shader.Find("HDRP/Unlit"));
-            glowMaterial.SetColor("_UnlitColor", Color.white);
 
             // Add overlay meshes
-            foreach (MeshRenderer renderer in Root.GetComponentsInChildren<MeshRenderer>())
+            foreach (Renderer renderer in Root.GetComponentsInChildren<Renderer>())
             {
+                if (renderer.gameObject.layer == LayerMask.NameToLayer("MapRadar")
+                || renderer.gameObject.layer == LayerMask.NameToLayer("ScanNode"))
+                {
+                    continue;
+                }
+
                 GameObject overlay = new GameObject("GlowOverlay");
-                overlay.transform.position = renderer.transform.position;
-                overlay.transform.rotation = renderer.transform.rotation;
+                overlay.transform.SetPositionAndRotation(renderer.transform.position, renderer.transform.rotation);
                 overlay.transform.SetParent(renderer.transform, true);
 
-                MeshFilter overlayMesh = overlay.AddComponent<MeshFilter>();
-                overlayMesh.sharedMesh = renderer.GetComponent<MeshFilter>().sharedMesh;
-
-                MeshRenderer overlayRenderer = overlay.AddComponent<MeshRenderer>();
-                overlayRenderer.material = glowMaterial;
-                overlayRenderer.material.color = new Color(1, 1, 1, 0); // Start transparent
+                if (renderer is MeshRenderer meshRenderer)
+                {
+                    MeshFilter meshFilter = meshRenderer.GetComponent<MeshFilter>();
+                    if (meshFilter != null && meshFilter.sharedMesh != null)
+                    {
+                        MeshFilter overlayMesh = overlay.AddComponent<MeshFilter>();
+                        overlayMesh.sharedMesh = meshFilter.sharedMesh;
+                        Renderer overlayRenderer = overlay.AddComponent<MeshRenderer>();
+                        SetupOverlayRenderer(overlayRenderer, glowMaterial);
+                    }
+                }
+                else if (renderer is SkinnedMeshRenderer skinnedMeshRenderer)
+                {
+                    if (skinnedMeshRenderer.sharedMesh != null)
+                    {
+                        SkinnedMeshRenderer overlayRenderer = overlay.AddComponent<SkinnedMeshRenderer>();
+                        overlayRenderer.sharedMesh = skinnedMeshRenderer.sharedMesh;
+                        overlayRenderer.bones = skinnedMeshRenderer.bones;
+                        overlayRenderer.rootBone = skinnedMeshRenderer.rootBone;
+                        SetupOverlayRenderer(overlayRenderer, glowMaterial);
+                    }
+                }
             }
             TargetAnimatedOnion.DoVacumeClientRpc();
             StartCoroutine(DoGlowAnimationPart());
             StartCoroutine(DoShakeAnimationPart());
             StartCoroutine(DoScaleAndMoveAnimationPart());
+        }
+
+
+        private void SetupOverlayRenderer(Renderer overlayRenderer, Material glowMaterial)
+        {
+            overlayRenderer.material = new Material(glowMaterial);
+            overlayRenderer.material.SetFloat("_SurfaceType", 1); // 1 is for Transparent
+            overlayRenderer.material.SetFloat("_BlendMode", 0); // 0 is for Alpha
+            overlayRenderer.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            overlayRenderer.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            overlayRenderer.material.SetInt("_ZWrite", 0);
+            overlayRenderer.material.renderQueue = 3000; // Transparent render queue
+            overlayRenderer.material.SetShaderPassEnabled("SHADOWCASTER", false);
+            overlayRenderer.material.SetColor("_UnlitColor", new Color(1, 1, 1, 0)); // Start transparent
         }
 
         public IEnumerator DoGlowAnimationPart()
@@ -935,7 +969,7 @@ namespace LethalMin
             float elapsed = 0;
 
             // Get all overlay renderers
-            MeshRenderer[] overlays = Root.GetComponentsInChildren<MeshRenderer>()
+            Renderer[] overlays = Root.GetComponentsInChildren<Renderer>()
                 .Where(r => r.gameObject.name == "GlowOverlay")
                 .ToArray();
 
@@ -944,10 +978,21 @@ namespace LethalMin
             {
                 float alpha = Mathf.Lerp(0, 0.5f, elapsed / duration);
 
-                foreach (MeshRenderer overlay in overlays)
+                foreach (Renderer overlay in overlays)
                 {
                     Color color = overlay.material.color;
                     overlay.material.color = new Color(color.r, color.g, color.b, alpha);
+
+                    // If it's a SkinnedMeshRenderer, update its bones
+                    if (overlay is SkinnedMeshRenderer skinnedOverlay)
+                    {
+                        SkinnedMeshRenderer originalRenderer = overlay.transform.parent.GetComponent<SkinnedMeshRenderer>();
+                        if (originalRenderer != null)
+                        {
+                            skinnedOverlay.bones = originalRenderer.bones;
+                            skinnedOverlay.rootBone = originalRenderer.rootBone;
+                        }
+                    }
                 }
 
                 elapsed += Time.deltaTime;
@@ -974,14 +1019,18 @@ namespace LethalMin
             for (int i = 0; i < 100; i++)
             {
                 Root.transform.position = Vector3.Lerp(Root.transform.position, TargetAnimatedOnion.SucPoint.position, i / 100f);
-                //Root.transform.localScale = Vector3.Lerp(Root.transform.localScale, Vector3.zero, i / 100f);
+                Root.transform.localScale = Vector3.Lerp(Root.transform.localScale, Vector3.zero, i / 100f);
+                if(Vector3.Distance(Root.transform.position, TargetAnimatedOnion.SucPoint.position) < 0.1f)
+                {
+                    break;
+                }
                 yield return new WaitForSeconds(0.02f);
             }
             //Destroy the object
             if (IsServer)
             {
-                TargetOnion.AddToTypesToSpawnServerRpc(TargetType.PikminTypeID);
-                //Root.NetworkObject.Despawn(true);
+                TargetOnion.AddToTypesToSpawnServerRpc(TargetType.PikminTypeID, PikminNeedOnItem);
+                Root.NetworkObject.Despawn(true);
             }
         }
 

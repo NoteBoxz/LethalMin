@@ -245,7 +245,7 @@ namespace LethalMin
             float spawnX = Random.Range(-8f, 8f);
             float spawnZ = Random.Range(-8f, 8f);
 
-            if(spawnX <= 0)
+            if (spawnX <= 0)
             {
                 Mathf.Clamp(spawnX, -2, -8);
             }
@@ -262,7 +262,7 @@ namespace LethalMin
                 Mathf.Clamp(spawnZ, 2, 8);
             }
 
-            SpawnPos = new Vector3(spawnX, SpiPoint.position.y, spawnZ);
+            SpawnPos = new Vector3(SpiPoint.position.y + spawnX, SpiPoint.position.y, SpiPoint.position.z + spawnZ);
 
             GameObject SproutInstance2 = Instantiate(LethalMin.sproutPrefab, SpawnPos, Quaternion.identity);
             Sprout SproteScript2 = SproutInstance2.GetComponent<Sprout>();
@@ -273,9 +273,9 @@ namespace LethalMin
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public override void AddToTypesToSpawnServerRpc(int TypeID)
+        public override void AddToTypesToSpawnServerRpc(int TypeID, int Times)
         {
-            base.AddToTypesToSpawnServerRpc(TypeID);
+            base.AddToTypesToSpawnServerRpc(TypeID, Times);
 
             DoSuctionClientRpc();
         }

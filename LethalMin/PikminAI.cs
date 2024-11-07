@@ -2632,14 +2632,14 @@ namespace LethalMin
             }
 
             // Ship target (outside and not in Company Building)
-            if (isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
+            if (isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
             {
                 Vector3 shipPos = StartOfRound.Instance.insideShipPositions[UnityEngine.Random.Range(0, StartOfRound.Instance.insideShipPositions.Length)].position;
                 possibleTargets.Add(new ItemTarget("Ship", shipPos, 80));
             }
 
             // Car target
-            if (LethalMin.GoToCar && isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
+            if (LethalMin.GoToCar && isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
             {
                 Vector3 shipPos = StartOfRound.Instance.insideShipPositions[UnityEngine.Random.Range(0, StartOfRound.Instance.insideShipPositions.Length)].position;
                 GetNearestCar();
@@ -2730,6 +2730,7 @@ namespace LethalMin
                 // Add the target onion to possible targets
                 if (targetOnion != null)
                 {
+                    targetItem.TargetOnion = targetOnion;
                     OnionTarget = new ItemTarget("Onion", targetOnion.transform.position, 100);
                     possibleTargets.Add(OnionTarget);
                 }
@@ -2954,7 +2955,6 @@ namespace LethalMin
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Onion");
-                    targetItem.TargetOnion = TargetOnion;
                     targetItem.SuckIntoOnionClientRpc();
                     CallingHandleItemCarying = false;
                 }
