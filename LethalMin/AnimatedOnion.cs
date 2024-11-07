@@ -235,42 +235,144 @@ namespace LethalMin
                 StartCoroutine(HideBeam());
             }
         }
+        int SpawnCount = 0;
 
-        public override void SpawnPikmin(PikminType pikminType)
+        public void DEBUG_SPAWNSEED()
         {
-            base.SpawnPikmin(pikminType);
-
-            Vector3 SpawnPos = Vector3.zero;
-
-            float spawnX = Random.Range(-8f, 8f);
-            float spawnZ = Random.Range(-8f, 8f);
-
-            if (spawnX <= 0)
-            {
-                Mathf.Clamp(spawnX, -2, -8);
-            }
-            else
-            {
-                Mathf.Clamp(spawnX, 2, 8);
-            }
-            if (spawnZ <= 0)
-            {
-                Mathf.Clamp(spawnZ, -2, -8);
-            }
-            else
-            {
-                Mathf.Clamp(spawnZ, 2, 8);
-            }
-
-            SpawnPos = new Vector3(SpiPoint.position.y + spawnX, SpiPoint.position.y, SpiPoint.position.z + spawnZ);
-
-            GameObject SproutInstance2 = Instantiate(LethalMin.sproutPrefab, SpawnPos, Quaternion.identity);
-            Sprout SproteScript2 = SproutInstance2.GetComponent<Sprout>();
-
-            SproteScript2.NetworkObject.Spawn();
-            SproteScript2.InitalizeTypeClientRpc(pikminType.PikminTypeID);
-            DoSpitClientRpc();
+            SpawnPikminSeed(LethalMin.GetPikminTypeById(0));
         }
+
+        public override void SpawnPikminSeed(PikminType pikminType)
+        {
+            base.SpawnPikminSeed(pikminType);
+            if (!IsServer)
+            {
+                return;
+            }
+            // Define the circle parameters
+            float radius = 8f;
+            float angleStep = 30f;
+            float startAngle = UnityEngine.Random.Range(0f, 360f);
+
+            // Calculate the spawn position on the circle
+            float angle = startAngle + (SpawnCount * angleStep) % 360f;
+            float radian = angle * Mathf.Deg2Rad;
+            float spawnX = Mathf.Sin(radian) * radius;
+            float spawnZ = Mathf.Cos(radian) * radius;
+
+            Vector3 airPosition = new Vector3(
+                SpiPoint.position.x + spawnX,
+                SpiPoint.position.y,
+                SpiPoint.position.z + spawnZ
+            );
+
+            // Raycast to find the ground position
+            RaycastHit hit;
+            Vector3 groundPosition;
+            if (Physics.Raycast(airPosition, Vector3.down, out hit, Mathf.Infinity, LethalMin.Instance.PikminColideable))
+            {
+                groundPosition = hit.point;
+            }
+            else
+            {
+                groundPosition = new Vector3(airPosition.x, 0, airPosition.z); // Fallback if raycast fails
+            }
+
+            // Spawn the animated sprout prefab
+            GameObject animSproutInstance = Instantiate(LethalMin.AnimSproutPrefab, SpiPoint.position, Quaternion.identity);
+            animSproutInstance.GetComponent<AnimatedSprout>().NetworkObject.Spawn();
+            animSproutInstance.GetComponent<AnimatedSprout>().ColorAndSyncClientRpc(pikminType.PikminTypeID);
+
+            // Start the animation coroutine
+            DoSpitClientRpc();
+            DoSproutAnimationClientRpc(animSproutInstance.GetComponent<AnimatedSprout>().NetworkObject, SpiPoint.position, groundPosition, pikminType.PikminTypeID);
+
+            SpawnCount++; // Increment the spawn count
+        }
+
+        [ClientRpc]
+        public void DoSproutAnimationClientRpc(NetworkObjectReference sproutRef, Vector3 start, Vector3 end, int pikminTypeID)
+        {
+            GameObject sprout = null!;
+
+            sproutRef.TryGet(out NetworkObject sproutNetObj);
+
+            sprout = sproutNetObj.gameObject;
+
+            StartCoroutine(AnimateSproutScale(sprout));
+            StartCoroutine(AnimateSprout(sprout, start, end, LethalMin.GetPikminTypeById(pikminTypeID)));
+        }
+
+        private IEnumerator AnimateSprout(GameObject sprout, Vector3 start, Vector3 end, PikminType pikminType)
+        {
+            float duration = 1f;
+            float elapsedTime = 0f;
+            Vector3 midPoint = Vector3.Lerp(start, end, 0.5f) + Vector3.up * 5f; // Mid-point with some height
+
+            // Initial rotation (upside down)
+            Quaternion startRotation = Quaternion.Euler(180f, 0f, 0f);
+            Quaternion endRotation = Quaternion.Euler(0f, Random.Range(-360, 360), 0f);
+            float spinAmount = Random.Range(-360, 360);
+
+
+            while (elapsedTime < duration)
+            {
+                elapsedTime += Time.deltaTime;
+                float t = elapsedTime / duration;
+
+                // Calculate position along the curved path
+                Vector3 m1 = Vector3.Lerp(start, midPoint, t);
+                Vector3 m2 = Vector3.Lerp(midPoint, end, t);
+                sprout.transform.position = Vector3.Lerp(m1, m2, t);
+
+                // Rotate the sprout
+                sprout.transform.rotation = Quaternion.Slerp(startRotation, endRotation, t);
+
+                // Add spin around the y-axis
+                //sprout.transform.Rotate(Vector3.up, spinAmount * Time.deltaTime);
+
+                yield return null;
+            }
+            // Ensure final position, rotation, and scale
+            sprout.transform.position = end;
+            sprout.transform.rotation = endRotation;
+
+            yield return new WaitForSeconds(0.5f);
+
+            // Replace animated sprout with actual sprout prefab
+            if (IsServer)
+            {
+                sprout.GetComponent<NetworkObject>().Despawn(true);
+                GameObject actualSprout = Instantiate(LethalMin.sproutPrefab, end, endRotation);
+                Sprout sproutScript = actualSprout.GetComponent<Sprout>();
+
+                sproutScript.NetworkObject.Spawn();
+                sproutScript.InitalizeTypeClientRpc(pikminType.PikminTypeID);
+            }
+        }
+
+        private IEnumerator AnimateSproutScale(GameObject sprout)
+        {
+            // Initial scale (start from 0)
+            Vector3 startScale = Vector3.zero;
+            float val = LethalMin.SproutScale;
+            Vector3 endScale = new Vector3(val, val, val);
+
+            float scaleDuration = 0.2f;
+            float scaleElapsedTime = 0f;
+
+            while (scaleElapsedTime < scaleDuration)
+            {
+                scaleElapsedTime += Time.deltaTime;
+                float scaleT = scaleElapsedTime / scaleDuration;
+
+                sprout.transform.localScale = Vector3.Lerp(startScale, endScale, scaleT);
+
+                yield return null;
+            }
+            sprout.transform.localScale = endScale;
+        }
+
 
         [ServerRpc(RequireOwnership = false)]
         public override void AddToTypesToSpawnServerRpc(int TypeID, int Times)
@@ -285,6 +387,7 @@ namespace LethalMin
         {
             Audio.PlayOneShot(LethalMin.OnionVac);
             onionAnimator.SetBool("Inhaleing", true);
+            SpawnCount = 0;
         }
 
 

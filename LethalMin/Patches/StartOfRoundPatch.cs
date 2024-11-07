@@ -80,6 +80,7 @@ namespace LethalMin.Patches
                 PikminManager.Instance.SyncEndgameDataServerRpc();
 
             PikminManager.Instance.DespawnSprouts();
+            PikminManager.Instance.RemoveAllRadiuses();
         }
 
         [HarmonyPatch("SetShipReadyToLand")]

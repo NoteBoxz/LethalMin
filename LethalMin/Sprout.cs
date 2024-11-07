@@ -172,7 +172,8 @@ namespace LethalMin
             else
             {
                 LethalMin.Logger.LogWarning("No ground detected within maxRaycastDistance.");
-                Destroy(gameObject);
+                if (IsServer)
+                    NetworkObject.Despawn(true);
             }
         }
 

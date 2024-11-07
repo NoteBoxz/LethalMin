@@ -1343,9 +1343,40 @@ namespace LethalMin
             }
         }
 
+        public bool CreatedSafetyRings = false;
+        public void CreateSafetyRings()
+        {
+            if (CreatedSafetyRings) { return; }
+            CreatedSafetyRings = true;
+            //Create Radiuses around each onion and the ship
+            Onion[] onions = UnityEngine.Object.FindObjectsOfType<Onion>();
+            foreach (var onion in onions)
+            {
+                CreateRadius(onion.transform.position, 20);
+            }
+            CreateRadius(StartOfRound.Instance.elevatorTransform.position, 20f);
+        }
+
         #endregion
 
         #region Post-Game
+
+        List<GameObject> Radiuses = new List<GameObject>();
+        public void RemoveAllRadiuses()
+        {
+            CreatedSafetyRings = false;
+            foreach (var item in Radiuses)
+            {
+                Destroy(item);
+            }
+        }
+        public void CreateRadius(Vector3 position, float radius)
+        {
+            GameObject radiusObject = new GameObject($"Radius ({Radiuses.Count})");
+            radiusObject.transform.position = position;
+            radiusObject.AddComponent<CircleRenderer>().radius = radius;
+            Radiuses.Add(radiusObject);
+        }
         public IEnumerator DespawnOnions()
         {
             if (!IsServer) { yield return null; }

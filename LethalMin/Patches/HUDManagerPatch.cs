@@ -106,6 +106,9 @@ namespace LethalMin.Patches
 
             if (!img.enabled) { return; }
 
+            if (PikminManager.Instance.CreatedSafetyRings)
+                PikminManager.Instance.CreateSafetyRings();
+
             if (IntervalDanger >= 0)
             {
                 IntervalDanger -= Time.deltaTime;

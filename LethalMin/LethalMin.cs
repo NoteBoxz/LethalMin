@@ -1098,11 +1098,11 @@ namespace LethalMin
         public static Mesh TwoSideOnion, ThreeSideOnion, FourSideOnion, FiveSideOnion, SixSideOnion, SevenSideOnion, EightSideOnion;
         public static Item OnionItem;
         public static AnimationClip PluckAnim;
-        public static GameObject PuffminPrefab, POMprefab;
+        public static GameObject PuffminPrefab, POMprefab,AnimSproutPrefab;
 
         private void LoadPikminAssets()
         {
-
+            AnimSproutPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/AnimSprout.prefab");
             OnionMeunOpen = AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Onion/Audio/UI_PikOnyonMenu_Open.wav");
             OnionMeunClose = AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Onion/Audio/UI_PikOnyonMenu_Exit.wav");
             //AssetLoader.LoadAsset<AudioClip>("");

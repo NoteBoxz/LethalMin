@@ -25,10 +25,9 @@ namespace LethalMin.Patches
             {
                 __instance.gameObject.AddComponent<PikminDamager>().RootScript = __instance;
             }
-            if (HPDict.ContainsKey(__instance))
+            if (!HPDict.ContainsKey(__instance))
             {
                 HPDict[__instance] = __instance.enemyHP;
-
             }
         }
 

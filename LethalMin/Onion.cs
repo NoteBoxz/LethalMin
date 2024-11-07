@@ -119,28 +119,28 @@ namespace LethalMin
                 SpawnTimer -= Time.deltaTime;
                 if (SpawnTimer <= 0 && !DoingSpawning)
                 {
-                    StartCoroutine(DoSpawnPikmin());
+                    StartCoroutine(DoSpawnPikminSeed());
                 }
             }
         }
-        IEnumerator DoSpawnPikmin()
+        IEnumerator DoSpawnPikminSeed()
         {
             DoingSpawning = true;
             int Number = 0;
             for (int i = 0; i < TypesToSpawn.Count; i++)
             {
-                SpawnPikmin(TypesToSpawn[0]);
+                SpawnPikminSeed(TypesToSpawn[0]);
                 TypesToSpawn.RemoveAt(0);
                 Number++;
                 if (Number >= 2)
                 {
-                    yield return new WaitForSeconds(0.1f);
+                    yield return new WaitForSeconds(0.55f);
                     Number = 0;
                 }
             }
             DoingSpawning = false;
         }
-        public virtual void SpawnPikmin(PikminType type)
+        public virtual void SpawnPikminSeed(PikminType type)
         {
         }
         [ServerRpc(RequireOwnership = false)]

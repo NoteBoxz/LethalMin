@@ -29,6 +29,17 @@ namespace LethalMin.Patches
             GameObject NoticePrefab = LethalMin.NoticeZone;
             GameObject PuffminPrefab = LethalMin.PuffminPrefab;
             GameObject PuffminOwnerManagerPrefab = LethalMin.POMprefab;
+            GameObject SproutAnimPrefab = LethalMin.AnimSproutPrefab;
+
+            if (SproutAnimPrefab != null)
+            {
+                SproutAnimPrefab.AddComponent<AnimatedSprout>();
+                NetworkManager.Singleton.AddNetworkPrefab(SproutAnimPrefab);
+            }
+            else
+            {
+                LethalMin.Logger.LogError("Failed to load AnimatedSprout.prefab!");
+            }
 
             if (PuffminOwnerManagerPrefab != null)
             {

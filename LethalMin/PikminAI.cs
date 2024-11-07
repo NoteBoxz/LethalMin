@@ -1269,9 +1269,11 @@ namespace LethalMin
                 if (TargetOnion == null || IsLeftBehind)
                 {
                     agent.SetDestination(new Vector3(randoVect.x, transform.position.y, randoVect.z));
+                    LethalMin.Logger.LogInfo($"{uniqueDebugId}: Moving to random position {randoVect}");
                 }
                 else if (!IsLeftBehind)
                 {
+                    LethalMin.Logger.LogInfo($"{uniqueDebugId}: Moving to onion {TargetOnion.name}");
                     Vector3 targetPosition = TargetOnion.transform.position;
                     float dynamicSpeed = CalculateDynamicSpeed(targetPosition);
                     agent.speed = dynamicSpeed;
