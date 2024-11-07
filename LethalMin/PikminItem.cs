@@ -5,6 +5,7 @@ using Unity.Netcode;
 using GameNetcodeStuff;
 using System.Collections;
 using System;
+using System.Linq;
 
 namespace LethalMin
 {
@@ -26,6 +27,7 @@ namespace LethalMin
         public Color basecolor;
         public Color CurColor;
         public bool CanBeConvertedIntoSprouts;
+        public bool DontParentToObjects;
         public PikminType FavoredType = null!;
 
         #region Unity Lifecycle Methods
@@ -466,6 +468,7 @@ namespace LethalMin
 
 
         #region Item Parenting and Unparenting 
+        public bool UsePikminAsParent;
         private void ParentToFirstPikmin()
         {
             if (PikminOnItemList.Count > 0 && Root != null)
@@ -478,8 +481,16 @@ namespace LethalMin
                 }
                 Root.GrabItemFromEnemy(firstPikmin);
                 Root.hasHitGround = false;
-                Root.parentObject = firstPikmin.HoldPos;
-                Root.transform.SetParent(firstPikmin.HoldPos, worldPositionStays: true);
+                if (!UsePikminAsParent)
+                {
+                    Root.parentObject = firstPikmin.HoldPos;
+                    Root.transform.SetParent(firstPikmin.HoldPos, worldPositionStays: true);
+                }
+                else
+                {
+                    Root.parentObject = firstPikmin.HoldPos;
+                    Root.transform.SetParent(firstPikmin.transform, worldPositionStays: true);
+                }
                 Root.EnablePhysics(enable: false);
                 isParented = true;
                 // Call ServerRpc to sync across network
@@ -500,31 +511,46 @@ namespace LethalMin
                 {
                     ManEater.GetComponentInChildren<EaterBehavior>().DroppedByPikmin(firstPikminG);
                 }
-                if (firstPikminG != null)
+                if (!DontParentToObjects)
                 {
-                    Vector3 hitPoint;
-                    NetworkObject physicsRegionOfDroppedObject = GetPhysicsRegionOfDroppedObject(firstPikminG, out hitPoint);
-                    if (physicsRegionOfDroppedObject != null)
+                    if (firstPikminG != null)
                     {
-                        placePosition = hitPoint;
-                        parentObjectTo = physicsRegionOfDroppedObject;
-                        matchRotationOfParent = false;
-                        PlaceGrabbableObject(parentObjectTo.transform, placePosition, matchRotationOfParent, Root);
-                        Root.DiscardItemFromEnemy();
-                        isParented = false;
-                        firstPikminG = null!;
-                        return;
+                        Vector3 hitPoint;
+                        NetworkObject physicsRegionOfDroppedObject = GetPhysicsRegionOfDroppedObject(firstPikminG, out hitPoint);
+                        if (physicsRegionOfDroppedObject != null)
+                        {
+                            placePosition = hitPoint;
+                            parentObjectTo = physicsRegionOfDroppedObject;
+                            matchRotationOfParent = false;
+                            PlaceGrabbableObject(parentObjectTo.transform, placePosition, matchRotationOfParent, Root);
+                            Root.DiscardItemFromEnemy();
+                            isParented = false;
+                            firstPikminG = null!;
+                            return;
+                        }
                     }
-                }
-                if (firstPikminG != null && firstPikminG.IsInShip)
-                {
-                    //Parent To Ship
-                    Root.transform.SetParent(StartOfRound.Instance.elevatorTransform, worldPositionStays: true);
-                }
-                else if (firstPikminG != null && firstPikminG.IsOnElevator)
-                {
-                    //Parent To Elevator
-                    Root.transform.SetParent(RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint, worldPositionStays: true);
+                    if (firstPikminG != null && firstPikminG.IsInShip)
+                    {
+                        //Parent To Ship
+                        Root.transform.SetParent(StartOfRound.Instance.elevatorTransform, worldPositionStays: true);
+                    }
+                    else if (firstPikminG != null && firstPikminG.IsOnElevator)
+                    {
+                        //Parent To Elevator
+                        Root.transform.SetParent(RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint, worldPositionStays: true);
+                    }
+                    else
+                    {
+                        //Parent To Root/Prop Container
+                        if (StartOfRound.Instance.propsContainer == null)
+                        {
+                            Root.transform.SetParent(null, worldPositionStays: true);
+                        }
+                        else
+                        {
+                            Root.transform.SetParent(StartOfRound.Instance.propsContainer, worldPositionStays: true);
+                        }
+                    }
                 }
                 else
                 {
@@ -540,8 +566,16 @@ namespace LethalMin
                 }
                 Root.EnablePhysics(enable: true);
                 Root.fallTime = 0f;
-                Root.startFallingPosition = Root.transform.parent.InverseTransformPoint(ObjectPosition);
-                Root.targetFloorPosition = Root.transform.parent.InverseTransformPoint(targetFloorPosition);
+                if (Root.transform.parent != null)
+                {
+                    Root.startFallingPosition = Root.transform.parent.InverseTransformPoint(ObjectPosition);
+                    Root.targetFloorPosition = Root.transform.parent.InverseTransformPoint(targetFloorPosition);
+                }
+                else
+                {
+                    Root.startFallingPosition = Root.transform.InverseTransformPoint(ObjectPosition);
+                    Root.targetFloorPosition = Root.transform.InverseTransformPoint(targetFloorPosition);
+                }
                 Root.floorYRot = -1;
                 Root.transform.localScale = Root.originalScale;
                 Root.DiscardItemFromEnemy();
@@ -845,8 +879,111 @@ namespace LethalMin
             return speed;
         }
         #endregion
+        public Onion TargetOnion;
+        public AnimatedOnion TargetAnimatedOnion;
+        public PikminType TargetType;
+        [ClientRpc]
+        public void SuckIntoOnionClientRpc()
+        {
+            if (TargetOnion == null)
+            {
+                LethalMin.Logger.LogWarning("Target Onion is null");
+                return;
+            }
+            if (TargetOnion.GetComponent<AnimatedOnion>() == null)
+            {
+                LethalMin.Logger.LogWarning("Target Onion is not an Animated Onion");
+                return;
+            }
+            Root.enabled = false; // Disable the root object
+            TargetAnimatedOnion = TargetOnion.GetComponent<AnimatedOnion>();
+            //Remove any and all Pikmin
+            if (IsServer && PikminOnItemList.Count > 0)
+            {
+                HandleArrivedClientRpc();
+                RemoveAllPikminAndUnparent();
+            }
 
+            // Create an overlay material
+            Material glowMaterial = new Material(Shader.Find("HDRP/Unlit"));
+            glowMaterial.SetColor("_UnlitColor", Color.white);
 
+            // Add overlay meshes
+            foreach (MeshRenderer renderer in Root.GetComponentsInChildren<MeshRenderer>())
+            {
+                GameObject overlay = new GameObject("GlowOverlay");
+                overlay.transform.position = renderer.transform.position;
+                overlay.transform.rotation = renderer.transform.rotation;
+                overlay.transform.SetParent(renderer.transform, true);
+
+                MeshFilter overlayMesh = overlay.AddComponent<MeshFilter>();
+                overlayMesh.sharedMesh = renderer.GetComponent<MeshFilter>().sharedMesh;
+
+                MeshRenderer overlayRenderer = overlay.AddComponent<MeshRenderer>();
+                overlayRenderer.material = glowMaterial;
+                overlayRenderer.material.color = new Color(1, 1, 1, 0); // Start transparent
+            }
+            TargetAnimatedOnion.DoVacumeClientRpc();
+            StartCoroutine(DoGlowAnimationPart());
+            StartCoroutine(DoShakeAnimationPart());
+            StartCoroutine(DoScaleAndMoveAnimationPart());
+        }
+
+        public IEnumerator DoGlowAnimationPart()
+        {
+            float duration = 1.0f;
+            float elapsed = 0;
+
+            // Get all overlay renderers
+            MeshRenderer[] overlays = Root.GetComponentsInChildren<MeshRenderer>()
+                .Where(r => r.gameObject.name == "GlowOverlay")
+                .ToArray();
+
+            // Fade in glow
+            while (elapsed < duration)
+            {
+                float alpha = Mathf.Lerp(0, 0.5f, elapsed / duration);
+
+                foreach (MeshRenderer overlay in overlays)
+                {
+                    Color color = overlay.material.color;
+                    overlay.material.color = new Color(color.r, color.g, color.b, alpha);
+                }
+
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+        }
+        public IEnumerator DoShakeAnimationPart()
+        {
+            //Shake the item rotaion wise
+            for (int i = 0; i < 100; i++)
+            {
+                Root.transform.localEulerAngles = new Vector3(
+                    Mathf.Sin(Time.time * 100) * 5,
+                    Mathf.Sin(Time.time * 100) * 5,
+                    Mathf.Sin(Time.time * 100) * 5
+                );
+                yield return new WaitForSeconds(0.02f);
+            }
+        }
+        public IEnumerator DoScaleAndMoveAnimationPart()
+        {
+            yield return new WaitForSeconds(0.5f);
+            // Move the item up and scale it down
+            for (int i = 0; i < 100; i++)
+            {
+                Root.transform.position = Vector3.Lerp(Root.transform.position, TargetAnimatedOnion.SucPoint.position, i / 100f);
+                //Root.transform.localScale = Vector3.Lerp(Root.transform.localScale, Vector3.zero, i / 100f);
+                yield return new WaitForSeconds(0.02f);
+            }
+            //Destroy the object
+            if (IsServer)
+            {
+                TargetOnion.AddToTypesToSpawnServerRpc(TargetType.PikminTypeID);
+                //Root.NetworkObject.Despawn(true);
+            }
+        }
 
     }
 }

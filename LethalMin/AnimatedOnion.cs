@@ -4,6 +4,7 @@ using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 
 namespace LethalMin
 {
@@ -13,7 +14,7 @@ namespace LethalMin
         public GameObject RealMesh, FunniMesh;
         public GameObject Beam;
         public bool FunniMode = false;
-
+        private AudioSource Audio;
         private Animator onionAnimator;
 
         // Methods
@@ -49,6 +50,9 @@ namespace LethalMin
             RealMesh = transform.Find("mesh/RealMesh").gameObject;
             FunniMesh = transform.Find("mesh/TempMesh").gameObject;
             AnimPos = transform.Find("PikminAnimPos");
+            SucPoint = transform.Find("mesh/SK_stg_Onyon/ObjectSucPoint");
+            SpiPoint = transform.Find("mesh/SK_stg_Onyon/SproutSpiPoint");
+            Audio = transform.Find("Sound").GetComponent<AudioSource>();
             transform.Find("mesh").transform.rotation = Quaternion.Euler(0, OnionRandom.Next(360), 0);
         }
 
@@ -127,7 +131,7 @@ namespace LethalMin
             {
                 OnionTexture = type.OnionTexture;
             }
-            
+
             if (onionMaterial != null)
             {
                 onionRenderer.material = onionMaterial;
@@ -204,13 +208,15 @@ namespace LethalMin
             transform.Find("mesh/SK_stg_Onyon/root/S_j000/S_j001/S_j030/MapDot").GetComponent<Renderer>().material.color = Color.white;
             transform.Find("mesh/SK_stg_Onyon/root/S_j000/S_j001/S_j030/MapDot").GetComponent<Renderer>().material.SetTexture("_UnlitColorMap", gradient);
         }
-
+        bool IsDoingSpawning = false;
         public override void LateUpdate()
         {
             base.LateUpdate();
             UpdateMeshVisibility();
             CheckForShipLeaving();
         }
+
+        //
 
         private void UpdateMeshVisibility()
         {
@@ -229,5 +235,73 @@ namespace LethalMin
                 StartCoroutine(HideBeam());
             }
         }
+
+        public override void SpawnPikmin(PikminType pikminType)
+        {
+            base.SpawnPikmin(pikminType);
+
+            Vector3 SpawnPos = Vector3.zero;
+
+            float spawnX = Random.Range(-8f, 8f);
+            float spawnZ = Random.Range(-8f, 8f);
+
+            if(spawnX <= 0)
+            {
+                Mathf.Clamp(spawnX, -2, -8);
+            }
+            else
+            {
+                Mathf.Clamp(spawnX, 2, 8);
+            }
+            if (spawnZ <= 0)
+            {
+                Mathf.Clamp(spawnZ, -2, -8);
+            }
+            else
+            {
+                Mathf.Clamp(spawnZ, 2, 8);
+            }
+
+            SpawnPos = new Vector3(spawnX, SpiPoint.position.y, spawnZ);
+
+            GameObject SproutInstance2 = Instantiate(LethalMin.sproutPrefab, SpawnPos, Quaternion.identity);
+            Sprout SproteScript2 = SproutInstance2.GetComponent<Sprout>();
+
+            SproteScript2.NetworkObject.Spawn();
+            SproteScript2.InitalizeTypeClientRpc(pikminType.PikminTypeID);
+            DoSpitClientRpc();
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public override void AddToTypesToSpawnServerRpc(int TypeID)
+        {
+            base.AddToTypesToSpawnServerRpc(TypeID);
+
+            DoSuctionClientRpc();
+        }
+
+        [ClientRpc]
+        public void DoVacumeClientRpc()
+        {
+            Audio.PlayOneShot(LethalMin.OnionVac);
+            onionAnimator.SetBool("Inhaleing", true);
+        }
+
+
+        [ClientRpc]
+        public void DoSuctionClientRpc()
+        {
+            Audio.PlayOneShot(LethalMin.OnionSuc);
+            onionAnimator.SetBool("Inhaleing", false);
+            onionAnimator.SetTrigger("Inhaled");
+        }
+
+        [ClientRpc]
+        public void DoSpitClientRpc()
+        {
+            Audio.PlayOneShot(LethalMin.OnionSpi);
+            onionAnimator.SetTrigger("Exhaled");
+        }
+
     }
 }

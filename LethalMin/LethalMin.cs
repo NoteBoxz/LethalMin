@@ -657,7 +657,7 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new TextInputFieldConfigItem(AttackBlackListConfig, false));
             LethalConfigManager.AddConfigItem(new TextInputFieldConfigItem(PickupBlacklistConfig, false));
 
-            
+
             // Puffmin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(TurnToNormalOnDeath, false));
 
@@ -1090,8 +1090,8 @@ namespace LethalMin
         public static AudioClip LiftSFX, DeadSFX, NoticeSFX, ThrowSFX, HoldSFX;
         public static Dictionary<OnionType, int> PreviousRoundPikminCounts = new Dictionary<OnionType, int>();
         public static Material lineMaterial;
-        public static AudioClip WhistleSFX, DissSFX, PlayerPluckSound, PlayerPluckSound2,
-        OnionMeunOpen, OnionMeunClose, PikAdd, PikSub, PurpSlam, PuffHit;
+        public static AudioClip WhistleSFX, DissSFX, PlayerPluckSound, PlayerPluckSound2, PurpSlam, PuffHit;
+        public static AudioClip OnionMeunOpen, OnionMeunClose, PikAdd, PikSub, OnionVac, OnionSuc, OnionSpi;
         public static AudioClip[] PlayerThrowSound, RealHitSFX;
         public static GameObject PikminObjectPrefab, OnionPrefab, OnionItemPrefab, leaderManagerPrefab,
          WhistlePrefab, PmanPrefab, ManeaterScriptContainer, IdelGlowPrefab, EaterBehavior, NoticeZone;
@@ -1102,6 +1102,14 @@ namespace LethalMin
 
         private void LoadPikminAssets()
         {
+
+            OnionMeunOpen = AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Onion/Audio/UI_PikOnyonMenu_Open.wav");
+            OnionMeunClose = AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Onion/Audio/UI_PikOnyonMenu_Exit.wav");
+            //AssetLoader.LoadAsset<AudioClip>("");
+            //AssetLoader.LoadAsset<AudioClip>("");
+            OnionVac = AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Onion/Audio/Onyon_PelletVacuum.wav");
+            OnionSuc = AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Onion/Audio/Onyon_PelletVacuumFinish.wav");
+            OnionSpi = AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Pikmin/Audio/Com/Pikmin_BornSeed.wav");
 
             // Helper method to load audio clips
             AudioClip[] LoadAudioSet(string basePath, int count)

@@ -24,6 +24,10 @@ namespace LethalMin
 
         public Dictionary<PikminAI, PikminType> PikminInField;
         public bool HasDecidedToLeave;
+        public Transform SucPoint;
+        public Transform SpiPoint;
+        public List<PikminType> TypesToSpawn;
+        public float SpawnTimer;
 
         public virtual void Start()
         {
@@ -68,6 +72,10 @@ namespace LethalMin
         {
             return pikminInOnion.Count;
         }
+        public virtual int GetPikminCountByType(PikminType pikminType)
+        {
+            return pikminInOnion.Count(p => p.PikminTypeID == pikminType.PikminTypeID);
+        }
 
         [ServerRpc(RequireOwnership = false)]
         public void SyncPikminListServerRpc(OnionPikmin[] pikminArray)
@@ -103,9 +111,43 @@ namespace LethalMin
             }
         }
 
+        bool DoingSpawning = false;
         public virtual void LateUpdate()
         {
-            // Base implementation - can be overridden in derived classes
+            if (TypesToSpawn.Count > 0)
+            {
+                SpawnTimer -= Time.deltaTime;
+                if (SpawnTimer <= 0 && !DoingSpawning)
+                {
+                    StartCoroutine(DoSpawnPikmin());
+                }
+            }
+        }
+        IEnumerator DoSpawnPikmin()
+        {
+            DoingSpawning = true;
+            int Number = 0;
+            for (int i = 0; i < TypesToSpawn.Count; i++)
+            {
+                SpawnPikmin(TypesToSpawn[0]);
+                TypesToSpawn.RemoveAt(0);
+                Number++;
+                if (Number >= 2)
+                {
+                    yield return new WaitForSeconds(0.1f);
+                    Number = 0;
+                }
+            }
+            DoingSpawning = false;
+        }
+        public virtual void SpawnPikmin(PikminType type)
+        {
+        }
+        [ServerRpc(RequireOwnership = false)]
+        public virtual void AddToTypesToSpawnServerRpc(int TypeID)
+        {
+            SpawnTimer = 1;
+            TypesToSpawn.Add(LethalMin.GetPikminTypeById(TypeID));
         }
         // Update the CreatePikminServerRpc method to handle multiple Pikmin types
         [ServerRpc(RequireOwnership = false)]
@@ -187,7 +229,7 @@ namespace LethalMin
                     pikminRefs.Add(new NetworkObjectReference(pikminNetObj));
                 }
             }
-            
+
             if (LeaderRef.TryGet(out NetworkObject leaderNetObj))
             {
                 PlayerControllerB leader = leaderNetObj.GetComponent<PlayerControllerB>();

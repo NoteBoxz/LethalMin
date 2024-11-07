@@ -430,7 +430,7 @@ namespace LethalMin
                 removeAllPikminAction.Disable();
                 removeAllPikminAction.Dispose();
             }
-            if (noticeZone != null && IsServer)
+            if (IsServer && noticeZone != null && noticeZone.NetworkObject != null)
             {
                 noticeZone.NetworkObject.Despawn(true);
             }

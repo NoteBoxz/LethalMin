@@ -304,6 +304,7 @@ namespace LethalMin
             }
             mainPanel.SetActive(true);
             UIAnim.Play("UIopen");
+            GetComponent<AudioSource>().PlayOneShot(LethalMin.OnionMeunOpen);
             isMenuOpen = true;
             SetupTypeSlots(curonion.type);
             if (onion.type.TypesCanHold.Length == 1)
@@ -323,6 +324,7 @@ namespace LethalMin
                 StopCoroutine(WaitAnimTimer);
             }
             UIAnim.Play("UIClose");
+            GetComponent<AudioSource>().PlayOneShot(LethalMin.OnionMeunClose);
             WaitAnimTimer = StartCoroutine(DisableMeun());
             isMenuOpen = false;
             Cursor.lockState = CursorLockMode.Locked;

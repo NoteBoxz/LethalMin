@@ -124,6 +124,13 @@ namespace LethalMin
                 StartCoroutine(SpawnOnions());
                 StartCoroutine(Spawn1());
                 StartCoroutine(Spawn2());
+                RefreshPikminItemsInMapList();
+                RefreshNonPikminEnemiesList();
+                RefreshPuffminList();
+                RefreshPikminList();
+                RefreshOnionsList();
+                RefreshCarsList();
+                RefreshLocks();
             }
             else if (LethalMin.CanWalkAtCompany())
             {
@@ -1242,10 +1249,17 @@ namespace LethalMin
 
         public float ShipPickupRange = 20f;
         public float OnionPickupRange = 20f;
+        public List<GrabbableObject> ObjectsToDestroyOnLeave = new List<GrabbableObject>();
         public void HandlePikminWhenShipLeaving()
         {
             if (!IsServer) { return; }
-
+            foreach (var item in ObjectsToDestroyOnLeave)
+            {
+                if (item.isInElevator || item.isInShipRoom)
+                {
+                    Destroy(item);
+                }
+            }
             Vector3 shipPosition = StartOfRound.Instance.elevatorTransform.position;
             Onion[] onions = UnityEngine.Object.FindObjectsOfType<Onion>();
             PikminAI[] allPikmin = UnityEngine.Object.FindObjectsOfType<PikminAI>();
@@ -1836,7 +1850,7 @@ namespace LethalMin
 
             if (LethalMin.IsUsingModLib())
             {
-                for (int i = 1; i <= ezSaveData.OnionsCollected.Count; i++) // Assuming we're looking for up to 3 spawn points
+                for (int i = 1; i < ezSaveData.OnionsCollected.Count; i++) // Assuming we're looking for up to 3 spawn points
                 {
                     GameObject spawnPoint = GameObject.Find($"ONION_SPAWN_POINT_{i}");
                     if (spawnPoint != null)
@@ -1847,7 +1861,7 @@ namespace LethalMin
             }
             else
             {
-                for (int i = 1; i <= saveData.OnionsCollected.Count; i++) // Assuming we're looking for up to 3 spawn points
+                for (int i = 1; i < saveData.OnionsCollected.Count; i++) // Assuming we're looking for up to 3 spawn points
                 {
                     GameObject spawnPoint = GameObject.Find($"ONION_SPAWN_POINT_{i}");
                     if (spawnPoint != null)

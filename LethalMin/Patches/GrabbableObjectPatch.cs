@@ -21,8 +21,15 @@ namespace LethalMin.Patches
                 // Add a component to wait for the object to be spawned
                 __instance.gameObject.AddComponent<WaitForSpawn>().Initialize(__instance);
             }
-            if (LethalMin.IsDependencyLoaded("Entity378.sellbodies") &&
-                CleaningCompany.Plugin.instance.BodySpawns.Values.ToList().Contains(__instance.itemProperties))
+            if (LethalMin.IsDependencyLoaded("Entity378.sellbodies"))
+            {
+                DoSellBodiesCheck(__instance);
+            }
+        }
+
+        public static void DoSellBodiesCheck(GrabbableObject __instance)
+        {
+            if (CleaningCompany.Plugin.instance.BodySpawns.Values.ToList().Contains(__instance.itemProperties))
             {
                 if (__instance.IsSpawned)
                 {

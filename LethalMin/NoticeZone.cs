@@ -128,7 +128,7 @@ namespace LethalMin
                     LethalMin.Logger.LogDebug($"An error occurred while doing invalid checks for Pikmin in the whistle zone: " + e.ToString());
                 }
 
-                yield return new WaitForSeconds(0.01f);
+                yield return new WaitForSeconds(0.001f);
 
                 try
                 {
