@@ -1374,8 +1374,10 @@ namespace LethalMin
         {
             GameObject radiusObject = new GameObject($"Radius ({Radiuses.Count})");
             radiusObject.transform.position = position;
+            radiusObject.AddComponent<LineRenderer>();
             radiusObject.AddComponent<CircleRenderer>().radius = radius;
             Radiuses.Add(radiusObject);
+            LethalMin.Logger.LogInfo($"Created radius at {position} with radius {radius}");
         }
         public IEnumerator DespawnOnions()
         {

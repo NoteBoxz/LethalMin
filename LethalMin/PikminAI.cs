@@ -2661,15 +2661,19 @@ namespace LethalMin
 
             // Onion Target
             ItemTarget OnionTarget = new ItemTarget("Onion", Vector3.zero, 0);
-            if (targetItem.CanBeConvertedIntoSprouts && PikminManager._currentOnions.ToList().Count > 0 &&
-                isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
+            if (targetItem.CanBeConvertedIntoSprouts && 
+            isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" &&
+                PikminManager._currentOnions.Where(o => o.type.CanCreateSprouts).ToList().Count > 0)
             {
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion");
                 // Determine which onion the pikmin should go to.
                 Onion targetOnion = null;
                 PikminType majorityType = null;
                 PikminType minorityType = null;
+                PikminAI majorityTypeInstance = null;
+                PikminAI minorityTypeInstance = null;
                 Dictionary<PikminType, int> typeCounts = new Dictionary<PikminType, int>();
+                bool hasSelectedOinion = false;
 
                 // Count pikmin types on the carried item
                 foreach (var pikmin in targetItem.PikminOnItemList)
@@ -2686,28 +2690,32 @@ namespace LethalMin
                 {
                     majorityType = typeCounts.OrderByDescending(kv => kv.Value).First().Key;
                     minorityType = typeCounts.OrderBy(kv => kv.Value).First().Key;
+                    majorityTypeInstance =  targetItem.PikminOnItemList.FirstOrDefault(p => p.PminType == majorityType);
+                    minorityTypeInstance = targetItem.PikminOnItemList.FirstOrDefault(p => p.PminType == minorityType);
                 }
                 List<Onion> UseableOnions = PikminManager._currentOnions.Where(o => o.type.CanCreateSprouts).ToList();
                 // Case 1: Majority pikmin type's target onion
-                if (majorityType != null && majorityType.TargetOnion != null)
+                if (!hasSelectedOinion && targetOnion == null && majorityType != null && majorityType.TargetOnion != null)
                 {
-                    targetOnion = UseableOnions.FirstOrDefault(o => o.type == majorityType.TargetOnion);
+                    targetOnion = UseableOnions.FirstOrDefault(o => o == majorityTypeInstance?.TargetOnion);
                     targetItem.TargetType = majorityType;
                     targetItem.CurColor = majorityType.PikminColor;
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with majority {majorityType.ScientificName} pikmin: {targetOnion?.type}");
+                    hasSelectedOinion = true;
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with majority {majorityType.GetName()} pikmin: {targetOnion?.type.TypeName}");
                 }
 
                 // Case 2: Minority pikmin type's target onion
-                if (targetOnion == null && minorityType != null && minorityType.TargetOnion != null)
+                if (!hasSelectedOinion && targetOnion == null && minorityType != null && minorityType.TargetOnion != null)
                 {
-                    targetOnion = UseableOnions.FirstOrDefault(o => o.type == minorityType.TargetOnion);
+                    targetOnion = UseableOnions.FirstOrDefault(o => o == majorityTypeInstance?.TargetOnion);
                     targetItem.TargetType = minorityType;
                     targetItem.CurColor = minorityType.PikminColor;
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with minority pikmin: {targetOnion?.type}");
+                    hasSelectedOinion = true;
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with minority pikmin {minorityType.GetName()}: {targetOnion?.type}");
                 }
 
                 // Case 3: Onion that needs more pikmin the most
-                if (targetOnion == null)
+                if (!hasSelectedOinion && targetOnion == null)
                 {
                     int minPikminCount = int.MaxValue;
                     Onion onionwithmin = null;
@@ -2732,6 +2740,7 @@ namespace LethalMin
                         targetOnion = onionwithmin;
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with least pikmin: {targetOnion?.type}");
                     }
+                    hasSelectedOinion = true;
                     LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with least pikmin: {targetOnion?.type}");
                 }
 

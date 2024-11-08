@@ -468,8 +468,11 @@ namespace LethalMin
         IEnumerator HoldingThrowButtonFailSafe()
         {
             yield return new WaitForSeconds(1f);
-            LethalMin.Logger.LogWarning("HoldingThrowButtonFailSafe: Cancelling throw.");
-            IsWaitingForThrowResponce = false;
+            if (IsWaitingForThrowResponce)
+            {
+                LethalMin.Logger.LogWarning("HoldingThrowButtonFailSafe: Cancelling throw.");
+                IsWaitingForThrowResponce = false;
+            }
         }
         #endregion
 
