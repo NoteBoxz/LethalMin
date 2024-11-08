@@ -1268,8 +1268,14 @@ namespace LethalMin
             {
                 if (TargetOnion == null || IsLeftBehind)
                 {
-                    agent.SetDestination(new Vector3(randoVect.x, transform.position.y, randoVect.z));
-                    LethalMin.Logger.LogInfo($"{uniqueDebugId}: Moving to random position {randoVect}");
+                    Vector3 LeavingPos = Vector3.zero;
+                    NavMeshHit hit;
+                    if (NavMesh.SamplePosition(randoVect, out hit, float.MaxValue, NavMesh.AllAreas))
+                    {
+                        LeavingPos = hit.position;
+                    }
+                    agent.SetDestination(LeavingPos);
+                    LethalMin.Logger.LogInfo($"{uniqueDebugId}: Moving to random position {LeavingPos}");
                 }
                 else if (!IsLeftBehind)
                 {
@@ -2719,7 +2725,7 @@ namespace LethalMin
                             }
                         }
                     }
-                    if (onionwithmin != null && typeWithMin!= null)
+                    if (onionwithmin != null && typeWithMin != null)
                     {
                         targetItem.TargetType = typeWithMin;
                         targetItem.CurColor = typeWithMin.PikminColor;
