@@ -203,6 +203,12 @@ namespace LethalMin
         public int GrowStage; // 0 for leaf, 1 for bud, 2 for flower
         public int PikminTypeID; // Add this field
 
+        public OnionPikmin(int growStage, int pikminTypeId)
+        {
+            GrowStage = growStage;
+            PikminTypeID = pikminTypeId;
+        }
+
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref GrowStage);

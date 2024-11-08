@@ -249,6 +249,15 @@ namespace LethalMin
             {
                 return;
             }
+            
+            if (PikminManager.GetPikminEnemies().Count >= LethalMin.MaxMinValue)
+            {
+                pikminInOnion.Add(new OnionPikmin(0, pikminType.PikminTypeID));
+                DoSpitClientRpc();
+                LethalMin.Logger.LogWarning("Max Pikmin Reached");
+                return;
+            }
+
             // Define the circle parameters
             float radius = 8f;
             float angleStep = 30f;

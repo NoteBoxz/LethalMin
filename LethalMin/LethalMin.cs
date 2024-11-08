@@ -1086,7 +1086,7 @@ namespace LethalMin
         public static Sprite NoPikmin, UndefinedPikmin;
         public static Sprite DangerRanger, SaferWafer;
         public static GameObject Ghost, PikminAttackerNode;
-        public static AudioClip[] AttackSFX, BornSFX, ExitOnionSFX, EnterOnionSFX, ItemNoticeSFX, GhostSFX, CarrySFX, LostSFX, YaySFX;
+        public static AudioClip[] AttackSFX, BornSFX, ExitOnionSFX, EnterOnionSFX, ItemNoticeSFX, GhostSFX, CarrySFX, LostSFX, YaySFX,CoughSFXs;
         public static AudioClip LiftSFX, DeadSFX, NoticeSFX, ThrowSFX, HoldSFX;
         public static Dictionary<OnionType, int> PreviousRoundPikminCounts = new Dictionary<OnionType, int>();
         public static Material lineMaterial;
@@ -1098,10 +1098,11 @@ namespace LethalMin
         public static Mesh TwoSideOnion, ThreeSideOnion, FourSideOnion, FiveSideOnion, SixSideOnion, SevenSideOnion, EightSideOnion;
         public static Item OnionItem;
         public static AnimationClip PluckAnim;
-        public static GameObject PuffminPrefab, POMprefab,AnimSproutPrefab;
+        public static GameObject PuffminPrefab, POMprefab,AnimSproutPrefab,PosionPrefab;
 
         private void LoadPikminAssets()
         {
+            PosionPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/Particles/PikminGas.prefab");
             AnimSproutPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/AnimSprout.prefab");
             OnionMeunOpen = AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Onion/Audio/UI_PikOnyonMenu_Open.wav");
             OnionMeunClose = AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Onion/Audio/UI_PikOnyonMenu_Exit.wav");
@@ -1141,6 +1142,14 @@ namespace LethalMin
             CarrySFX = LoadAudioSet("Assets/LethalminAssets/Pikmin/Audio/RBY/PikminNormal_Voice_Transport_Hold", 6);
 
             LostSFX = LoadAudioSet("Assets/LethalminAssets/Pikmin/Audio/RBY/PikminNormal_Voice_GiveUp", 2);
+
+
+            CoughSFXs = new AudioClip[3]
+            {
+                AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Pikmin/Audio/p2aud/poison1.wav"),
+                AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Pikmin/Audio/p2aud/poison2.wav"),
+                AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Pikmin/Audio/p2aud/poison3.wav")
+            };
 
             // Load single-clip audio sets
             LiftSFX = LoadSingleAudioSet("Assets/LethalminAssets/Pikmin/Audio/RBY/PikminNormal_Voice_Push_Start_04");

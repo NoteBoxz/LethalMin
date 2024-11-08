@@ -1,18 +1,17 @@
 (0.2.x)
-Redo PikminOnItem system. (Done)
 
-Make onions produce sprouts. (Done)
-
-Add in Puffmin. (Done, Needs more testing)
+Add in poisoning. (Not Started)
 
 Redesinge the HUD (Not Started)
 
-Redesinge the Pikmin Container (Done)
-
 Make Unity Library mod. (Mostly Done)
 
+Add in Puffmin. (Done, Needs more testing)
+
+Redo PikminOnItem system. (Done)
+Make onions produce sprouts. (Done)
 Fix Left behind bug (Done)
-Add in poisoning. (Not Started)
+Redesinge the Pikmin Container (Done)
 
 Make Pikmin get stuck in hydrogear. (0.2.1)
 Fix buggy player animation. (0.2.1)

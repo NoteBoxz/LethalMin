@@ -52,11 +52,15 @@ namespace LethalMin
         [Tooltip("The sound the pikmin plays for compleating action")]
         public AudioClip[] YayVoiceLine = new AudioClip[0];
 
+        [Tooltip("the sound that plays when a pikmin is poisoned")]
+        public AudioClip[] CoughVoiceLine = new AudioClip[0];
+
         [Tooltip("the 'woosh' sound that plays when a pikmin is thrown, overridden by mod if left empty")]
         public AudioClip[] ThrowSFX = new AudioClip[0];
 
         [Tooltip("the hit sound that plays when a pikmin lands a hit on an enemy, overridden by mod if left empty")]
         public AudioClip[] HitSFX = new AudioClip[0];
+
 
         public bool FillEmptyWithDefault = false;
     }

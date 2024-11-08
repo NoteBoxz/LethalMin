@@ -253,6 +253,16 @@ namespace LethalMin
         bool IsCallingCLOSFI;
         GameObject NoticeColider;
         [SerializeField] private GameObject scanNode;
+        bool HasMultipliedSpeed;
+        Vector3 LeavingPos = Vector3.zero;
+        public bool Deacying;
+        public float DecayTimer;
+        bool CanBeWhistledOutOfPanic;
+        bool HasCalledMOI;
+        public bool IsTurningIntoPuffmin = false;
+        public bool ShouldDoLethalEscape;
+        public bool DeathBuffer;
+        public static List<GameObject> NonPikminEnemies = new List<GameObject>();
         #endregion
 
 
@@ -575,6 +585,10 @@ namespace LethalMin
                 {
                     PminType.soundPack.YayVoiceLine = LethalMin.YaySFX;
                 }
+                if (PminType.soundPack.CoughVoiceLine.Length == 0)
+                {
+                    PminType.soundPack.CoughVoiceLine = LethalMin.CoughSFXs;
+                }
             }
             if (PminType.soundPack?.ThrowSFX.Length == 0)
             {
@@ -651,6 +665,10 @@ namespace LethalMin
 
         }
         #endregion
+
+
+
+
 
 
         #region Core Update Logic
@@ -928,9 +946,114 @@ namespace LethalMin
                 OnHandleDrowningStateEnd.Invoke();
         }
 
+        public void EnterPanicState(bool CanBeWhistled, HazardType hazardType, bool IsLethal, float DeathTimer)
+        {
+            if (LethalMin.IsPikminResistantToHazard(PminType, hazardType) || IsDrowing)
+            {
+                return;
+            }
+            if (hazardType == HazardType.Poison)
+            {
+                string PGP = "";
+                if (string.IsNullOrEmpty(PminType.PikminGlowPath) && PminType.GrowthStagePaths.Length >= 0)
+                {
+                    PGP = PminType.GrowthStagePaths[0].RemoveAfterLastSlash();
+                }
+                else if (!string.IsNullOrEmpty(PminType.PikminGlowPath))
+                {
+                    PGP = PminType.PikminGlowPath;
+                }
+                if (PGP != null)
+                {
+                    GameObject poison = Instantiate(LethalMin.PosionPrefab, Mesh.transform.Find(PGP));
+                }
+            }
+            if (CanBeWhistled)
+            {
+                CanBeWhistledOutOfPanic = true;
+            }
+            if (IsLethal)
+            {
+                Deacying = true;
+                DecayTimer = DeathTimer;
+            }
+            if (currentBehaviourStateIndex == (int)PState.Airborn)
+            {
+                LandPikminClientRpc();
+            }
+            if (IsServer && targetItem != null)
+            {
+                ReleaseItemServerRpc();
+            }
+            if (IsServer && currentLeader != null)
+            {
+                currentLeader.RemovePikminServerRpc(new NetworkObjectReference(NetworkObject));
+                targetPlayer = null;
+                currentLeader = null;
+                currentLeaderNetworkObject = null;
+            }
+            if (EnemyDamager != null)
+            {
+                EnemyDamager.LatchOffServerRpc(this);
+                EnemyDamager = null;
+            }
+            UpdateAnimBoolClientRpc("IsPanicing", true);
+            EnemyAttacking = null;
+            UnSnapPikmin();
+            IsWhistled = false;
+            whistlingPlayer = null;
+            NoticeColider.name = "WhistleDetectionWhistle";
+            SwitchToBehaviourClientRpc((int)PState.Stuck);
+        }
         private void HandlePanicState()
         {
+            if (CanBeWhistledOutOfPanic && IsWhistled)
+            {
+                ExitPanicState();
+                return;
+            }
+            if (!HasCalledMOI)
+                StartCoroutine(MoveOnInterval());
+            ReqeustCoughSFXClientRpc();
+        }
 
+        IEnumerator MoveOnInterval()
+        {
+            HasCalledMOI = true;
+            yield return new WaitForSeconds(UnityEngine.Random.Range(0.5f, 2.5f));
+            agent.SetDestination(FindRandomNearbyPositionOnNavMesh(5));
+        }
+        public Vector3 FindRandomNearbyPositionOnNavMesh(float radius)
+        {
+            NavMeshHit hit;
+            Vector3 position = transform.position + new Vector3(UnityEngine.Random.Range(-radius, radius), transform.position.y, UnityEngine.Random.Range(-radius, radius));
+            if (NavMesh.SamplePosition(position, out hit, radius, NavMesh.AllAreas))
+            {
+                return hit.position;
+            }
+            return position;
+        }
+        public void ExitPanicState()
+        {
+            if (IsServer && targetItem != null)
+            {
+                ReleaseItemServerRpc();
+            }
+            if (IsServer && currentLeader != null)
+            {
+                currentLeader.RemovePikminServerRpc(new NetworkObjectReference(NetworkObject));
+                targetPlayer = null;
+                currentLeader = null;
+                currentLeaderNetworkObject = null;
+            }
+            drowningTimer = enemyRandom.Next(5, 10);
+            SwitchToBehaviourClientRpc((int)PState.Idle);
+            UpdateAnimBoolClientRpc("IsPanicing", false);
+            AssignLeader(whistlingPlayer);
+            DecayTimer = 5;
+            Deacying = false;
+            HasCalledMOI = false;
+            whistlingPlayer = null;
         }
 
         private void HandleWorkingState()
@@ -1120,6 +1243,7 @@ namespace LethalMin
                 return randomPoint;
             }
         }
+
         public override void Update()
         {
             base.Update();
@@ -1268,14 +1392,16 @@ namespace LethalMin
             {
                 if (TargetOnion == null || IsLeftBehind)
                 {
-                    Vector3 LeavingPos = Vector3.zero;
-                    NavMeshHit hit;
-                    if (NavMesh.SamplePosition(randoVect, out hit, float.MaxValue, NavMesh.AllAreas))
+                    if (LeavingPos == Vector3.zero)
                     {
-                        LeavingPos = hit.position;
+                        NavMeshHit hit;
+                        if (NavMesh.SamplePosition(randoVect, out hit, float.MaxValue, NavMesh.AllAreas))
+                        {
+                            LeavingPos = hit.position;
+                        }
+                        LethalMin.Logger.LogInfo($"{uniqueDebugId}: Moving to random position {LeavingPos}");
                     }
                     agent.SetDestination(LeavingPos);
-                    LethalMin.Logger.LogInfo($"{uniqueDebugId}: Moving to random position {LeavingPos}");
                 }
                 else if (!IsLeftBehind)
                 {
@@ -1360,6 +1486,18 @@ namespace LethalMin
                     DeathBuffer = true;
                     KillEnemyOnOwnerClient();
                 }
+            }
+
+            if (Deacying & DecayTimer >= 0)
+            {
+                DecayTimer -= Time.deltaTime;
+            }
+            else if (Deacying)
+            {
+                DecayTimer = 0;
+                DedTimer = 0;
+                DeathBuffer = true;
+                KillEnemyOnOwnerClient();
             }
 
 
@@ -1475,7 +1613,7 @@ namespace LethalMin
 
             scanNode.SetActive(LethalMin.ScanMin);
         }
-        bool HasMultipliedSpeed;
+
         #endregion
 
 
@@ -1647,7 +1785,7 @@ namespace LethalMin
             whistlingPlayer = null;
             IsWhistled = false;
         }
-        public bool IsTurningIntoPuffmin = false;
+
 
         public void TurnIntoPuffmin()
         {
@@ -2044,7 +2182,6 @@ namespace LethalMin
 
 
         #region Item Detection and Interaction
-        public bool ShouldDoLethalEscape;
 
         public static void RefreshPikminItemsInMapList()
         {
@@ -2661,7 +2798,7 @@ namespace LethalMin
 
             // Onion Target
             ItemTarget OnionTarget = new ItemTarget("Onion", Vector3.zero, 0);
-            if (targetItem.CanBeConvertedIntoSprouts && 
+            if (targetItem.CanBeConvertedIntoSprouts &&
             isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" &&
                 PikminManager._currentOnions.Where(o => o.type.CanCreateSprouts).ToList().Count > 0)
             {
@@ -2690,12 +2827,12 @@ namespace LethalMin
                 {
                     majorityType = typeCounts.OrderByDescending(kv => kv.Value).First().Key;
                     minorityType = typeCounts.OrderBy(kv => kv.Value).First().Key;
-                    majorityTypeInstance =  targetItem.PikminOnItemList.FirstOrDefault(p => p.PminType == majorityType);
+                    majorityTypeInstance = targetItem.PikminOnItemList.FirstOrDefault(p => p.PminType == majorityType);
                     minorityTypeInstance = targetItem.PikminOnItemList.FirstOrDefault(p => p.PminType == minorityType);
                 }
                 List<Onion> UseableOnions = PikminManager._currentOnions.Where(o => o.type.CanCreateSprouts).ToList();
                 // Case 1: Majority pikmin type's target onion
-                if (!hasSelectedOinion && targetOnion == null && majorityType != null && majorityType.TargetOnion != null)
+                if (!hasSelectedOinion && targetOnion == null && majorityType != null && majorityTypeInstance != null && majorityTypeInstance.TargetOnion != null)
                 {
                     targetOnion = UseableOnions.FirstOrDefault(o => o == majorityTypeInstance?.TargetOnion);
                     targetItem.TargetType = majorityType;
@@ -2705,7 +2842,7 @@ namespace LethalMin
                 }
 
                 // Case 2: Minority pikmin type's target onion
-                if (!hasSelectedOinion && targetOnion == null && minorityType != null && minorityType.TargetOnion != null)
+                if (!hasSelectedOinion && targetOnion == null && minorityType != null && minorityTypeInstance != null && minorityTypeInstance.TargetOnion != null)
                 {
                     targetOnion = UseableOnions.FirstOrDefault(o => o == majorityTypeInstance?.TargetOnion);
                     targetItem.TargetType = minorityType;
@@ -3390,6 +3527,79 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Force: {throwDirection * force}");
         }
 
+
+        [ClientRpc]
+        public void SetComponentsForAimingClientRpc(bool isAiming)
+        {
+            if (LethalMin.DebugMode)
+                LethalMin.Logger.LogInfo(isAiming);
+            if (isAiming)
+            {
+                isHeldOrThrown = true;
+                isHeld = true;
+                agent.updateRotation = false;
+                agent.updatePosition = false;
+                rb.isKinematic = true;
+                rb.useGravity = false;
+                rb.detectCollisions = false;
+                rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+                rb.interpolation = RigidbodyInterpolation.Interpolate;
+                rb.Sleep();
+                Pcollider.enabled = false;
+                if (LethalMin.DebugMode)
+                    LethalMin.Logger.LogInfo("Set Trigger");
+                SetTriggerClientRpc("Aim");
+                PlayAnimClientRpc("Hold");
+                ReqeustHoldSFXClientRpc();
+            }
+            else
+            {
+                isHeldOrThrown = true;
+                IsThrown = true;
+                isHeld = false;
+                agent.updateRotation = false;
+                agent.updatePosition = false;
+                rb.isKinematic = false;
+                rb.useGravity = true;
+                rb.detectCollisions = true;
+                rb.constraints = RigidbodyConstraints.None;
+                rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+                rb.interpolation = RigidbodyInterpolation.Interpolate;
+                rb.WakeUp();
+                Pcollider.enabled = true;
+            }
+        }
+
+        [ClientRpc]
+        public void StartRotationEasingClientRpc()
+        {
+            StartCoroutine(EaseXRotationToZero());
+        }
+
+        private IEnumerator EaseXRotationToZero()
+        {
+            float duration = 0.5f; // Adjust this value to change how long the easing takes
+            float elapsedTime = 0f;
+            Quaternion startRotation = transform.rotation;
+            Quaternion targetRotation = Quaternion.Euler(0f, startRotation.eulerAngles.y, startRotation.eulerAngles.z);
+
+            while (elapsedTime < duration)
+            {
+                elapsedTime += Time.deltaTime;
+                float t = Mathf.SmoothStep(0f, 1f, elapsedTime / duration);
+                transform.rotation = Quaternion.Slerp(startRotation, targetRotation, t);
+                yield return null;
+            }
+
+            transform.rotation = targetRotation;
+        }
+
+        #endregion
+
+
+
+
+        #region Synced Audio and Visuals
         [ClientRpc]
         public void ReqeustThrowSFXClientRpc()
         {
@@ -3593,6 +3803,19 @@ namespace LethalMin
             }
         }
 
+        [ClientRpc]
+        public void ReqeustCoughSFXClientRpc()
+        {
+            if (!HasInitalized) { return; }
+            if (PminType.soundPack == null)
+            {
+                PlaySFX(ref LethalMin.CoughSFXs);
+            }
+            else
+            {
+                PlaySFX(ref PminType.soundPack.CoughVoiceLine);
+            }
+        }
 
         public void PlaySFX(ref AudioClip[] Clips, bool PlayOnWalkie = true, bool AudibleToEnemies = false, float Volume = 1)
         {
@@ -3654,74 +3877,6 @@ namespace LethalMin
                 }
             }
         }
-
-
-        [ClientRpc]
-        public void SetComponentsForAimingClientRpc(bool isAiming)
-        {
-            if (LethalMin.DebugMode)
-                LethalMin.Logger.LogInfo(isAiming);
-            if (isAiming)
-            {
-                isHeldOrThrown = true;
-                isHeld = true;
-                agent.updateRotation = false;
-                agent.updatePosition = false;
-                rb.isKinematic = true;
-                rb.useGravity = false;
-                rb.detectCollisions = false;
-                rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
-                rb.interpolation = RigidbodyInterpolation.Interpolate;
-                rb.Sleep();
-                Pcollider.enabled = false;
-                if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo("Set Trigger");
-                SetTriggerClientRpc("Aim");
-                PlayAnimClientRpc("Hold");
-                ReqeustHoldSFXClientRpc();
-            }
-            else
-            {
-                isHeldOrThrown = true;
-                IsThrown = true;
-                isHeld = false;
-                agent.updateRotation = false;
-                agent.updatePosition = false;
-                rb.isKinematic = false;
-                rb.useGravity = true;
-                rb.detectCollisions = true;
-                rb.constraints = RigidbodyConstraints.None;
-                rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
-                rb.interpolation = RigidbodyInterpolation.Interpolate;
-                rb.WakeUp();
-                Pcollider.enabled = true;
-            }
-        }
-
-        [ClientRpc]
-        public void StartRotationEasingClientRpc()
-        {
-            StartCoroutine(EaseXRotationToZero());
-        }
-
-        private IEnumerator EaseXRotationToZero()
-        {
-            float duration = 0.5f; // Adjust this value to change how long the easing takes
-            float elapsedTime = 0f;
-            Quaternion startRotation = transform.rotation;
-            Quaternion targetRotation = Quaternion.Euler(0f, startRotation.eulerAngles.y, startRotation.eulerAngles.z);
-
-            while (elapsedTime < duration)
-            {
-                elapsedTime += Time.deltaTime;
-                float t = Mathf.SmoothStep(0f, 1f, elapsedTime / duration);
-                transform.rotation = Quaternion.Slerp(startRotation, targetRotation, t);
-                yield return null;
-            }
-
-            transform.rotation = targetRotation;
-        }
-
 
         #endregion
 
@@ -4268,7 +4423,7 @@ namespace LethalMin
             CanGrabItems = false;
             CanAttack = false;
         }
-        public bool DeathBuffer;
+
         public override void KillEnemy(bool destroy = false)
         {
             if (LethalMin.DebugMode)
@@ -4472,7 +4627,6 @@ namespace LethalMin
 
 
         #region Attacking
-        public static List<GameObject> NonPikminEnemies = new List<GameObject>();
 
         private void DetectNearbyEnemies()
         {
