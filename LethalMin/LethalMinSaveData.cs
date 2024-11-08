@@ -209,4 +209,23 @@ namespace LethalMin
             serializer.SerializeValue(ref PikminTypeID); // Serialize the PikminTypeID
         }
     }
+
+    [Serializable]
+    public struct SproutData : INetworkSerializable
+    {
+        public int GrowStage; // 0 for sprout, 1 for bud, 2 for flower
+        public int PikminTypeID; // Add this field
+        public float X, Y, Z; // Add this field
+        public string SceneName;
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref GrowStage);
+            serializer.SerializeValue(ref PikminTypeID); // Serialize the PikminTypeID
+            serializer.SerializeValue(ref X);
+            serializer.SerializeValue(ref Y);
+            serializer.SerializeValue(ref Z);
+            serializer.SerializeValue(ref SceneName);
+        }
+    }
 }
