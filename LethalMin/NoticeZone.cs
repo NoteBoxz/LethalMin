@@ -172,7 +172,8 @@ namespace LethalMin
                 else
                 {
                     if (pikminAI != null && !pikminAI.CannotEscape && !pikminAI.IsDying
-                     && pikminAI.currentBehaviourStateIndex == (int)PState.Idle)
+                     && pikminAI.currentBehaviourStateIndex == (int)PState.Idle
+                     && !LethalMin.IsPikminResistantToHazard(pikminAI.PminType, HazardType.Spore))
                     {
                         pikminAI.TurnIntoPuffmin(enemy);
                     }

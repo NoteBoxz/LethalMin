@@ -1,13 +1,15 @@
 (0.2.x)
 
-Add in poisoning. (Not Started)
-
 Redesinge the HUD (Not Started)
 
-Make Unity Library mod. (Mostly Done)
+Redo Routing System (Not Started)
+
+Make Library Scriptable Object Converter (Not Started)
 
 Add in Puffmin. (Done, Needs more testing)
 
+Make Unity Library Plugin. (Done)
+Add in poisoning. (Done)
 Redo PikminOnItem system. (Done)
 Make onions produce sprouts. (Done)
 Fix Left behind bug (Done)
@@ -17,3 +19,4 @@ Make Pikmin get stuck in hydrogear. (0.2.1)
 Fix buggy player animation. (0.2.1)
 Fix remenats issue. (0.2.1)
 Optimize Pikmin Script. (0.2.1)
+Add in late company support (0.2.1)

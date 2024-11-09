@@ -263,6 +263,8 @@ namespace LethalMin
         public bool ShouldDoLethalEscape;
         public bool DeathBuffer;
         public static List<GameObject> NonPikminEnemies = new List<GameObject>();
+        public GameObject CurParticleInstance;
+        public bool IsPoisoned;
         #endregion
 
 
@@ -506,8 +508,16 @@ namespace LethalMin
             {
                 Plants[i] = Mesh.transform.Find(PminType.GrowthStagePaths[i]).gameObject;
             }
-            LocalAnim = Mesh.transform.Find(PminType.AnimPath).GetComponent<Animator>();
-            Mesh.transform.Find(PminType.AnimPath).gameObject.AddComponent<PikminAnimEvents>().AI = this;
+            if (string.IsNullOrEmpty(PminType.AnimPath))
+            {
+                LocalAnim = Mesh.GetComponent<Animator>();
+
+            }
+            else
+            {
+                LocalAnim = Mesh.transform.Find(PminType.AnimPath).GetComponent<Animator>();
+            }
+            LocalAnim.gameObject.AddComponent<PikminAnimEvents>().AI = this;
             GetComponentInChildren<ScanNodeProperties>(true).headerText = $"{PminType.GetName()}";
 
             PlantSpeeds = new float[PminType.Speeds.Length];
@@ -948,25 +958,15 @@ namespace LethalMin
 
         public void EnterPanicState(bool CanBeWhistled, HazardType hazardType, bool IsLethal, float DeathTimer)
         {
+            NoticeColider.name = "NONE";
             if (LethalMin.IsPikminResistantToHazard(PminType, hazardType) || IsDrowing)
             {
                 return;
             }
             if (hazardType == HazardType.Poison)
             {
-                string PGP = "";
-                if (string.IsNullOrEmpty(PminType.PikminGlowPath) && PminType.GrowthStagePaths.Length >= 0)
-                {
-                    PGP = PminType.GrowthStagePaths[0].RemoveAfterLastSlash();
-                }
-                else if (!string.IsNullOrEmpty(PminType.PikminGlowPath))
-                {
-                    PGP = PminType.PikminGlowPath;
-                }
-                if (PGP != null)
-                {
-                    GameObject poison = Instantiate(LethalMin.PosionPrefab, Mesh.transform.Find(PGP));
-                }
+                IsPoisoned = true;
+                ShowPoisonClientRpc();
             }
             if (CanBeWhistled)
             {
@@ -1002,26 +1002,49 @@ namespace LethalMin
             UnSnapPikmin();
             IsWhistled = false;
             whistlingPlayer = null;
+            SwitchToBehaviourClientRpc((int)PState.Panic);
+            LocalAnim.speed = UnityEngine.Random.Range(1f, 2f);
             NoticeColider.name = "WhistleDetectionWhistle";
-            SwitchToBehaviourClientRpc((int)PState.Stuck);
         }
         private void HandlePanicState()
         {
+            NoticeColider.name = "WhistleDetectionWhistle";
             if (CanBeWhistledOutOfPanic && IsWhistled)
             {
                 ExitPanicState();
                 return;
             }
             if (!HasCalledMOI)
+            {
                 StartCoroutine(MoveOnInterval());
-            ReqeustCoughSFXClientRpc();
+                if (IsPoisoned)
+                    StartCoroutine(qeustCoughSFXCl());
+            }
+
+
+            agent.speed = 12;
+
         }
 
+        IEnumerator qeustCoughSFXCl()
+        {
+            ReqeustCoughSFXClientRpc();
+            if (currentBehaviourStateIndex != (int)PState.Panic)
+            {
+                yield break;
+            }
+            yield return new WaitForSeconds(UnityEngine.Random.Range(0.1f, 0.7f));
+        }
         IEnumerator MoveOnInterval()
         {
             HasCalledMOI = true;
-            yield return new WaitForSeconds(UnityEngine.Random.Range(0.5f, 2.5f));
-            agent.SetDestination(FindRandomNearbyPositionOnNavMesh(5));
+            agent.SetDestination(FindRandomNearbyPositionOnNavMesh(7));
+            if (currentBehaviourStateIndex != (int)PState.Panic)
+            {
+                HasCalledMOI = false;
+                yield break;
+            }
+            yield return new WaitForSeconds(UnityEngine.Random.Range(0.5f, 1.5f));
         }
         public Vector3 FindRandomNearbyPositionOnNavMesh(float radius)
         {
@@ -1052,8 +1075,40 @@ namespace LethalMin
             AssignLeader(whistlingPlayer);
             DecayTimer = 5;
             Deacying = false;
+            IsPoisoned = false;
             HasCalledMOI = false;
             whistlingPlayer = null;
+            agent.speed = PlantSpeeds[GrowStage];
+            LocalAnim.speed = 1;
+            HidePoisonClientRpc();
+        }
+
+        [ClientRpc]
+        public void HidePoisonClientRpc()
+        {
+            if (CurParticleInstance != null)
+            {
+                Destroy(CurParticleInstance);
+            }
+        }
+
+        [ClientRpc]
+        public void ShowPoisonClientRpc()
+        {
+            string PGP = "";
+            if (string.IsNullOrEmpty(PminType.PikminGlowPath) && PminType.GrowthStagePaths.Length >= 0)
+            {
+                PGP = PminType.GrowthStagePaths[0].RemoveAfterLastSlash();
+            }
+            else if (!string.IsNullOrEmpty(PminType.PikminGlowPath))
+            {
+                PGP = PminType.PikminGlowPath;
+            }
+            if (PGP != null && CurParticleInstance == null)
+            {
+                GameObject poison = Instantiate(LethalMin.PosionPrefab, Mesh.transform.Find(PGP));
+                CurParticleInstance = poison;
+            }
         }
 
         private void HandleWorkingState()
@@ -2543,7 +2598,7 @@ namespace LethalMin
                         if (LethalMin.DebugMode)
                             LethalMin.Logger.LogInfo($"({uniqueDebugId}) New closest enemy: {enemy.name} at distance {Mathf.Sqrt(distanceToEnemy)}");
                     }
-                    EnemyAIPatch.CreateItemNodeOnBody(enemy.GetComponent<EnemyAI>());
+                    PikminManager.Instance.CreateItemNodeOnBodyServerRpc(enemy.GetComponent<EnemyAI>().NetworkObject);
                 }
             }
 
@@ -2836,7 +2891,7 @@ namespace LethalMin
                 {
                     targetOnion = UseableOnions.FirstOrDefault(o => o == majorityTypeInstance?.TargetOnion);
                     targetItem.TargetType = majorityType;
-                    targetItem.CurColor = majorityType.PikminColor;
+                    targetItem.SetCurColorClientRpc(majorityType.PikminColor);
                     hasSelectedOinion = true;
                     LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with majority {majorityType.GetName()} pikmin: {targetOnion?.type.TypeName}");
                 }
@@ -2846,7 +2901,7 @@ namespace LethalMin
                 {
                     targetOnion = UseableOnions.FirstOrDefault(o => o == majorityTypeInstance?.TargetOnion);
                     targetItem.TargetType = minorityType;
-                    targetItem.CurColor = minorityType.PikminColor;
+                    targetItem.SetCurColorClientRpc(minorityType.PikminColor);
                     hasSelectedOinion = true;
                     LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with minority pikmin {minorityType.GetName()}: {targetOnion?.type}");
                 }
@@ -2873,7 +2928,7 @@ namespace LethalMin
                     if (onionwithmin != null && typeWithMin != null)
                     {
                         targetItem.TargetType = typeWithMin;
-                        targetItem.CurColor = typeWithMin.PikminColor;
+                        targetItem.SetCurColorClientRpc(typeWithMin.PikminColor);
                         targetOnion = onionwithmin;
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with least pikmin: {targetOnion?.type}");
                     }
@@ -2964,7 +3019,7 @@ namespace LethalMin
                     LethalMin.Logger.LogInfo($"({uniqueDebugId}) Selected target: {target.Name} at {target.GetPos()} with score of {target.Score}");
                     if (target.Name != "Onion")
                     {
-                        targetItem.CurColor = targetItem.basecolor;
+                        targetItem.SetCurColorClientRpc(targetItem.basecolor);
                     }
                     return;
                 }

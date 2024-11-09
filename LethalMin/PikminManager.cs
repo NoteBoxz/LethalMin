@@ -714,6 +714,87 @@ namespace LethalMin
             }
         }
 
+        private static ulong currentEnemy = 9999999;
+        [ServerRpc(RequireOwnership = false)]
+        public void CreateItemNodeOnBodyServerRpc(NetworkObjectReference EnemyRef)
+        {
+            if (LethalMin.IsDependencyLoaded("Entity378.sellbodies")) return;
+
+            EnemyAI __instance = null!;
+            
+            EnemyRef.TryGet(out NetworkObject enemyNetObj);
+            if (enemyNetObj != null)
+            {
+                __instance = enemyNetObj.GetComponent<EnemyAI>();
+            }
+
+            if (currentEnemy == __instance.NetworkObject.NetworkObjectId) return;
+            if (__instance.GetComponentInChildren<PlayerControllerB>()) return;
+
+            currentEnemy = __instance.NetworkObject.NetworkObjectId;
+
+            LethalMin.Logger.LogInfo("Creating item node on enemy body " + __instance.gameObject.name);
+
+            Item Iprops = new Item();
+            Iprops.restingRotation = __instance.transform.rotation.eulerAngles;
+
+            if (__instance.enemyType.canDie && EnemyAIPatch.HPDict.ContainsKey(__instance) && EnemyAIPatch.HPDict[__instance] > 0f)
+            {
+                Iprops.weight = EnemyAIPatch.HPDict[__instance] * 0.4f;
+            }
+            else
+            {
+                Iprops.weight = Mathf.Clamp((float)(__instance.enemyType.PowerLevel * 0.6), 1f, 5f);
+            }
+
+            PhysicsProp prop = __instance.gameObject.AddComponent<PhysicsProp>();
+            prop.itemProperties = Iprops;
+            prop.grabbable = false;
+            SyncBodyPropClientRpc(__instance.NetworkObject, Iprops.weight, Iprops.restingRotation);
+            PikminItem Pitem = EnemyAIPatch.CreatePikminItemForBody(prop);
+            SyncBodyItemNodeClientRpc(Pitem.NetworkObject);
+        }
+
+        [ClientRpc]
+        public void SyncBodyPropClientRpc(NetworkObjectReference EnemyRef, float Weight, Vector3 RestingRotation)
+        {
+            if (IsServer)
+                return;
+            EnemyAI __instance = null!;
+            EnemyRef.TryGet(out NetworkObject enemyNetObj);
+            if (enemyNetObj != null)
+            {
+                __instance = enemyNetObj.GetComponent<EnemyAI>();
+            }
+            currentEnemy = __instance.NetworkObject.NetworkObjectId;
+
+            LethalMin.Logger.LogInfo("Creating item node on enemy body on the client side " + __instance.gameObject.name);
+
+            Item Iprops = new Item();
+            Iprops.restingRotation = RestingRotation;
+
+            Iprops.weight = Weight;
+
+            PhysicsProp prop = __instance.gameObject.AddComponent<PhysicsProp>();
+            prop.itemProperties = Iprops;
+            prop.grabbable = false;
+        }
+
+        [ClientRpc]
+        public void SyncBodyItemNodeClientRpc(NetworkObjectReference PminRef)
+        {
+            if (IsServer)
+                return;
+            PikminItem pikminItem = null!;
+            PminRef.TryGet(out NetworkObject pminNetObj);
+            if (pminNetObj != null)
+            {
+                pikminItem = pminNetObj.GetComponent<PikminItem>();
+            }
+            pikminItem.CanBeConvertedIntoSprouts = true;
+            pikminItem.UsePikminAsParent = true;
+            pikminItem.DontParentToObjects = true;
+        }
         #endregion
 
         #region Player and Vehicle Interaction
