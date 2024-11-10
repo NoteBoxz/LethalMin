@@ -88,5 +88,34 @@ namespace LethalMin.Library
 
             pikminAI.SnapPikminToPosition(null!, false, true, KillTimer);
         }
+
+        public static void ApplyAffectToPikmin(GameObject pikmin, HazardType[] type, bool CanWhistle, float KillTimerMin, float KillTimerMax)
+        {
+            PikminAI pikminAI = null!;
+            Transform parent = pikmin.transform.parent;
+            if (parent != null)
+            {
+                pikminAI = parent.GetComponent<PikminAI>();
+            }
+            if (pikminAI == null)
+            {
+                pikminAI = pikmin.GetComponent<PikminAI>();
+            }
+            if (pikminAI == null)
+            {
+                Debug.LogError("(LETHALMIN_LIB_RECIVER): PikminAI not found on Pikmin when killing");
+                return;
+            }
+            foreach (var hazard in type)
+            {
+                if (LethalMin.IsPikminResistantToHazard(pikminAI.PminType, hazard))
+                {
+                    return;
+                }
+
+                pikminAI.EnterPanicState(true, hazard, CanWhistle, Random.Range(KillTimerMin, KillTimerMax));
+            }
+        }
     }
+
 }

@@ -48,6 +48,11 @@ namespace LethalMin.Patches
 
         public static PikminItem CreatePikminItem(GrabbableObject grabbableObject, bool overrideGrabbableCheck = false)
         {
+            if (grabbableObject == null)
+            {
+                LethalMin.Logger.LogWarning("GrabbableObject is null! When creating PikminItem");
+                return null!;
+            }
             if (!LethalMin.AllItemsToP && grabbableObject.IsServer && grabbableObject.grabbableToEnemies
             || LethalMin.AllItemsToP && grabbableObject.IsServer && grabbableObject.grabbable
             || overrideGrabbableCheck)
@@ -57,6 +62,10 @@ namespace LethalMin.Patches
                 PikminItem[] Pims = GameObject.FindObjectsOfType<PikminItem>();
                 foreach (var item in Pims)
                 {
+                    if (item == null)
+                    {
+                        continue;
+                    }
                     if (item.Root == grabbableObject)
                     {
                         LethalMin.Logger.LogWarning($"{grabbableObject.itemProperties.name} already has a pikmin node!");
@@ -71,6 +80,11 @@ namespace LethalMin.Patches
                     networkObject.Spawn();
                     PikminItem pikminItem = PikminObjectPrefabInstance.GetComponent<PikminItem>();
                     //pikminItem.Initialize(grabbableObject);
+                    if(grabbableObject.NetworkObject == null)
+                    {
+                        LethalMin.Logger.LogWarning($"NetworkObject component not found on GrabbableObject for {grabbableObject.name}");
+                        return null!;
+                    }
                     pikminItem.SetRootServerRpc(new NetworkObjectReference(grabbableObject.NetworkObject));
                     PikminObjectPrefabInstance.name = grabbableObject.name + "(PikminNode)";
                     PikminObjectPrefabInstance.transform.position = grabbableObject.transform.position;

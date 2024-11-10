@@ -28,7 +28,7 @@ namespace LethalMin
         public static PikminHUD pikminHUDInstance;
         private TMP_Text ThrowPrompt, LeftPrompt, RightPrompt;
         public GameObject WigglePrompt;
-        public CanvasGroup PromptcanvasGroup;
+        public CanvasGroup PromptcanvasGroup, CountGroup;
         public HudPresets CurrentHUDPreset = HudPresets.New;
 
         void Awake()
@@ -65,12 +65,13 @@ namespace LethalMin
             PikminInSquadRect = transform.Find("PikminCount/InSquad").GetComponent<RectTransform>();
             PikminInFieldRect = transform.Find("PikminCount/In Field").GetComponent<RectTransform>();
             PikminInExsistanceRect = transform.Find("PikminCount/In Exisistance").GetComponent<RectTransform>();
+            CountGroup = transform.Find("PikminCount").GetComponent<CanvasGroup>();
 
-            WigglePrompt = transform.Find("Prompts/Wiggle").gameObject;
-            PromptcanvasGroup = transform.Find("Prompts/Buttons").GetComponent<CanvasGroup>();
-            ThrowPrompt = transform.Find("Prompts/Buttons/ThrowPrompt").GetComponent<TMP_Text>();
-            LeftPrompt = transform.Find("Prompts/Buttons/SwitchL").GetComponent<TMP_Text>();
-            RightPrompt = transform.Find("Prompts/Buttons/SwitchR").GetComponent<TMP_Text>();
+            WigglePrompt = transform.Find("PikminSelected/Prompts/Wiggle").gameObject;
+            PromptcanvasGroup = transform.Find("PikminSelected/Prompts/Buttons").GetComponent<CanvasGroup>();
+            ThrowPrompt = transform.Find("PikminSelected/Prompts/Buttons/ThrowPrompt").GetComponent<TMP_Text>();
+            LeftPrompt = transform.Find("PikminSelected/Prompts/Buttons/SwitchL").GetComponent<TMP_Text>();
+            RightPrompt = transform.Find("PikminSelected/Prompts/Buttons/SwitchR").GetComponent<TMP_Text>();
 
             SetHudPresets(CurrentHUDPreset);
         }
@@ -107,7 +108,7 @@ namespace LethalMin
                     PikminInExsistanceRect.gameObject.SetActive(true);
 
                     LethalMin.PikminSelectedPosX = 8.4f;
-                    LethalMin.PikminSelectedPosY = -106.6f;
+                    LethalMin.PikminSelectedPosY = -90f;
                     LethalMin.PikminSelectedPosZ = -15.9f;
                     LethalMin.PikminSelectedRotX = 0f;
                     LethalMin.PikminSelectedRotY = 0f;
@@ -115,7 +116,7 @@ namespace LethalMin
                     LethalMin.PikminSelectedScale = 0.6f;
 
                     LethalMin.PikminCountPosX = 23.5f;
-                    LethalMin.PikminCountPosY = -204.9f;
+                    LethalMin.PikminCountPosY = -187f;
                     LethalMin.PikminCountPosZ = -47.4f;
                     LethalMin.PikminCountRotX = 0f;
                     LethalMin.PikminCountRotY = 0f;
@@ -165,7 +166,7 @@ namespace LethalMin
                     LethalMin.PikminCountRotY = 0f;
                     LethalMin.PikminCountRotZ = 0f;
                     LethalMin.PikminCountScale = 0.6f;
-                    
+
                     LethalMin.Logger.LogWarning("Invalid HUD preset selected, defaulting to new HUD.");
                     break;
             }
@@ -255,6 +256,25 @@ namespace LethalMin
             yield return new WaitForSeconds(2);
             StartCoroutine(HidePromptsRoutine());
         }
+        Coroutine CounterRoutine;
+        public void PingCounter()
+        {
+            if (CounterRoutine != null) { StopCoroutine(CounterRoutine); }
+            CounterRoutine = StartCoroutine(PingCounterRoutine());
+        }
+        public IEnumerator PingCounterRoutine()
+        {
+            CountGroup.alpha = 0.75f;
+            yield return new WaitForSeconds(1.5f);
+            float time = 0;
+            while (time < 1)
+            {
+                time += Time.deltaTime;
+                CountGroup.alpha = Mathf.Lerp(0.75f, 0.2f, time);
+                yield return null;
+            }
+            CounterRoutine = null!;
+        }
 
         public float UpdateInterval = 1f;
         private float timer = 0f;
@@ -284,6 +304,7 @@ namespace LethalMin
                 }
             }
         }
+        int LastSquadCount;
         public void UpdateHUD()
         {
             if (LeaderScript == null)
@@ -307,6 +328,11 @@ namespace LethalMin
                 PikminInSquad.text = LeaderScript.followingPikmin.Count.ToString();
                 PikminInField.text = PikminInFieldI.ToString();
                 PikminInExsistance.text = PikminInExistenceI.ToString();
+                if (PikminInExistenceI != LastSquadCount)
+                {
+                    LastSquadCount = PikminInExistenceI;
+                    PingCounter();
+                }
             }
 
             LeaderScript.UpdateAvailableTypes();

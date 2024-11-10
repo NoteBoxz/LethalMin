@@ -82,6 +82,15 @@ namespace LethalMin
                 return Points.Count;
             }
         }
+        public int AdvanceToNextPoint()
+        {
+            CurPathIndex++;
+            if (CurPathIndex >= TotalPointCount())
+            {
+                CurPathIndex = TotalPointCount() - 1;
+            }
+            return CurPathIndex;
+        }
         public (Vector3, bool) GetRoutePoint()
         {
             if (IsTransform)
@@ -116,6 +125,16 @@ namespace LethalMin
         {
             Transforms.Add(transform);
             this.IsOutside.Add(IsOutside);
+        }
+        public void AddPointToStart(Vector3 point, bool IsOutside)
+        {
+            Points.Insert(0, point);
+            this.IsOutside.Insert(0, IsOutside);
+        }
+        public void AddPointToStart(Transform transform, bool IsOutside)
+        {
+            Transforms.Insert(0, transform);
+            this.IsOutside.Insert(0, IsOutside);
         }
     }
 
@@ -3110,7 +3129,15 @@ namespace LethalMin
 
                 HasFoundCaryTarget = true;
                 targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
+                CurRoutes = PossibleRoutes;
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found route: {route.RouteName}");
+
+                if (CurRoutes.Count > 1 && CurRoutes[0].RouteName == "Onion" && !isOutside)
+                {
+                    CurRoutes[0].AddPointToStart(CurRoutes[1].GetRoutePoint().Item1, true);
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Added point {CurRoutes[1].GetRoutePoint().Item1} to onion route");
+                }
+
                 return;
             }
 
@@ -3118,6 +3145,7 @@ namespace LethalMin
             HasFoundCaryTarget = true;
             targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
             PossibleRoutes.Add(new ItemRoute("???"));
+            CurRoutes = PossibleRoutes;
 
             LethalMin.Logger.LogWarning($"({uniqueDebugId}) No pathable target found!");
         }
@@ -3226,16 +3254,28 @@ namespace LethalMin
         {
             void DoDrop()
             {
+                if (CurRoutes[0].CurPathIndex < CurRoutes[0].TotalPointCount())
+                {
+                    //Switch to the next point
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Switching to next point ");
+                    CurRoutes[0].AdvanceToNextPoint();
+                    if (CurRoutes[0].GetRoutePoint().Item2 == true && !isOutside)
+                    {
+                        if (CurRoutes[0].GetExitPoint() != null)
+                            DoLethalEscape(CurRoutes[0].GetExitPoint().Value);
+                        return;
+                    }
+                }
                 targetItem.HandleArrivedClientRpc();
                 targetItem.RemoveAllPikminAndUnparent();
                 CallingHandleItemCarying = false;
             }
             void DoLethalEscape(Vector3 escapePos)
             {
+                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Escaping to {escapePos}");
                 agent.Warp(escapePos);
                 transform2.Teleport(escapePos, Quaternion.identity, transform.localScale);
             }
-
 
 
             if (isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")

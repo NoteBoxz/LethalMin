@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Collections;
+using LethalMin.Library;
 
 namespace LethalMin
 {
@@ -73,6 +74,7 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo($"Loaded bundle: {bundleName}");
 
                 // Process the loaded bundle
+                ProcessLoadedLibBundle(request.assetBundle);
                 ProcessLoadedBundle(request.assetBundle);
             }
             else
@@ -81,6 +83,38 @@ namespace LethalMin
             }
         }
 
+        private void ProcessLoadedLibBundle(AssetBundle bundle)
+        {
+            bool IsValidLethalMinBundle = false;
+            // Load PikminTypes
+            LethalMinLibrary.PikminType[] pikminTypes = bundle.LoadAllAssets<LethalMinLibrary.PikminType>();
+            foreach (LethalMinLibrary.PikminType pikminType in pikminTypes)
+            {
+                LethalMin.RegisterPikminType(TypeConverter.Convert_Lib_PikminTypeToLmPikminType(pikminType));
+                IsValidLethalMinBundle = true;
+            }
+
+            // Load OnionTypes
+            LethalMinLibrary.OnionType[] onionTypes = bundle.LoadAllAssets<LethalMinLibrary.OnionType>();
+            foreach (LethalMinLibrary.OnionType onionType in onionTypes)
+            {
+                LethalMin.RegisterOnionType(TypeConverter.Convert_Lib_OnionTypeToLmOnionType(onionType));
+                IsValidLethalMinBundle = true;
+            }
+
+            // Load OnionFuseRules
+            LethalMinLibrary.OnionFuseRules[] fuseRules = bundle.LoadAllAssets<LethalMinLibrary.OnionFuseRules>();
+            foreach (LethalMinLibrary.OnionFuseRules fuseRule in fuseRules)
+            {
+                LethalMin.RegisterFuseRule(TypeConverter.Convert_Lib_OnionFuseRulesToLmOnionFuseRules(fuseRule));
+                IsValidLethalMinBundle = true;
+            }
+
+            if (IsValidLethalMinBundle == false)
+            {
+                LethalMin.Logger.LogWarning($"Bundle does not contain any valid LethalMin assets: {bundle.name}");
+            }
+        }
         private void ProcessLoadedBundle(AssetBundle bundle)
         {
             bool IsValidLethalMinBundle = false;
@@ -110,7 +144,7 @@ namespace LethalMin
 
             if (IsValidLethalMinBundle == false)
             {
-                LethalMin.Logger.LogWarning($"Bundle does not contain any valid LethalMin assets: {bundle.name}");
+                //LethalMin.Logger.LogWarning($"Bundle does not contain any valid LethalMin assets: {bundle.name}");
             }
         }
     }

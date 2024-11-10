@@ -1102,7 +1102,7 @@ namespace LethalMin
 
         private void LoadPikminAssets()
         {
-            PosionPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/Particles/PikminGas.prefab");
+            PosionPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/Particles/fixed FireGasPrefabs/PikminGas.prefab");
             AnimSproutPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/AnimSprout.prefab");
             OnionMeunOpen = AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Onion/Audio/UI_PikOnyonMenu_Open.wav");
             OnionMeunClose = AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Onion/Audio/UI_PikOnyonMenu_Exit.wav");
@@ -1381,6 +1381,7 @@ namespace LethalMin
 
             Loader = new GameObject().AddComponent<AssetBundleLoader>();
             Loader.name = "LethalMin's AssetBundleLoader";
+            DontDestroyOnLoad(Loader.gameObject);
         }
         public static void AddEventToFrame(int frame, string functionName2, AnimationClip animationClip)
         {
