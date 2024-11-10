@@ -13,10 +13,11 @@ namespace LethalMin.Library
         public static PikminType Convert_Lib_PikminTypeToLmPikminType(LethalMinLibrary.PikminType libType)
         {
             PikminType lmType = ScriptableObject.CreateInstance<PikminType>();
+            lmType.name = libType.name;
 
             FieldInfo[] libFields = typeof(LethalMinLibrary.PikminType).GetFields(BindingFlags.Public | BindingFlags.Instance);
             FieldInfo[] lmFields = typeof(PikminType).GetFields(BindingFlags.Public | BindingFlags.Instance);
-            LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converting LibPikminType with ({libFields.Length}) fields to LmPikminType with ({lmFields.Length}) fields");
+            LethalMin.Logger.LogDebug($"(LETHALMIN_CONVERTER) Converting LibPikminType with ({libFields.Length}) fields to LmPikminType with ({lmFields.Length}) fields");
             int ConvertedFieldsCount = 0;
 
             foreach (var libField in libFields)
@@ -29,15 +30,28 @@ namespace LethalMin.Library
                 {
                     object value = libField.GetValue(libType);
                     lmField.SetValue(lmType, value);
-                    LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converted {libField.Name} from Library to LethalMin");
+                    LethalMin.Logger.LogDebug($"(LETHALMIN_CONVERTER) Converted {libField.Name} from Library to LethalMin");
                     ConvertedFieldsCount++;
                 }
             }
-            LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converted {ConvertedFieldsCount} fields from LibPikminType with ({libFields.Length}) to LmPikminType with ({lmFields.Length})");
+            LethalMin.Logger.LogDebug($"(LETHALMIN_CONVERTER) Converted {ConvertedFieldsCount} fields from LibPikminType with ({libFields.Length}) to LmPikminType with ({lmFields.Length})");
 
             // Handle special cases
             lmType.HazardsResistantTo = EnumConverter.Convert_Lib_HazardToLmHazard(libType.HazardsResistantTo);
-            lmType.MeshRefernces = Convert_Lib_PikminMeshReferncesToLmPikminMeshRefernces(libType.MeshRefernces);
+
+            if (libType.soundPack != null)
+                lmType.soundPack = Convert_Lib_PikminSoundPackToLmPikminSoundPack(libType.soundPack);
+
+            if (lmType.MeshPrefab == null)
+            {
+                LethalMin.Logger.LogError($"(LETHALMIN_CONVERTER) MeshPrefab is null for {libType.name}");
+                return lmType;
+            }
+
+            PikminMeshRefernces meshRef = lmType.MeshPrefab.AddComponent<PikminMeshRefernces>();
+
+            CopyFields(libType.MeshRefernces, meshRef, "PikminMeshRefernces");
+            lmType.MeshRefernces = meshRef;
 
             return lmType;
         }
@@ -45,6 +59,7 @@ namespace LethalMin.Library
         public static PikminSoundPack Convert_Lib_PikminSoundPackToLmPikminSoundPack(LethalMinLibrary.PikminSoundPack libSoundPack)
         {
             PikminSoundPack lmSoundPack = ScriptableObject.CreateInstance<PikminSoundPack>();
+            lmSoundPack.name = libSoundPack.name;
             CopyFields(libSoundPack, lmSoundPack, "PikminSoundPack");
             return lmSoundPack;
         }
@@ -52,11 +67,13 @@ namespace LethalMin.Library
         public static OnionType Convert_Lib_OnionTypeToLmOnionType(LethalMinLibrary.OnionType libOnionType)
         {
             OnionType lmOnionType = ScriptableObject.CreateInstance<OnionType>();
+            lmOnionType.name = libOnionType.name;
             CopyFields(libOnionType, lmOnionType, "OnionType");
 
             // Handle special cases
             lmOnionType.TypesCanHold = libOnionType.TypesCanHold.Select(Convert_Lib_PikminTypeToLmPikminType).ToArray();
-            lmOnionType.FuesingRules = Convert_Lib_OnionFuseRulesToLmOnionFuseRules(libOnionType.FuesingRules);
+            //if (libOnionType.FuesingRules != null)
+            //    lmOnionType.FuesingRules = Convert_Lib_OnionFuseRulesToLmOnionFuseRules(libOnionType.FuesingRules);
 
             return lmOnionType;
         }
@@ -64,6 +81,7 @@ namespace LethalMin.Library
         public static OnionFuseRules Convert_Lib_OnionFuseRulesToLmOnionFuseRules(LethalMinLibrary.OnionFuseRules libFuseRules)
         {
             OnionFuseRules lmFuseRules = ScriptableObject.CreateInstance<OnionFuseRules>();
+            lmFuseRules.name = libFuseRules.name;
             CopyFields(libFuseRules, lmFuseRules, "OnionFuseRules");
 
             // Handle special cases
@@ -93,12 +111,12 @@ namespace LethalMin.Library
                 {
                     object value = sourceField.GetValue(source);
                     destField.SetValue(destination, value);
-                    LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converted {sourceField.Name} from {typeof(TSource).Name.ToLower()} to {typeof(TDestination).Name.ToLower()}");
+                    LethalMin.Logger.LogDebug($"(LETHALMIN_CONVERTER) Converted {sourceField.Name} from {typeof(TSource).Name.ToLower()} to {typeof(TDestination).Name.ToLower()}");
                     convertedFieldsCount++;
                 }
             }
 
-            LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converted {convertedFieldsCount} fields from Lib{typeName} with ({sourceFields.Length}) to Lm{typeName} with ({destFields.Length})");
+            LethalMin.Logger.LogDebug($"(LETHALMIN_CONVERTER) Converted {convertedFieldsCount} fields from Lib{typeName} with ({sourceFields.Length}) to Lm{typeName} with ({destFields.Length})");
         }
     }
 
@@ -107,7 +125,7 @@ namespace LethalMin.Library
         public static HazardType Convert_Lib_HazardToLmHazard(LibHazardType libHazardType)
         {
             HazardType hazardType = Enum.TryParse<HazardType>(libHazardType.ToString(), out var result) ? result : HazardType.Lethal;
-            LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converted {libHazardType} to {hazardType}");
+            LethalMin.Logger.LogDebug($"(LETHALMIN_CONVERTER) Converted {libHazardType} to {hazardType}");
             return hazardType;
         }
 
@@ -119,7 +137,7 @@ namespace LethalMin.Library
         public static LibHazardType Convert_LethalMin_HazardToLibHazard(HazardType hazardType)
         {
             LibHazardType libHazardType = Enum.TryParse<LibHazardType>(hazardType.ToString(), out var result) ? result : LibHazardType.Lethal;
-            LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converted {hazardType} to {libHazardType}");
+            LethalMin.Logger.LogDebug($"(LETHALMIN_CONVERTER) Converted {hazardType} to {libHazardType}");
             return libHazardType;
         }
 

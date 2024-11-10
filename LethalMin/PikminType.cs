@@ -12,6 +12,10 @@ namespace LethalMin
         + "\n This is not recomended, as it requires alot more unnessasy set up."
         +"\n So I recommend using the LethalMinLibrary mod to create custom Pikmin Types instead!")]
         [Header("Distinguishing Information")]
+
+        [Tooltip("The pikmin's name")]
+        public string PikminName = "";
+
         [Tooltip("The pikmin's color")]
         public Color PikminColor;
 
@@ -53,14 +57,6 @@ namespace LethalMin
 
         [HideInInspector]
         public PikminMeshRefernces MeshRefernces = null!;
-
-        [Tooltip("The pikmin's name affix. (i.e. (RTypeName: Red) (NameAffix: Pikmin) = 'Red Pikmin') ")]
-        public string NameAffix = " Pikmin";
-
-
-        [Tooltip("The name of the pikmin's type.")]
-        public string TypeName = "";
-
 
         [Header("Pikmin Stats")]
         
@@ -162,10 +158,6 @@ namespace LethalMin
         [TextArea(2, 20)]
         public string beastiarySegment = "";
 
-        public string GetName()
-        {
-            return TypeName + NameAffix;
-        }
         public float GetDamage()
         {
             if (NormalizeDamage)

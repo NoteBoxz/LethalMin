@@ -348,7 +348,7 @@ namespace LethalMin
                 return null!;
             }
 
-            LethalMin.Logger.LogInfo($"Finding nearest Pikmin of type {type.GetName()}... (Total: {followingPikmin.Count})");
+            LethalMin.Logger.LogInfo($"Finding nearest Pikmin of type {type.PikminName}... (Total: {followingPikmin.Count})");
             foreach (PikminAI pikmin in followingPikmin)
             {
                 if (pikmin == null || pikmin.PminType == null)
@@ -370,7 +370,7 @@ namespace LethalMin
                     }
                 }
             }
-            LethalMin.Logger.LogInfo($"Nearest Pikmin of type {type.GetName()}: {nearest.name} ({nearestDistance:F2} units)");
+            LethalMin.Logger.LogInfo($"Nearest Pikmin of type {type.PikminName}: {nearest.name} ({nearestDistance:F2} units)");
             return nearest;
         }
 

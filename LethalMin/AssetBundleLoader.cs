@@ -88,7 +88,8 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo($"Loaded bundle: {bundleName}");
 
                 // Process the loaded bundle
-                ProcessLoadedLibBundle(request.assetBundle);
+                if (LethalMin.IsDependencyLoaded("NoteBoxz.LethalMinLibrary"))
+                    ProcessLoadedLibBundle(request.assetBundle);
                 ProcessLoadedBundle(request.assetBundle);
             }
             else

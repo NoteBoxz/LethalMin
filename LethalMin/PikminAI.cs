@@ -87,6 +87,7 @@ namespace LethalMin
             CurPathIndex++;
             if (CurPathIndex >= TotalPointCount())
             {
+                LethalMin.Logger.LogWarning($"{RouteName}: Reached end of path when advancing to next point");
                 CurPathIndex = TotalPointCount() - 1;
             }
             return CurPathIndex;
@@ -432,7 +433,7 @@ namespace LethalMin
 
             //Create DebugName
             string randomPart = GenerateRandomString(5);
-            uniqueDebugId = $"{PminType.GetName()}_{randomPart}_{NetworkObjectId}";
+            uniqueDebugId = $"{PminType.PikminName}_{randomPart}_{NetworkObjectId}";
             gameObject.name = uniqueDebugId;
 
             //checking if the dungon is a mineshaft
@@ -517,7 +518,7 @@ namespace LethalMin
                 List<NetworkBehaviour> CreatedScripts = ScriptContainer.GetComponents<NetworkBehaviour>().ToList();
                 if (PminType.PikminScripts.Length > CreatedScripts.Count)
                 {
-                    LethalMin.Logger.LogWarning($"Pikmin {PminType.GetName()} has more scripts than the container, this should not happen");
+                    LethalMin.Logger.LogWarning($"Pikmin {PminType.PikminName} has more scripts than the container, this should not happen");
                 }
                 else
                 {
@@ -544,14 +545,14 @@ namespace LethalMin
                         }
                     }
                     if (PminType.PikminScripts.Length > 0)
-                        LethalMin.Logger.LogMessage($"Pikmin {PminType.GetName()} has {CreatedScripts.Count} scripts");
+                        LethalMin.Logger.LogMessage($"Pikmin {PminType.PikminName} has {CreatedScripts.Count} scripts");
                 }
             }
             else
             {
                 Destroy(ScriptContainer);
                 if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogMessage($"Pikmin {PminType.GetName()} has no scripts");
+                    LethalMin.Logger.LogMessage($"Pikmin {PminType.PikminName} has no scripts");
             }
 
             //4 Emersion
@@ -596,7 +597,7 @@ namespace LethalMin
                 LocalAnim = PminType.MeshRefernces.PikminAnimator;
             }
             LocalAnim.gameObject.AddComponent<PikminAnimEvents>().AI = this;
-            GetComponentInChildren<ScanNodeProperties>(true).headerText = $"{PminType.GetName()}";
+            GetComponentInChildren<ScanNodeProperties>(true).headerText = $"{PminType.PikminName}";
 
             PlantSpeeds = new float[PminType.Speeds.Length];
             for (int i = 0; i < PminType.Speeds.Length; i++)
@@ -2993,7 +2994,7 @@ namespace LethalMin
                     targetItem.TargetType = majorityType;
                     targetItem.SetCurColorClientRpc(majorityType.PikminColor);
                     hasSelectedOinion = true;
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with majority {majorityType.GetName()} pikmin: {targetOnion?.type.TypeName}");
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with majority {majorityType.PikminName} pikmin: {targetOnion?.type.TypeName}");
                 }
 
                 // Case 2: Minority pikmin type's target onion
@@ -3003,7 +3004,7 @@ namespace LethalMin
                     targetItem.TargetType = minorityType;
                     targetItem.SetCurColorClientRpc(minorityType.PikminColor);
                     hasSelectedOinion = true;
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with minority pikmin {minorityType.GetName()}: {targetOnion?.type}");
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with minority pikmin {minorityType.PikminName}: {targetOnion?.type}");
                 }
 
                 // Case 3: Onion that needs more pikmin the most
@@ -3037,7 +3038,7 @@ namespace LethalMin
                 }
 
                 LethalMin.Logger.LogInfo($"Evaluation done. Varibles: (TargetOnion: {targetOnion?.type.TypeName})," +
-                $"(Majotity Type: {majorityType?.GetName()}), (Minority Type: {minorityType?.GetName()})," +
+                $"(Majotity Type: {majorityType?.PikminName}), (Minority Type: {minorityType?.PikminName})," +
                 $"(Majority Instance: {majorityTypeInstance?.name}), (Minority Instance: {minorityTypeInstance?.name})");
 
                 // Add the target onion to possible targets
@@ -3277,7 +3278,14 @@ namespace LethalMin
                     if (CurRoutes[0].GetRoutePoint().Item2 == true && !isOutside)
                     {
                         if (CurRoutes[0].GetExitPoint() != null)
+                        {
                             DoLethalEscape(CurRoutes[0].GetExitPoint().Value);
+                        }
+                        else
+                        {
+                            LethalMin.Logger.LogWarning($"({uniqueDebugId}) No exit point for this route");
+                            return;
+                        }
                         return;
                     }
                 }

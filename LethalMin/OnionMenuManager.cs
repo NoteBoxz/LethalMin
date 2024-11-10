@@ -399,7 +399,7 @@ namespace LethalMin
             typeSlotUI.inOnionTxt.text = $"{pikminInOnion - withdrawAmount}";
             typeSlotUI.inSquadTxt.text = $"{pikminInSquad + withdrawAmount}";
             typeSlotUI.withdrawTxt.text = $"{withdrawAmount}";
-            typeSlotUI.promptTxt.text = $"{pikminType.GetName()}";
+            typeSlotUI.promptTxt.text = $"{pikminType.PikminName}";
 
             typeSlotUI.addButton.interactable = totalPikmin == 0 || (withdrawAmount < pikminInOnion) || (withdrawAmount <= LethalMin.MaxMinValue);
             typeSlotUI.subtractButton.interactable = totalPikmin == 0 || (withdrawAmount > -pikminInSquad);

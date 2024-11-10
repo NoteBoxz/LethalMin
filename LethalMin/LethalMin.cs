@@ -900,17 +900,17 @@ namespace LethalMin
                 {
                     if (type.MeshPrefab == null)
                     {
-                        Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no mesh prefab, skipping registration!");
+                        Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " has no mesh prefab, skipping registration!");
                         return;
                     }
                     if (string.IsNullOrEmpty(type.AnimPath) && type.MeshPrefab.GetComponent<Animator>() == null)
                     {
-                        Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no anim path, skipping registration!");
+                        Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " has no anim path, skipping registration!");
                         return;
                     }
                     if (type.MeshPrefab.transform.Find(type.AnimPath).GetComponent<Animator>() == null)
                     {
-                        Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " anim path does not contain an animator, skipping registration!");
+                        Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " anim path does not contain an animator, skipping registration!");
                         return;
                     }
                 }
@@ -918,7 +918,7 @@ namespace LethalMin
                 {
                     if (type.MeshRefernces.PikminAnimator == null)
                     {
-                        Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no animator, skipping registration!");
+                        Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " has no animator, skipping registration!");
                         return;
                     }
                 }
@@ -926,7 +926,7 @@ namespace LethalMin
                 if (type.PikminScripts != null && type.PikminScripts.Length > 0)
                 {
                     GameObject container = LethalMin.pikminPrefab.transform.Find("PikminScriptContainer").gameObject;
-                    LethalMin.Logger.LogInfo(type.GetName() + " has " + type.PikminScripts.Length + " scripts");
+                    LethalMin.Logger.LogInfo(type.PikminName + " has " + type.PikminScripts.Length + " scripts");
                     foreach (var script in type.PikminScripts)
                     {
                         container.AddComponent(script.GetType());
@@ -939,28 +939,29 @@ namespace LethalMin
                 RegisteredPikminTypes.Add(type.PikminTypeID, type);
                 if (GetMajorMinorVersion(type.version) != GetMajorMinorVersion(MyPluginInfo.PLUGIN_VERSION))
                 {
-                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has a different version than the mod " + $"({GetMajorMinorVersion(MyPluginInfo.PLUGIN_VERSION)})" + ", this may cause issues!");
+                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + 
+                    $" {type.version} has a different version than the mod " + $"({MyPluginInfo.PLUGIN_VERSION})" + ", this may cause issues!");
                 }
                 if (type.PikminIcon == null)
                 {
-                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no icon!");
+                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " has no icon!");
                     type.PikminIcon = UndefinedPikmin;
                 }
                 if (type.soundPack == null)
                 {
-                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no soundPack!");
+                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " has no soundPack!");
                 }
                 if (type.ThrowForce == 0)
                 {
-                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no throw force!");
+                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " has no throw force!");
                 }
                 if (type.MinKnockBackResistance == 0 && type.MaxKnockBackResistance == 0)
                 {
-                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no knockback resistance!");
+                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " has no knockback resistance!");
                 }
                 if (type.MaxKnockBackResistance < type.MinKnockBackResistance)
                 {
-                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has invalid knockback resistance!");
+                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " has invalid knockback resistance!");
                 }
                 int invalidspeeds = 0;
                 foreach (float item in type.Speeds)
@@ -970,58 +971,58 @@ namespace LethalMin
                 }
                 if (invalidspeeds == type.Speeds.Length || type.Speeds.Length == 0)
                 {
-                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no speed!");
+                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " has no speed!");
                 }
                 if (type.MeshRefernces == null)
                 {
                     if (type.GrowthStagePaths.Length > type.Speeds.Length)
                     {
-                        Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has more grow paths than speeds!");
+                        Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " has more grow paths than speeds!");
                     }
                     if (type.GrowthStagePaths.Length < type.Speeds.Length)
                     {
-                        Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has less grow paths than speeds!");
+                        Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " has less grow paths than speeds!");
                     }
                 }
                 else
                 {
                     if (type.MeshRefernces.PikminGrowthStagePlants.Length > type.Speeds.Length)
                     {
-                        Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has more grow plants than speeds!");
+                        Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " has more grow plants than speeds!");
                     }
                     if (type.MeshRefernces.PikminGrowthStagePlants.Length < type.Speeds.Length)
                     {
-                        Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has less grow plants than speeds!");
+                        Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " has less grow plants than speeds!");
                     }
                 }
                 if (AllowSpawnMultiplier && type.SpawnChanceMultiplier == 0)
                 {
-                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has a zero spawn chance multiplier!");
+                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + " has a zero spawn chance multiplier!");
                 }
 
                 //Do spawn checks
                 if (type.SpawnsIndoors)
                 {
                     if (DebugMode)
-                        Logger.LogInfo(" " + type.GetName() + " is an indoor pikmin type");
+                        Logger.LogInfo(" " + type.PikminName + " is an indoor pikmin type");
                     IndoorTypes.Add(type.PikminTypeID, type);
                 }
                 if (type.SpawnsOutdoors)
                 {
                     if (DebugMode)
-                        Logger.LogInfo(" " + type.GetName() + " is an outdoor pikmin type");
+                        Logger.LogInfo(" " + type.PikminName + " is an outdoor pikmin type");
                     OutdoorTypes.Add(type.PikminTypeID, type);
                 }
                 if (type.SpawnsAsSprout)
                 {
                     if (DebugMode)
-                        Logger.LogInfo(" " + type.GetName() + " spawns as sprout");
+                        Logger.LogInfo(" " + type.PikminName + " spawns as sprout");
                     SproutTypes.Add(type.PikminTypeID, type);
                 }
                 if (type.SpawnsNaturally)
                 {
                     if (DebugMode)
-                        Logger.LogInfo(" " + type.GetName() + " spawns naturally");
+                        Logger.LogInfo(" " + type.PikminName + " spawns naturally");
                     NaturalTypes.Add(type.PikminTypeID, type);
                 }
 
@@ -1030,11 +1031,11 @@ namespace LethalMin
                 type.MeshData.Initalize();
                 UpdateBeastairy();
                 type.HasBeenRegistered = true;
-                Logger.LogMessage("Registered Pikmin type with ID " + type.PikminTypeID + " " + type.GetName());
+                Logger.LogMessage("Registered Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName);
             }
             else
             {
-                Logger.LogWarning("Pikmin type: " + type.GetName() + " with ID " + type.PikminTypeID + " already registered!");
+                Logger.LogWarning("Pikmin type: " + type.PikminName + " with ID " + type.PikminTypeID + " already registered!");
             }
         }
         public static void RegisterOnionType(OnionType type)
@@ -1045,7 +1046,7 @@ namespace LethalMin
                 RegisteredOnionTypes.Add(type.OnionTypeID, type);
                 if (GetMajorMinorVersion(type.version) != GetMajorMinorVersion(MyPluginInfo.PLUGIN_VERSION))
                 {
-                    Logger.LogWarning("Pikmin type with ID " + type.OnionTypeID + " " + type.TypeName + " has a different version than the mod " + $"({MyPluginInfo.PLUGIN_VERSION})" + ", this may cause issues!");
+                    Logger.LogWarning("Onion type with ID " + type.OnionTypeID + " " + type.TypeName + " has a different version than the mod " + $"({MyPluginInfo.PLUGIN_VERSION})" + ", this may cause issues!");
                 }
                 if (type.TypesCanHold.Length == 0)
                 {
@@ -1071,7 +1072,7 @@ namespace LethalMin
                 RegisteredFuseRules.Add(fuseRule.FuseID, fuseRule);
                 if (GetMajorMinorVersion(fuseRule.version) != GetMajorMinorVersion(MyPluginInfo.PLUGIN_VERSION))
                 {
-                    Logger.LogWarning("Pikmin Onion Fuse Rule with ID " + fuseRule.FuseID + " " + fuseRule.name + " has a different version than the mod " + $"({MyPluginInfo.PLUGIN_VERSION})" + ", this may cause issues!");
+                    Logger.LogWarning("Onion Fuse Rule with ID " + fuseRule.FuseID + " " + fuseRule.name + " has a different version than the mod " + $"({MyPluginInfo.PLUGIN_VERSION})" + ", this may cause issues!");
                 }
                 Logger.LogMessage("Registered Onion Fuse Rule with ID " + fuseRule.FuseID + " " + fuseRule.name);
                 fuseRule.HasBeenRegistered = true;

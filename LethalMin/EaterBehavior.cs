@@ -44,7 +44,7 @@ namespace LethalMin
                         if (babyMemoryOfPlayer2.orderSeen == -1)
                         {
                             FavoritePikminType = allPlayersInLineOfSight[j].GetComponentInChildren<LeaderManager>().GetCurrentSelectedType();
-                            LethalMin.Logger.LogInfo($"Favorite Pikmin Type: {FavoritePikminType.GetName()}");
+                            LethalMin.Logger.LogInfo($"Favorite Pikmin Type: {FavoritePikminType.PikminName}");
                         }
                     }
                 }
