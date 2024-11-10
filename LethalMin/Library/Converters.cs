@@ -8,7 +8,7 @@ namespace LethalMin.Library
 {
     public static class TypeConverter
     {
-        private static readonly string[] ExcludedProperties = { "AnimPath", "GrowthStagePaths" };
+        private static readonly string[] ExcludedProperties = { "AnimPath", "PikminGlowPath", "GrowthStagePaths" };
 
         public static PikminType Convert_Lib_PikminTypeToLmPikminType(LethalMinLibrary.PikminType libType)
         {
