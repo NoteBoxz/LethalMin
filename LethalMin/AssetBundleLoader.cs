@@ -4,24 +4,36 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Collections;
 using LethalMin.Library;
+using UnityEngine.SceneManagement;
 
 namespace LethalMin
 {
     public class AssetBundleLoader : MonoBehaviour
     {
         public static AssetBundleLoader instance;
-        private void Awake()
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void OnRuntimeMethodLoad()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             if (instance == null)
             {
-                instance = this;
-                DontDestroyOnLoad(gameObject);
-                LoadLethalMinBundles();
+                GameObject go = new GameObject("LethalMin AssetBundleLoader");
+                instance = go.AddComponent<AssetBundleLoader>();
+                DontDestroyOnLoad(go);
+                instance.Initialize();
             }
-            else
-            {
-                Destroy(gameObject);
-            }
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void Initialize()
+        {
+            // Move your initialization logic here
+            LoadLethalMinBundles();
         }
 
         private const string BUNDLE_EXTENSION = "*.lethalmin";
@@ -29,6 +41,8 @@ namespace LethalMin
         internal static DirectoryInfo? lethalMinFolder;
         internal static DirectoryInfo? pluginsFolder;
         private Dictionary<string, AssetBundle> loadedBundles = new Dictionary<string, AssetBundle>();
+        public List<LethalMinLibrary.PikminType> GpikminTypes = new List<LethalMinLibrary.PikminType>();
+        public List<PikminType> GpikminTypes2 = new List<PikminType>();
 
         private void LoadLethalMinBundles()
         {
@@ -88,9 +102,13 @@ namespace LethalMin
             bool IsValidLethalMinBundle = false;
             // Load PikminTypes
             LethalMinLibrary.PikminType[] pikminTypes = bundle.LoadAllAssets<LethalMinLibrary.PikminType>();
+
             foreach (LethalMinLibrary.PikminType pikminType in pikminTypes)
             {
-                LethalMin.RegisterPikminType(TypeConverter.Convert_Lib_PikminTypeToLmPikminType(pikminType));
+                PikminType Ptype = TypeConverter.Convert_Lib_PikminTypeToLmPikminType(pikminType);
+                GpikminTypes.Add(pikminType);
+                GpikminTypes2.Add(Ptype);
+                LethalMin.RegisterPikminType(Ptype);
                 IsValidLethalMinBundle = true;
             }
 

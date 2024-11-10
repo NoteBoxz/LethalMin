@@ -557,19 +557,11 @@ namespace LethalMin
             //4 Emersion
             PminType.MeshData.ToggleMeshVisibility(!HideMeshOnStart);
             Mesh = Instantiate(PminType.MeshPrefab, transform);
+            GameObject PGP = GetSproutRoot();
 
-            string? PGP = null;
-            if (string.IsNullOrEmpty(PminType.PikminGlowPath) && PminType.GrowthStagePaths.Length >= 0)
-            {
-                PGP = PminType.GrowthStagePaths[0].RemoveAfterLastSlash();
-            }
-            else if (!string.IsNullOrEmpty(PminType.PikminGlowPath))
-            {
-                PGP = PminType.PikminGlowPath;
-            }
             if (PGP != null)
             {
-                IdleGlow = Instantiate(LethalMin.IdelGlowPrefab, Mesh.transform.Find(PGP));
+                IdleGlow = Instantiate(LethalMin.IdelGlowPrefab, PGP.transform);
                 IdleGlowAnim = IdleGlow.GetComponent<Animator>();
                 if (PminType.PikminGlow != null)
                     IdleGlow.GetComponentInChildren<SpriteRenderer>().sprite = PminType.PikminGlow;
@@ -577,23 +569,31 @@ namespace LethalMin
                     IdleGlow.GetComponentInChildren<SpriteRenderer>().sprite = null;
                 IdleGlow.GetComponentInChildren<SpriteRenderer>().color = PminType.PikminColor;
 
-                IdleGlow.transform.SetParent(Mesh.transform.Find(PGP));
+                IdleGlow.transform.SetParent(PGP.transform);
             }
+
 
             // Set up plant references
-            Plants = new GameObject[PminType.GrowthStagePaths.Length];
-            for (int i = 0; i < PminType.GrowthStagePaths.Length; i++)
+            if (PminType.MeshRefernces == null)
             {
-                Plants[i] = Mesh.transform.Find(PminType.GrowthStagePaths[i]).gameObject;
-            }
-            if (string.IsNullOrEmpty(PminType.AnimPath))
-            {
-                LocalAnim = Mesh.GetComponent<Animator>();
-
+                Plants = new GameObject[PminType.GrowthStagePaths.Length];
+                for (int i = 0; i < PminType.GrowthStagePaths.Length; i++)
+                {
+                    Plants[i] = Mesh.transform.Find(PminType.GrowthStagePaths[i]).gameObject;
+                }
+                if (string.IsNullOrEmpty(PminType.AnimPath))
+                {
+                    LocalAnim = Mesh.GetComponent<Animator>();
+                }
+                else
+                {
+                    LocalAnim = Mesh.transform.Find(PminType.AnimPath).GetComponent<Animator>();
+                }
             }
             else
             {
-                LocalAnim = Mesh.transform.Find(PminType.AnimPath).GetComponent<Animator>();
+                Plants = PminType.MeshRefernces.PikminGrowthStagePlants;
+                LocalAnim = PminType.MeshRefernces.PikminAnimator;
             }
             LocalAnim.gameObject.AddComponent<PikminAnimEvents>().AI = this;
             GetComponentInChildren<ScanNodeProperties>(true).headerText = $"{PminType.GetName()}";
@@ -1109,6 +1109,7 @@ namespace LethalMin
             ReqeustCoughSFXClientRpc();
             if (currentBehaviourStateIndex != (int)PState.Panic)
             {
+                LethalMin.Logger.LogInfo($"Coughing SFX was requested but the state has changed: {currentBehaviourStateIndex} - {(PState)currentBehaviourStateIndex}");
                 yield break;
             }
             yield return new WaitForSeconds(UnityEngine.Random.Range(0.1f, 0.7f));
@@ -1120,6 +1121,7 @@ namespace LethalMin
             if (currentBehaviourStateIndex != (int)PState.Panic)
             {
                 HasCalledMOI = false;
+                LethalMin.Logger.LogInfo($"random move was requested but the state has changed: {currentBehaviourStateIndex} - {(PState)currentBehaviourStateIndex}");
                 yield break;
             }
             yield return new WaitForSeconds(UnityEngine.Random.Range(0.5f, 1.5f));
@@ -1173,20 +1175,33 @@ namespace LethalMin
         [ClientRpc]
         public void ShowPoisonClientRpc()
         {
-            string PGP = "";
-            if (string.IsNullOrEmpty(PminType.PikminGlowPath) && PminType.GrowthStagePaths.Length >= 0)
-            {
-                PGP = PminType.GrowthStagePaths[0].RemoveAfterLastSlash();
-            }
-            else if (!string.IsNullOrEmpty(PminType.PikminGlowPath))
-            {
-                PGP = PminType.PikminGlowPath;
-            }
+            GameObject PGP = GetSproutRoot();
             if (PGP != null && CurParticleInstance == null)
             {
-                GameObject poison = Instantiate(LethalMin.PosionPrefab, Mesh.transform.Find(PGP));
+                GameObject poison = Instantiate(LethalMin.PosionPrefab, PGP.transform);
                 CurParticleInstance = poison;
             }
+        }
+
+        public GameObject GetSproutRoot()
+        {
+            if (PminType.MeshRefernces == null)
+            {
+                string PGP = "";
+                if (string.IsNullOrEmpty(PminType.PikminGlowPath) && PminType.GrowthStagePaths.Length >= 0)
+                {
+                    PGP = PminType.GrowthStagePaths[0].RemoveAfterLastSlash();
+                }
+                else if (!string.IsNullOrEmpty(PminType.PikminGlowPath))
+                {
+                    PGP = PminType.PikminGlowPath;
+                }
+                if (PGP != null)
+                {
+                    return Mesh.transform.Find(PGP).gameObject;
+                }
+            }
+            return PminType.MeshRefernces.PikminGlowRoot;
         }
 
         private void HandleWorkingState()

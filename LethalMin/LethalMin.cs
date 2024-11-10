@@ -896,22 +896,32 @@ namespace LethalMin
             if (!type.HasBeenRegistered)
             {
                 //Do Fatal Checks
-                if (type.MeshPrefab == null)
+                if (type.MeshRefernces == null)
                 {
-                    Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no mesh prefab, skipping registration!");
-                    return;
+                    if (type.MeshPrefab == null)
+                    {
+                        Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no mesh prefab, skipping registration!");
+                        return;
+                    }
+                    if (string.IsNullOrEmpty(type.AnimPath) && type.MeshPrefab.GetComponent<Animator>() == null)
+                    {
+                        Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no anim path, skipping registration!");
+                        return;
+                    }
+                    if (type.MeshPrefab.transform.Find(type.AnimPath).GetComponent<Animator>() == null)
+                    {
+                        Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " anim path does not contain an animator, skipping registration!");
+                        return;
+                    }
                 }
-                if (string.IsNullOrEmpty(type.AnimPath) && type.MeshPrefab.GetComponent<Animator>() == null)
+                else
                 {
-                    Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no anim path, skipping registration!");
-                    return;
+                    if (type.MeshRefernces.PikminAnimator == null)
+                    {
+                        Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no animator, skipping registration!");
+                        return;
+                    }
                 }
-                if (type.MeshPrefab.transform.Find(type.AnimPath).GetComponent<Animator>() == null)
-                {
-                    Logger.LogError("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " anim path does not contain an animator, skipping registration!");
-                    return;
-                }
-
                 //Register the type
                 if (type.PikminScripts != null && type.PikminScripts.Length > 0)
                 {
@@ -962,13 +972,27 @@ namespace LethalMin
                 {
                     Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has no speed!");
                 }
-                if (type.GrowthStagePaths.Length > type.Speeds.Length)
+                if (type.MeshRefernces == null)
                 {
-                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has more grow paths than speeds!");
+                    if (type.GrowthStagePaths.Length > type.Speeds.Length)
+                    {
+                        Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has more grow paths than speeds!");
+                    }
+                    if (type.GrowthStagePaths.Length < type.Speeds.Length)
+                    {
+                        Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has less grow paths than speeds!");
+                    }
                 }
-                if (type.GrowthStagePaths.Length < type.Speeds.Length)
+                else
                 {
-                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has less grow paths than speeds!");
+                    if (type.MeshRefernces.PikminGrowthStagePlants.Length > type.Speeds.Length)
+                    {
+                        Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has more grow plants than speeds!");
+                    }
+                    if (type.MeshRefernces.PikminGrowthStagePlants.Length < type.Speeds.Length)
+                    {
+                        Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.GetName() + " has less grow plants than speeds!");
+                    }
                 }
                 if (AllowSpawnMultiplier && type.SpawnChanceMultiplier == 0)
                 {
@@ -1086,7 +1110,7 @@ namespace LethalMin
         public static Sprite NoPikmin, UndefinedPikmin;
         public static Sprite DangerRanger, SaferWafer;
         public static GameObject Ghost, PikminAttackerNode;
-        public static AudioClip[] AttackSFX, BornSFX, ExitOnionSFX, EnterOnionSFX, ItemNoticeSFX, GhostSFX, CarrySFX, LostSFX, YaySFX,CoughSFXs;
+        public static AudioClip[] AttackSFX, BornSFX, ExitOnionSFX, EnterOnionSFX, ItemNoticeSFX, GhostSFX, CarrySFX, LostSFX, YaySFX, CoughSFXs;
         public static AudioClip LiftSFX, DeadSFX, NoticeSFX, ThrowSFX, HoldSFX;
         public static Dictionary<OnionType, int> PreviousRoundPikminCounts = new Dictionary<OnionType, int>();
         public static Material lineMaterial;
@@ -1098,7 +1122,7 @@ namespace LethalMin
         public static Mesh TwoSideOnion, ThreeSideOnion, FourSideOnion, FiveSideOnion, SixSideOnion, SevenSideOnion, EightSideOnion;
         public static Item OnionItem;
         public static AnimationClip PluckAnim;
-        public static GameObject PuffminPrefab, POMprefab,AnimSproutPrefab,PosionPrefab;
+        public static GameObject PuffminPrefab, POMprefab, AnimSproutPrefab, PosionPrefab;
 
         private void LoadPikminAssets()
         {
@@ -1381,7 +1405,6 @@ namespace LethalMin
 
             Loader = new GameObject().AddComponent<AssetBundleLoader>();
             Loader.name = "LethalMin's AssetBundleLoader";
-            DontDestroyOnLoad(Loader.gameObject);
         }
         public static void AddEventToFrame(int frame, string functionName2, AnimationClip animationClip)
         {

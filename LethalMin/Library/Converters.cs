@@ -14,29 +14,30 @@ namespace LethalMin.Library
         {
             PikminType lmType = ScriptableObject.CreateInstance<PikminType>();
 
-            PropertyInfo[] libProperties = typeof(LethalMinLibrary.PikminType).GetProperties();
-            PropertyInfo[] lmProperties = typeof(PikminType).GetProperties();
-            LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converting LibPikminType with ({libProperties.Length}) varibles to LmPikminType with ({lmProperties.Length}) variables");
-            int ConvertedPropertiesCount = 0;
+            FieldInfo[] libFields = typeof(LethalMinLibrary.PikminType).GetFields(BindingFlags.Public | BindingFlags.Instance);
+            FieldInfo[] lmFields = typeof(PikminType).GetFields(BindingFlags.Public | BindingFlags.Instance);
+            LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converting LibPikminType with ({libFields.Length}) fields to LmPikminType with ({lmFields.Length}) fields");
+            int ConvertedFieldsCount = 0;
 
-            foreach (var libProperty in libProperties)
+            foreach (var libField in libFields)
             {
-                if (ExcludedProperties.Contains(libProperty.Name))
+                if (ExcludedProperties.Contains(libField.Name))
                     continue;
 
-                var lmProperty = lmProperties.FirstOrDefault(p => p.Name.ToLower() == libProperty.Name.ToLower() && p.PropertyType == libProperty.PropertyType);
-                if (lmProperty != null && lmProperty.CanWrite)
+                var lmField = lmFields.FirstOrDefault(f => f.Name.ToLower() == libField.Name.ToLower() && f.FieldType == libField.FieldType);
+                if (lmField != null)
                 {
-                    object value = libProperty.GetValue(libType);
-                    lmProperty.SetValue(lmType, value);
-                    LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converted {libProperty.Name} from {libType.GetType().Name.ToLower()} to {lmType.GetType().Name.ToLower()}");
-                    ConvertedPropertiesCount++;
+                    object value = libField.GetValue(libType);
+                    lmField.SetValue(lmType, value);
+                    LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converted {libField.Name} from Library to LethalMin");
+                    ConvertedFieldsCount++;
                 }
             }
-            LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converted {ConvertedPropertiesCount} properties from LibPikminType with ({libProperties.Length}) to LmPikminType with ({lmProperties.Length})");
+            LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converted {ConvertedFieldsCount} fields from LibPikminType with ({libFields.Length}) to LmPikminType with ({lmFields.Length})");
 
             // Handle special cases
             lmType.HazardsResistantTo = EnumConverter.Convert_Lib_HazardToLmHazard(libType.HazardsResistantTo);
+            lmType.MeshRefernces = Convert_Lib_PikminMeshReferncesToLmPikminMeshRefernces(libType.MeshRefernces);
 
             return lmType;
         }
@@ -44,14 +45,14 @@ namespace LethalMin.Library
         public static PikminSoundPack Convert_Lib_PikminSoundPackToLmPikminSoundPack(LethalMinLibrary.PikminSoundPack libSoundPack)
         {
             PikminSoundPack lmSoundPack = ScriptableObject.CreateInstance<PikminSoundPack>();
-            CopyProperties(libSoundPack, lmSoundPack, "PikminSoundPack");
+            CopyFields(libSoundPack, lmSoundPack, "PikminSoundPack");
             return lmSoundPack;
         }
 
         public static OnionType Convert_Lib_OnionTypeToLmOnionType(LethalMinLibrary.OnionType libOnionType)
         {
             OnionType lmOnionType = ScriptableObject.CreateInstance<OnionType>();
-            CopyProperties(libOnionType, lmOnionType, "OnionType");
+            CopyFields(libOnionType, lmOnionType, "OnionType");
 
             // Handle special cases
             lmOnionType.TypesCanHold = libOnionType.TypesCanHold.Select(Convert_Lib_PikminTypeToLmPikminType).ToArray();
@@ -63,7 +64,7 @@ namespace LethalMin.Library
         public static OnionFuseRules Convert_Lib_OnionFuseRulesToLmOnionFuseRules(LethalMinLibrary.OnionFuseRules libFuseRules)
         {
             OnionFuseRules lmFuseRules = ScriptableObject.CreateInstance<OnionFuseRules>();
-            CopyProperties(libFuseRules, lmFuseRules, "OnionFuseRules");
+            CopyFields(libFuseRules, lmFuseRules, "OnionFuseRules");
 
             // Handle special cases
             lmFuseRules.CompatibleOnions = libFuseRules.CompatibleOnions.Select(Convert_Lib_OnionTypeToLmOnionType).ToArray();
@@ -71,26 +72,33 @@ namespace LethalMin.Library
             return lmFuseRules;
         }
 
-        private static void CopyProperties<TSource, TDestination>(TSource source, TDestination destination, string typeName)
+        public static PikminMeshRefernces Convert_Lib_PikminMeshReferncesToLmPikminMeshRefernces(LethalMinLibrary.PikminMeshRefernces libMeshRefernces)
         {
-            PropertyInfo[] sourceProperties = typeof(TSource).GetProperties();
-            PropertyInfo[] destProperties = typeof(TDestination).GetProperties();
+            PikminMeshRefernces lmMeshRefernces = new PikminMeshRefernces();
+            CopyFields(libMeshRefernces, lmMeshRefernces, "PikminMeshRefernces");
+            return lmMeshRefernces;
+        }
 
-            int convertedPropertiesCount = 0;
+        private static void CopyFields<TSource, TDestination>(TSource source, TDestination destination, string typeName)
+        {
+            FieldInfo[] sourceFields = typeof(TSource).GetFields(BindingFlags.Public | BindingFlags.Instance);
+            FieldInfo[] destFields = typeof(TDestination).GetFields(BindingFlags.Public | BindingFlags.Instance);
 
-            foreach (var sourceProperty in sourceProperties)
+            int convertedFieldsCount = 0;
+
+            foreach (var sourceField in sourceFields)
             {
-                var destProperty = destProperties.FirstOrDefault(p => p.Name.ToLower() == sourceProperty.Name.ToLower() && p.PropertyType == sourceProperty.PropertyType);
-                if (destProperty != null && destProperty.CanWrite)
+                var destField = destFields.FirstOrDefault(f => f.Name.ToLower() == sourceField.Name.ToLower() && f.FieldType == sourceField.FieldType);
+                if (destField != null)
                 {
-                    object value = sourceProperty.GetValue(source);
-                    destProperty.SetValue(destination, value);
-                    LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converted {sourceProperty.Name} from {typeof(TSource).Name.ToLower()} to {typeof(TDestination).Name.ToLower()}");
-                    convertedPropertiesCount++;
+                    object value = sourceField.GetValue(source);
+                    destField.SetValue(destination, value);
+                    LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converted {sourceField.Name} from {typeof(TSource).Name.ToLower()} to {typeof(TDestination).Name.ToLower()}");
+                    convertedFieldsCount++;
                 }
             }
 
-            LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converted {convertedPropertiesCount} properties from Lib{typeName} with ({sourceProperties.Length}) to Lm{typeName} with ({destProperties.Length})");
+            LethalMin.Logger.LogMessage($"(LETHALMIN_CONVERTER) Converted {convertedFieldsCount} fields from Lib{typeName} with ({sourceFields.Length}) to Lm{typeName} with ({destFields.Length})");
         }
     }
 

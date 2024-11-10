@@ -1,5 +1,5 @@
 using UnityEngine;
-using LethalMin;
+using LethalMin.Library;
 using Unity.Netcode;
 using System;
 namespace LethalMin
@@ -24,8 +24,6 @@ namespace LethalMin
         [Tooltip("The pikmin's the Idle Glow Sprite")]
         public Sprite? PikminGlow;
         public bool ReplaceGlowFXwithDefult = true;
-        [Tooltip("The pikmin's the sprout path, should be the object right before the plant objects (will be filled automatically if empty)")]
-        public string PikminGlowPath;
 
         [Tooltip("The pikmin's custom AI scripts")]
         public NetworkBehaviour[]? PikminScripts;
@@ -49,6 +47,12 @@ namespace LethalMin
 
         [Tooltip("The path to the pikmin's animations")]
         public string AnimPath = "";
+
+        [Tooltip("The pikmin's the sprout path, should be the object right before the plant objects (will be filled automatically if empty)")]
+        public string PikminGlowPath;
+
+        [HideInInspector]
+        public PikminMeshRefernces MeshRefernces = null!;
 
         [Tooltip("The pikmin's name affix. (i.e. (RTypeName: Red) (NameAffix: Pikmin) = 'Red Pikmin') ")]
         public string NameAffix = " Pikmin";
