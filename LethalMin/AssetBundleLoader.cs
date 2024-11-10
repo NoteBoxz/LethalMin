@@ -41,8 +41,10 @@ namespace LethalMin
         internal static DirectoryInfo? lethalMinFolder;
         internal static DirectoryInfo? pluginsFolder;
         private Dictionary<string, AssetBundle> loadedBundles = new Dictionary<string, AssetBundle>();
-        public List<LethalMinLibrary.PikminType> GpikminTypes = new List<LethalMinLibrary.PikminType>();
-        public List<PikminType> GpikminTypes2 = new List<PikminType>();
+        public static List<LethalMinLibrary.PikminType> GpikminTypes = new List<LethalMinLibrary.PikminType>();
+        public static List<PikminType> GpikminTypes2 = new List<PikminType>();
+
+        public static List<OnionType> OnionTypes2 = new List<OnionType>();
 
         private void LoadLethalMinBundles()
         {
@@ -117,7 +119,9 @@ namespace LethalMin
             LethalMinLibrary.OnionType[] onionTypes = bundle.LoadAllAssets<LethalMinLibrary.OnionType>();
             foreach (LethalMinLibrary.OnionType onionType in onionTypes)
             {
-                LethalMin.RegisterOnionType(TypeConverter.Convert_Lib_OnionTypeToLmOnionType(onionType));
+                OnionType oynon = TypeConverter.Convert_Lib_OnionTypeToLmOnionType(onionType);
+                OnionTypes2.Add(oynon);
+                LethalMin.RegisterOnionType(oynon);
                 IsValidLethalMinBundle = true;
             }
 

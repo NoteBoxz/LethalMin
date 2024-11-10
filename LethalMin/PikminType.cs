@@ -158,6 +158,9 @@ namespace LethalMin
         [TextArea(2, 20)]
         public string beastiarySegment = "";
 
+        [HideInInspector]
+        public LethalMinLibrary.PikminType typeConvertedFrom = null!;
+
         public float GetDamage()
         {
             if (NormalizeDamage)

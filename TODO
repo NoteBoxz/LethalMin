@@ -1,10 +1,12 @@
 (0.2.x)
 
+Add in 0.2.0 configs (Not Started)
+
 Redo Routing System (Mostly Done)
 
-Make Library Scriptable Object Converter (Done, Needs more testing)
 Add in Puffmin. (Done, Needs more testing)
 
+Make Library Scriptable Object Converter (Done)
 Redesinge the HUD (Done)
 Make Unity Library Plugin. (Done)
 Add in poisoning. (Done)

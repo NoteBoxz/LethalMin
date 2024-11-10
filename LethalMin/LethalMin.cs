@@ -1046,7 +1046,7 @@ namespace LethalMin
                 RegisteredOnionTypes.Add(type.OnionTypeID, type);
                 if (GetMajorMinorVersion(type.version) != GetMajorMinorVersion(MyPluginInfo.PLUGIN_VERSION))
                 {
-                    Logger.LogWarning("Onion type with ID " + type.OnionTypeID + " " + type.TypeName + " has a different version than the mod " + $"({MyPluginInfo.PLUGIN_VERSION})" + ", this may cause issues!");
+                    Logger.LogWarning("Onion type with ID " + type.OnionTypeID + " " + type.TypeName + $" has a different version {type.version} than the mod " + $"({MyPluginInfo.PLUGIN_VERSION})" + ", this may cause issues!");
                 }
                 if (type.TypesCanHold.Length == 0)
                 {
@@ -1072,7 +1072,7 @@ namespace LethalMin
                 RegisteredFuseRules.Add(fuseRule.FuseID, fuseRule);
                 if (GetMajorMinorVersion(fuseRule.version) != GetMajorMinorVersion(MyPluginInfo.PLUGIN_VERSION))
                 {
-                    Logger.LogWarning("Onion Fuse Rule with ID " + fuseRule.FuseID + " " + fuseRule.name + " has a different version than the mod " + $"({MyPluginInfo.PLUGIN_VERSION})" + ", this may cause issues!");
+                    Logger.LogWarning("Onion Fuse Rule with ID " + fuseRule.FuseID + " " + fuseRule.name + $" has a different version {fuseRule.version} than the mod " + $"({MyPluginInfo.PLUGIN_VERSION})" + ", this may cause issues!");
                 }
                 Logger.LogMessage("Registered Onion Fuse Rule with ID " + fuseRule.FuseID + " " + fuseRule.name);
                 fuseRule.HasBeenRegistered = true;
