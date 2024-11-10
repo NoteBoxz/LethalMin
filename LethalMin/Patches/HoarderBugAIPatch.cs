@@ -21,7 +21,7 @@ namespace LethalMin.Patches
             AttackRange = 3f,
             AttackStates = new int[] { 2 }
         };
-        
+
         [HarmonyPatch("DoAIInterval")]
         [HarmonyPostfix]
         static void DoAIIntervalPostfix(HoarderBugAI __instance)
@@ -30,6 +30,14 @@ namespace LethalMin.Patches
             {
                 for (int i = 0; i < HoarderBugAI.HoarderBugItems.Count; i++)
                 {
+                    if (HoarderBugAI.HoarderBugItems[i] == null)
+                    {
+                        continue;
+                    }
+                    if (HoarderBugAI.HoarderBugItems[i].itemGrabbableObject == null)
+                    {
+                        continue;
+                    }
                     PikminItem ItemScript = HoarderBugAI.HoarderBugItems[i].itemGrabbableObject.GetComponentInChildren<PikminItem>();
                     if (ItemScript == null)
                     {

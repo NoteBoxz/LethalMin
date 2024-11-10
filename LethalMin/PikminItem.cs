@@ -901,6 +901,14 @@ namespace LethalMin
         public AnimatedOnion TargetAnimatedOnion;
         public PikminType TargetType;
         [ClientRpc]
+        public void SetTargetOnionClientRpc(NetworkObjectReference onionRef)
+        {
+            if (onionRef.TryGet(out NetworkObject onionNO))
+            {
+                TargetOnion = onionNO.GetComponent<Onion>();
+            }
+        }
+        [ClientRpc]
         public void SuckIntoOnionClientRpc()
         {
             if (TargetOnion == null)
@@ -913,6 +921,8 @@ namespace LethalMin
                 LethalMin.Logger.LogWarning("Target Onion is not an Animated Onion");
                 return;
             }
+            if (Root.GetComponent<EnemyAI>() != null)
+                Root.GetComponent<EnemyAI>().enabled = false;
             Root.enabled = false; // Disable the root object
             TargetAnimatedOnion = TargetOnion.GetComponent<AnimatedOnion>();
             //Remove any and all Pikmin

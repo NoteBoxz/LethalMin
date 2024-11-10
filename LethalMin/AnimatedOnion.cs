@@ -352,11 +352,11 @@ namespace LethalMin
             if (IsServer)
             {
                 sprout.GetComponent<NetworkObject>().Despawn(true);
-                GameObject actualSprout = Instantiate(LethalMin.sproutPrefab, end, endRotation);
+                GameObject actualSprout = Instantiate(LethalMin.sproutPrefab, sprout.transform.position, sprout.transform.rotation);
                 Sprout sproutScript = actualSprout.GetComponent<Sprout>();
 
                 sproutScript.NetworkObject.Spawn();
-                sproutScript.InitalizeTypeClientRpc(pikminType.PikminTypeID);
+                sproutScript.InitalizeTypeClientRpc(pikminType.PikminTypeID,false);
             }
         }
 

@@ -19,8 +19,12 @@ namespace LethalMin
         AudioSource aud;
 
         [ClientRpc]
-        public void InitalizeTypeClientRpc(int Type = -1)
+        public void InitalizeTypeClientRpc(int Type = -1, bool DoReagust = true)
         {
+            if (DoReagust)
+            {
+                AdjustPosition();
+            }
             System.Random enemyRandom = new System.Random(StartOfRound.Instance.randomMapSeed + NetworkBehaviourId);
             if (Type == -1)
             {
@@ -58,8 +62,6 @@ namespace LethalMin
                     return;
                 }
             }
-
-            AdjustPosition();
         }
         public void PluckStop(PlayerControllerB player)
         {

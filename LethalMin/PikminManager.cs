@@ -721,7 +721,7 @@ namespace LethalMin
             if (LethalMin.IsDependencyLoaded("Entity378.sellbodies")) return;
 
             EnemyAI __instance = null!;
-            
+
             EnemyRef.TryGet(out NetworkObject enemyNetObj);
             if (enemyNetObj != null)
             {
@@ -735,12 +735,24 @@ namespace LethalMin
 
             LethalMin.Logger.LogInfo("Creating item node on enemy body " + __instance.gameObject.name);
 
+            __instance.moveTowardsDestination = false;
+            __instance.movingTowardsTargetPlayer = false;
+            __instance.updatePositionThreshold = 9000;
+            __instance.syncMovementSpeed = 0f;
+
             Item Iprops = new Item();
             Iprops.restingRotation = __instance.transform.rotation.eulerAngles;
 
             if (__instance.enemyType.canDie && EnemyAIPatch.HPDict.ContainsKey(__instance) && EnemyAIPatch.HPDict[__instance] > 0f)
             {
-                Iprops.weight = EnemyAIPatch.HPDict[__instance] * 0.4f;
+                if (EnemyAIPatch.HPDict[__instance] <= 1f)
+                {
+                    Iprops.weight = 0;
+                }
+                else
+                {
+                    Iprops.weight = EnemyAIPatch.HPDict[__instance] * 0.4f;
+                }
             }
             else
             {
@@ -758,6 +770,7 @@ namespace LethalMin
         [ClientRpc]
         public void SyncBodyPropClientRpc(NetworkObjectReference EnemyRef, float Weight, Vector3 RestingRotation)
         {
+            bool shouldothrick = false;
             if (IsServer)
                 return;
             EnemyAI __instance = null!;
@@ -766,9 +779,19 @@ namespace LethalMin
             {
                 __instance = enemyNetObj.GetComponent<EnemyAI>();
             }
+            if (__instance.enabled)
+            {
+                __instance.enabled = false;
+                shouldothrick = true;
+            }
             currentEnemy = __instance.NetworkObject.NetworkObjectId;
 
             LethalMin.Logger.LogInfo("Creating item node on enemy body on the client side " + __instance.gameObject.name);
+
+            __instance.moveTowardsDestination = false;
+            __instance.movingTowardsTargetPlayer = false;
+            __instance.updatePositionThreshold = 9000;
+            __instance.syncMovementSpeed = 0f;
 
             Item Iprops = new Item();
             Iprops.restingRotation = RestingRotation;
@@ -778,8 +801,12 @@ namespace LethalMin
             PhysicsProp prop = __instance.gameObject.AddComponent<PhysicsProp>();
             prop.itemProperties = Iprops;
             prop.grabbable = false;
+            if(shouldothrick)
+            {
+                __instance.enabled = true;
+            }
         }
-
+        
         [ClientRpc]
         public void SyncBodyItemNodeClientRpc(NetworkObjectReference PminRef)
         {

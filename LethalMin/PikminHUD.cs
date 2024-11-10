@@ -11,6 +11,12 @@ using UnityEngine.UI;
 using UnityEngine.InputSystem;
 namespace LethalMin
 {
+    public enum HudPresets
+    {
+        Classic,
+        New,
+        Simplified
+    }
     public class PikminHUD : MonoBehaviour
     {
         public LeaderManager LeaderScript;
@@ -23,6 +29,7 @@ namespace LethalMin
         private TMP_Text ThrowPrompt, LeftPrompt, RightPrompt;
         public GameObject WigglePrompt;
         public CanvasGroup PromptcanvasGroup;
+        public HudPresets CurrentHUDPreset = HudPresets.New;
 
         void Awake()
         {
@@ -64,6 +71,104 @@ namespace LethalMin
             ThrowPrompt = transform.Find("Prompts/Buttons/ThrowPrompt").GetComponent<TMP_Text>();
             LeftPrompt = transform.Find("Prompts/Buttons/SwitchL").GetComponent<TMP_Text>();
             RightPrompt = transform.Find("Prompts/Buttons/SwitchR").GetComponent<TMP_Text>();
+
+            SetHudPresets(CurrentHUDPreset);
+        }
+        public void SetHudPresets(HudPresets preset)
+        {
+            switch (preset)
+            {
+                case HudPresets.Classic:
+                    // Set up classic HUD
+                    NextPortRect.gameObject.SetActive(true);
+                    PrevPortRect.gameObject.SetActive(true);
+                    PikminInExsistanceRect.gameObject.SetActive(true);
+
+                    LethalMin.PikminSelectedPosX = 262.78f;
+                    LethalMin.PikminSelectedPosY = -106f;
+                    LethalMin.PikminSelectedPosZ = -59.767f;
+                    LethalMin.PikminSelectedRotX = 0f;
+                    LethalMin.PikminSelectedRotY = 12f;
+                    LethalMin.PikminSelectedRotZ = 0f;
+                    LethalMin.PikminSelectedScale = 0.677937f;
+
+                    LethalMin.PikminCountPosX = 268.4f;
+                    LethalMin.PikminCountPosY = -165.4f;
+                    LethalMin.PikminCountPosZ = -45.4f;
+                    LethalMin.PikminCountRotX = 0f;
+                    LethalMin.PikminCountRotY = 12f;
+                    LethalMin.PikminCountRotZ = 0f;
+                    LethalMin.PikminCountScale = 0.6698875f;
+                    break;
+                case HudPresets.New:
+                    // Set up new HUD
+                    NextPortRect.gameObject.SetActive(true);
+                    PrevPortRect.gameObject.SetActive(true);
+                    PikminInExsistanceRect.gameObject.SetActive(true);
+
+                    LethalMin.PikminSelectedPosX = 8.4f;
+                    LethalMin.PikminSelectedPosY = -106.6f;
+                    LethalMin.PikminSelectedPosZ = -15.9f;
+                    LethalMin.PikminSelectedRotX = 0f;
+                    LethalMin.PikminSelectedRotY = 0f;
+                    LethalMin.PikminSelectedRotZ = 0f;
+                    LethalMin.PikminSelectedScale = 0.6f;
+
+                    LethalMin.PikminCountPosX = 23.5f;
+                    LethalMin.PikminCountPosY = -204.9f;
+                    LethalMin.PikminCountPosZ = -47.4f;
+                    LethalMin.PikminCountRotX = 0f;
+                    LethalMin.PikminCountRotY = 0f;
+                    LethalMin.PikminCountRotZ = 0f;
+                    LethalMin.PikminCountScale = 0.6f;
+                    break;
+                case HudPresets.Simplified:
+                    // Set up simplified HUD
+                    NextPortRect.gameObject.SetActive(false);
+                    PrevPortRect.gameObject.SetActive(false);
+                    PikminInExsistanceRect.gameObject.SetActive(false);
+
+                    LethalMin.PikminSelectedPosX = 109f;
+                    LethalMin.PikminSelectedPosY = -85.4f;
+                    LethalMin.PikminSelectedPosZ = -47f;
+                    LethalMin.PikminSelectedRotX = 0f;
+                    LethalMin.PikminSelectedRotY = 0f;
+                    LethalMin.PikminSelectedRotZ = 0f;
+                    LethalMin.PikminSelectedScale = 0.6f;
+
+                    LethalMin.PikminCountPosX = 73f;
+                    LethalMin.PikminCountPosY = -106f;
+                    LethalMin.PikminCountPosZ = -47.4f;
+                    LethalMin.PikminCountRotX = 0f;
+                    LethalMin.PikminCountRotY = 0f;
+                    LethalMin.PikminCountRotZ = 0f;
+                    LethalMin.PikminCountScale = 0.6f;
+                    break;
+                default:
+                    // Default to new HUD
+                    NextPortRect.gameObject.SetActive(true);
+                    PrevPortRect.gameObject.SetActive(true);
+                    PikminInExsistanceRect.gameObject.SetActive(true);
+
+                    LethalMin.PikminSelectedPosX = 8.4f;
+                    LethalMin.PikminSelectedPosY = -106.6f;
+                    LethalMin.PikminSelectedPosZ = -15.9f;
+                    LethalMin.PikminSelectedRotX = 0f;
+                    LethalMin.PikminSelectedRotY = 0f;
+                    LethalMin.PikminSelectedRotZ = 0f;
+                    LethalMin.PikminSelectedScale = 0.6f;
+
+                    LethalMin.PikminCountPosX = 23.5f;
+                    LethalMin.PikminCountPosY = -204.9f;
+                    LethalMin.PikminCountPosZ = -47.4f;
+                    LethalMin.PikminCountRotX = 0f;
+                    LethalMin.PikminCountRotY = 0f;
+                    LethalMin.PikminCountRotZ = 0f;
+                    LethalMin.PikminCountScale = 0.6f;
+                    
+                    LethalMin.Logger.LogWarning("Invalid HUD preset selected, defaulting to new HUD.");
+                    break;
+            }
         }
 
 
@@ -116,7 +221,7 @@ namespace LethalMin
         Coroutine promptRoutine;
         public void HidePrompts()
         {
-            if(HasThrownMin){return;}
+            if (HasThrownMin) { return; }
             HasThrownMin = true;
             StartCoroutine(HidePromptsRoutine());
         }
@@ -134,7 +239,7 @@ namespace LethalMin
         }
         public void PingPrompts()
         {
-            if(!HasThrownMin || promptRoutine != null){return;}
+            if (!HasThrownMin || promptRoutine != null) { return; }
             promptRoutine = StartCoroutine(PingPromptsRoutine());
         }
         public IEnumerator PingPromptsRoutine()

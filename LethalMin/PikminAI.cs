@@ -27,36 +27,95 @@ namespace LethalMin
         Panic,
     }
 
-    public struct ItemTarget
+    public struct ItemRoute
     {
-        public string Name;
-        public bool relivent;
-        public int Score;
-        public Transform Transform;
-        public Vector3 Position;
-
-        public ItemTarget(string name, Vector3 position, int score)
+        public string RouteName = "";
+        public float InitalDistance = 0f;
+        public bool IsPathable = false;
+        public bool BypassPathableCheck = false;
+        public bool BypassDistanceCheck = false;
+        public bool BypassLethalEscape = false;
+        public int CurPathIndex = 0;
+        public int Priority = 0;
+        public float stoppingDistance = 0.5f;
+        public List<Vector3> Points = new List<Vector3>();
+        public List<Transform> Transforms = new List<Transform>();
+        public List<bool> IsOutside = new List<bool>();
+        public EntranceTeleport entranceTeleport;
+        public bool IsTransform = false;
+        public ItemRoute(string name)
         {
-            Name = name;
-            Position = position;
-            Score = score;
-            Transform = null!;
-            relivent = true;
+            RouteName = name;
         }
-
-        public ItemTarget(string name, Transform transform, int score)
+        public Vector3? GetExitPoint()
         {
-            Name = name;
-            Transform = transform;
-            Score = score;
-            Position = Vector3.zero;
-            relivent = true;
+            if (entranceTeleport != null && entranceTeleport.FindExitPoint())
+            {
+                LethalMin.Logger.LogInfo($"{RouteName}: Found exit point at {entranceTeleport.exitPoint.position}");
+                return entranceTeleport.exitPoint.position;
+            }
+            else
+            {
+                return null!;
+            }
         }
-        public Vector3 GetPos()
+        public Vector3? GetEntreancePoint()
         {
-            if (Transform != null)
-                return Transform.position;
-            return Position;
+            if (entranceTeleport != null)
+            {
+                LethalMin.Logger.LogInfo($"{RouteName}: Found entrance point at {entranceTeleport.entrancePoint.position}");
+                return entranceTeleport.entrancePoint.position;
+            }
+            else
+            {
+                return null!;
+            }
+        }
+        public int TotalPointCount()
+        {
+            if (IsTransform)
+            {
+                return Transforms.Count;
+            }
+            else
+            {
+                return Points.Count;
+            }
+        }
+        public (Vector3, bool) GetRoutePoint()
+        {
+            if (IsTransform)
+            {
+                if (Transforms.Count > CurPathIndex)
+                {
+                    return (Transforms[CurPathIndex].position, IsOutside[CurPathIndex]);
+                }
+                else
+                {
+                    return (Transforms[Transforms.Count - 1].position, IsOutside[Transforms.Count - 1]);
+                }
+            }
+            else
+            {
+                if (Points.Count > CurPathIndex)
+                {
+                    return (Points[CurPathIndex], IsOutside[CurPathIndex]);
+                }
+                else
+                {
+                    return (Points[Points.Count - 1], IsOutside[Points.Count - 1]);
+                }
+            }
+        }
+        public void AddPoint(Vector3 point, bool IsOutside)
+        {
+            Points.Add(point);
+            this.IsOutside.Add(IsOutside);
+        }
+        public void AddPoint(Transform transform, bool IsOutside)
+        {
+            Transforms.Add(transform);
+            this.IsOutside.Add(IsOutside);
         }
     }
 
@@ -2720,10 +2779,7 @@ namespace LethalMin
             }
         }
 
-        public List<ItemTarget> CurTargets = new List<ItemTarget>();
-
-        [IDebuggable.Debug]
-        public List<string> CurTargetNames => CurTargets.Select(x => x.Name).ToList();
+        public List<ItemRoute> CurRoutes = new List<ItemRoute>();
         private void HandleItemCarrying()
         {
             if (targetItem == null || targetItem.Root == null)
@@ -2755,20 +2811,20 @@ namespace LethalMin
                         GetItemTarget();
                     }
 
-                    if (CurTargets[0].Name == "???")
+                    if (CurRoutes[0].RouteName == "???")
                     {
                         MoveInCircles();
                     }
                     else
                     {
-                        agent.SetDestination(CurTargets[0].GetPos());
+                        agent.SetDestination(CurRoutes[0].GetRoutePoint().Item1);
                     }
                     agent.updateRotation = false;
                     transform.rotation = targetCarryRotaion;
 
                     RefeshItemTargets();
 
-                    if (CurTargets[0].Name != "???")
+                    if (CurRoutes[0].RouteName != "???")
                         CheckToDropItem();
                 }
                 else
@@ -2810,20 +2866,21 @@ namespace LethalMin
 
         private void GetItemTarget()
         {
-            List<ItemTarget> possibleTargets = new List<ItemTarget>();
+            List<ItemRoute> PossibleRoutes = new List<ItemRoute>();
 
             Transform targetPos2 = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
-
-            var Qtarget = new ItemTarget("???", targetPos2, 0);
-            ItemTarget cartarget = new ItemTarget(" ", Vector3.zero, 0);
 
 
             // CaveDweller target
             if (targetItem.GetComponentInParent<CaveDwellerPhysicsProp>() != null)
             {
                 Transform targetPos = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
-                possibleTargets.Add(new ItemTarget("CaveDweller", targetPos, 100)); // High priority
-                CurTargets = possibleTargets;
+                ItemRoute CaveDwellerRoute = new ItemRoute("CaveDweller");
+                CaveDwellerRoute.AddPoint(targetPos2, isOutside);
+                CaveDwellerRoute.BypassDistanceCheck = true;
+                CaveDwellerRoute.BypassPathableCheck = true;
+                PossibleRoutes.Add(CaveDwellerRoute);
+                CurRoutes = PossibleRoutes;
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Skipping other targets because of CaveDweller");
                 CarryingItemTo = "CaveDweller";
                 HasFoundCaryTarget = true;
@@ -2832,29 +2889,33 @@ namespace LethalMin
             }
 
             // Ship target (outside and not in Company Building)
-            if (isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
+            if (RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
             {
                 Vector3 shipPos = StartOfRound.Instance.insideShipPositions[UnityEngine.Random.Range(0, StartOfRound.Instance.insideShipPositions.Length)].position;
-                possibleTargets.Add(new ItemTarget("Ship", shipPos, 80));
+                ItemRoute ShipRoute = new ItemRoute("Ship");
+                ShipRoute.AddPoint(shipPos, true);
+                ShipRoute.BypassPathableCheck = true;
+                ShipRoute.InitalDistance = Vector3.Distance(transform.position, shipPos);
+                PossibleRoutes.Add(ShipRoute);
             }
 
             // Car target
-            if (LethalMin.GoToCar && isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
+            if (LethalMin.GoToCar && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
             {
-                Vector3 shipPos = StartOfRound.Instance.insideShipPositions[UnityEngine.Random.Range(0, StartOfRound.Instance.insideShipPositions.Length)].position;
                 GetNearestCar();
-                if (TargetCar != null && TargetCarPos != null && TargetCar.backDoorOpen
-                 && Vector3.Distance(transform.position, TargetCar.transform.position) < Vector3.Distance(transform.position, shipPos))
+                if (TargetCar != null && TargetCarPos != null && TargetCar.backDoorOpen)
                 {
-                    cartarget = new ItemTarget("Car", TargetCarPos.transform.position, 90);
-                    possibleTargets.Add(cartarget); // Higher priority than ship
+                    ItemRoute CarRoute = new ItemRoute("Car");
+                    CarRoute.AddPoint(TargetCarPos.position, false);
+                    PossibleRoutes.Add(CarRoute);
+                    CarRoute.BypassPathableCheck = true;
+                    CarRoute.InitalDistance = Vector3.Distance(transform.position, TargetCarPos.position);
+                    PossibleRoutes.Add(CarRoute);
                 }
             }
 
             // Onion Target
-            ItemTarget OnionTarget = new ItemTarget("Onion", Vector3.zero, 0);
-            if (targetItem.CanBeConvertedIntoSprouts &&
-            isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" &&
+            if (targetItem.CanBeConvertedIntoSprouts && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" &&
                 PikminManager._currentOnions.Where(o => o.type.CanCreateSprouts).ToList().Count > 0)
             {
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion");
@@ -2865,7 +2926,12 @@ namespace LethalMin
                 PikminAI majorityTypeInstance = null;
                 PikminAI minorityTypeInstance = null;
                 Dictionary<PikminType, int> typeCounts = new Dictionary<PikminType, int>();
+                ItemRoute OnionRoute = new ItemRoute("Onion");
                 bool hasSelectedOinion = false;
+
+                OnionRoute.BypassDistanceCheck = true;
+                OnionRoute.BypassPathableCheck = true;
+                OnionRoute.Priority = 10;
 
                 // Count pikmin types on the carried item
                 foreach (var pikmin in targetItem.PikminOnItemList)
@@ -2899,7 +2965,7 @@ namespace LethalMin
                 // Case 2: Minority pikmin type's target onion
                 if (!hasSelectedOinion && targetOnion == null && minorityType != null && minorityTypeInstance != null && minorityTypeInstance.TargetOnion != null)
                 {
-                    targetOnion = UseableOnions.FirstOrDefault(o => o == majorityTypeInstance?.TargetOnion);
+                    targetOnion = UseableOnions.FirstOrDefault(o => o == minorityTypeInstance?.TargetOnion);
                     targetItem.TargetType = minorityType;
                     targetItem.SetCurColorClientRpc(minorityType.PikminColor);
                     hasSelectedOinion = true;
@@ -2936,182 +3002,182 @@ namespace LethalMin
                     LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with least pikmin: {targetOnion?.type}");
                 }
 
+                LethalMin.Logger.LogInfo($"Evaluation done. Varibles: (TargetOnion: {targetOnion?.type.TypeName})," +
+                $"(Majotity Type: {majorityType?.GetName()}), (Minority Type: {minorityType?.GetName()})," +
+                $"(Majority Instance: {majorityTypeInstance?.name}), (Minority Instance: {minorityTypeInstance?.name})");
+
                 // Add the target onion to possible targets
                 if (targetOnion != null)
                 {
-                    targetItem.TargetOnion = targetOnion;
-                    OnionTarget = new ItemTarget("Onion", targetOnion.transform.position, 100);
-                    possibleTargets.Add(OnionTarget);
+                    targetItem.SetTargetOnionClientRpc(targetOnion.NetworkObject);
+                    OnionRoute.AddPoint(targetOnion.transform.position, true);
+                    OnionRoute.InitalDistance = Vector3.Distance(transform.position, targetOnion.transform.position);
+                    PossibleRoutes.Add(OnionRoute);
                 }
             }
 
             // Company Building counter
-            if (isOutside && RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding")
+            if (RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding")
             {
                 Vector3 counterPos = GameObject.FindObjectOfType<DepositItemsDesk>().triggerCollider.transform.position;
-                possibleTargets.Add(new ItemTarget("Counter", counterPos, 80));
+                ItemRoute CounterRoute = new ItemRoute("Counter");
+                CounterRoute.BypassDistanceCheck = true;
+                CounterRoute.BypassPathableCheck = true;
+                CounterRoute.Priority = 5;
+                CounterRoute.AddPoint(counterPos, true);
+                CounterRoute.InitalDistance = Vector3.Distance(transform.position, counterPos);
+                PossibleRoutes.Add(CounterRoute);
             }
 
             // Main entrance and fire exit
-            if (!MineshaftInside && !isOutside)
+            if (!MineshaftInside)
             {
                 Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
                 Vector3 adjustedMainEntrancePos = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
+                ItemRoute MainRoute = new ItemRoute("Main");
                 if (!LethalMin.OnlyExit)
-                    possibleTargets.Add(new ItemTarget("Main", adjustedMainEntrancePos, 70));
-
-                Vector3 fireExitPosition = FindNearestFireExit();
-                if (fireExitPosition != Vector3.zero && !LethalMin.OnlyMain)
                 {
-                    if (Vector3.Distance(transform.position, fireExitPosition) < Vector3.Distance(transform.position, mainEntrancePosition) ||
-                    LethalMin.OnlyExit)
+                    MainRoute.AddPoint(adjustedMainEntrancePos, true);
+                    MainRoute.InitalDistance = Vector3.Distance(transform.position, adjustedMainEntrancePos);
+                    PossibleRoutes.Add(MainRoute);
+                }
+
+                if (FindFireExits().Count > 0 && !LethalMin.OnlyMain)
+                {
+                    int i = 0;
+                    foreach (var fireExit in FindFireExits())
                     {
-                        possibleTargets.Add(new ItemTarget("FireExit", fireExitPosition, 75));
+                        ItemRoute FireExitRoute = new ItemRoute($"FireExit: {i}");
+                        FireExitRoute.AddPoint(fireExit.transform.position, false);
+                        FireExitRoute.InitalDistance = Vector3.Distance(transform.position, fireExit.transform.position);
+                        PossibleRoutes.Add(FireExitRoute);
+                        i++;
                     }
                 }
             }
 
             // Mineshaft specific targets
-            if (MineshaftInside && !isOutside)
+            if (MineshaftInside)
             {
+                ItemRoute MainRoute = new ItemRoute("Main");
+                ItemRoute ElevatorRoute = new ItemRoute("Elevator");
                 if (IsOnUpperLevel)
                 {
                     Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
                     Vector3 adjustedMainEntrancePos = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
                     if (!LethalMin.OnlyExit)
-                        possibleTargets.Add(new ItemTarget("Main(Mineshaft)", adjustedMainEntrancePos, 70));
+                    {
+                        MainRoute.AddPoint(adjustedMainEntrancePos, true);
+                        MainRoute.InitalDistance = Vector3.Distance(transform.position, adjustedMainEntrancePos);
+                        PossibleRoutes.Add(MainRoute);
+                    }
                 }
                 else
                 {
                     Vector3 elevatorPos = RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint.position;
-                    possibleTargets.Add(new ItemTarget("Elevator", elevatorPos, 70));
+                    ElevatorRoute.AddPoint(elevatorPos, false);
 
-                    Vector3 fireExitPosition = FindNearestFireExit();
-                    if (fireExitPosition != Vector3.zero && !LethalMin.OnlyMain)
+                    if (FindFireExits().Count > 0 && !LethalMin.OnlyMain)
                     {
-                        if (Vector3.Distance(transform.position, fireExitPosition) < Vector3.Distance(transform.position, elevatorPos) ||
-                            LethalMin.OnlyExit)
+                        int i = 0;
+                        foreach (var fireExit in FindFireExits())
                         {
-                            possibleTargets.Add(new ItemTarget("FireExit(Mineshaft)", fireExitPosition, 75));
+                            ItemRoute FireExitRoute = new ItemRoute($"FireExit: {i}");
+                            FireExitRoute.AddPoint(fireExit.transform.position, false);
+                            FireExitRoute.InitalDistance = Vector3.Distance(transform.position, fireExit.transform.position);
+                            PossibleRoutes.Add(FireExitRoute);
+                            i++;
                         }
                     }
                 }
             }
 
-            // Sort targets by score and find the highest scoring pathable target
-            possibleTargets = possibleTargets.OrderByDescending(t => t.Score).ToList();
-            CurTargets = possibleTargets;
-            foreach (var target in possibleTargets)
+            // Sort routes by their distance (lowest to highest)if ByPassDistanceCheck is false and their priority if true
+            PossibleRoutes = PossibleRoutes.OrderBy(route => route.BypassDistanceCheck ? 0 : 1)
+                               .ThenBy(route => route.BypassDistanceCheck ? -route.Priority : route.InitalDistance)
+                               .ToList();
+            for (int i = 0; i < PossibleRoutes.Count; i++)
             {
-                //Skip Null target
-                if (target.Name == "???")
-                    continue;
-                // Check if the target is a maneater and if the current maneater is not the same as the target
-                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Possible target: {target.Name} at {target.GetPos()} with score of {target.Score}");
-
-                if (IsPathPossible(target.Position) || target.Name == "Onion" || target.Name == "Car" || target.Name == "Counter"
-                || target.Name == "Ship" && !possibleTargets.Contains(cartarget) && !possibleTargets.Contains(OnionTarget))
+                ItemRoute route = PossibleRoutes[i];
+                if (!route.BypassPathableCheck)
                 {
-                    CarryingItemTo = target.Name;
-                    HasFoundCaryTarget = true;
-                    targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
-
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Selected target: {target.Name} at {target.GetPos()} with score of {target.Score}");
-                    if (target.Name != "Onion")
-                    {
-                        targetItem.SetCurColorClientRpc(targetItem.basecolor);
-                    }
-                    return;
+                    route.IsPathable = IsPathPossible(route.GetRoutePoint().Item1, false, true);
                 }
+                else
+                {
+                    route.IsPathable = true;
+                }
+
+                HasFoundCaryTarget = true;
+                targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
+                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found route: {route.RouteName}");
+                return;
             }
 
             // If no pathable target found
-            possibleTargets.Insert(0, Qtarget);
-            CurTargets = possibleTargets;
-
-            CarryingItemTo = Qtarget.Name;
             HasFoundCaryTarget = true;
             targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
+            PossibleRoutes.Add(new ItemRoute("???"));
 
             LethalMin.Logger.LogWarning($"({uniqueDebugId}) No pathable target found!");
         }
 
         private float lastTargetSwitchTime = 0f;
-        private const float TARGET_SWITCH_COOLDOWN = 2f; // 2 seconds cooldown
+        private const float TARGET_SWITCH_COOLDOWN = 1.5f; // 2 seconds cooldown
         private const float DISTANCE_THRESHOLD = 0.5f; // 0.5 units threshold
 
         private void RefeshItemTargets()
         {
-            // Exclude the ??? target name from the list before doing the return check
-            if (CurTargets[0].Name == "???")
-            {
-                //Check if any other targets are pathable
-                for (int i = 0; i < CurTargets.Count; i++)
-                {
-                    var target = CurTargets[i];
-                    if (target.Name != "???")
-                    {
-                        if (IsPathPossible(target.Position))
-                        {
-                            CurTargets.RemoveAt(i);
-                            CurTargets.Insert(0, target);
-                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Moved target {target.Name} to the top of the list");
-                            return;
-                        }
-                    }
-                }
-            }
+            if (CurRoutes.Count <= 0)
+                return;
 
-            ItemTarget[] targets = CurTargets.Where(t => t.Name != "???").ToArray();
-            if (targets.Length <= 1)
+            // Run the LastTargetSwitchTimer
+            float curTime = Time.time;
+            if (curTime - lastTargetSwitchTime < TARGET_SWITCH_COOLDOWN)
+                return;
+
+            ItemRoute firstRoute = CurRoutes[0];
+            //Check if the First route is not "???" and check if it's still pathable
+            if (firstRoute.RouteName != "???")
+            {
+                if (firstRoute.BypassPathableCheck)
+                    return;
+                firstRoute.IsPathable = IsPathPossible(CurRoutes[0].GetRoutePoint().Item1, false, true);
+            }
+            else
+            {
+                firstRoute.IsPathable = false;
+            }
+            if (firstRoute.IsPathable)
             {
                 return;
             }
-
-            // Check if enough time has passed since the last target switch
-            if (Time.time - lastTargetSwitchTime < TARGET_SWITCH_COOLDOWN)
+            if (firstRoute.RouteName == "???")
             {
+                LethalMin.Logger.LogWarning($"({uniqueDebugId}) The First route is still '???' which is not pathable. Refreshing routes.");
+                CurRoutes.Clear();
+                GetItemTarget();
                 return;
             }
-
-            ItemTarget currentTopTarget = CurTargets[0];
-            ItemTarget bestTarget = currentTopTarget;
-            float bestDistance = Vector3.Distance(transform.position, currentTopTarget.Position);
-
-            for (int i = 1; i < CurTargets.Count; i++)
+            else
             {
-                var target = CurTargets[i];
-                if (target.Name == "???")
+                for (int i = 0; i < CurRoutes.Count; i++)
                 {
-                    continue;
-                }
-
-                if (IsPathPossible(target.Position, false))
-                {
-                    float distanceToNewTarget = Vector3.Distance(transform.position, target.Position);
-
-                    // Add a slight preference for the current top target
-                    if (target.Equals(currentTopTarget))
+                    ItemRoute route = CurRoutes[i];
+                    if (!route.BypassPathableCheck)
                     {
-                        distanceToNewTarget -= 0.1f;
+                        route.IsPathable = IsPathPossible(route.GetRoutePoint().Item1, false, true);
                     }
-
-                    if (distanceToNewTarget < bestDistance - DISTANCE_THRESHOLD)
+                    else
                     {
-                        bestTarget = target;
-                        bestDistance = distanceToNewTarget;
+                        route.IsPathable = true;
                     }
                 }
+                // sort by pathable status
+                CurRoutes = CurRoutes.OrderBy(route => route.IsPathable).ToList();
+                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Refreshed routes {CurRoutes.Count} {CurRoutes[0].RouteName}");
             }
 
-            // Only switch if the best target is different and significantly closer
-            if (!bestTarget.Equals(currentTopTarget))
-            {
-                CurTargets.Remove(bestTarget);
-                CurTargets.Insert(0, bestTarget);
-                lastTargetSwitchTime = Time.time;
-                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Moved target {bestTarget.Name} to the top of the list");
-            }
         }
         private bool IsPathPossible(Vector3 destination, bool log = true, bool AllowPartiallyBlocked = false)
         {
@@ -3158,65 +3224,72 @@ namespace LethalMin
         }
         private void CheckToDropItem()
         {
+            void DoDrop()
+            {
+                targetItem.HandleArrivedClientRpc();
+                targetItem.RemoveAllPikminAndUnparent();
+                CallingHandleItemCarying = false;
+            }
+            void DoLethalEscape(Vector3 escapePos)
+            {
+                agent.Warp(escapePos);
+                transform2.Teleport(escapePos, Quaternion.identity, transform.localScale);
+            }
+
+
+
             if (isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
             {
-                if (CarryingItemTo == "Onion" && HorizontalDistance(transform.position, CurTargets[0].GetPos()) < 0.5f)
+                if (CarryingItemTo == "Onion" && HorizontalDistance(transform.position, CurRoutes[0].GetRoutePoint().Item1) < 0.5f)
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Onion");
                     targetItem.SuckIntoOnionClientRpc();
                     CallingHandleItemCarying = false;
                 }
+
                 if (IsInShip || IsInCar)
                 {
                     InShipBuffer += Time.deltaTime;
                 }
-                if (HasArrivedAtDestonation(0.5f, CurTargets[0].GetPos()) && CarryingItemTo != "CaveDweller"
+                if (HasArrivedAtDestonation(0.5f, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo != "CaveDweller"
                 || (IsInShip && InShipBuffer >= PminType.DropItemInShipBuffer)
-                || HasArrivedAtDestonation(0, CurTargets[0].GetPos()) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                || HasArrivedAtDestonation(0, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Ship");
                     InShipBuffer = 0;
-                    targetItem.HandleArrivedClientRpc();
-                    targetItem.RemoveAllPikminAndUnparent();
-                    CallingHandleItemCarying = false;
+                    DoDrop();
                 }
             }
             else if (isOutside && RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding")
             {
-                if (HasArrivedAtDestonation(2.5f, CurTargets[0].GetPos()) && CarryingItemTo != "CaveDweller"
-                || HasArrivedAtDestonation(0f, CurTargets[0].GetPos()) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                if (HasArrivedAtDestonation(2.5f, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo != "CaveDweller"
+                || HasArrivedAtDestonation(0f, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Counter");
-                    targetItem.HandleArrivedClientRpc();
-                    targetItem.RemoveAllPikminAndUnparent();
-                    CallingHandleItemCarying = false;
+                    DoDrop();
                 }
             }
             else if (!MineshaftInside || MineshaftInside && !IsOnLowerLevel)
             {
-                if (HasArrivedAtDestonation(4, CurTargets[0].GetPos()) && CarryingItemTo != "CaveDweller"
-                || HasArrivedAtDestonation(0, CurTargets[0].GetPos()) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                if (HasArrivedAtDestonation(4, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo != "CaveDweller"
+                || HasArrivedAtDestonation(0, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at MainEntrance");
-                    targetItem.HandleArrivedClientRpc();
-                    targetItem.RemoveAllPikminAndUnparent();
-                    CallingHandleItemCarying = false;
+                    DoDrop();
                 }
             }
             else
             {
-                if (HasArrivedAtDestonation(0.5f, CurTargets[0].GetPos()) && CarryingItemTo != "CaveDweller"
-                || HasArrivedAtDestonation(0f, CurTargets[0].GetPos()) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                if (HasArrivedAtDestonation(0.5f, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo != "CaveDweller"
+                || HasArrivedAtDestonation(0f, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Elevator");
-                    targetItem.HandleArrivedClientRpc();
-                    targetItem.RemoveAllPikminAndUnparent();
-                    CallingHandleItemCarying = false;
+                    DoDrop();
                 }
             }
         }
@@ -3258,42 +3331,28 @@ namespace LethalMin
             }
             return transform.rotation;
         }
-        private Vector3 FindNearestFireExit()
+        private List<EntranceTeleport> FindFireExits()
         {
             EntranceTeleport[] allEntrances = UnityEngine.Object.FindObjectsOfType<EntranceTeleport>(includeInactive: false);
-            EntranceTeleport nearestFireExit = null;
             List<EntranceTeleport> allExits = new List<EntranceTeleport>();
-            float nearestDistance = float.MaxValue;
 
             foreach (EntranceTeleport entrance in allEntrances)
             {
                 // Check if it's a fire exit (entrance ID is not 0)
                 if (entrance.entranceId != 0)
                 {
-                    if (IsPathPossible(entrance.transform.position, true, true))
-                        allExits.Add(entrance);
+                    allExits.Add(entrance);
                 }
             }
 
             if (allExits.Count == 0)
             {
-                LethalMin.Logger.LogWarning("No fire exit found. Returning root.");
-                return Vector3.zero;
+                LethalMin.Logger.LogWarning("No fire exit found. Returning null.");
+                return null!;
             }
 
-            nearestFireExit = allExits
-                .OrderBy(exit => Vector3.Distance(transform.position, exit.transform.position))
-                .First();
+            return allExits.OrderBy(exit => Vector3.Distance(transform.position, exit.transform.position)).ToList();
 
-            if (nearestFireExit != null)
-            {
-                return nearestFireExit.transform.position;
-            }
-            else
-            {
-                LethalMin.Logger.LogWarning("No fire exit found. Returning root.");
-                return Vector3.zero;
-            }
         }
         private void GetNearestCar()
         {
@@ -3398,112 +3457,6 @@ namespace LethalMin
             HasPlayedLift = false;
             CanGrabItems = false;
         }
-
-
-
-        private void GetItemTargetLEGACY()
-        {
-            Vector3 targetScrapPosition = targetItem.transform.position;
-            if (targetItem.GetComponentInParent<CaveDwellerPhysicsProp>() != null)
-            {
-                if (previousLeader == null)
-                    targetScrapPosition = StartOfRound.Instance.localPlayerController.transform.position;
-                if (previousLeader != null)
-                    targetScrapPosition = previousLeader.transform.position;
-                if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Player Pos at {targetScrapPosition}");
-                CarryingItemTo = "CaveDweller";
-                HasFoundCaryTarget = true;
-                return;
-            }
-            if (isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
-            {
-                if (LethalMin.GoToCar)
-                {
-                    GetNearestCar();
-                    Vector3 shippos = StartOfRound.Instance.insideShipPositions[UnityEngine.Random.Range(0, StartOfRound.Instance.insideShipPositions.Length)].position;
-                    //Check if the car is closer than the ship
-                    if (TargetCar != null && TargetCarPos != null &&
-                    Vector3.Distance(transform.position, TargetCar.transform.position) < Vector3.Distance(transform.position, shippos)
-                    && TargetCar.backDoorOpen)
-                    {
-                        targetScrapPosition = TargetCarPos.transform.position;
-                        if (LethalMin.DebugMode)
-                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Car Pos at {targetScrapPosition}");
-                        CarryingItemTo = "Car";
-                        HasFoundCaryTarget = true;
-                        return;
-                    }
-                }
-                targetScrapPosition = StartOfRound.Instance.insideShipPositions[UnityEngine.Random.Range(0, StartOfRound.Instance.insideShipPositions.Length)].position;
-                if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Ship Pos at {targetScrapPosition}");
-                CarryingItemTo = "Ship";
-                HasFoundCaryTarget = true;
-            }
-            else if (isOutside && RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding")
-            {
-                targetScrapPosition = GameObject.FindObjectOfType<DepositItemsDesk>().triggerCollider.transform.position;
-                if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Counter Pos at {targetScrapPosition}");
-                CarryingItemTo = "Counter";
-                HasFoundCaryTarget = true;
-            }
-            else if (!MineshaftInside)
-            {
-                Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
-                Vector3 fireExitPosition = FindNearestFireExit();
-
-                if (LethalMin.OnlyExit && fireExitPosition != Vector3.zero
-                || !LethalMin.OnlyMain && fireExitPosition != Vector3.zero
-                && Vector3.Distance(transform.position, fireExitPosition) < Vector3.Distance(transform.position, mainEntrancePosition))
-                {
-                    targetScrapPosition = fireExitPosition;
-                    if (LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Fire Exit Pos at {targetScrapPosition}");
-                    CarryingItemTo = "FireExit";
-                }
-                else
-                {
-                    targetScrapPosition = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
-                    if (LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Main Entrance Pos at {targetScrapPosition}");
-                    CarryingItemTo = "Main";
-                }
-                HasFoundCaryTarget = true;
-            }
-            else if (MineshaftInside && IsOnUpperLevel)
-            {
-                Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
-                targetScrapPosition = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
-                if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Main Entrance Pos at {targetScrapPosition}");
-                CarryingItemTo = "Main(Mineshaft)";
-            }
-            else
-            {
-                Vector3 fireExitPosition = FindNearestFireExit();
-                targetScrapPosition = RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint.position;
-                if (LethalMin.OnlyExit && fireExitPosition != Vector3.zero
-                || !LethalMin.OnlyMain && Vector3.Distance(transform.position, fireExitPosition) <
-                 Vector3.Distance(transform.position, RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint.position))
-                {
-                    targetScrapPosition = fireExitPosition;
-                    if (LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Fire Exit Pos at {targetScrapPosition}");
-                    CarryingItemTo = "FireExit (Mineshaft)";
-                }
-                else
-                {
-                    if (LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found Elevator Pos at {targetScrapPosition}");
-                    CarryingItemTo = "Elevator";
-                    HasFoundCaryTarget = true;
-                }
-            }
-            targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
-        }
-
 
         #endregion
 

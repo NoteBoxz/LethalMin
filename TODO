@@ -1,13 +1,11 @@
 (0.2.x)
 
-Redesinge the HUD (Not Started)
-
-Redo Routing System (Not Started)
-
 Make Library Scriptable Object Converter (Not Started)
 
+Redo Routing System (Done, Needs more testing)
 Add in Puffmin. (Done, Needs more testing)
 
+Redesinge the HUD (Done)
 Make Unity Library Plugin. (Done)
 Add in poisoning. (Done)
 Redo PikminOnItem system. (Done)
