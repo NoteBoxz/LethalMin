@@ -1362,6 +1362,7 @@ namespace LethalMin
         public List<GrabbableObject> ObjectsToDestroyOnLeave = new List<GrabbableObject>();
         public void HandlePikminWhenShipLeaving()
         {
+            RemoveAllRadiuses();
             if (!IsServer) { return; }
             foreach (var item in ObjectsToDestroyOnLeave)
             {
@@ -1484,6 +1485,7 @@ namespace LethalMin
         {
             GameObject radiusObject = new GameObject($"Radius ({Radiuses.Count})");
             radiusObject.transform.position = position;
+            radiusObject.transform.rotation = Quaternion.Euler(90, 0, 0);
             radiusObject.AddComponent<LineRenderer>();
             radiusObject.AddComponent<CircleRenderer>().radius = radius;
             Radiuses.Add(radiusObject);

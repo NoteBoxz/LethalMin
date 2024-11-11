@@ -523,7 +523,7 @@ namespace LethalMin
             LocalVoice.PlayOneShot(LethalMin.AttackSFX[enemyRandom.Next(0, LethalMin.AttackSFX.Count())]);
             LocalAnim.SetTrigger("AttackStanding");
             yield return new WaitForSeconds(0.4f);
-            LethalMin.Logger.LogInfo("{DebugID} HIT!!!!");
+            LethalMin.Logger.LogInfo($"{DebugID} HIT!!!!");
             LocalSFX.PlayOneShot(LethalMin.PuffHit);
             targetplayer.DamagePlayer(damage, false, true, CauseOfDeath.Bludgeoning);
             IsHitting = false;

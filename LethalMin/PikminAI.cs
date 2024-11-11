@@ -3140,6 +3140,8 @@ namespace LethalMin
                         Vector3 elevatorPos = RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint.position;
                         ElevatorRoute.InitalDistance = Vector3.Distance(transform.position, elevatorPos);
                         ElevatorRoute.AddPoint(elevatorPos, false);
+                        ElevatorRoute.BypassPathableCheck = true;
+                        ElevatorRoute.Priority = 7;  
                         PossibleRoutes.Add(ElevatorRoute);
                     }
 
@@ -3307,6 +3309,18 @@ namespace LethalMin
                 }
                 // sort by pathable status
                 CurRoutes = CurRoutes.OrderBy(route => route.IsPathable).ToList();
+                // log the possible routes
+                string RouteLog = "";
+                foreach (var route in CurRoutes)
+                {
+                    RouteLog += $"\n-------------------\n";
+                    RouteLog += route.RouteName + "\n";
+                    RouteLog += $"Pathable: {route.IsPathable} \nBypassPath: {route.BypassPathableCheck} \nBypassDistance: {route.BypassDistanceCheck}\n";
+                    RouteLog += $"Entrance: {route.entranceTeleport?.name ?? "None"}\n";
+                    RouteLog += $"Priority: {route.Priority}, \nDistance: {route.InitalDistance}";
+                    RouteLog += $"-------------------\n";
+                }
+                LethalMin.Logger.LogInfo($"({uniqueDebugId}) New routes: {RouteLog}");
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Refreshed routes {CurRoutes.Count} {CurRoutes[0].RouteName}");
             }
 
