@@ -2932,6 +2932,7 @@ namespace LethalMin
                 CaveDwellerRoute.AddPoint(targetPos2, isOutside);
                 CaveDwellerRoute.BypassDistanceCheck = true;
                 CaveDwellerRoute.BypassPathableCheck = true;
+                CaveDwellerRoute.Priority = 7;
                 PossibleRoutes.Add(CaveDwellerRoute);
                 CurRoutes = PossibleRoutes;
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Skipping other targets because of CaveDweller");
@@ -2948,6 +2949,7 @@ namespace LethalMin
                 ItemRoute ShipRoute = new ItemRoute("Ship");
                 ShipRoute.AddPoint(shipPos, true);
                 ShipRoute.BypassPathableCheck = true;
+                ShipRoute.Priority = 5;
                 ShipRoute.InitalDistance = Vector3.Distance(transform.position, shipPos);
                 PossibleRoutes.Add(ShipRoute);
             }
@@ -2962,6 +2964,7 @@ namespace LethalMin
                     CarRoute.AddPoint(TargetCarPos.position, false);
                     PossibleRoutes.Add(CarRoute);
                     CarRoute.BypassPathableCheck = true;
+                    CarRoute.Priority = 5;
                     CarRoute.InitalDistance = Vector3.Distance(transform.position, TargetCarPos.position);
                     PossibleRoutes.Add(CarRoute);
                 }
@@ -3130,16 +3133,20 @@ namespace LethalMin
                 }
                 else
                 {
-                    Vector3 elevatorPos = RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint.position;
-                    ElevatorRoute.InitalDistance = Vector3.Distance(transform.position, elevatorPos);
-                    ElevatorRoute.AddPoint(elevatorPos, false);
+                    if (!LethalMin.OnlyExit)
+                    {
+                        Vector3 elevatorPos = RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint.position;
+                        ElevatorRoute.InitalDistance = Vector3.Distance(transform.position, elevatorPos);
+                        ElevatorRoute.AddPoint(elevatorPos, false);
+                        PossibleRoutes.Add(ElevatorRoute);
+                    }
 
                     if (FindFireExits().Count > 0 && !LethalMin.OnlyMain)
                     {
                         int i = 0;
                         foreach (var fireExit in FindFireExits())
                         {
-                            ItemRoute FireExitRoute = new ItemRoute($"FireExit ({i})");
+                            ItemRoute FireExitRoute = new ItemRoute($"(Mineshaft)FireExit ({i})");
                             FireExitRoute.AddPoint(fireExit.transform.position, false);
                             FireExitRoute.InitalDistance = Vector3.Distance(transform.position, fireExit.transform.position);
                             FireExitRoute.entranceTeleport = fireExit;
@@ -3202,7 +3209,7 @@ namespace LethalMin
                 RouteLog += route.RouteName + "\n";
                 RouteLog += $"Pathable: {route.IsPathable} \nBypassPath: {route.BypassPathableCheck} \nBypassDistance: {route.BypassDistanceCheck}\n";
                 RouteLog += $"Entrance: {route.entranceTeleport?.name ?? "None"}\n";
-                RouteLog += $"Priority: {route.Priority}, \nDistance: {route.InitalDistance}, \nPathable: {route.IsPathable}\n";
+                RouteLog += $"Priority: {route.Priority}, \nDistance: {route.InitalDistance}";
                 RouteLog += $"-------------------\n";
             }
             LethalMin.Logger.LogInfo($"({uniqueDebugId}) Possible routes: {RouteLog}");
@@ -3264,7 +3271,7 @@ namespace LethalMin
             {
                 if (firstRoute.BypassPathableCheck)
                     return;
-                firstRoute.IsPathable = IsPathPossible(CurRoutes[0].GetRoutePoint().Item1, false, true);
+                firstRoute.IsPathable = IsPathPossible(CurRoutes[0].GetRoutePoint().Item1, false, false);
             }
             else
             {
@@ -3294,6 +3301,7 @@ namespace LethalMin
                     {
                         route.IsPathable = true;
                     }
+                    CurRoutes[i] = route;
                 }
                 // sort by pathable status
                 CurRoutes = CurRoutes.OrderBy(route => route.IsPathable).ToList();
@@ -3355,7 +3363,7 @@ namespace LethalMin
                     ItemRoute route = CurRoutes[0];
                     route.AdvanceToNextPoint();
                     CurRoutes[0] = route;
-                    
+
                     if (CurRoutes[0].GetRoutePoint().Item2 == true && !isOutside)
                     {
                         if (CurRoutes[0].GetExitPoint() != null)
