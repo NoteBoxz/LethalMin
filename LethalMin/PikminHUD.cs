@@ -108,7 +108,7 @@ namespace LethalMin
                     PikminInExsistanceRect.gameObject.SetActive(true);
 
                     LethalMin.PikminSelectedPosX = 8.4f;
-                    LethalMin.PikminSelectedPosY = -90f;
+                    LethalMin.PikminSelectedPosY = -106.6f;
                     LethalMin.PikminSelectedPosZ = -15.9f;
                     LethalMin.PikminSelectedRotX = 0f;
                     LethalMin.PikminSelectedRotY = 0f;
@@ -116,7 +116,7 @@ namespace LethalMin
                     LethalMin.PikminSelectedScale = 0.6f;
 
                     LethalMin.PikminCountPosX = 23.5f;
-                    LethalMin.PikminCountPosY = -187f;
+                    LethalMin.PikminCountPosY = -204.9f;
                     LethalMin.PikminCountPosZ = -47.4f;
                     LethalMin.PikminCountRotX = 0f;
                     LethalMin.PikminCountRotY = 0f;
@@ -257,23 +257,62 @@ namespace LethalMin
             StartCoroutine(HidePromptsRoutine());
         }
         Coroutine CounterRoutine;
+        private float counterActiveTime = 0f;
+        private bool isCounterActive = false;
+
         public void PingCounter()
         {
-            if (CounterRoutine != null) { StopCoroutine(CounterRoutine); }
-            CounterRoutine = StartCoroutine(PingCounterRoutine());
+            if (CounterRoutine != null)
+            {
+                // If the counter is already active, just reset the timer
+                counterActiveTime = 0f;
+            }
+            else
+            {
+                // If the counter is not active, start the coroutine
+                CounterRoutine = StartCoroutine(PingCounterRoutine());
+            }
         }
+
         public IEnumerator PingCounterRoutine()
         {
+            isCounterActive = true;
             CountGroup.alpha = 0.75f;
-            yield return new WaitForSeconds(1.5f);
-            float time = 0;
-            while (time < 1)
+
+            while (isCounterActive)
             {
-                time += Time.deltaTime;
-                CountGroup.alpha = Mathf.Lerp(0.75f, 0.2f, time);
+                counterActiveTime += Time.deltaTime;
+
+                if (counterActiveTime >= 1.5f)
+                {
+                    // Start fading out after 1.5 seconds of inactivity
+                    float fadeTime = 0f;
+                    while (fadeTime < 1f)
+                    {
+                        fadeTime += Time.deltaTime;
+                        CountGroup.alpha = Mathf.Lerp(0.75f, 0.2f, fadeTime);
+
+                        // If PingCounter is called again during fade out, reset
+                        if (counterActiveTime < 1.5f)
+                        {
+                            CountGroup.alpha = 0.75f;
+                            break;
+                        }
+
+                        yield return null;
+                    }
+
+                    // If we completed the fade out, end the coroutine
+                    if (fadeTime >= 1f)
+                    {
+                        isCounterActive = false;
+                    }
+                }
+
                 yield return null;
             }
-            CounterRoutine = null!;
+
+            CounterRoutine = null;
         }
 
         public float UpdateInterval = 1f;
@@ -328,9 +367,9 @@ namespace LethalMin
                 PikminInSquad.text = LeaderScript.followingPikmin.Count.ToString();
                 PikminInField.text = PikminInFieldI.ToString();
                 PikminInExsistance.text = PikminInExistenceI.ToString();
-                if (PikminInExistenceI != LastSquadCount)
+                if (LeaderScript.followingPikmin.Count != LastSquadCount)
                 {
-                    LastSquadCount = PikminInExistenceI;
+                    LastSquadCount = LeaderScript.followingPikmin.Count;
                     PingCounter();
                 }
             }
