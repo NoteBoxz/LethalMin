@@ -1545,6 +1545,8 @@ namespace LethalMin
                     if (LeavingPos == Vector3.zero)
                     {
                         NavMeshHit hit;
+                        agent.updatePosition = true;
+                        agent.updateRotation = true;
                         if (NavMesh.SamplePosition(randoVect, out hit, float.MaxValue, NavMesh.AllAreas))
                         {
                             LeavingPos = hit.position;
@@ -3389,7 +3391,13 @@ namespace LethalMin
                 transform2.Teleport(escapePos, Quaternion.identity, transform.localScale);
                 isOutside = isOVutside;
             }
-
+            if (HasArrivedAtDestonation(0f, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+            {
+                if (LethalMin.DebugMode)
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Elevator");
+                DoDrop();
+                return;
+            }
 
             if (isOutside && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
             {
@@ -3405,9 +3413,8 @@ namespace LethalMin
                 {
                     InShipBuffer += Time.deltaTime;
                 }
-                if (HasArrivedAtDestonation(0.5f, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo != "CaveDweller"
-                || (IsInShip && InShipBuffer >= PminType.DropItemInShipBuffer)
-                || HasArrivedAtDestonation(0, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                if (HasArrivedAtDestonation(0.5f, CurRoutes[0].GetRoutePoint().Item1)
+                || (IsInShip && InShipBuffer >= PminType.DropItemInShipBuffer))
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Ship");
@@ -3417,32 +3424,32 @@ namespace LethalMin
             }
             else if (isOutside && RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding")
             {
-                if (HasArrivedAtDestonation(2.5f, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo != "CaveDweller"
-                || HasArrivedAtDestonation(0f, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                if (HasArrivedAtDestonation(2.5f, CurRoutes[0].GetRoutePoint().Item1))
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Counter");
                     DoDrop();
                 }
             }
-            else if (!MineshaftInside || MineshaftInside && !IsOnLowerLevel)
-            {
-                if (HasArrivedAtDestonation(4, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo != "CaveDweller"
-                || HasArrivedAtDestonation(0, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
-                {
-                    if (LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at MainEntrance");
-                    DoDrop();
-                }
-            }
             else
             {
-                if (HasArrivedAtDestonation(0.5f, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo != "CaveDweller"
-                || HasArrivedAtDestonation(0f, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
+                if (CarryingItemTo != "Elevator")
                 {
-                    if (LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Elevator");
-                    DoDrop();
+                    if (HasArrivedAtDestonation(4, CurRoutes[0].GetRoutePoint().Item1))
+                    {
+                        if (LethalMin.DebugMode)
+                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Entrance");
+                        DoDrop();
+                    }
+                }
+                else
+                {
+                    if (HasArrivedAtDestonation(0.4f, CurRoutes[0].GetRoutePoint().Item1))
+                    {
+                        if (LethalMin.DebugMode)
+                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Elevator");
+                        DoDrop();
+                    }
                 }
             }
         }

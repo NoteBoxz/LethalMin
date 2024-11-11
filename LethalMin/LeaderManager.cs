@@ -422,9 +422,16 @@ namespace LethalMin
                 StartCoroutine(ThrowCanceledBuffer());
                 return;
             }
-            if (IsHoldingThrowButtonFailSafe != null)
+            try
             {
-                StopCoroutine(IsHoldingThrowButtonFailSafe);
+                if (IsHoldingThrowButtonFailSafe != null)
+                {
+                    StopCoroutine(IsHoldingThrowButtonFailSafe);
+                }
+            }
+            catch
+            {
+                LethalMin.Logger.LogWarning("CouldentStop Coroutine for holding throw button fail safe.");
             }
             IsWaitingForThrowResponce = true;
             IsHoldingThrowButtonFailSafe = StartCoroutine(HoldingThrowButtonFailSafe());
