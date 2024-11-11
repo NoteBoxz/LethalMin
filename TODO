@@ -1,12 +1,14 @@
 (0.2.x)
 
-Add in 0.2.0 configs (Not Started)
+Make Trailer (Just Started)
+
+Redesinge the HUD (Done, Needs Tweeking)
 
 Add in Puffmin. (Done, Needs more testing)
+Redo Routing System (Done, Needs more testing)
 
-Redo Routing System (Done)
+Add in 0.2.0 configs (Done)
 Make Library Scriptable Object Converter (Done)
-Redesinge the HUD (Done)
 Make Unity Library Plugin. (Done)
 Add in poisoning. (Done)
 Redo PikminOnItem system. (Done)
