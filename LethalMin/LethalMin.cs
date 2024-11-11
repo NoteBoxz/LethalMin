@@ -200,6 +200,12 @@ namespace LethalMin
         public static string AttackBlacklist, PickupBlacklist;
         public static int HoarderBugEatBuffer, HoarderBugEatLimmit;
         public static bool ConvertPuffminOnDeath;
+        public static bool PuffMask;
+        public static bool ShowSafety;
+        public static HudPresets CurrentHudPreset;
+        public static bool AllowConvertion;
+        public static bool AllowProduction;
+        public static float MaskedWhistleVolume,MaskedWhistleRange;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
         public static ConfigEntry<bool> SkipPluckAnimation, FF, Smartmin, Smartermin, OnlyMainV, OnlyExitV, Pattack,
@@ -209,13 +215,13 @@ namespace LethalMin
         LethalManEaterConfig, CalmableManeaterConfig, Rasisium, NotFormidableOak, LethalTurrentsC, InvinciMin,
         StrudyMin, UselessblueMin, DebugM, FunniMode, PassiveToManEaterConfig, FFOM, FFM, TeleEle, TeleCarie,
         TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF, NoPowerSpawn, MWon, ScanablePikmin, CanShipEjectFromShip,
-        TurnToNormalOnDeath;
+        TurnToNormalOnDeath,PuffMaskConfig, ShowSafetyConfig, AllowConvertionConfig, AllowProductionConfig;
 
         public static ConfigEntry<float> Pscale, Sscale, ChaseR, PCPX, PCPY, PCPZ, PCRX, PCRY, PCRZ, PCScale,
          PCPCountX, PCPCountY, PCPCountZ, PCRCCountX, PCRCCountY, PCRCCountZ, PCScaleCount, FallTimer, CounterOffset,
          NoticeTimer, BarberR, OnionSpawnChance, SproutSpawnChance, IndoorSpawnChance, WhistleVolumeConfig,
          ManagerRefreshRateC, WhistleRange, WhistleMinRaidus, WhistleMaxRadius, PlayerNR, SpeedMultiplierConfig,
-         DamageMultiplierConfig;
+         DamageMultiplierConfig,MaskedWhistleVolumeConfig, MaskedWhistleRangeConfig;
 
         public static ConfigEntry<int> MechBurnLimmitConfig, JesterDiet, ThumperDiet, GiantDiet, BarberDiet, ManeaterDiet, SpideDiet,
         JesterBuffer, ThumperBuffer, SpiderBuffer, BeesShockCountConfig, ManeaterBuffer, MaxMin
@@ -226,6 +232,7 @@ namespace LethalMin
         AttackBlackListConfig, PickupBlacklistConfig;
         public static ConfigEntry<ObstacleAvoidanceType> PikminDefaultAvoidanceTypeConfig;
         public static ConfigEntry<ObstacleAvoidanceType> PikminCarryingAvoidanceTypeConfig;
+        public static ConfigEntry<HudPresets> HudPresetsConfig;
         #endregion
 
         private void Awake()
@@ -290,6 +297,7 @@ namespace LethalMin
             ScanablePikmin = Config.Bind("Pikmin", "Make Pikmin Scanable", true, "Makes it so Pikmin can be scanned");
             AttackBlackListConfig = Config.Bind("Pikmin", "Attack Blacklist", "Docile Locust Bees,Manticoil", "The list of enemy names that pikmin can't attack (separated by commas, no spaces in between) (item1,item2,item3...)");
             PickupBlacklistConfig = Config.Bind("Pikmin", "Pickup Blacklist", "", "The list of item names that pikmin can't pickup (separated by commas, no spaces in between) (item1,item2,item3...)");
+            AllowConvertionConfig = Config.Bind("Pikmin", "Allow bodies to be converted into Items", true, "Allows bodies to be converted into items. You'd only really need to disable this if you have another mod to do this");
 
             TurnToNormalOnDeath = Config.Bind("Puffmin", "Turn Puffmin into Pikmin on Death", false, "Turns a puffmin back to normal when they die");
 
@@ -319,7 +327,12 @@ namespace LethalMin
             BeeChase = Config.Bind("Enemy AI", "Make bees chase Pikmin", false, "Makes Bees chase Pikmin when their hive goes missing");
             HBDiet = Config.Bind("Enemy AI", "Hoarding Bug Eat Limmit", 1, "The max ammount of Hoarding Bugs can eat at a time");
             HBBuffer = Config.Bind("Enemy AI", "Hoarding Bug Eat Buffer", 2, "The max ammount time after eating that the Hoarding Bug can eat again");
+            PuffMaskConfig = Config.Bind("Enemy AI", "Allow Masked to Make Puffmin", true, "Allows masked pikmin to convert Pikmin into Puffmin");
+            MaskedWhistleVolumeConfig = Config.Bind("Enemy AI", "Masked Whistle Volume", 1f, "The volume of the whistle sound for the masked");
+            MaskedWhistleRangeConfig = Config.Bind("Enemy AI", "Masked Whistle Range", 10f, "The range at which the whistle can reach for the masked");
 
+            
+            HudPresetsConfig = Config.Bind("HUD", "HUD Preset", HudPresets.New, "The preset for the HUD");
             PCPX = Config.Bind("HUD", "PikminSelected(XPos)", 262.78f, "The X position of the selected pikmin UI element");
             PCPY = Config.Bind("HUD", "PikminSelected(YPos)", -106f, "The Y position of the selected pikmin UI element");
             PCPZ = Config.Bind("HUD", "PikminSelected(ZPos)", -59.767f, "The Z position of the selected pikmin UI element");
@@ -355,6 +368,8 @@ namespace LethalMin
             WhistleVolumeConfig = Config.Bind("Extra", "Whistle Volume", 1f, "The volume of the whistle sound (I'm only implumenting this because the whistle sound is bugged and I can't fix it)");
             ManagerRefreshRateC = Config.Bind("Extra", "PikminManager Refersh Rate", 0.75f, "The rate at which the PikminManager refreshes it's object refernces. Warning! Having this value too low could cause lag.");
             MWon = Config.Bind("Extra", "Mesh Wrapping", false, "Enables mesh wrapping for the target object");
+            ShowSafetyConfig = Config.Bind("Extra", "Show Safety areas", true, "Shows the range in which Pikmin are safe from being left behind");
+            AllowProductionConfig = Config.Bind("Extra", "Allow Onions to produce Sprouts", true, "Allows Onions to produce sprouts.");
 
             LethalManEaterConfig = Config.Bind("Maneater", "Make Adult Maneater Eat Pikmin", true, "Makes The Maneater kill pikmin in it's way when agroed");
             CalmableManeaterConfig = Config.Bind("Maneater", "Make Maneater Calmable by Pikmin", true, "Makes the maneater in it's baby state calmable by pikmin. (Note: The unless Favor any Pikmin Type is enabled, the maneater will only be calmable by the pikmin type that was selected by the first player it sees.)");
@@ -394,6 +409,13 @@ namespace LethalMin
 
 
             #region Setting Config values
+            AllowConvertion = AllowConvertionConfig.Value;
+            AllowProduction = AllowProductionConfig.Value;
+            PuffMask = PuffMaskConfig.Value;
+            MaskedWhistleRange = MaskedWhistleRangeConfig.Value;
+            MaskedWhistleVolume = MaskedWhistleVolumeConfig.Value;
+            CurrentHudPreset = HudPresetsConfig.Value;
+            ShowSafety = ShowSafetyConfig.Value;            
             ConvertPuffminOnDeath = TurnToNormalOnDeath.Value;
             HoarderBugEatBuffer = HBBuffer.Value;
             HoarderBugEatLimmit = HBDiet.Value;
@@ -516,6 +538,14 @@ namespace LethalMin
 
             #region Setting Config Events
             // Add SettingChanged events for all configs
+            AllowConvertionConfig.SettingChanged += (_, _) => AllowConvertion = AllowConvertionConfig.Value;
+            AllowProductionConfig.SettingChanged += (_, _) => AllowProduction = AllowProductionConfig.Value;
+            PuffMaskConfig.SettingChanged += (_, _) => PuffMask = PuffMaskConfig.Value;
+            MaskedWhistleVolumeConfig.SettingChanged += (_, _) => MaskedWhistleVolume = MaskedWhistleVolumeConfig.Value;
+            MaskedWhistleRangeConfig.SettingChanged += (_, _) => MaskedWhistleRange = MaskedWhistleRangeConfig.Value;
+            HudPresetsConfig.SettingChanged += (_, _) => CurrentHudPreset = HudPresetsConfig.Value;
+            HudPresetsConfig.SettingChanged += (_, _) => PikminHUD.pikminHUDInstance.SetHudPresets(CurrentHudPreset);
+            ShowSafetyConfig.SettingChanged += (_, _) => ShowSafety = ShowSafetyConfig.Value;
             TurnToNormalOnDeath.SettingChanged += (_, _) => ConvertPuffminOnDeath = TurnToNormalOnDeath.Value;
             HBBuffer.SettingChanged += (_, _) => HoarderBugEatBuffer = HBBuffer.Value;
             HBDiet.SettingChanged += (_, _) => HoarderBugEatLimmit = HBDiet.Value;
@@ -656,7 +686,7 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(ScanablePikmin, false));
             LethalConfigManager.AddConfigItem(new TextInputFieldConfigItem(AttackBlackListConfig, false));
             LethalConfigManager.AddConfigItem(new TextInputFieldConfigItem(PickupBlacklistConfig, false));
-
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowConvertionConfig, false));
 
             // Puffmin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(TurnToNormalOnDeath, false));
@@ -696,6 +726,9 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(BeeChase, false));
             LethalConfigManager.AddConfigItem(new IntInputFieldConfigItem(HBDiet, false));
             LethalConfigManager.AddConfigItem(new IntInputFieldConfigItem(HBBuffer, false));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(PuffMaskConfig, false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(MaskedWhistleVolumeConfig, false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(MaskedWhistleRangeConfig, false));
 
             // Maneater
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(LethalManEaterConfig, false));
@@ -721,8 +754,12 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(WhistleVolumeConfig, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(ManagerRefreshRateC, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(MWon, true));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(ShowSafetyConfig, false));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowProductionConfig, false));
+
 
             // HUD
+            LethalConfigManager.AddConfigItem(new EnumDropDownConfigItem<HudPresets>(HudPresetsConfig, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(PCPX, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(PCPY, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(PCPZ, false));

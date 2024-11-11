@@ -911,6 +911,16 @@ namespace LethalMin
         [ClientRpc]
         public void SuckIntoOnionClientRpc()
         {
+            //Remove any and all Pikmin
+            if (IsServer && PikminOnItemList.Count > 0)
+            {
+                HandleArrivedClientRpc();
+                RemoveAllPikminAndUnparent();
+            }
+            if (!LethalMin.AllowProduction)
+            {
+                return;
+            }
             if (TargetOnion == null)
             {
                 LethalMin.Logger.LogWarning("Target Onion is null");
@@ -925,12 +935,7 @@ namespace LethalMin
                 Root.GetComponent<EnemyAI>().enabled = false;
             Root.enabled = false; // Disable the root object
             TargetAnimatedOnion = TargetOnion.GetComponent<AnimatedOnion>();
-            //Remove any and all Pikmin
-            if (IsServer && PikminOnItemList.Count > 0)
-            {
-                HandleArrivedClientRpc();
-                RemoveAllPikminAndUnparent();
-            }
+
 
             // Create an overlay material
             Material glowMaterial = new Material(Shader.Find("HDRP/Unlit"));

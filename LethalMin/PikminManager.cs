@@ -47,6 +47,7 @@ namespace LethalMin
         public GameObject OnionPrefab;
 
         #region Initialization and Core Management
+        public float CarRefreshTimer, ItemRefreshTimer, OnionRefreshTimer, PikminEntityTimer, PuffminEntityTime, NonPikminEnetityTimer;
 
         private void Awake()
         {
@@ -624,11 +625,7 @@ namespace LethalMin
             if (LethalMin.TargetCar)
             {
                 VehicleController[] allCars = UnityEngine.Object.FindObjectsOfType<VehicleController>();
-                if (_currentCars.Length != allCars.Length)
-                {
-                    LethalMin.Logger.LogInfo($"VehicleController count changed from {_currentCars.Length} to {allCars.Length}");
-                    _currentCars = allCars;
-                }
+                _currentCars = allCars;
             }
         }
         public static void RefreshPuffminList()
@@ -803,12 +800,12 @@ namespace LethalMin
             PhysicsProp prop = __instance.gameObject.AddComponent<PhysicsProp>();
             prop.itemProperties = Iprops;
             prop.grabbable = false;
-            if(shouldothrick)
+            if (shouldothrick)
             {
                 __instance.enabled = true;
             }
         }
-        
+
         [ClientRpc]
         public void SyncBodyItemNodeClientRpc(NetworkObjectReference PminRef)
         {
@@ -1457,7 +1454,7 @@ namespace LethalMin
         public bool CreatedSafetyRings = false;
         public void CreateSafetyRings()
         {
-            if (CreatedSafetyRings) { return; }
+            if (CreatedSafetyRings || !LethalMin.ShowSafety) { return; }
             CreatedSafetyRings = true;
             //Create Radiuses around each onion and the ship
             Onion[] onions = UnityEngine.Object.FindObjectsOfType<Onion>();

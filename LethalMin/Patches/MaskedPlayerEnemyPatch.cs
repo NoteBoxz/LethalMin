@@ -37,7 +37,7 @@ namespace LethalMin.Patches
                 ZoneInstance.transform.SetParent(__instance.transform);
 
                 // Sync the refs
-                pom.InitalizeRefsClientRpc( zone.NetworkObject, pom.NetworkObject, __instance.NetworkObject);
+                pom.InitalizeRefsClientRpc(zone.NetworkObject, pom.NetworkObject, __instance.NetworkObject);
             }
         }
 
@@ -45,6 +45,7 @@ namespace LethalMin.Patches
         [HarmonyPatch("DoAIInterval")]
         private static void DoAIInterval(MaskedPlayerEnemy __instance)
         {
+            if (!LethalMin.PuffMask) { return; }
             if (LethalMin.FindNearestIdlePikmin(__instance.transform.position, 15f, 1).Count > 0
              || LethalMin.FindNearestPuffmin(__instance.transform.position, 15f, 1).Count > 0)
             {
@@ -76,7 +77,7 @@ namespace LethalMin.Patches
         {
             __instance.GetComponentInChildren<PuffminOwnerManager>().TeleportPuffminToOwner();
         }
-        
+
         [HarmonyPrefix]
         [HarmonyPatch("OnCollideWithPlayer")]
         private static bool mothafuker()

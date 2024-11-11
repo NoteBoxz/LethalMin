@@ -2650,7 +2650,7 @@ namespace LethalMin
             //if(LethalMin.DebugMode)
             //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Starting CheckLineOfSightForItem. Items to check: {PikminItemsInMap.Count}");
 
-            if (!LethalMin.IsDependencyLoaded("Entity378.sellbodies"))
+            if (!LethalMin.IsDependencyLoaded("Entity378.sellbodies") && LethalMin.AllowConvertion)
             {
                 for (int i = 0; i < PikminManager.GetNonPikminEnemies().Count; i++)
                 {
@@ -2966,7 +2966,7 @@ namespace LethalMin
                     CarRoute.AddPoint(TargetCarPos.position, false);
                     PossibleRoutes.Add(CarRoute);
                     CarRoute.BypassPathableCheck = true;
-                    CarRoute.Priority = 5;
+                    CarRoute.Priority = 6;
                     CarRoute.InitalDistance = Vector3.Distance(transform.position, TargetCarPos.position);
                     PossibleRoutes.Add(CarRoute);
                 }

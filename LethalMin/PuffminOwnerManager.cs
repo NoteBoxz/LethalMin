@@ -107,7 +107,8 @@ namespace LethalMin
             {
                 //ResetWhistleZonePosition();
             }
-            //maxWhistleZoneRadius = LethalMin.WhistleMaxRadius.Value / 2;
+            maxWhistleZoneRadius = LethalMin.MaskedWhistleRange;
+            whistleSound.volume = LethalMin.MaskedWhistleVolume;
         }
 
         public bool isAiming = false;
