@@ -3083,7 +3083,7 @@ namespace LethalMin
             }
 
             // Main entrance and fire exit
-            if (!MineshaftInside)
+            if (!MineshaftInside && !isOutside)
             {
                 Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
                 Vector3 adjustedMainEntrancePos = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
@@ -3112,7 +3112,7 @@ namespace LethalMin
             }
 
             // Mineshaft specific targets
-            if (MineshaftInside)
+            if (MineshaftInside && !isOutside)
             {
                 ItemRoute MainRoute = new ItemRoute("Main");
                 ItemRoute ElevatorRoute = new ItemRoute("Elevator");
@@ -3159,7 +3159,7 @@ namespace LethalMin
                 ItemRoute route = PossibleRoutes[i];
                 if (!route.BypassPathableCheck)
                 {
-                    route.IsPathable = IsPathPossible(route.GetRoutePoint().Item1, false, true);
+                    route.IsPathable = IsPathPossible(route.GetRoutePoint().Item1, false, false);
                 }
                 else
                 {
