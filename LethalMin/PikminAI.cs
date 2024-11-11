@@ -3170,7 +3170,7 @@ namespace LethalMin
                 ItemRoute route = PossibleRoutes[i];
                 if (!route.BypassPathableCheck)
                 {
-                    route.IsPathable = IsPathPossible(route.GetRoutePoint().Item1, false, false);
+                    route.IsPathable = IsPathPossible(route.GetRoutePoint().Item1);
                 }
                 else
                 {
@@ -3275,7 +3275,7 @@ namespace LethalMin
             {
                 if (firstRoute.BypassPathableCheck)
                     return;
-                firstRoute.IsPathable = IsPathPossible(CurRoutes[0].GetRoutePoint().Item1, false, false);
+                firstRoute.IsPathable = IsPathPossible(CurRoutes[0].GetRoutePoint().Item1);
             }
             else
             {
@@ -3299,7 +3299,7 @@ namespace LethalMin
                     ItemRoute route = CurRoutes[i];
                     if (!route.BypassPathableCheck)
                     {
-                        route.IsPathable = IsPathPossible(route.GetRoutePoint().Item1, false, true);
+                        route.IsPathable = IsPathPossible(route.GetRoutePoint().Item1);
                     }
                     else
                     {
@@ -3317,7 +3317,7 @@ namespace LethalMin
                     RouteLog += route.RouteName + "\n";
                     RouteLog += $"Pathable: {route.IsPathable} \nBypassPath: {route.BypassPathableCheck} \nBypassDistance: {route.BypassDistanceCheck}\n";
                     RouteLog += $"Entrance: {route.entranceTeleport?.name ?? "None"}\n";
-                    RouteLog += $"Priority: {route.Priority}, \nDistance: {route.InitalDistance}";
+                    RouteLog += $"Priority: {route.Priority}, \nDistance: {route.InitalDistance}\n";
                     RouteLog += $"-------------------\n";
                 }
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) New routes: {RouteLog}");
