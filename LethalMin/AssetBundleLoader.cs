@@ -41,10 +41,6 @@ namespace LethalMin
         internal static DirectoryInfo? lethalMinFolder;
         internal static DirectoryInfo? pluginsFolder;
         private Dictionary<string, AssetBundle> loadedBundles = new Dictionary<string, AssetBundle>();
-        public static List<LethalMinLibrary.PikminType> GpikminTypes = new List<LethalMinLibrary.PikminType>();
-        public static List<PikminType> GpikminTypes2 = new List<PikminType>();
-
-        public static List<OnionType> OnionTypes2 = new List<OnionType>();
 
         private void LoadLethalMinBundles()
         {
@@ -55,6 +51,10 @@ namespace LethalMin
             {
                 LethalMin.Logger.LogError($"Plugins folder not found: {pluginsFolder?.FullName}");
                 return;
+            }
+            if (LethalMin.IsDependencyLoaded("NoteBoxz.LethalMinLibrary"))
+            {
+                gameObject.AddComponent<LibAssetBundleLoader>();
             }
 
             string[] bundleFiles = Directory.GetFiles(pluginsFolder.FullName, BUNDLE_EXTENSION, SearchOption.AllDirectories);
@@ -91,7 +91,7 @@ namespace LethalMin
 
                 // Process the loaded bundle
                 if (LethalMin.IsDependencyLoaded("NoteBoxz.LethalMinLibrary"))
-                    ProcessLoadedLibBundle(request.assetBundle);
+                    gameObject.GetComponent<LibAssetBundleLoader>().ProcessLoadedLibBundle(request.assetBundle);
                 ProcessLoadedBundle(request.assetBundle);
             }
             else
@@ -100,44 +100,6 @@ namespace LethalMin
             }
         }
 
-        private void ProcessLoadedLibBundle(AssetBundle bundle)
-        {
-            bool IsValidLethalMinBundle = false;
-            // Load PikminTypes
-            LethalMinLibrary.PikminType[] pikminTypes = bundle.LoadAllAssets<LethalMinLibrary.PikminType>();
-
-            foreach (LethalMinLibrary.PikminType pikminType in pikminTypes)
-            {
-                PikminType Ptype = TypeConverter.Convert_Lib_PikminTypeToLmPikminType(pikminType);
-                GpikminTypes.Add(pikminType);
-                GpikminTypes2.Add(Ptype);
-                LethalMin.RegisterPikminType(Ptype);
-                IsValidLethalMinBundle = true;
-            }
-
-            // Load OnionTypes
-            LethalMinLibrary.OnionType[] onionTypes = bundle.LoadAllAssets<LethalMinLibrary.OnionType>();
-            foreach (LethalMinLibrary.OnionType onionType in onionTypes)
-            {
-                OnionType oynon = TypeConverter.Convert_Lib_OnionTypeToLmOnionType(onionType);
-                OnionTypes2.Add(oynon);
-                LethalMin.RegisterOnionType(oynon);
-                IsValidLethalMinBundle = true;
-            }
-
-            // Load OnionFuseRules
-            LethalMinLibrary.OnionFuseRules[] fuseRules = bundle.LoadAllAssets<LethalMinLibrary.OnionFuseRules>();
-            foreach (LethalMinLibrary.OnionFuseRules fuseRule in fuseRules)
-            {
-                LethalMin.RegisterFuseRule(TypeConverter.Convert_Lib_OnionFuseRulesToLmOnionFuseRules(fuseRule));
-                IsValidLethalMinBundle = true;
-            }
-
-            if (IsValidLethalMinBundle == false)
-            {
-                LethalMin.Logger.LogWarning($"Bundle does not contain any valid LethalMin assets: {bundle.name}");
-            }
-        }
         private void ProcessLoadedBundle(AssetBundle bundle)
         {
             bool IsValidLethalMinBundle = false;
@@ -168,6 +130,10 @@ namespace LethalMin
             if (IsValidLethalMinBundle == false)
             {
                 //LethalMin.Logger.LogWarning($"Bundle does not contain any valid LethalMin assets: {bundle.name}");
+            }
+            if (!IsValidLethalMinBundle && !LethalMin.IsDependencyLoaded("NoteBoxz.LethalMinLibrary"))
+            {
+                LethalMin.Logger.LogWarning($"Bundle does not contain any valid LethalMin assets: {bundle.name} This could be because you are missing the LethalMinLibrary mod");
             }
         }
     }

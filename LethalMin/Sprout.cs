@@ -19,12 +19,8 @@ namespace LethalMin
         AudioSource aud;
 
         [ClientRpc]
-        public void InitalizeTypeClientRpc(int Type = -1, bool DoReagust = true)
+        public void InitalizeTypeClientRpc(int Type = -1)
         {
-            if (DoReagust)
-            {
-                AdjustPosition();
-            }
             System.Random enemyRandom = new System.Random(StartOfRound.Instance.randomMapSeed + NetworkBehaviourId);
             if (Type == -1)
             {
@@ -155,8 +151,18 @@ namespace LethalMin
         public Transform raycastOrigin;
         public LayerMask groundLayer;
         public float maxRaycastDistance = 50f;
-        private void AdjustPosition()
+        [ClientRpc]
+        public void AdjustPositionClientRpc()
         {
+            if (raycastOrigin == null)
+            {
+                raycastOrigin = transform.Find("RaycastOrigin");
+                if (raycastOrigin == null)
+                {
+                    LethalMin.Logger.LogError("RaycastOrigin child not found!");
+                    return;
+                }
+            }
             groundLayer = LethalMin.Instance.PikminColideable;
             if (raycastOrigin == null)
             {

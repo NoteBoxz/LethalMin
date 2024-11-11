@@ -317,6 +317,7 @@ namespace LethalMin
                         SproteScript2.NetworkObject.Spawn();
                         PikminType pikminType = DeterminePikminType(RoundManager.Instance.currentLevel);
                         SproteScript2.InitalizeTypeClientRpc(pikminType.PikminTypeID);
+                        SproteScript2.AdjustPositionClientRpc();
                     }
                     else if (Type.SpawnsOutdoors)
                     {
@@ -359,6 +360,7 @@ namespace LethalMin
                         SproteScript2.NetworkObject.Spawn();
                         PikminType pikminType = DeterminePikminType(RoundManager.Instance.currentLevel);
                         SproteScript2.InitalizeTypeClientRpc(pikminType.PikminTypeID);
+                        SproteScript2.AdjustPositionClientRpc();
                     }
                     else if (Type.SpawnsIndoors)
                     {

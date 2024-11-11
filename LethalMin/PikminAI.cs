@@ -596,7 +596,8 @@ namespace LethalMin
                 Plants = PminType.MeshRefernces.PikminGrowthStagePlants;
                 LocalAnim = PminType.MeshRefernces.PikminAnimator;
             }
-            LocalAnim.gameObject.AddComponent<PikminAnimEvents>().AI = this;
+            if (LocalAnim.gameObject.GetComponent<PikminAnimEvents>() == null)
+                LocalAnim.gameObject.AddComponent<PikminAnimEvents>().AI = this;
             GetComponentInChildren<ScanNodeProperties>(true).headerText = $"{PminType.PikminName}";
 
             PlantSpeeds = new float[PminType.Speeds.Length];
@@ -2839,6 +2840,7 @@ namespace LethalMin
                     // Set the agent's speed
                     agent.speed = adjustedSpeed;
 
+
                     // This is the first Pikmin, responsible for moving the item
                     if (!HasFoundCaryTarget)
                     {
@@ -2858,6 +2860,7 @@ namespace LethalMin
                     transform.rotation = targetCarryRotaion;
 
                     RefeshItemTargets();
+                    CarryingItemTo = CurRoutes[0].RouteName;
 
                     if (CurRoutes[0].RouteName != "???")
                         CheckToDropItem();
@@ -2904,6 +2907,21 @@ namespace LethalMin
             List<ItemRoute> PossibleRoutes = new List<ItemRoute>();
 
             Transform targetPos2 = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
+
+            (int, EntranceTeleport) GetVaildExit()
+            {
+                (int, EntranceTeleport) result = (-1, null);
+                for (int i = 0; i < PossibleRoutes.Count; i++)
+                {
+                    if (PossibleRoutes[i].entranceTeleport != null)
+                    {
+                        result = (i, PossibleRoutes[i].entranceTeleport);
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found valid exit at {i} {PossibleRoutes[i].RouteName}");
+                        break;
+                    }
+                }
+                return result;
+            }
 
 
             // CaveDweller target
@@ -3074,6 +3092,7 @@ namespace LethalMin
                 {
                     MainRoute.AddPoint(adjustedMainEntrancePos, true);
                     MainRoute.InitalDistance = Vector3.Distance(transform.position, adjustedMainEntrancePos);
+                    MainRoute.entranceTeleport = RoundManager.FindMainEntranceScript();
                     PossibleRoutes.Add(MainRoute);
                 }
 
@@ -3082,9 +3101,10 @@ namespace LethalMin
                     int i = 0;
                     foreach (var fireExit in FindFireExits())
                     {
-                        ItemRoute FireExitRoute = new ItemRoute($"FireExit: {i}");
+                        ItemRoute FireExitRoute = new ItemRoute($"FireExit ({i})");
                         FireExitRoute.AddPoint(fireExit.transform.position, false);
                         FireExitRoute.InitalDistance = Vector3.Distance(transform.position, fireExit.transform.position);
+                        FireExitRoute.entranceTeleport = fireExit;
                         PossibleRoutes.Add(FireExitRoute);
                         i++;
                     }
@@ -3104,12 +3124,14 @@ namespace LethalMin
                     {
                         MainRoute.AddPoint(adjustedMainEntrancePos, true);
                         MainRoute.InitalDistance = Vector3.Distance(transform.position, adjustedMainEntrancePos);
+                        MainRoute.entranceTeleport = RoundManager.FindMainEntranceScript();
                         PossibleRoutes.Add(MainRoute);
                     }
                 }
                 else
                 {
                     Vector3 elevatorPos = RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint.position;
+                    ElevatorRoute.InitalDistance = Vector3.Distance(transform.position, elevatorPos);
                     ElevatorRoute.AddPoint(elevatorPos, false);
 
                     if (FindFireExits().Count > 0 && !LethalMin.OnlyMain)
@@ -3117,9 +3139,10 @@ namespace LethalMin
                         int i = 0;
                         foreach (var fireExit in FindFireExits())
                         {
-                            ItemRoute FireExitRoute = new ItemRoute($"FireExit: {i}");
+                            ItemRoute FireExitRoute = new ItemRoute($"FireExit ({i})");
                             FireExitRoute.AddPoint(fireExit.transform.position, false);
                             FireExitRoute.InitalDistance = Vector3.Distance(transform.position, fireExit.transform.position);
+                            FireExitRoute.entranceTeleport = fireExit;
                             PossibleRoutes.Add(FireExitRoute);
                             i++;
                         }
@@ -3142,7 +3165,51 @@ namespace LethalMin
                 {
                     route.IsPathable = true;
                 }
+                PossibleRoutes[i] = route;
+            }
 
+            PossibleRoutes = PossibleRoutes
+                .OrderBy(route => route.InitalDistance)
+                .ThenByDescending(route => route.IsPathable)
+                .ThenBy(route => route.BypassDistanceCheck ? -route.Priority : 0)
+                .ToList();
+
+            //Force the onion route to the front if it exists
+            int OnionIndex = -1;
+            for (int i = 0; i < PossibleRoutes.Count; i++)
+            {
+                ItemRoute route = PossibleRoutes[i];
+                if (route.RouteName == "Onion")
+                {
+                    OnionIndex = i;
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found onion route a1t index {OnionIndex}");
+                    break;
+                }
+            }
+            if (OnionIndex != -1)
+            {
+                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found onion route at index {OnionIndex}");
+                ItemRoute temp = PossibleRoutes[OnionIndex];
+                PossibleRoutes.RemoveAt(OnionIndex);
+                PossibleRoutes.Insert(0, temp);
+            }
+
+            // log the possible routes
+            string RouteLog = "";
+            foreach (var route in PossibleRoutes)
+            {
+                RouteLog += $"\n-------------------\n";
+                RouteLog += route.RouteName + "\n";
+                RouteLog += $"Pathable: {route.IsPathable} \nBypassPath: {route.BypassPathableCheck} \nBypassDistance: {route.BypassDistanceCheck}\n";
+                RouteLog += $"Entrance: {route.entranceTeleport?.name ?? "None"}\n";
+                RouteLog += $"Priority: {route.Priority}, \nDistance: {route.InitalDistance}, \nPathable: {route.IsPathable}\n";
+                RouteLog += $"-------------------\n";
+            }
+            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Possible routes: {RouteLog}");
+
+            for (int i = 0; PossibleRoutes.Count > 0 && i < PossibleRoutes.Count; i++)
+            {
+                ItemRoute route = PossibleRoutes[i];
                 HasFoundCaryTarget = true;
                 targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
                 CurRoutes = PossibleRoutes;
@@ -3150,8 +3217,19 @@ namespace LethalMin
 
                 if (CurRoutes.Count > 1 && CurRoutes[0].RouteName == "Onion" && !isOutside)
                 {
-                    CurRoutes[0].AddPointToStart(CurRoutes[1].GetRoutePoint().Item1, true);
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Added point {CurRoutes[1].GetRoutePoint().Item1} to onion route");
+                    if (GetVaildExit().Item2 == null)
+                    {
+                        LethalMin.Logger.LogWarning($"({uniqueDebugId}) No exit point for this route");
+                    }
+                    else
+                    {
+                        (int, EntranceTeleport) exit = GetVaildExit();
+                        ItemRoute temp = CurRoutes[0];
+                        temp.AddPointToStart(CurRoutes[exit.Item1].GetRoutePoint().Item1, false);
+                        temp.entranceTeleport = exit.Item2;
+                        CurRoutes[0] = temp;
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Added point {CurRoutes[exit.Item1].GetRoutePoint().Item1} to {CurRoutes[0]} route");
+                    }
                 }
 
                 return;
@@ -3225,7 +3303,7 @@ namespace LethalMin
         }
         private bool IsPathPossible(Vector3 destination, bool log = true, bool AllowPartiallyBlocked = false)
         {
-            Vector3 FindNearestNavMeshPoint(Vector3 targetPosition, float maxDistance = 5f)
+            Vector3 FindNearestNavMeshPoint(Vector3 targetPosition, float maxDistance = 10f)
             {
                 NavMeshHit hit;
                 if (NavMesh.SamplePosition(targetPosition, out hit, maxDistance, NavMesh.AllAreas))
@@ -3270,11 +3348,14 @@ namespace LethalMin
         {
             void DoDrop()
             {
-                if (CurRoutes[0].CurPathIndex < CurRoutes[0].TotalPointCount())
+                if (CurRoutes[0].CurPathIndex < CurRoutes[0].TotalPointCount() - 1)
                 {
                     //Switch to the next point
                     LethalMin.Logger.LogInfo($"({uniqueDebugId}) Switching to next point ");
-                    CurRoutes[0].AdvanceToNextPoint();
+                    ItemRoute route = CurRoutes[0];
+                    route.AdvanceToNextPoint();
+                    CurRoutes[0] = route;
+                    
                     if (CurRoutes[0].GetRoutePoint().Item2 == true && !isOutside)
                     {
                         if (CurRoutes[0].GetExitPoint() != null)
@@ -3293,11 +3374,12 @@ namespace LethalMin
                 targetItem.RemoveAllPikminAndUnparent();
                 CallingHandleItemCarying = false;
             }
-            void DoLethalEscape(Vector3 escapePos)
+            void DoLethalEscape(Vector3 escapePos, bool isOVutside = true)
             {
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Escaping to {escapePos}");
                 agent.Warp(escapePos);
                 transform2.Teleport(escapePos, Quaternion.identity, transform.localScale);
+                isOutside = isOVutside;
             }
 
 

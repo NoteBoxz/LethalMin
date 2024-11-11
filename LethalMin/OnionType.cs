@@ -51,9 +51,6 @@ namespace LethalMin
 		public GameObject OnionPrefab;
 
 		[HideInInspector]
-		public LethalMinLibrary.OnionType typeConvertedFrom;
-
-		[HideInInspector]
 		public bool HasBeenRegistered;
 
 		[HideInInspector]

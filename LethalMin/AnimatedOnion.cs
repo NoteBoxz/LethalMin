@@ -356,7 +356,7 @@ namespace LethalMin
                 Sprout sproutScript = actualSprout.GetComponent<Sprout>();
 
                 sproutScript.NetworkObject.Spawn();
-                sproutScript.InitalizeTypeClientRpc(pikminType.PikminTypeID,false);
+                sproutScript.InitalizeTypeClientRpc(pikminType.PikminTypeID);
             }
         }
 

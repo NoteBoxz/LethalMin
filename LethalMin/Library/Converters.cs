@@ -53,7 +53,6 @@ namespace LethalMin.Library
 
             CopyFields(libType.MeshRefernces, meshRef, "PikminMeshRefernces");
             lmType.MeshRefernces = meshRef;
-            lmType.typeConvertedFrom = libType;
 
             return lmType;
         }
@@ -70,24 +69,20 @@ namespace LethalMin.Library
         {
             OnionType lmOnionType = ScriptableObject.CreateInstance<OnionType>();
             lmOnionType.name = libOnionType.name;
-            lmOnionType.typeConvertedFrom = libOnionType;
             CopyFields(libOnionType, lmOnionType, "OnionType");
-
-            // Handle special cases
             List<PikminType> TypesCanHold = new List<PikminType>();
-            foreach (var item in AssetBundleLoader.GpikminTypes2)
+            foreach (var item in AssetBundleLoader.instance.GetComponent<LibAssetBundleLoader>().ConvertedPikminTypes.Keys)
             {
-                if (libOnionType.TypesCanHold.ToList().Contains(item.typeConvertedFrom))
+                if (libOnionType.TypesCanHold.ToList().Contains(item))
                 {
-                    TypesCanHold.Add(item);
+                    TypesCanHold.Add(AssetBundleLoader.instance.GetComponent<LibAssetBundleLoader>().ConvertedPikminTypes[item]);
                 }
-                if (item.typeConvertedFrom.TargetOnion == libOnionType)
+                if (item.TargetOnion == libOnionType)
                 {
-                    item.TargetOnion = lmOnionType;
+                    AssetBundleLoader.instance.GetComponent<LibAssetBundleLoader>().ConvertedPikminTypes[item].TargetOnion = lmOnionType;
                 }
             }
             lmOnionType.TypesCanHold = TypesCanHold.ToArray();
-
 
             //if (libOnionType.FuesingRules != null)
             //    lmOnionType.FuesingRules = Convert_Lib_OnionFuseRulesToLmOnionFuseRules(libOnionType.FuesingRules);
@@ -99,16 +94,6 @@ namespace LethalMin.Library
         {
             OnionFuseRules lmFuseRules = ScriptableObject.CreateInstance<OnionFuseRules>();
             lmFuseRules.name = libFuseRules.name;
-
-            List<OnionType> CompatibleOnions = new List<OnionType>();
-            foreach (OnionType onionType in AssetBundleLoader.OnionTypes2)
-            {
-                if(libFuseRules.CompatibleOnions.ToList().Contains(onionType.typeConvertedFrom))
-                {
-                    CompatibleOnions.Add(onionType);
-                }
-            }
-            lmFuseRules.CompatibleOnions = CompatibleOnions.ToArray();
 
             return lmFuseRules;
         }
