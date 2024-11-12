@@ -262,7 +262,7 @@ namespace LethalMin
             IsTurningIntoPikmin = true;
             GameObject SproutInstance = Instantiate(LethalMin.pikminPrefab, transform.position, transform.rotation);
             PikminAI SproteScript = SproutInstance.GetComponent<PikminAI>();
-            SproteScript.isOutside = false;
+            SproteScript.isOutside = transform.position.y > -50;
             SproteScript.NetworkObject.Spawn();
             PikminManager.Instance.SpawnPikminClientRpc(SproteScript.NetworkObject);
             PikminManager.Instance.CreatePikminClientRPC(SproteScript.NetworkObject, OriginalType.PikminTypeID, isOutside);
