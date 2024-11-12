@@ -1108,26 +1108,33 @@ namespace LethalMin
 
         IEnumerator qeustCoughSFXCl()
         {
-            ReqeustCoughSFXClientRpc();
-            if (currentBehaviourStateIndex != (int)PState.Panic)
+            while (currentBehaviourStateIndex == (int)PState.Panic)
             {
-                LethalMin.Logger.LogInfo($"Coughing SFX was requested but the state has changed: {currentBehaviourStateIndex} - {(PState)currentBehaviourStateIndex}");
-                yield break;
+                if (currentBehaviourStateIndex != (int)PState.Panic)
+                {
+                    HasCalledMOI = false;
+                    LethalMin.Logger.LogInfo($"random move was requested but the state has changed: {currentBehaviourStateIndex} - {(PState)currentBehaviourStateIndex}");
+                    break;
+                }
+                ReqeustCoughSFXClientRpc();
+                LethalMin.Logger.LogInfo($"Coughing SFX was requested");
+                yield return new WaitForSeconds(UnityEngine.Random.Range(0.1f, 0.7f));
             }
-            LethalMin.Logger.LogInfo($"Coughing SFX was requested");
-            yield return new WaitForSeconds(UnityEngine.Random.Range(0.1f, 0.7f));
         }
         IEnumerator MoveOnInterval()
         {
             HasCalledMOI = true;
-            agent.SetDestination(FindRandomNearbyPositionOnNavMesh(7));
-            if (currentBehaviourStateIndex != (int)PState.Panic)
+            while (currentBehaviourStateIndex == (int)PState.Panic)
             {
-                HasCalledMOI = false;
-                LethalMin.Logger.LogInfo($"random move was requested but the state has changed: {currentBehaviourStateIndex} - {(PState)currentBehaviourStateIndex}");
-                yield break;
+                if (currentBehaviourStateIndex != (int)PState.Panic)
+                {
+                    HasCalledMOI = false;
+                    LethalMin.Logger.LogInfo($"random move was requested but the state has changed: {currentBehaviourStateIndex} - {(PState)currentBehaviourStateIndex}");
+                    break;
+                }
+                agent.SetDestination(FindRandomNearbyPositionOnNavMesh(7));
+                yield return new WaitForSeconds(UnityEngine.Random.Range(0.5f, 1.5f));
             }
-            yield return new WaitForSeconds(UnityEngine.Random.Range(0.5f, 1.5f));
         }
         public Vector3 FindRandomNearbyPositionOnNavMesh(float radius)
         {
@@ -3142,7 +3149,7 @@ namespace LethalMin
                         ElevatorRoute.InitalDistance = Vector3.Distance(transform.position, elevatorPos);
                         ElevatorRoute.AddPoint(elevatorPos, false);
                         ElevatorRoute.BypassPathableCheck = true;
-                        ElevatorRoute.Priority = 7;  
+                        ElevatorRoute.Priority = 7;
                         PossibleRoutes.Add(ElevatorRoute);
                     }
 
