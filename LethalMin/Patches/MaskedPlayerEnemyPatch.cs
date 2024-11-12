@@ -77,12 +77,5 @@ namespace LethalMin.Patches
         {
             __instance.GetComponentInChildren<PuffminOwnerManager>().TeleportPuffminToOwner();
         }
-
-        [HarmonyPrefix]
-        [HarmonyPatch("OnCollideWithPlayer")]
-        private static bool mothafuker()
-        {
-            return false;
-        }
     }
 }
