@@ -742,7 +742,7 @@ namespace LethalMin
             ParentToFirstPikminClientRpc(pikminNetworkObjectId);
         }
 
-        PikminAI firstPikminG;
+        PikminAI firstPikminG; 
 
         [ClientRpc]
         private void ParentToFirstPikminClientRpc(ulong pikminNetworkObjectId)
