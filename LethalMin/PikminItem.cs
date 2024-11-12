@@ -491,15 +491,27 @@ namespace LethalMin
                 {
                     Root.parentObject = firstPikmin.HoldPos;
 
-                    if (Root.NetworkObject != null && IsServer)
+                    if (Root.NetworkObject != null)
+                    {
                         Root.transform.SetParent(firstPikmin.HoldPos, worldPositionStays: true);
+                    }
+                    else 
+                    {
+                        Root.transform.SetParent(firstPikmin.HoldPos, worldPositionStays: true);
+                    }
                 }
                 else
                 {
                     Root.parentObject = firstPikmin.HoldPos;
 
-                    if (Root.NetworkObject != null && IsServer)
+                    if (Root.NetworkObject != null)
+                    {
                         Root.transform.SetParent(firstPikmin.transform, worldPositionStays: true);
+                    }
+                    else 
+                    {
+                        Root.transform.SetParent(firstPikmin.transform, worldPositionStays: true);
+                    }
                 }
                 Root.EnablePhysics(enable: false);
                 isParented = true;
@@ -542,27 +554,51 @@ namespace LethalMin
                     if (firstPikminG != null && firstPikminG.IsInShip)
                     {
                         //Parent To Ship
-                        if (Root.NetworkObject != null && IsServer)
+                        if (Root.NetworkObject != null)
+                        {
                             Root.transform.SetParent(StartOfRound.Instance.elevatorTransform, worldPositionStays: true);
+                        }
+                        else 
+                        {
+                            Root.transform.SetParent(StartOfRound.Instance.elevatorTransform, worldPositionStays: true);
+                        }
                     }
                     else if (firstPikminG != null && firstPikminG.IsOnElevator)
                     {
                         //Parent To Elevator
-                        if (Root.NetworkObject != null && IsServer)
+                        if (Root.NetworkObject != null)
+                        {
                             Root.transform.SetParent(RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint, worldPositionStays: true);
+                        }
+                        else 
+                        {
+                            Root.transform.SetParent(RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint, worldPositionStays: true);
+                        }
                     }
                     else
                     {
                         //Parent To Root/Prop Container
                         if (StartOfRound.Instance.propsContainer == null)
                         {
-                            if (Root.NetworkObject != null && IsServer)
+                            if (Root.NetworkObject != null)
+                            {
                                 Root.transform.SetParent(null, worldPositionStays: true);
+                            }
+                            else 
+                            {
+                                Root.transform.SetParent(null, worldPositionStays: true);
+                            }
                         }
                         else
                         {
-                            if (Root.NetworkObject != null && IsServer)
+                            if (Root.NetworkObject != null)
+                            {
                                 Root.transform.SetParent(StartOfRound.Instance.propsContainer, worldPositionStays: true);
+                            }
+                            else 
+                            {
+                                Root.transform.SetParent(StartOfRound.Instance.propsContainer, worldPositionStays: true);
+                            }
                         }
                     }
                 }
@@ -571,13 +607,25 @@ namespace LethalMin
                     //Parent To Root/Prop Container
                     if (StartOfRound.Instance.propsContainer == null)
                     {
-                        if (Root.NetworkObject != null && IsServer)
+                        if (Root.NetworkObject != null)
+                        {
                             Root.transform.SetParent(null, worldPositionStays: true);
+                        }
+                        else 
+                        {
+                            Root.transform.SetParent(null, worldPositionStays: true);
+                        }
                     }
                     else
                     {
-                        if (Root.NetworkObject != null && IsServer)
+                        if (Root.NetworkObject != null)
+                        {
                             Root.transform.SetParent(StartOfRound.Instance.propsContainer, worldPositionStays: true);
+                        }
+                        else 
+                        {
+                            Root.transform.SetParent(StartOfRound.Instance.propsContainer, worldPositionStays: true);
+                        }
                     }
                 }
                 Root.EnablePhysics(enable: true);
@@ -589,12 +637,13 @@ namespace LethalMin
                 }
                 else
                 {
-                    Root.startFallingPosition = Root.transform.InverseTransformPoint(ObjectPosition);
-                    Root.targetFloorPosition = Root.transform.InverseTransformPoint(targetFloorPosition);
+                    LethalMin.Logger.LogWarning("Root.transform.parent is null in PikminItem.UnparentItem()");
+                    Root.startFallingPosition = ObjectPosition;
+                    Root.targetFloorPosition = targetFloorPosition;
                 }
+                Root.DiscardItemFromEnemy();
                 Root.floorYRot = -1;
                 Root.transform.localScale = Root.originalScale;
-                Root.DiscardItemFromEnemy();
                 isParented = false;
                 if (firstPikminG != null && firstPikminG.IsInShip)
                 {
@@ -635,8 +684,15 @@ namespace LethalMin
                 //firstPikminG.previousLeader.Controller.SetItemInElevator(firstPikminG.IsInShip, firstPikminG.IsInShip, Root);
             }
             placeObject.parentObject = null;
-            if (Root.NetworkObject != null && IsServer)
+            if (Root.NetworkObject != null)
+            {
                 placeObject.transform.SetParent(parentObject, worldPositionStays: true);
+            }
+            else 
+            {
+                placeObject.transform.SetParent(parentObject, worldPositionStays: true);
+            }
+
             placeObject.startFallingPosition = placeObject.transform.localPosition;
             placeObject.transform.localScale = placeObject.originalScale;
             placeObject.transform.localPosition = positionOffset;
@@ -700,10 +756,16 @@ namespace LethalMin
             if (firstPikmin != null && Root != null)
             {
                 Root.GrabItemFromEnemy(firstPikmin);
-                Root.hasHitGround = true;
+                Root.hasHitGround = false;
                 Root.parentObject = firstPikmin.HoldPos;
-                if (Root.NetworkObject != null && IsServer)
+                if (Root.NetworkObject != null)
+                {
                     Root.transform.SetParent(firstPikmin.HoldPos, worldPositionStays: true);
+                }
+                else 
+                {
+                    Root.transform.SetParent(firstPikmin.HoldPos, worldPositionStays: true);
+                }
                 Root.EnablePhysics(enable: false);
                 isParented = true;
             }

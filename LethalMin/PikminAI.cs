@@ -1559,13 +1559,13 @@ namespace LethalMin
                         {
                             LeavingPos = hit.position;
                         }
-                        LethalMin.Logger.LogInfo($"{uniqueDebugId}: Moving to random position {LeavingPos}");
+                        //LethalMin.Logger.LogInfo($"{uniqueDebugId}: Moving to random position {LeavingPos}");
                     }
                     agent.SetDestination(LeavingPos);
                 }
                 else if (!IsLeftBehind)
                 {
-                    LethalMin.Logger.LogInfo($"{uniqueDebugId}: Moving to onion {TargetOnion.name}");
+                    //LethalMin.Logger.LogInfo($"{uniqueDebugId}: Moving to onion {TargetOnion.name}");
                     Vector3 targetPosition = TargetOnion.transform.position;
                     float dynamicSpeed = CalculateDynamicSpeed(targetPosition);
                     agent.speed = dynamicSpeed;
