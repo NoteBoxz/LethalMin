@@ -2866,8 +2866,11 @@ namespace LethalMin
                     {
                         agent.SetDestination(CurRoutes[0].GetRoutePoint().Item1);
                     }
-                    agent.updateRotation = false;
-                    transform.rotation = targetCarryRotaion;
+                    if (CurRoutes[0].RouteName != "???")
+                    {
+                        agent.updateRotation = false;
+                        transform.rotation = targetCarryRotaion;
+                    }
 
                     RefeshItemTargets();
                     CarryingItemTo = CurRoutes[0].RouteName;

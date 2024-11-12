@@ -370,7 +370,7 @@ namespace LethalMin
             WhistleVolumeConfig = Config.Bind("Extra", "Whistle Volume", 1f, "The volume of the whistle sound (I'm only implumenting this because the whistle sound is bugged and I can't fix it)");
             ManagerRefreshRateC = Config.Bind("Extra", "PikminManager Refersh Rate", 0.75f, "The rate at which the PikminManager refreshes it's object refernces. Warning! Having this value too low could cause lag.");
             MWon = Config.Bind("Extra", "Mesh Wrapping", false, "Enables mesh wrapping for the target object");
-            ShowSafetyConfig = Config.Bind("Extra", "Show Safety areas", true, "Shows the range in which Pikmin are safe from being left behind");
+            ShowSafetyConfig = Config.Bind("Extra", "Show Safety areas", false, "Shows the range in which Pikmin are safe from being left behind");
             AllowProductionConfig = Config.Bind("Extra", "Allow Onions to produce Sprouts", true, "Allows Onions to produce sprouts.");
 
             LethalManEaterConfig = Config.Bind("Maneater", "Make Adult Maneater Eat Pikmin", true, "Makes The Maneater kill pikmin in it's way when agroed");
