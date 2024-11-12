@@ -322,6 +322,7 @@ namespace LethalMin
                 CurTypeSelectionIndex = (CurTypeSelectionIndex + 1) % AvailableTypes.Count;
                 PikminHUD.pikminHUDInstance.UpdateHUD();
                 PikminHUD.pikminHUDInstance.PingPrompts();
+                PikminHUD.pikminHUDInstance.HasSwaped1 = true;
             }
         }
 
@@ -334,6 +335,7 @@ namespace LethalMin
                 CurTypeSelectionIndex = (CurTypeSelectionIndex - 1 + AvailableTypes.Count) % AvailableTypes.Count;
                 PikminHUD.pikminHUDInstance.UpdateHUD();
                 PikminHUD.pikminHUDInstance.PingPrompts();
+                PikminHUD.pikminHUDInstance.HasSwaped2 = true;
             }
         }
 
@@ -441,7 +443,8 @@ namespace LethalMin
                 selectedPikmin.ThrowPikminServerRpc(throwOrigin.transform.position, cameraForward, selectedPikmin.ThrowForce, NetworkObject);
                 SetPikminComponentsForAiming(selectedPikmin, false);
                 RemovePikminServerRpc(selectedPikmin.NetworkObject);
-                PikminHUD.pikminHUDInstance.HidePrompts();
+                PikminHUD.pikminHUDInstance.PingPrompts();
+                PikminHUD.pikminHUDInstance.HasThrown = true;
                 LethalMin.Logger.LogInfo($"Throw Initated.");
             }
             else

@@ -1114,6 +1114,7 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo($"Coughing SFX was requested but the state has changed: {currentBehaviourStateIndex} - {(PState)currentBehaviourStateIndex}");
                 yield break;
             }
+            LethalMin.Logger.LogInfo($"Coughing SFX was requested");
             yield return new WaitForSeconds(UnityEngine.Random.Range(0.1f, 0.7f));
         }
         IEnumerator MoveOnInterval()
@@ -3308,7 +3309,7 @@ namespace LethalMin
                     CurRoutes[i] = route;
                 }
                 // sort by pathable status
-                CurRoutes = CurRoutes.OrderBy(route => route.IsPathable).ToList();
+                CurRoutes = CurRoutes.OrderByDescending(route => route.IsPathable).ToList();
                 // log the possible routes
                 string RouteLog = "";
                 foreach (var route in CurRoutes)

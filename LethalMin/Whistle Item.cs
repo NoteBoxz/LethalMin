@@ -333,13 +333,15 @@ namespace LethalMin
             Vector3 startPosition = playerCamera.transform.position;
             Vector3 endPosition = startPosition + rayDirection * whistleZoneOffset;
 
-            if (Physics.Raycast(startPosition, rayDirection, out RaycastHit hit, whistleZoneOffset, collidersAndRoomMask))
+            if (Physics.Raycast(startPosition, rayDirection, out RaycastHit hit, whistleZoneOffset, collidersAndRoomMask, QueryTriggerInteraction.Ignore))
             {
-                noticeZone.transform.position = hit.point + hit.normal * 0.05f;
+                if (!hit.collider.isTrigger)
+                    noticeZone.transform.position = hit.point + hit.normal * 0.05f;
             }
-            else if (Physics.Raycast(endPosition, Vector3.down, out hit, maxRaycastDistance, collidersAndRoomMask))
+            else if (Physics.Raycast(endPosition, Vector3.down, out hit, maxRaycastDistance, collidersAndRoomMask, QueryTriggerInteraction.Ignore))
             {
-                noticeZone.transform.position = hit.point + hit.normal * 0.05f;
+                if (!hit.collider.isTrigger)
+                    noticeZone.transform.position = hit.point + hit.normal * 0.05f;
             }
             else
             {

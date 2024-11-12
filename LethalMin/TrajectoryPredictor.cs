@@ -85,11 +85,15 @@ namespace LethalMin
                 overlap = Vector3.Distance(position, nextPosition) * rayOverlap;
 
                 // When hitting a surface we want to show the surface marker and stop updating our line
-                if (Physics.Raycast(position, velocity.normalized, out RaycastHit hit, overlap, collidersAndRoomMask))
+                if (Physics.Raycast(position, velocity.normalized, out RaycastHit hit, overlap, collidersAndRoomMask, QueryTriggerInteraction.Ignore))
                 {
-                    UpdateLineRender(i + 1, (i, hit.point));
-                    MoveHitMarker(hit);
-                    break;
+                    if (!hit.collider.isTrigger)
+                    {
+                        UpdateLineRender(i + 1, (i, hit.point));
+                        MoveHitMarker(hit);
+                        break;
+                    }
+                    // If it's a trigger, continue the loop
                 }
 
                 // If nothing is hit, continue rendering the arc without a visual marker
@@ -179,7 +183,7 @@ namespace LethalMin
             }
 
             //if (LethalMin.DebugMode)
-                //LethalMin.Logger.LogInfo($"Trajectory visibility set to: {visible}");
+            //LethalMin.Logger.LogInfo($"Trajectory visibility set to: {visible}");
         }
     }
 }

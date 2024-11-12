@@ -73,7 +73,8 @@ namespace LethalMin
             LeftPrompt = transform.Find("PikminSelected/Prompts/Buttons/SwitchL").GetComponent<TMP_Text>();
             RightPrompt = transform.Find("PikminSelected/Prompts/Buttons/SwitchR").GetComponent<TMP_Text>();
 
-            SetHudPresets(CurrentHUDPreset);
+            SetHudPresets(LethalMin.CurrentHudPreset);
+            PromptcanvasGroup.alpha = 0;
         }
         public void SetHudPresets(HudPresets preset)
         {
@@ -217,13 +218,39 @@ namespace LethalMin
             {
                 LeftPrompt.text = "???";
             }
+            if(HasSeenMin && HasSwaped1 && HasSwaped2 && HasThrown && !hasHiddenPrompts)
+            {
+                HidePrompts();
+                hasHiddenPrompts = true;
+            }
+
+            if (LethalMin.HideInputPrompts)
+                PromptcanvasGroup.alpha = 0;
         }
-        bool HasThrownMin = false;
+        bool hasHiddenPrompts = false;
+        public bool HasSeenMin, HasSwaped1, HasSwaped2, HasThrown;
         Coroutine promptRoutine;
+        public void ShowPrompts()
+        {
+            if (LethalMin.HideInputPrompts) { return; }
+            HasSeenMin = true;
+            StartCoroutine(ShowPromptsRoutine());
+        }
+        public IEnumerator ShowPromptsRoutine()
+        {
+            //tween the canva's group alpha to 0
+            float time = 0;
+            while (time < 1)
+            {
+                time += Time.deltaTime;
+                PromptcanvasGroup.alpha = Mathf.Lerp(0, 1, time);
+                yield return null;
+            }
+            promptRoutine = null!;
+        }
         public void HidePrompts()
         {
-            if (HasThrownMin) { return; }
-            HasThrownMin = true;
+            if (LethalMin.HideInputPrompts) { return; }
             StartCoroutine(HidePromptsRoutine());
         }
         public IEnumerator HidePromptsRoutine()
@@ -238,23 +265,69 @@ namespace LethalMin
             }
             promptRoutine = null!;
         }
+        private float promptActiveTime = 0f;
+        private bool isPromptActive = false;
+
         public void PingPrompts()
         {
-            if (!HasThrownMin || promptRoutine != null) { return; }
-            promptRoutine = StartCoroutine(PingPromptsRoutine());
+            if (LethalMin.HideInputPrompts) { return; }
+            if(!HasSwaped1 || !HasSwaped2 || !HasThrown)
+            {
+                return;
+            }
+
+            if (promptRoutine != null)
+            {
+                // If the prompt is already active, just reset the timer
+                promptActiveTime = 0f;
+            }
+            else
+            {
+                // If the prompt is not active, start the coroutine
+                promptActiveTime = 0f;
+                promptRoutine = StartCoroutine(PingPromptsRoutine());
+            }
         }
+
         public IEnumerator PingPromptsRoutine()
         {
-            //tween the canva's group alpha to 1
-            float time = 0;
-            while (time < 1)
+            isPromptActive = true;
+            PromptcanvasGroup.alpha = 1f;
+
+            while (isPromptActive)
             {
-                time += Time.deltaTime;
-                PromptcanvasGroup.alpha = Mathf.Lerp(0, 1, time);
+                promptActiveTime += Time.deltaTime;
+
+                if (promptActiveTime >= 1.5f)
+                {
+                    // Start fading out after 1.5 seconds of inactivity
+                    float fadeTime = 0f;
+                    while (fadeTime < 1f)
+                    {
+                        fadeTime += Time.deltaTime;
+                        PromptcanvasGroup.alpha = Mathf.Lerp(1f, 0f, fadeTime);
+
+                        // If PingPrompts is called again during fade out, reset
+                        if (promptActiveTime < 1.5f)
+                        {
+                            PromptcanvasGroup.alpha = 1f;
+                            break;
+                        }
+
+                        yield return null;
+                    }
+
+                    // If we completed the fade out, end the coroutine
+                    if (fadeTime >= 1f)
+                    {
+                        isPromptActive = false;
+                    }
+                }
+
                 yield return null;
             }
-            yield return new WaitForSeconds(2);
-            StartCoroutine(HidePromptsRoutine());
+
+            promptRoutine = null;
         }
         Coroutine CounterRoutine;
         private float counterActiveTime = 0f;
@@ -270,6 +343,7 @@ namespace LethalMin
             else
             {
                 // If the counter is not active, start the coroutine
+                counterActiveTime = 0f;
                 CounterRoutine = StartCoroutine(PingCounterRoutine());
             }
         }
@@ -343,7 +417,8 @@ namespace LethalMin
                 }
             }
         }
-        int LastSquadCount;
+        int LastSquadCount, LastExistCount, LastFieldCount;
+
         public void UpdateHUD()
         {
             if (LeaderScript == null)
@@ -370,6 +445,18 @@ namespace LethalMin
                 if (LeaderScript.followingPikmin.Count != LastSquadCount)
                 {
                     LastSquadCount = LeaderScript.followingPikmin.Count;
+                    PingCounter();
+                    if (!HasSeenMin)
+                        ShowPrompts();
+                }
+                if (PikminInExistenceI != LastExistCount)
+                {
+                    LastExistCount = PikminInExistenceI;
+                    PingCounter();
+                }
+                if (PikminInFieldI != LastFieldCount)
+                {
+                    LastFieldCount = PikminInFieldI;
                     PingCounter();
                 }
             }

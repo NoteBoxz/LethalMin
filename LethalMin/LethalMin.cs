@@ -206,6 +206,7 @@ namespace LethalMin
         public static bool AllowConvertion;
         public static bool AllowProduction;
         public static float MaskedWhistleVolume,MaskedWhistleRange;
+        public static bool HideInputPrompts;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
         public static ConfigEntry<bool> SkipPluckAnimation, FF, Smartmin, Smartermin, OnlyMainV, OnlyExitV, Pattack,
@@ -215,7 +216,7 @@ namespace LethalMin
         LethalManEaterConfig, CalmableManeaterConfig, Rasisium, NotFormidableOak, LethalTurrentsC, InvinciMin,
         StrudyMin, UselessblueMin, DebugM, FunniMode, PassiveToManEaterConfig, FFOM, FFM, TeleEle, TeleCarie,
         TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF, NoPowerSpawn, MWon, ScanablePikmin, CanShipEjectFromShip,
-        TurnToNormalOnDeath,PuffMaskConfig, ShowSafetyConfig, AllowConvertionConfig, AllowProductionConfig;
+        TurnToNormalOnDeath,PuffMaskConfig, ShowSafetyConfig, AllowConvertionConfig, AllowProductionConfig,HideInputPromptsConfig;
 
         public static ConfigEntry<float> Pscale, Sscale, ChaseR, PCPX, PCPY, PCPZ, PCRX, PCRY, PCRZ, PCScale,
          PCPCountX, PCPCountY, PCPCountZ, PCRCCountX, PCRCCountY, PCRCCountZ, PCScaleCount, FallTimer, CounterOffset,
@@ -277,6 +278,7 @@ namespace LethalMin
         {
             #region Setting Config
             SkipPluckAnimation = Config.Bind("Pikmin", "Skip Pluck Animation", false, "Skips the player's pluck animation");
+            HideInputPromptsConfig = Config.Bind("Pikmin", "Hide Input Prompts", false, "Hides the input prompts above the Pikmin Hud");
             FF = Config.Bind("Pikmin", "Friendly Fire", false, "Allows a leaders to attack their pikmin");
             Smartmin = Config.Bind("Pikmin", "Make pikmin follow behind leader", true, "(HOST ONLY) Makes pikmin move behind their leader when following.");
             Smartermin = Config.Bind("Pikmin", "Dynamic Positioning", false, "(HOST ONLY) Makes pikmin move in a more dynamic way simular to the Pikmin games, (Causes Lag)");
@@ -409,6 +411,7 @@ namespace LethalMin
 
 
             #region Setting Config values
+            HideInputPrompts = HideInputPromptsConfig.Value;
             AllowConvertion = AllowConvertionConfig.Value;
             AllowProduction = AllowProductionConfig.Value;
             PuffMask = PuffMaskConfig.Value;
@@ -538,13 +541,21 @@ namespace LethalMin
 
             #region Setting Config Events
             // Add SettingChanged events for all configs
+            HideInputPromptsConfig.SettingChanged += (_, _) => HideInputPrompts = HideInputPromptsConfig.Value;
             AllowConvertionConfig.SettingChanged += (_, _) => AllowConvertion = AllowConvertionConfig.Value;
             AllowProductionConfig.SettingChanged += (_, _) => AllowProduction = AllowProductionConfig.Value;
             PuffMaskConfig.SettingChanged += (_, _) => PuffMask = PuffMaskConfig.Value;
             MaskedWhistleVolumeConfig.SettingChanged += (_, _) => MaskedWhistleVolume = MaskedWhistleVolumeConfig.Value;
             MaskedWhistleRangeConfig.SettingChanged += (_, _) => MaskedWhistleRange = MaskedWhistleRangeConfig.Value;
             HudPresetsConfig.SettingChanged += (_, _) => CurrentHudPreset = HudPresetsConfig.Value;
-            HudPresetsConfig.SettingChanged += (_, _) => PikminHUD.pikminHUDInstance.SetHudPresets(CurrentHudPreset);
+            HudPresetsConfig.SettingChanged += (_, _) => 
+            {
+                CurrentHudPreset = HudPresetsConfig.Value;
+                if (PikminHUD.pikminHUDInstance != null)
+                {
+                    PikminHUD.pikminHUDInstance.SetHudPresets(CurrentHudPreset);
+                }
+            };
             ShowSafetyConfig.SettingChanged += (_, _) => ShowSafety = ShowSafetyConfig.Value;
             TurnToNormalOnDeath.SettingChanged += (_, _) => ConvertPuffminOnDeath = TurnToNormalOnDeath.Value;
             HBBuffer.SettingChanged += (_, _) => HoarderBugEatBuffer = HBBuffer.Value;
@@ -668,6 +679,7 @@ namespace LethalMin
 
             // Pikmin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(SkipPluckAnimation, false));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(HideInputPromptsConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(FF, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(Smartmin, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(Smartermin, false));
