@@ -83,11 +83,15 @@ namespace LethalMin
 
                     foreach (var item in _currentPuffminEnemies)
                     {
-                        if (item.GetComponent<PuffminAI>().PlayerLatchedOn == StartOfRound.Instance.localPlayerController)
+                        if (item.GetComponent<PuffminAI>().PlayerLatchedOn == StartOfRound.Instance.localPlayerController && !item.GetComponent<PuffminAI>().IsDying)
                         {
                             PikminHUD.pikminHUDInstance.WigglePrompt.SetActive(true);
                             break;
                         }
+                        PikminHUD.pikminHUDInstance.WigglePrompt.SetActive(false);
+                    }
+                    if (_currentPuffminEnemies.Count == 0)
+                    {
                         PikminHUD.pikminHUDInstance.WigglePrompt.SetActive(false);
                     }
 
