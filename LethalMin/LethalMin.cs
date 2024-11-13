@@ -207,6 +207,7 @@ namespace LethalMin
         public static bool AllowProduction;
         public static float MaskedWhistleVolume,MaskedWhistleRange;
         public static bool HideInputPrompts;
+        public static bool HidePuffminPrompt;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
         public static ConfigEntry<bool> SkipPluckAnimation, FF, Smartmin, Smartermin, OnlyMainV, OnlyExitV, Pattack,
@@ -216,7 +217,8 @@ namespace LethalMin
         LethalManEaterConfig, CalmableManeaterConfig, Rasisium, NotFormidableOak, LethalTurrentsC, InvinciMin,
         StrudyMin, UselessblueMin, DebugM, FunniMode, PassiveToManEaterConfig, FFOM, FFM, TeleEle, TeleCarie,
         TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF, NoPowerSpawn, MWon, ScanablePikmin, CanShipEjectFromShip,
-        TurnToNormalOnDeath,PuffMaskConfig, ShowSafetyConfig, AllowConvertionConfig, AllowProductionConfig,HideInputPromptsConfig;
+        TurnToNormalOnDeath,PuffMaskConfig, ShowSafetyConfig, AllowConvertionConfig, AllowProductionConfig,HideInputPromptsConfig,
+        HidePuffminPromptConfig;
 
         public static ConfigEntry<float> Pscale, Sscale, ChaseR, PCPX, PCPY, PCPZ, PCRX, PCRY, PCRZ, PCScale,
          PCPCountX, PCPCountY, PCPCountZ, PCRCCountX, PCRCCountY, PCRCCountZ, PCScaleCount, FallTimer, CounterOffset,
@@ -302,6 +304,7 @@ namespace LethalMin
             AllowConvertionConfig = Config.Bind("Pikmin", "Allow bodies to be converted into Items", true, "Allows bodies to be converted into items. You'd only really need to disable this if you have another mod to do this");
 
             TurnToNormalOnDeath = Config.Bind("Puffmin", "Turn Puffmin into Pikmin on Death", false, "Turns a puffmin back to normal when they die");
+            HidePuffminPromptConfig = Config.Bind("Puffmin", "Hide Puffmin Prompt", false, "Hides the wiggle prompt that shows when a puffmin is latched on to you.");
 
             LethalSpiderConfig = Config.Bind("Enemy AI", "Make Spider eat Pikmin", true, "Makes Spider eat Pikmin that are too close to the spider");
             LethalJesterConfig = Config.Bind("Enemy AI", "Make Jester eat Pikmin", true, "Makes Jester eat Pikmin when opened");
@@ -412,6 +415,7 @@ namespace LethalMin
 
             #region Setting Config values
             HideInputPrompts = HideInputPromptsConfig.Value;
+            HidePuffminPrompt = HidePuffminPromptConfig.Value;
             AllowConvertion = AllowConvertionConfig.Value;
             AllowProduction = AllowProductionConfig.Value;
             PuffMask = PuffMaskConfig.Value;
@@ -541,6 +545,7 @@ namespace LethalMin
 
             #region Setting Config Events
             // Add SettingChanged events for all configs
+            HidePuffminPromptConfig.SettingChanged += (_, _) => HidePuffminPrompt = HidePuffminPromptConfig.Value;
             HideInputPromptsConfig.SettingChanged += (_, _) => HideInputPrompts = HideInputPromptsConfig.Value;
             AllowConvertionConfig.SettingChanged += (_, _) => AllowConvertion = AllowConvertionConfig.Value;
             AllowProductionConfig.SettingChanged += (_, _) => AllowProduction = AllowProductionConfig.Value;
@@ -702,6 +707,7 @@ namespace LethalMin
 
             // Puffmin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(TurnToNormalOnDeath, false));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(HidePuffminPromptConfig, false));
 
 
             // Controls
