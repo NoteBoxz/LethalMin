@@ -559,7 +559,7 @@ namespace LethalMin
             //4 Emersion
             if (PminType.MeshRefernces != null)
             {
-                MeshRefernces = GetComponent<PikminMeshRefernces>();
+                MeshRefernces = GetComponentInChildren<PikminMeshRefernces>();
             }
             PminType.MeshData.ToggleMeshVisibility(!HideMeshOnStart);
             Mesh = Instantiate(PminType.MeshPrefab, transform);
