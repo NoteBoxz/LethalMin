@@ -107,6 +107,17 @@ namespace LethalMin.Library
 
         private static void CopyFields<TSource, TDestination>(TSource source, TDestination destination, string typeName)
         {
+            if(source == null)
+            {
+                LethalMin.Logger.LogError($"(LETHALMIN_CONVERTER) Source is null for {typeName}");
+                return;
+            }
+            if(destination == null)
+            {
+                LethalMin.Logger.LogError($"(LETHALMIN_CONVERTER) Destination is null for {typeName}");
+                return;
+            }
+            
             FieldInfo[] sourceFields = typeof(TSource).GetFields(BindingFlags.Public | BindingFlags.Instance);
             FieldInfo[] destFields = typeof(TDestination).GetFields(BindingFlags.Public | BindingFlags.Instance);
 

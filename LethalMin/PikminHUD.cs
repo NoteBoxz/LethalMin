@@ -86,21 +86,21 @@ namespace LethalMin
                     PrevPortRect.gameObject.SetActive(true);
                     PikminInExsistanceRect.gameObject.SetActive(true);
 
-                    LethalMin.PikminSelectedPosX = 262.78f;
-                    LethalMin.PikminSelectedPosY = -106f;
-                    LethalMin.PikminSelectedPosZ = -59.767f;
-                    LethalMin.PikminSelectedRotX = 0f;
-                    LethalMin.PikminSelectedRotY = 12f;
-                    LethalMin.PikminSelectedRotZ = 0f;
-                    LethalMin.PikminSelectedScale = 0.677937f;
+                    LethalMin.PCPX.Value = 262.78f;
+                    LethalMin.PCPY.Value = -106f;
+                    LethalMin.PCPZ.Value = -59.767f;
+                    LethalMin.PCRX.Value = 0f;
+                    LethalMin.PCRY.Value = 12f;
+                    LethalMin.PCRZ.Value = 0f;
+                    LethalMin.PCScale.Value = 0.677937f;
 
-                    LethalMin.PikminCountPosX = 268.4f;
-                    LethalMin.PikminCountPosY = -165.4f;
-                    LethalMin.PikminCountPosZ = -45.4f;
-                    LethalMin.PikminCountRotX = 0f;
-                    LethalMin.PikminCountRotY = 12f;
-                    LethalMin.PikminCountRotZ = 0f;
-                    LethalMin.PikminCountScale = 0.6698875f;
+                    LethalMin.PCPCountX.Value = 268.4f;
+                    LethalMin.PCPCountY.Value = -165.4f;
+                    LethalMin.PCPCountZ.Value = -45.4f;
+                    LethalMin.PCRCCountX.Value = 0f;
+                    LethalMin.PCRCCountY.Value = 12f;
+                    LethalMin.PCRCCountZ.Value = 0f;
+                    LethalMin.PCScaleCount.Value = 0.6698875f;
                     break;
                 case HudPresets.New:
                     // Set up new HUD
@@ -108,21 +108,21 @@ namespace LethalMin
                     PrevPortRect.gameObject.SetActive(true);
                     PikminInExsistanceRect.gameObject.SetActive(true);
 
-                    LethalMin.PikminSelectedPosX = 8.4f;
-                    LethalMin.PikminSelectedPosY = -106.6f;
-                    LethalMin.PikminSelectedPosZ = -15.9f;
-                    LethalMin.PikminSelectedRotX = 0f;
-                    LethalMin.PikminSelectedRotY = 0f;
-                    LethalMin.PikminSelectedRotZ = 0f;
-                    LethalMin.PikminSelectedScale = 0.6f;
+                    LethalMin.PCPX.Value = 8.4f;
+                    LethalMin.PCPY.Value = -106.6f;
+                    LethalMin.PCPZ.Value = -15.9f;
+                    LethalMin.PCRX.Value = 0f;
+                    LethalMin.PCRY.Value = 0f;
+                    LethalMin.PCRZ.Value = 0f;
+                    LethalMin.PCScale.Value = 0.6f;
 
-                    LethalMin.PikminCountPosX = 23.5f;
-                    LethalMin.PikminCountPosY = -204.9f;
-                    LethalMin.PikminCountPosZ = -47.4f;
-                    LethalMin.PikminCountRotX = 0f;
-                    LethalMin.PikminCountRotY = 0f;
-                    LethalMin.PikminCountRotZ = 0f;
-                    LethalMin.PikminCountScale = 0.6f;
+                    LethalMin.PCPCountX.Value = 23.5f;
+                    LethalMin.PCPCountY.Value = -204.9f;
+                    LethalMin.PCPCountZ.Value = -47.4f;
+                    LethalMin.PCRCCountX.Value = 0f;
+                    LethalMin.PCRCCountY.Value = 0f;
+                    LethalMin.PCRCCountZ.Value = 0f;
+                    LethalMin.PCScaleCount.Value = 0.6f;
                     break;
                 case HudPresets.Simplified:
                     // Set up simplified HUD
@@ -130,21 +130,21 @@ namespace LethalMin
                     PrevPortRect.gameObject.SetActive(false);
                     PikminInExsistanceRect.gameObject.SetActive(false);
 
-                    LethalMin.PikminSelectedPosX = 109f;
-                    LethalMin.PikminSelectedPosY = -85.4f;
-                    LethalMin.PikminSelectedPosZ = -47f;
-                    LethalMin.PikminSelectedRotX = 0f;
-                    LethalMin.PikminSelectedRotY = 0f;
-                    LethalMin.PikminSelectedRotZ = 0f;
-                    LethalMin.PikminSelectedScale = 0.6f;
+                    LethalMin.PCPX.Value = 109f;
+                    LethalMin.PCPY.Value = -85.4f;
+                    LethalMin.PCPZ.Value = -47f;
+                    LethalMin.PCRX.Value = 0f;
+                    LethalMin.PCRY.Value = 0f;
+                    LethalMin.PCRZ.Value = 0f;
+                    LethalMin.PCScale.Value = 0.6f;
 
-                    LethalMin.PikminCountPosX = 73f;
-                    LethalMin.PikminCountPosY = -106f;
-                    LethalMin.PikminCountPosZ = -47.4f;
-                    LethalMin.PikminCountRotX = 0f;
-                    LethalMin.PikminCountRotY = 0f;
-                    LethalMin.PikminCountRotZ = 0f;
-                    LethalMin.PikminCountScale = 0.6f;
+                    LethalMin.PCPCountX.Value = 73f;
+                    LethalMin.PCPCountY.Value = -106f;
+                    LethalMin.PCPCountZ.Value = -47.4f;
+                    LethalMin.PCRCCountX.Value = 0f;
+                    LethalMin.PCRCCountY.Value = 0f;
+                    LethalMin.PCRCCountZ.Value = 0f;
+                    LethalMin.PCScaleCount.Value = 0.6f;
                     break;
                 default:
                     // Default to new HUD
@@ -152,21 +152,21 @@ namespace LethalMin
                     PrevPortRect.gameObject.SetActive(true);
                     PikminInExsistanceRect.gameObject.SetActive(true);
 
-                    LethalMin.PikminSelectedPosX = 8.4f;
-                    LethalMin.PikminSelectedPosY = -106.6f;
-                    LethalMin.PikminSelectedPosZ = -15.9f;
-                    LethalMin.PikminSelectedRotX = 0f;
-                    LethalMin.PikminSelectedRotY = 0f;
-                    LethalMin.PikminSelectedRotZ = 0f;
-                    LethalMin.PikminSelectedScale = 0.6f;
+                    LethalMin.PCPX.Value = 8.4f;
+                    LethalMin.PCPY.Value = -106.6f;
+                    LethalMin.PCPZ.Value = -15.9f;
+                    LethalMin.PCRX.Value = 0f;
+                    LethalMin.PCRY.Value = 0f;
+                    LethalMin.PCRZ.Value = 0f;
+                    LethalMin.PCScale.Value = 0.6f;
 
-                    LethalMin.PikminCountPosX = 23.5f;
-                    LethalMin.PikminCountPosY = -204.9f;
-                    LethalMin.PikminCountPosZ = -47.4f;
-                    LethalMin.PikminCountRotX = 0f;
-                    LethalMin.PikminCountRotY = 0f;
-                    LethalMin.PikminCountRotZ = 0f;
-                    LethalMin.PikminCountScale = 0.6f;
+                    LethalMin.PCPCountX.Value = 23.5f;
+                    LethalMin.PCPCountY.Value = -204.9f;
+                    LethalMin.PCPCountZ.Value = -47.4f;
+                    LethalMin.PCRCCountX.Value = 0f;
+                    LethalMin.PCRCCountY.Value = 0f;
+                    LethalMin.PCRCCountZ.Value = 0f;
+                    LethalMin.PCScaleCount.Value = 0.6f;
 
                     LethalMin.Logger.LogWarning("Invalid HUD preset selected, defaulting to new HUD.");
                     break;
@@ -218,7 +218,7 @@ namespace LethalMin
             {
                 LeftPrompt.text = "???";
             }
-            if(HasSeenMin && HasSwaped1 && HasSwaped2 && HasThrown && !hasHiddenPrompts)
+            if (HasSeenMin && HasSwaped1 && HasSwaped2 && HasThrown && !hasHiddenPrompts)
             {
                 HidePrompts();
                 hasHiddenPrompts = true;
@@ -271,7 +271,7 @@ namespace LethalMin
         public void PingPrompts()
         {
             if (LethalMin.HideInputPrompts) { return; }
-            if(!HasSwaped1 || !HasSwaped2 || !HasThrown)
+            if (!HasSwaped1 || !HasSwaped2 || !HasThrown)
             {
                 return;
             }

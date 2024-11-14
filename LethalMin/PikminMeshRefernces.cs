@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using LethalMin;
 
-namespace LethalMin.Library
+namespace LethalMin
 {
     public class PikminMeshRefernces : MonoBehaviour
     {

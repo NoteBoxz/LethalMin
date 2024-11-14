@@ -1,5 +1,4 @@
 using UnityEngine;
-using LethalMin.Library;
 using Unity.Netcode;
 using System;
 namespace LethalMin
@@ -178,7 +177,7 @@ namespace LethalMin
         [HideInInspector]
         public bool HasBeenRegistered;
         [HideInInspector]
-        public string version = "0.2.0";
+        public string version = "0.2.3";
     }
 
     public struct PikminMeshData

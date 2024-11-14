@@ -10,7 +10,6 @@ using Unity.Netcode.Components;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Events;
 using LethalMon.Behaviours;
-using LethalMin.Patches;
 
 namespace LethalMin
 {
@@ -247,6 +246,8 @@ namespace LethalMin
         int KnockBackResistance = 3;
         public Animator IdleGlowAnim;
         public bool IsLeftBehind;
+        
+        public PikminMeshRefernces? MeshRefernces;
 
         //because vector3.distance will never work because the pikmin can never reach the onion on the Y axis.
         private float HorizontalDistance(Vector3 a, Vector3 b)
@@ -556,6 +557,10 @@ namespace LethalMin
             }
 
             //4 Emersion
+            if(PminType.MeshRefernces != null)
+            {
+                MeshRefernces = PminType.MeshRefernces;
+            }
             PminType.MeshData.ToggleMeshVisibility(!HideMeshOnStart);
             Mesh = Instantiate(PminType.MeshPrefab, transform);
             GameObject PGP = GetSproutRoot();
@@ -563,6 +568,7 @@ namespace LethalMin
             if (PGP != null)
             {
                 IdleGlow = Instantiate(LethalMin.IdelGlowPrefab, PGP.transform);
+                IdleGlow.transform.localScale = LethalMin.IdelGlowPrefab.transform.localScale;
                 IdleGlowAnim = IdleGlow.GetComponent<Animator>();
                 if (PminType.PikminGlow != null)
                     IdleGlow.GetComponentInChildren<SpriteRenderer>().sprite = PminType.PikminGlow;
@@ -575,7 +581,7 @@ namespace LethalMin
 
 
             // Set up plant references
-            if (PminType.MeshRefernces == null)
+            if (MeshRefernces == null)
             {
                 Plants = new GameObject[PminType.GrowthStagePaths.Length];
                 for (int i = 0; i < PminType.GrowthStagePaths.Length; i++)
@@ -593,8 +599,8 @@ namespace LethalMin
             }
             else
             {
-                Plants = PminType.MeshRefernces.PikminGrowthStagePlants;
-                LocalAnim = PminType.MeshRefernces.PikminAnimator;
+                Plants = MeshRefernces.PikminGrowthStagePlants;
+                LocalAnim = MeshRefernces.PikminAnimator;
             }
             if (LocalAnim.gameObject.GetComponent<PikminAnimEvents>() == null)
                 LocalAnim.gameObject.AddComponent<PikminAnimEvents>().AI = this;
@@ -1195,7 +1201,7 @@ namespace LethalMin
 
         public GameObject GetSproutRoot()
         {
-            if (PminType.MeshRefernces == null)
+            if (MeshRefernces == null)
             {
                 string PGP = "";
                 if (string.IsNullOrEmpty(PminType.PikminGlowPath) && PminType.GrowthStagePaths.Length >= 0)
@@ -1211,7 +1217,12 @@ namespace LethalMin
                     return Mesh.transform.Find(PGP).gameObject;
                 }
             }
-            return PminType.MeshRefernces.PikminGlowRoot;
+            else
+            {
+                return MeshRefernces.PikminGlowRoot;
+            }
+            LethalMin.Logger.LogWarning("Could not find the sprout root");
+            return gameObject;
         }
 
         private void HandleWorkingState()
