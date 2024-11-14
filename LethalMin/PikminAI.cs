@@ -246,7 +246,7 @@ namespace LethalMin
         int KnockBackResistance = 3;
         public Animator IdleGlowAnim;
         public bool IsLeftBehind;
-        
+
         public PikminMeshRefernces? MeshRefernces;
 
         //because vector3.distance will never work because the pikmin can never reach the onion on the Y axis.
@@ -557,9 +557,9 @@ namespace LethalMin
             }
 
             //4 Emersion
-            if(PminType.MeshRefernces != null)
+            if (PminType.MeshRefernces != null)
             {
-                MeshRefernces = PminType.MeshRefernces;
+                MeshRefernces = GetComponent<PikminMeshRefernces>();
             }
             PminType.MeshData.ToggleMeshVisibility(!HideMeshOnStart);
             Mesh = Instantiate(PminType.MeshPrefab, transform);
@@ -567,16 +567,29 @@ namespace LethalMin
 
             if (PGP != null)
             {
-                IdleGlow = Instantiate(LethalMin.IdelGlowPrefab, PGP.transform);
-                IdleGlow.transform.localScale = LethalMin.IdelGlowPrefab.transform.localScale;
+                // Instantiate the object
+                IdleGlow = Instantiate(LethalMin.IdelGlowPrefab);
+
+                // Store the original world scale
+                Vector3 originalScale = IdleGlow.transform.lossyScale;
+
+                // Set the parent
+                IdleGlow.transform.SetParent(PGP.transform);
+
+                // Reset the world scale
+                IdleGlow.transform.localScale = Vector3.one;
+                IdleGlow.transform.localScale = new Vector3(
+                    originalScale.x / PGP.transform.lossyScale.x,
+                    originalScale.y / PGP.transform.lossyScale.y,
+                    originalScale.z / PGP.transform.lossyScale.z
+                );
+
                 IdleGlowAnim = IdleGlow.GetComponent<Animator>();
                 if (PminType.PikminGlow != null)
                     IdleGlow.GetComponentInChildren<SpriteRenderer>().sprite = PminType.PikminGlow;
                 if (!PminType.ReplaceGlowFXwithDefult && PminType.PikminGlow == null)
                     IdleGlow.GetComponentInChildren<SpriteRenderer>().sprite = null;
                 IdleGlow.GetComponentInChildren<SpriteRenderer>().color = PminType.PikminColor;
-
-                IdleGlow.transform.SetParent(PGP.transform);
             }
 
 
