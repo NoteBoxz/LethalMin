@@ -243,6 +243,7 @@ namespace LethalMin
         private void PlayDismissSoundClientRpc()
         {
             float loudness = 1f;
+            aud.volume = LethalMin.WhistleVolume;
             aud.PlayOneShot(DissSFX, loudness);
             WalkieTalkie.TransmitOneShotAudio(aud, DissSFX, loudness);
             if (!LethalMin.LethaDogs2Value)

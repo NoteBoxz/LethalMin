@@ -224,7 +224,7 @@ namespace LethalMin
          PCPCountX, PCPCountY, PCPCountZ, PCRCCountX, PCRCCountY, PCRCCountZ, PCScaleCount, FallTimer, CounterOffset,
          NoticeTimer, BarberR, OnionSpawnChance, SproutSpawnChance, IndoorSpawnChance, WhistleVolumeConfig,
          ManagerRefreshRateC, WhistleRange, WhistleMinRaidus, WhistleMaxRadius, PlayerNR, SpeedMultiplierConfig,
-         DamageMultiplierConfig,MaskedWhistleVolumeConfig, MaskedWhistleRangeConfig;
+         DamageMultiplierConfig,MaskedWhistleVolumeConfig, MaskedWhistleRangeConfig,ThrowX,ThrowY,ThrowZ;
 
         public static ConfigEntry<int> MechBurnLimmitConfig, JesterDiet, ThumperDiet, GiantDiet, BarberDiet, ManeaterDiet, SpideDiet,
         JesterBuffer, ThumperBuffer, SpiderBuffer, BeesShockCountConfig, ManeaterBuffer, MaxMin
@@ -375,6 +375,9 @@ namespace LethalMin
             MWon = Config.Bind("Extra", "Mesh Wrapping", false, "Enables mesh wrapping for the target object");
             ShowSafetyConfig = Config.Bind("Extra", "Show Safety areas", false, "Shows the range in which Pikmin are safe from being left behind");
             AllowProductionConfig = Config.Bind("Extra", "Allow Onions to produce Sprouts", true, "Allows Onions to produce sprouts.");
+            ThrowX = Config.Bind("Extra", "ThrowOrigen X", 0.1f, "The X Position of the throw origen");
+            ThrowY = Config.Bind("Extra", "ThrowOrigen Y", 0f, "The Y Position of the throw origen");
+            ThrowZ = Config.Bind("Extra", "ThrowOrigen Z", 0f, "The Z Position of the throw origen");
 
             LethalManEaterConfig = Config.Bind("Maneater", "Make Adult Maneater Eat Pikmin", true, "Makes The Maneater kill pikmin in it's way when agroed");
             CalmableManeaterConfig = Config.Bind("Maneater", "Make Maneater Calmable by Pikmin", true, "Makes the maneater in it's baby state calmable by pikmin. (Note: The unless Favor any Pikmin Type is enabled, the maneater will only be calmable by the pikmin type that was selected by the first player it sees.)");
@@ -774,6 +777,9 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(MWon, true));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(ShowSafetyConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowProductionConfig, false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(ThrowX, false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(ThrowY, false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(ThrowZ, false));
 
 
             // HUD

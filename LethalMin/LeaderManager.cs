@@ -166,16 +166,6 @@ namespace LethalMin
             GameObject throwOriginObj = new GameObject("ThrowOrigin");
             throwOrigin = throwOriginObj.transform;
 
-            if (mainCamera != null)
-            {
-                throwOrigin.localPosition = new Vector3(mainCamera.transform.position.x -
-                 0.15f, mainCamera.transform.position.y, mainCamera.transform.position.z);
-                throwOrigin.transform.rotation = mainCamera.transform.rotation;
-            }
-            else
-            {
-                throwOrigin.localPosition = new Vector3(0, 1.6f, 0.5f);
-            }
             throwOrigin.transform.SetParent(mainCamera.transform, true);
             trajectoryPredictor.SetThrowOrigin(throwOrigin);
         }
@@ -540,12 +530,7 @@ namespace LethalMin
 
         private void UpdateThrowOrigin()
         {
-            if (mainCamera != null && throwOrigin != null)
-            {
-                //throwOrigin.transform.position = new Vector3(mainCamera.transform.position.x, mainCamera.transform.position.y, mainCamera.transform.position.z + 0.2f);
-                //throwOrigin.transform.rotation = mainCamera.transform.rotation;
-            }
-            //transform.localPosition = Controller.transform.position;
+            throwOrigin.localPosition = new Vector3(LethalMin.ThrowX.Value, LethalMin.ThrowY.Value, LethalMin.ThrowZ.Value);
         }
 
         private void UpdateSelectedPikmin()
