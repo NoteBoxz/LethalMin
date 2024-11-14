@@ -568,22 +568,7 @@ namespace LethalMin
             if (PGP != null)
             {
                 // Instantiate the object
-                IdleGlow = Instantiate(LethalMin.IdelGlowPrefab);
-
-                // Store the original world scale
-                Vector3 originalScale = IdleGlow.transform.lossyScale;
-
-                // Set the parent
-                IdleGlow.transform.SetParent(PGP.transform);
-
-                // Reset the world scale
-                IdleGlow.transform.localScale = Vector3.one;
-                IdleGlow.transform.localScale = new Vector3(
-                    originalScale.x / PGP.transform.lossyScale.x,
-                    originalScale.y / PGP.transform.lossyScale.y,
-                    originalScale.z / PGP.transform.lossyScale.z
-                );
-
+                IdleGlow = Instantiate(LethalMin.IdelGlowPrefab,PGP.transform);
                 IdleGlowAnim = IdleGlow.GetComponent<Animator>();
                 if (PminType.PikminGlow != null)
                     IdleGlow.GetComponentInChildren<SpriteRenderer>().sprite = PminType.PikminGlow;
