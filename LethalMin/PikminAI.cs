@@ -557,12 +557,12 @@ namespace LethalMin
             }
 
             //4 Emersion
+            PminType.MeshData.ToggleMeshVisibility(!HideMeshOnStart);
+            Mesh = Instantiate(PminType.MeshPrefab, transform);
             if (PminType.MeshRefernces != null)
             {
                 MeshRefernces = GetComponentInChildren<PikminMeshRefernces>();
             }
-            PminType.MeshData.ToggleMeshVisibility(!HideMeshOnStart);
-            Mesh = Instantiate(PminType.MeshPrefab, transform);
             GameObject PGP = GetSproutRoot();
 
             if (PGP != null)
