@@ -19,7 +19,7 @@ namespace LethalMin.Patches
         {
             if (!__instance.IsServer) { return; }
             
-            PikminProtector protector = __instance.gameObject.GetComponent<PikminProtector>();
+            PikminProtector protector = __instance.gameObject.AddComponent<PikminProtector>();
             protector.HazardTypez = new HazardType[1];
             protector.HazardTypez[0] = HazardType.Crush;
         }

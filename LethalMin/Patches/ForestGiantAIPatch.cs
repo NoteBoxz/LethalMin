@@ -18,9 +18,13 @@ namespace LethalMin.Patches
             if (!LethalMin.LethalGiant) { return; }
             LethalMin.Logger.LogInfo("Grabbing Pikmin");
             List<PikminAI> Pikmins = LethalMin.FindNearestPikmin(__instance.centerPosition.position, 10, LethalMin.GiantEatLimmit);
-            
+
             foreach (var item in Pikmins)
             {
+                if (LethalMin.IsPikminResistantToHazard(item.PminType, HazardType.Crush))
+                {
+                    continue;
+                }
                 LethalMin.Logger.LogInfo("Grabbing " + item.name);
                 if (!item.IsInShip && !item.IsDying && !item.FinnaBeDed && !item.isEnemyDead)
                 {
