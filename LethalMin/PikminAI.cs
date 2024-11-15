@@ -568,7 +568,7 @@ namespace LethalMin
             if (PGP != null)
             {
                 // Instantiate the object
-                IdleGlow = Instantiate(LethalMin.IdelGlowPrefab,PGP.transform);
+                IdleGlow = Instantiate(LethalMin.IdelGlowPrefab, PGP.transform);
                 IdleGlowAnim = IdleGlow.GetComponent<Animator>();
                 if (PminType.PikminGlow != null)
                     IdleGlow.GetComponentInChildren<SpriteRenderer>().sprite = PminType.PikminGlow;
@@ -855,14 +855,17 @@ namespace LethalMin
                 NoticeInstant(currentLeader.Controller);
             }
 
-            if (IdleTimer > 0)
+            if (PminType.ExtraIdleAnimsCount > 0)
             {
-                IdleTimer -= Time.deltaTime;
-            }
-            else
-            {
-                SetIntClientRpc("IdelInt", enemyRandom.Next(0, 9));
-                IdleTimer = enemyRandom.Next(1, 5) - 0.5f;
+                if (IdleTimer > 0)
+                {
+                    IdleTimer -= Time.deltaTime;
+                }
+                else
+                {
+                    SetIntClientRpc("IdelInt", enemyRandom.Next(0, PminType.ExtraIdleAnimsCount));
+                    IdleTimer = enemyRandom.Next(1, 5) - 0.5f;
+                }
             }
 
             if (targetItem == null && CanGrabItems && PminType.CanCarryItems)
@@ -1306,8 +1309,11 @@ namespace LethalMin
                     agent.speed = PlantSpeeds[GrowStage];
                     if (EnemyAttacking.isEnemyDead)
                     {
-                        SetIntClientRpc("YayInt", enemyRandom.Next(0, 3));
-                        SetTriggerClientRpc("Yay");
+                        if (PminType.YayAnimationsCount > 0)
+                        {
+                            SetIntClientRpc("YayInt", enemyRandom.Next(0, PminType.YayAnimationsCount));
+                            SetTriggerClientRpc("Yay");
+                        }
                         ReqeustYaySFXClientRpc();
                     }
                     // Set the state to Idle
@@ -1631,8 +1637,11 @@ namespace LethalMin
                     }
                     EnemyAttacking = null;
                     UnSnapPikmin(false, true);
-                    SetIntClientRpc("YayInt", enemyRandom.Next(0, 3));
-                    SetTriggerClientRpc("Yay");
+                    if (PminType.YayAnimationsCount > 0)
+                    {
+                        SetIntClientRpc("YayInt", enemyRandom.Next(0, PminType.YayAnimationsCount));
+                        SetTriggerClientRpc("Yay");
+                    }
                     ReqeustYaySFXClientRpc();
                 }
             }
@@ -2101,6 +2110,11 @@ namespace LethalMin
         }
         public void NoticeInstant(PlayerControllerB newLeader, bool PlayNoticeAnim = true)
         {
+            if (newLeader == null)
+            {
+                LethalMin.Logger.LogWarning($"{uniqueDebugId}: Cannot assign null player as leader");
+                return;
+            }
             if (currentBehaviourStateIndex == (int)PState.Leaveing) { return; }
             if (IsDrowing) { return; }
             if (IsGettingAsinged) { return; }

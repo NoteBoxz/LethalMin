@@ -149,6 +149,12 @@ namespace LethalMin
         [Tooltip("The type of onion this pikmin targets")]
         public OnionType TargetOnion;
 
+        [Tooltip("The ammount of extra idle animations for the pikmin")]
+        public int ExtraIdleAnimsCount = 0;
+
+        [Tooltip("The amount of Yay animations for the pikmin")]
+        public int YayAnimationsCount = 0;
+
         [Header("Beastiary")]
         [Tooltip("The Pikmin type's scientific name")]
         public string ScientificName = "Pikminus Pikminus";
