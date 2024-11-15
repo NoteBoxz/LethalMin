@@ -9,7 +9,7 @@ namespace LethalMin
         [Header("NOTE FROM DEV: If you are seeing this,"
         + "\n that probobly means you are createing a PikminType using the base LethalMin mod."
         + "\n This is not recomended, as it requires alot more unnessasy set up."
-        +"\n So I recommend using the LethalMinLibrary mod to create custom Pikmin Types instead!")]
+        + "\n So I recommend using the LethalMinLibrary mod to create custom Pikmin Types instead!")]
         [Header("Distinguishing Information")]
 
         [Tooltip("The pikmin's name")]
@@ -58,7 +58,7 @@ namespace LethalMin
         public PikminMeshRefernces MeshRefernces = null!;
 
         [Header("Pikmin Stats")]
-        
+
         [Tooltip("The hazards the pikmin is resistant to")]
         public HazardType[] HazardsResistantTo = new HazardType[0];
 
@@ -106,6 +106,21 @@ namespace LethalMin
 
         [Tooltip("The ammount of distance the pikmin can detect items")]
         public float ItemDetectionRange = 5f;
+
+        [Tooltip("The Attack animation for the pikmin")]
+        public AnimationClip? AttackAnimation;
+
+        [Tooltip("The Non-Latched Attack animation for the pikmin")]
+        public AnimationClip? NonLatchAttackAnimation;
+
+        [Tooltip("The frame of your Attack animaiton when the Pikmin should hit the enemy")]
+        public int AttackAnimationHitFrame;
+
+        [Tooltip("The frame of your Non-Latched Attack animaiton when the Pikmin should hit the enemy")]
+        public int NonLatchAttackAnimationHitFrame;
+
+        [Tooltip("The Pikmin's attack rate while latched onto an enemy in seconds (Set this to -1 if you have an animation)")]
+        public float AttackRate = -1f;
 
         [Header("Spawning")]
 
@@ -169,7 +184,7 @@ namespace LethalMin
                 return DamageAmmount / 100 * DamageMultiplier * LethalMin.DamageMultiplier;
             }
             return DamageAmmount * DamageMultiplier * LethalMin.DamageMultiplier;
-        }        
+        }
         public float GetDeathDamage()
         {
             if (NormalizeDamage)

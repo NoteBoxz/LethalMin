@@ -530,6 +530,7 @@ namespace LethalMin
 
         private void UpdateThrowOrigin()
         {
+            throwOrigin.transform.rotation = Quaternion.identity;
             throwOrigin.localPosition = new Vector3(LethalMin.ThrowX.Value, LethalMin.ThrowY.Value, LethalMin.ThrowZ.Value);
         }
 

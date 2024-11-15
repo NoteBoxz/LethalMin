@@ -205,7 +205,8 @@ namespace LethalMin
         private const float teleportDelay = 1f; // 1 second delay
         private bool isCheckingNavMesh = false;
         public bool KncockedBack, CannotEscape, IsThrown;
-        public bool IsDying, FinnaBeDed, RandomizedSnapTo, Invincible;
+        public bool IsDying, FinnaBeDed, RandomizedSnapTo;
+        public NetworkVariable<bool> Invincible = new NetworkVariable<bool>(false);
         float DedTimer;
         public float drowningTimer;
         public PlayerControllerB? whistlingPlayer;
@@ -1740,6 +1741,7 @@ namespace LethalMin
                     LethalMin.Logger.LogInfo($"Destroyed {initalcount} temp objects");
             }
         }
+        bool DoingAttackRutine;
         public void LateUpdate()
         {
             IsInShip = StartOfRound.Instance.shipInnerRoomBounds.bounds.Contains(transform.position) && isOutside;
@@ -1789,7 +1791,47 @@ namespace LethalMin
                 HasMultipliedSpeed = false;
             }
 
+            if (currentBehaviourStateIndex == (int)PState.Attacking && SnapToPos != null && 
+            !DoingAttackRutine && PminType.AttackRate > 0f)
+            {
+                DoingAttackRutine = true;
+                LethalMin.Logger.LogInfo($"{uniqueDebugId}: Started attack routine");
+                StartCoroutine(AttackCorutine());
+            }
+
             scanNode.SetActive(LethalMin.ScanMin);
+        }
+        public IEnumerator AttackCorutine()
+        {
+            while (currentBehaviourStateIndex == (int)PState.Attacking && SnapToPos != null)
+            {
+                yield return new WaitForSeconds(PminType.AttackRate);
+
+                Hit();
+
+                if (currentBehaviourStateIndex != (int)PState.Attacking || SnapToPos == null)
+                {
+                    DoingAttackRutine = false;
+                    break;
+                }
+            }
+            DoingAttackRutine = false;
+        }
+        public void Hit()
+        {
+            if (EnemyAttacking != null && !EnemyAttacking.isEnemyDead)
+            {
+                LethalMin.Logger.LogInfo($"{uniqueDebugId}: HIT using interval");
+                if (previousLeader != null)
+                {
+                    EnemyDamager.HitInAirQoutes(PminType.GetDamage(), previousLeader.Controller, true, 1);
+                }
+                else
+                {
+                    EnemyDamager.HitInAirQoutes(PminType.GetDamage(), null, true, 1);
+                }
+                ReqeustAttackAndHitSFXClientRpc();
+            }
         }
 
         #endregion
@@ -4383,7 +4425,7 @@ namespace LethalMin
         public override void HitEnemy(int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false, int hitID = -1)
         {
             base.HitEnemy(force, playerWhoHit, playHitSFX, hitID);
-            if (Invincible) { return; }
+            if (Invincible.Value) { return; }
             if (KncockedBack) { return; }
             if (!LethalMin.FriendlyFire && playerWhoHit != null && playerWhoHit == currentLeader?.Controller
             || !LethalMin.FriendlyFire && playerWhoHit != null && playerWhoHit == previousLeader?.Controller && currentBehaviourStateIndex == (int)PState.Attacking)
@@ -4406,7 +4448,7 @@ namespace LethalMin
         public override void HitFromExplosion(float distance)
         {
             base.HitFromExplosion(distance);
-            if (Invincible || LethalMin.IsPikminResistantToHazard(PminType, HazardType.Exsplosive)) { return; }
+            if (Invincible.Value || LethalMin.IsPikminResistantToHazard(PminType, HazardType.Exsplosive)) { return; }
             ApplyKnockbackServerRpc(new Vector3(-distance, -distance, -distance), true, false, 3);
         }
         public void UnSnapPikmin(bool DestorySnapToPos = false, bool UsePhysics = false, bool ResetToInitial = true)
@@ -4644,7 +4686,7 @@ namespace LethalMin
         {
             if (LethalMin.DebugMode)
                 LethalMin.Logger.LogInfo($"Killed called for {uniqueDebugId}");
-            if (Invincible) { return; }
+            if (Invincible.Value) { return; }
             if (LethalMin.InvinciMinValue) { return; }
 
             if (!IsDying && !DeathBuffer && !destroy)

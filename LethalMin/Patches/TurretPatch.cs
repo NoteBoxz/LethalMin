@@ -22,6 +22,7 @@ namespace LethalMin.Patches
                 {
                     PikminAI pikmin = CheckForPikminInLineOfSight(__instance, 3f);
                     if (pikmin == null) { return; }
+                    if (LethalMin.IsPikminResistantToHazard(pikmin.PminType, HazardType.Lethal)) { return; }
                     // Calculate knockback direction (away from the turret)
                     Vector3 knockbackDirection = (pikmin.transform.position - __instance.centerPoint.position).normalized;
 

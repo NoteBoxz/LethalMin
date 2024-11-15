@@ -32,7 +32,7 @@ namespace LethalMin.Patches
         {
             float lightningRadius = 6f;
 
-            Collider[] colliders = Physics.OverlapSphere(strikePosition, lightningRadius, -1, QueryTriggerInteraction.Collide);
+            Collider[] colliders = Physics.OverlapSphere(strikePosition, lightningRadius, 2621448, QueryTriggerInteraction.Collide);
             foreach (Collider collider in colliders)
             {
                 PikminAI pikmin = null;
@@ -47,18 +47,22 @@ namespace LethalMin.Patches
                     {
                         LethalMin.Logger.LogInfo($"Yellow Pikmin {pikmin.name} is immune to lightning!");
                         AffectedPikminAIList.Add(pikmin);
-                        pikmin.Invincible = true;
+                        pikmin.Invincible.Value = true;
                         continue; // Skip to the next Pikmin
                     }
 
+                    if (LethalMin.IsPikminResistantToHazard(pikmin.PminType, HazardType.Exsplosive) 
+                    && !LethalMin.IsPikminResistantToHazard(pikmin.PminType, HazardType.Electric))
+                    {
+                        LethalMin.Logger.LogInfo($"Pikmin {pikmin.name} struck by lightning and killed FailSafe.");
 
-                    // LethalMin.Logger.LogInfo($"Pikmin {pikmin.name} struck by lightning and killed.");
-
-                    // // Apply knockback effect
-                    // Vector3 knockbackDirection = (pikmin.transform.position - strikePosition).normalized;
-                    // float knockbackForce = 20f; // Adjust as needed
-                    // Vector3 knockbackVector = knockbackDirection * knockbackForce + Vector3.up * knockbackForce * 0.5f;
-                    // pikmin.ApplyKnockbackServerRpc(knockbackVector, true, false, 3f);
+                        // Apply knockback effect
+                        Vector3 knockbackDirection = (pikmin.transform.position - strikePosition).normalized;
+                        float knockbackForce = 20f; // Adjust as needed
+                        Vector3 knockbackVector = knockbackDirection * knockbackForce + Vector3.up * knockbackForce * 0.5f;
+                        pikmin.ApplyKnockbackServerRpc(knockbackVector, true, false, 3f);
+                        pikmin.Invincible.Value = false;
+                    }
                 }
             }
         }
@@ -67,7 +71,7 @@ namespace LethalMin.Patches
             foreach (var item in AffectedPikminAIList)
             {
                 LethalMin.Logger.LogInfo($"{item.name} is no longer immune...");
-                item.Invincible = false;
+                item.Invincible.Value = false;
             }
             AffectedPikminAIList.Clear();
         }

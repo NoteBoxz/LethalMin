@@ -22,6 +22,7 @@ using UnityEngine.AI;
 using UnityEngine.InputSystem;
 using System.IO;
 using LethalMin.Library;
+using UnityEngine.ProBuilder;
 
 namespace LethalMin
 {
@@ -205,7 +206,7 @@ namespace LethalMin
         public static HudPresets CurrentHudPreset;
         public static bool AllowConvertion;
         public static bool AllowProduction;
-        public static float MaskedWhistleVolume,MaskedWhistleRange;
+        public static float MaskedWhistleVolume, MaskedWhistleRange;
         public static bool HideInputPrompts;
         public static bool HidePuffminPrompt;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
@@ -217,14 +218,14 @@ namespace LethalMin
         LethalManEaterConfig, CalmableManeaterConfig, Rasisium, NotFormidableOak, LethalTurrentsC, InvinciMin,
         StrudyMin, UselessblueMin, DebugM, FunniMode, PassiveToManEaterConfig, FFOM, FFM, TeleEle, TeleCarie,
         TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF, NoPowerSpawn, MWon, ScanablePikmin, CanShipEjectFromShip,
-        TurnToNormalOnDeath,PuffMaskConfig, ShowSafetyConfig, AllowConvertionConfig, AllowProductionConfig,HideInputPromptsConfig,
+        TurnToNormalOnDeath, PuffMaskConfig, ShowSafetyConfig, AllowConvertionConfig, AllowProductionConfig, HideInputPromptsConfig,
         HidePuffminPromptConfig;
 
         public static ConfigEntry<float> Pscale, Sscale, ChaseR, PCPX, PCPY, PCPZ, PCRX, PCRY, PCRZ, PCScale,
          PCPCountX, PCPCountY, PCPCountZ, PCRCCountX, PCRCCountY, PCRCCountZ, PCScaleCount, FallTimer, CounterOffset,
          NoticeTimer, BarberR, OnionSpawnChance, SproutSpawnChance, IndoorSpawnChance, WhistleVolumeConfig,
          ManagerRefreshRateC, WhistleRange, WhistleMinRaidus, WhistleMaxRadius, PlayerNR, SpeedMultiplierConfig,
-         DamageMultiplierConfig,MaskedWhistleVolumeConfig, MaskedWhistleRangeConfig,ThrowX,ThrowY,ThrowZ;
+         DamageMultiplierConfig, MaskedWhistleVolumeConfig, MaskedWhistleRangeConfig, ThrowX, ThrowY, ThrowZ;
 
         public static ConfigEntry<int> MechBurnLimmitConfig, JesterDiet, ThumperDiet, GiantDiet, BarberDiet, ManeaterDiet, SpideDiet,
         JesterBuffer, ThumperBuffer, SpiderBuffer, BeesShockCountConfig, ManeaterBuffer, MaxMin
@@ -336,7 +337,7 @@ namespace LethalMin
             MaskedWhistleVolumeConfig = Config.Bind("Enemy AI", "Masked Whistle Volume", 1f, "The volume of the whistle sound for the masked");
             MaskedWhistleRangeConfig = Config.Bind("Enemy AI", "Masked Whistle Range", 10f, "The range at which the whistle can reach for the masked");
 
-            
+
             HudPresetsConfig = Config.Bind("HUD", "HUD Preset", HudPresets.New, "The preset for the HUD");
             PCPX = Config.Bind("HUD", "PikminSelected(XPos)", 262.78f, "The X position of the selected pikmin UI element");
             PCPY = Config.Bind("HUD", "PikminSelected(YPos)", -106f, "The Y position of the selected pikmin UI element");
@@ -425,7 +426,7 @@ namespace LethalMin
             MaskedWhistleRange = MaskedWhistleRangeConfig.Value;
             MaskedWhistleVolume = MaskedWhistleVolumeConfig.Value;
             CurrentHudPreset = HudPresetsConfig.Value;
-            ShowSafety = ShowSafetyConfig.Value;            
+            ShowSafety = ShowSafetyConfig.Value;
             ConvertPuffminOnDeath = TurnToNormalOnDeath.Value;
             HoarderBugEatBuffer = HBBuffer.Value;
             HoarderBugEatLimmit = HBDiet.Value;
@@ -556,7 +557,7 @@ namespace LethalMin
             MaskedWhistleVolumeConfig.SettingChanged += (_, _) => MaskedWhistleVolume = MaskedWhistleVolumeConfig.Value;
             MaskedWhistleRangeConfig.SettingChanged += (_, _) => MaskedWhistleRange = MaskedWhistleRangeConfig.Value;
             HudPresetsConfig.SettingChanged += (_, _) => CurrentHudPreset = HudPresetsConfig.Value;
-            HudPresetsConfig.SettingChanged += (_, _) => 
+            HudPresetsConfig.SettingChanged += (_, _) =>
             {
                 CurrentHudPreset = HudPresetsConfig.Value;
                 if (PikminHUD.pikminHUDInstance != null)
@@ -1000,7 +1001,7 @@ namespace LethalMin
                 RegisteredPikminTypes.Add(type.PikminTypeID, type);
                 if (GetMajorMinorVersion(type.version) != GetMajorMinorVersion(MyPluginInfo.PLUGIN_VERSION))
                 {
-                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName + 
+                    Logger.LogWarning("Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName +
                     $" {type.version} has a different version than the mod " + $"({MyPluginInfo.PLUGIN_VERSION})" + ", this may cause issues!");
                 }
                 if (type.PikminIcon == null)
@@ -1085,6 +1086,47 @@ namespace LethalMin
                     if (DebugMode)
                         Logger.LogInfo(" " + type.PikminName + " spawns naturally");
                     NaturalTypes.Add(type.PikminTypeID, type);
+                }
+
+                //Do Ship Onion Checks
+                if (type.UsesPikminContainer)
+                {
+                    if (DebugMode)
+                        Logger.LogInfo(" " + type.PikminName + " uses a pikmin container");
+
+                    AssetLoader.LoadAsset<OnionType>("Assets/LethalminAssets/Pikmin/Types 2/ShipOnion.asset").TypesCanHold.Add(type);
+                }
+
+                //Do Animator Checks
+                if (type.AttackAnimation != null)
+                {
+                    float timeAtFrame = (float)type.AttackAnimationHitFrame / type.AttackAnimation.frameRate;
+                    if (timeAtFrame > type.AttackAnimation.stopTime)
+                    {
+                        Logger.LogWarning($"Pikmin type with ID {type.PikminTypeID} {type.PikminName} has an attack animation with a stop time" +
+                        $" ({type.AttackAnimation.stopTime}) greater than its hit frame time {timeAtFrame}!");
+
+                    }
+                    else
+                    {
+                        AddEventToFrame(1, "InitHit", type.AttackAnimation);
+                        AddEventToFrame(type.AttackAnimationHitFrame, "Hit", type.AttackAnimation);
+                    }
+                }
+                if (type.NonLatchAttackAnimation != null)
+                {
+                    float timeAtFrame = (float)type.NonLatchAttackAnimationHitFrame / type.NonLatchAttackAnimation.frameRate;
+                    if (timeAtFrame > type.NonLatchAttackAnimation.stopTime)
+                    {
+                        Logger.LogWarning($"Pikmin type with ID {type.PikminTypeID} {type.PikminName} has an non attack animation with a stop time" +
+                        $" ({type.NonLatchAttackAnimation.stopTime}) greater than its hit frame time {timeAtFrame}!");
+
+                    }
+                    else
+                    {
+                        AddEventToFrame(1, "InitHit", type.NonLatchAttackAnimation);
+                        AddEventToFrame(type.NonLatchAttackAnimationHitFrame, "HitCastable", type.NonLatchAttackAnimation);
+                    }
                 }
 
                 //Do Finializeations
