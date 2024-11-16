@@ -530,7 +530,10 @@ namespace LethalMin
 
         private void UpdateThrowOrigin()
         {
-            throwOrigin.transform.rotation = Quaternion.identity;
+            // Set the rotation to match the controller's forward direction
+            if (Controller.transform.forward != Vector3.zero)
+                throwOrigin.transform.rotation = Quaternion.LookRotation(Controller.gameplayCamera.transform.forward);
+
             throwOrigin.localPosition = new Vector3(LethalMin.ThrowX.Value, LethalMin.ThrowY.Value, LethalMin.ThrowZ.Value);
         }
 
@@ -582,7 +585,8 @@ namespace LethalMin
             {
                 Vector3 newPosition = holdPosition.position;
                 Vector3 cameraForward = mainCamera.transform.forward;
-                Quaternion newRotation = Quaternion.LookRotation(cameraForward);
+                Quaternion newRotation = Quaternion.identity;
+                newRotation = Quaternion.LookRotation(cameraForward);
                 selectedPikmin.rb.position = newPosition;
                 selectedPikmin.rb.rotation = newRotation;
                 SyncPikminPositionServerRpc(new NetworkObjectReference(selectedPikmin.NetworkObject), newPosition, newRotation);
