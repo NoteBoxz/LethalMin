@@ -953,7 +953,7 @@ namespace LethalMin
         }
 
 
-        public static void RegisterPikminType(PikminType type)
+        public static void RegisterPikminType(PikminType type,bool SkipOnionCheck = false)
         {
             if (!type.HasBeenRegistered)
             {
@@ -1089,12 +1089,16 @@ namespace LethalMin
                 }
 
                 //Do Ship Onion Checks
-                if (type.UsesPikminContainer)
+                if (type.UsesPikminContainer && !SkipOnionCheck)
                 {
                     if (DebugMode)
                         Logger.LogInfo(" " + type.PikminName + " uses a pikmin container");
 
-                    AssetLoader.LoadAsset<OnionType>("Assets/LethalminAssets/Pikmin/Types 2/ShipOnion.asset").TypesCanHold.Add(type);
+                    OnionType ShipOnion = AssetLoader.LoadAsset<OnionType>("Assets/LethalminAssets/Pikmin/Types 2/ShipOnion.asset");
+                    List<PikminType> oldTC = new List<PikminType>(ShipOnion.TypesCanHold);
+                    oldTC.Add(type);
+                    ShipOnion.TypesCanHold = oldTC.ToArray();
+                    type.TargetOnion = ShipOnion;
                 }
 
                 //Do Animator Checks
@@ -1489,7 +1493,7 @@ namespace LethalMin
              };
             foreach (var item in RPtypes)
             {
-                RegisterPikminType(item);
+                RegisterPikminType(item,true);
             }
             OnionType[] ROnionTypes = new[] {
             AssetLoader.LoadAsset<OnionType>("Assets/LethalminAssets/Pikmin/Types/RedOnion.asset"),

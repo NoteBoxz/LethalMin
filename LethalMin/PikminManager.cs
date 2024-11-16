@@ -595,8 +595,9 @@ namespace LethalMin
             foreach (EnemyAI enemy in allEnemies)
             {
                 if (enemy == null) continue;
+                if (enemy.enemyType == null) continue;
                 if (!enemy.enemyType.canDie) continue;
-                if (enemy.GetComponent<PikminAI>() == null) // Check if it doesn't have PikminAI component
+                if (enemy.enemyType != LethalMin.pikminEnemyType) // Check if it doesn't have PikminAI component
                 {
                     _nextNonPikminEnemies.Add(enemy.gameObject);
                 }
