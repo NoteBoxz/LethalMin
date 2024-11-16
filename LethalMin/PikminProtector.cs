@@ -13,7 +13,7 @@ namespace LethalMin
         {
             foreach (HazardType hazardType in HazardTypez)
             {
-                if (LethalMin.IsPikminResistantToHazard(pikmin.PminType, hazardType))
+                if (!LethalMin.IsPikminResistantToHazard(pikmin.PminType, hazardType))
                 {
                     return;
                 }
