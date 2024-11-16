@@ -28,6 +28,7 @@ namespace LethalMin.Patches
         [HarmonyPrefix]
         public static void OnTriggerStayPostfix(Collider other, SpikeRoofTrap __instance)
         {
+            if (!__instance.IsServer) { return; }
             EnemyAICollisionDetect component3 = other.gameObject.GetComponent<EnemyAICollisionDetect>();
             if (component3 != null && component3.mainScript != null && component3.mainScript.IsOwner && component3.mainScript.enemyType.canDie && !component3.mainScript.isEnemyDead)
             {
@@ -42,6 +43,7 @@ namespace LethalMin.Patches
         [HarmonyPostfix]
         public static void OnTriggerStayPrefix(Collider other, SpikeRoofTrap __instance)
         {
+            if (!__instance.IsServer) { return; }
             __instance.GetComponent<PikminProtector>().UnprotectPikmin();
         }
 

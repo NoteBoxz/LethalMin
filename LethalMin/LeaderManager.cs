@@ -481,9 +481,6 @@ namespace LethalMin
         bool HasPlayerBeenDefined;
         private void Update()
         {
-            //if(LethalMin.DebugMode)
-            //LethalMin.Logger.LogInfo($"ControllerName: {Controller.gameObject.name},som {StartOfRound.Instance.localPlayerController == Controller}");
-
             if (Controller != null)
             {
                 isPlayer = StartOfRound.Instance.localPlayerController == Controller;
@@ -520,20 +517,13 @@ namespace LethalMin
             {
                 noticeZoneInstance.transform.localScale = new Vector3(LethalMin.PlayerNoticeRange, LethalMin.PlayerNoticeRange, LethalMin.PlayerNoticeRange);
             }
-            if (showDebugCubes)
-            {
-                UpdateDebugCubes();
-            }
             if (followingPikmin.Count > 0 && LethalMin.SmarterMinMov)
                 OrganizePikminFormation();
         }
 
         private void UpdateThrowOrigin()
         {
-            // Set the rotation to match the controller's forward direction
-            if (Controller.transform.forward != Vector3.zero)
-                throwOrigin.transform.rotation = Quaternion.LookRotation(Controller.gameplayCamera.transform.forward);
-
+            throwOrigin.transform.rotation = Controller.gameplayCamera.transform.rotation;
             throwOrigin.localPosition = new Vector3(LethalMin.ThrowX.Value, LethalMin.ThrowY.Value, LethalMin.ThrowZ.Value);
         }
 
