@@ -749,8 +749,9 @@ namespace LethalMin
             __instance.updatePositionThreshold = 9000;
             __instance.syncMovementSpeed = 0f;
 
-            Item Iprops = new Item();
+            Item Iprops = ScriptableObject.CreateInstance(typeof(Item)) as Item;
             Iprops.restingRotation = __instance.transform.rotation.eulerAngles;
+            Iprops.itemName = __instance.enemyType.enemyName;
 
             if (__instance.enemyType.canDie && EnemyAIPatch.HPDict.ContainsKey(__instance) && EnemyAIPatch.HPDict[__instance] > 0f)
             {
@@ -802,8 +803,9 @@ namespace LethalMin
             __instance.updatePositionThreshold = 9000;
             __instance.syncMovementSpeed = 0f;
 
-            Item Iprops = new Item();
+            Item Iprops = ScriptableObject.CreateInstance(typeof(Item)) as Item;
             Iprops.restingRotation = RestingRotation;
+            Iprops.itemName = __instance.enemyType.enemyName;
 
             Iprops.weight = Weight;
 

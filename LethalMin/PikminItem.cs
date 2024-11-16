@@ -62,6 +62,17 @@ namespace LethalMin
                     LethalMin.Logger.LogInfo($"Pikminitem {name} despawned due to destroyed parent");
                 }
             }
+            if (Root == null)
+            {
+                LethalMin.Logger.LogWarning($"{name} has no root! Looking in parent...");
+                Root = GetComponentInParent<GrabbableObject>();
+                if (Root == null)
+                {
+                    LethalMin.Logger.LogError($"{name} still has no root after checking parent!");
+                    if (IsServer)
+                        NetworkObject.Despawn(true);
+                }
+            }
         }
         public override void OnNetworkDespawn()
         {
@@ -495,7 +506,7 @@ namespace LethalMin
                     {
                         Root.transform.SetParent(firstPikmin.HoldPos, worldPositionStays: true);
                     }
-                    else 
+                    else
                     {
                         Root.transform.SetParent(firstPikmin.HoldPos, worldPositionStays: true);
                     }
@@ -508,7 +519,7 @@ namespace LethalMin
                     {
                         Root.transform.SetParent(firstPikmin.transform, worldPositionStays: true);
                     }
-                    else 
+                    else
                     {
                         Root.transform.SetParent(firstPikmin.transform, worldPositionStays: true);
                     }
@@ -558,7 +569,7 @@ namespace LethalMin
                         {
                             Root.transform.SetParent(StartOfRound.Instance.elevatorTransform, worldPositionStays: true);
                         }
-                        else 
+                        else
                         {
                             Root.transform.SetParent(StartOfRound.Instance.elevatorTransform, worldPositionStays: true);
                         }
@@ -570,7 +581,7 @@ namespace LethalMin
                         {
                             Root.transform.SetParent(RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint, worldPositionStays: true);
                         }
-                        else 
+                        else
                         {
                             Root.transform.SetParent(RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint, worldPositionStays: true);
                         }
@@ -584,7 +595,7 @@ namespace LethalMin
                             {
                                 Root.transform.SetParent(null, worldPositionStays: true);
                             }
-                            else 
+                            else
                             {
                                 Root.transform.SetParent(null, worldPositionStays: true);
                             }
@@ -595,7 +606,7 @@ namespace LethalMin
                             {
                                 Root.transform.SetParent(StartOfRound.Instance.propsContainer, worldPositionStays: true);
                             }
-                            else 
+                            else
                             {
                                 Root.transform.SetParent(StartOfRound.Instance.propsContainer, worldPositionStays: true);
                             }
@@ -611,7 +622,7 @@ namespace LethalMin
                         {
                             Root.transform.SetParent(null, worldPositionStays: true);
                         }
-                        else 
+                        else
                         {
                             Root.transform.SetParent(null, worldPositionStays: true);
                         }
@@ -622,7 +633,7 @@ namespace LethalMin
                         {
                             Root.transform.SetParent(StartOfRound.Instance.propsContainer, worldPositionStays: true);
                         }
-                        else 
+                        else
                         {
                             Root.transform.SetParent(StartOfRound.Instance.propsContainer, worldPositionStays: true);
                         }
@@ -688,7 +699,7 @@ namespace LethalMin
             {
                 placeObject.transform.SetParent(parentObject, worldPositionStays: true);
             }
-            else 
+            else
             {
                 placeObject.transform.SetParent(parentObject, worldPositionStays: true);
             }
@@ -742,7 +753,7 @@ namespace LethalMin
             ParentToFirstPikminClientRpc(pikminNetworkObjectId);
         }
 
-        PikminAI firstPikminG; 
+        PikminAI firstPikminG;
 
         [ClientRpc]
         private void ParentToFirstPikminClientRpc(ulong pikminNetworkObjectId)
@@ -762,7 +773,7 @@ namespace LethalMin
                 {
                     Root.transform.SetParent(firstPikmin.HoldPos, worldPositionStays: true);
                 }
-                else 
+                else
                 {
                     Root.transform.SetParent(firstPikmin.HoldPos, worldPositionStays: true);
                 }

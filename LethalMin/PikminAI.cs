@@ -1792,7 +1792,7 @@ namespace LethalMin
                 HasMultipliedSpeed = false;
             }
 
-            if (currentBehaviourStateIndex == (int)PState.Attacking && SnapToPos != null && 
+            if (currentBehaviourStateIndex == (int)PState.Attacking && SnapToPos != null &&
             !DoingAttackRutine && PminType.AttackRate > 0f)
             {
                 DoingAttackRutine = true;
@@ -3298,6 +3298,7 @@ namespace LethalMin
             for (int i = 0; PossibleRoutes.Count > 0 && i < PossibleRoutes.Count; i++)
             {
                 ItemRoute route = PossibleRoutes[i];
+                if (route.IsPathable == false) { continue; }
                 HasFoundCaryTarget = true;
                 targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
                 CurRoutes = PossibleRoutes;
@@ -3461,7 +3462,7 @@ namespace LethalMin
                     {
                         if (CurRoutes[0].GetExitPoint() != null)
                         {
-                            DoLethalEscape(CurRoutes[0].GetExitPoint().Value);
+                            DoLethalEscape(CurRoutes[0].GetExitPoint().Value,true);
                         }
                         else
                         {
