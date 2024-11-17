@@ -141,8 +141,11 @@ namespace LethalMin.Patches
             LethalMin.Logger.LogInfo("Reverted");
             animator.runtimeAnimatorController = originalController;
             isCustomAnimationPlaying = false;
+            Player.playerBodyAnimator.SetBool("Grab", false);
             Player.playerBodyAnimator.SetBool("Walking", true);
             yield return new WaitForSeconds(0.1f);
+            if (Player.isHoldingObject)
+                Player.playerBodyAnimator.SetBool("Grab", true);
             if (!Player.isWalking)
                 Player.playerBodyAnimator.SetBool("Walking", false);
         }

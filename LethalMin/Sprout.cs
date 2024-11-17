@@ -143,9 +143,14 @@ namespace LethalMin
         public void PlayCustomAnimClientRpc(NetworkObjectReference playerRef)
         {
             playerRef.TryGet(out NetworkObject playerNetObj);
-            GetComponentInChildren<Animator>().Play("Recorded (1)");
             PlayerControllerB player = playerNetObj.GetComponent<PlayerControllerB>();
             PlayerControllerBPatch.PlayCustomAnimation(player, 0f);
+            if (GetComponentInChildren<Animator>() == null)
+            {
+                LethalMin.Logger.LogWarning("Animator not found on the sprout!");
+                return;
+            }
+            GetComponentInChildren<Animator>().Play("Recorded (1)");
         }
 
         public Transform raycastOrigin;
