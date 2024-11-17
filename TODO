@@ -1,3 +1,5 @@
+(0.2.x)
+
 Fix item holding bug with pluck animation. (Not Started)
 Make Onions visible from ship windows mod (Not Started)
 Make Onion Land Config (Not Started)
@@ -6,6 +8,14 @@ Add in funciton that allows playes to be revived via the onion (Not Started)
 Add in Fire hazard compatability (Not Started)
 Add in Zap death Animation (Not Started)
 Add in late company support (Not Started)
-Add in config that switches the models and sounds with the ones from other Pikmin games other than 4.
 Make Pikmin get stuck in hydrogear. (Not Started)
 Fix bug that causes the whistle to break when Remnants is installed. (Not Started)
+
+(0.3.x)
+
+Add in config that switches the models and sounds with the ones from other Pikmin games other than 4. (Not Started)
+Inprove Throwing system on the client side. (Not Started)
+Reduce realay on client side when plucking. (Not Started)
+Reduce lag when converting an enemy to an item. (Not Started)
+...
+...
