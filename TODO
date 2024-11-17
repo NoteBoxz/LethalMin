@@ -1,11 +1,12 @@
 (0.2.x)
 
+Fix item holding bug with pluck animation. (Not Started)
 Make Onions visible from ship windows mod (Not Started)
 Make Onion Land Config (Not Started)
-Add Dead Player Body Onion Config (Not Started)
-
+Add in function that allows players to be carried to the onion (Not Started)
+Add in funciton that allows playes to be revived via the onion (Not Started)
+Add in Fire hazard compatability (Not Started)
+Add in Zap death Animation (Not Started)
 Add in late company support (Not Started)
 Make Pikmin get stuck in hydrogear. (Not Started)
-Fix buggy player animation. (Not Started)
-Fix remenats issue. (Not Started)
-Optimize Pikmin Script. (Not Started)
+Fix bug that causes the whistle to break when Remnants is installed. (Not Started)
