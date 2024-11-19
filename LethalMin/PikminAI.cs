@@ -2458,14 +2458,23 @@ namespace LethalMin
                 NonPikminEnemies = PikminManager.GetNonPikminEnemies();
             }
         }
+        public List<Vector3> GetNavmeshShipPositions()
+        {
+            List<Vector3> list = new List<Vector3>();
+            foreach (Transform shipPos in StartOfRound.Instance.insideShipPositions)
+            {
+                list.Add(shipPos.position);
+            }
+            return list;
+        }
         private bool IsNearDestination(Vector3 position, float thresholdA = 1f, float thresholdB = 5f)
         {
             // Check if near any InsideShipPosition
             if (RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && isOutside)
             {
-                foreach (var shipPos in StartOfRound.Instance.insideShipPositions)
+                foreach (var shipPos in GetNavmeshShipPositions())
                 {
-                    if (Vector3.Distance(position, shipPos.position) <= thresholdA)
+                    if (Vector3.Distance(position, shipPos) <= thresholdA)
                     {
                         return true;
                     }
@@ -3024,7 +3033,7 @@ namespace LethalMin
             // Ship target (outside and not in Company Building)
             if (RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
             {
-                Vector3 shipPos = StartOfRound.Instance.insideShipPositions[UnityEngine.Random.Range(0, StartOfRound.Instance.insideShipPositions.Length)].position;
+                Vector3 shipPos = GetNavmeshShipPositions()[UnityEngine.Random.Range(0, GetNavmeshShipPositions().Count)];
                 ItemRoute ShipRoute = new ItemRoute("Ship");
                 ShipRoute.AddPoint(shipPos, true);
                 ShipRoute.BypassPathableCheck = true;
@@ -3462,7 +3471,7 @@ namespace LethalMin
                     {
                         if (CurRoutes[0].GetExitPoint() != null)
                         {
-                            DoLethalEscape(CurRoutes[0].GetExitPoint().Value,true);
+                            DoLethalEscape(CurRoutes[0].GetExitPoint().Value, true);
                         }
                         else
                         {

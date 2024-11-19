@@ -345,6 +345,10 @@ namespace LethalMin
             {
                 PlayerLatchedOn = playerNO.GetComponent<PlayerControllerB>();
             }
+            else
+            {
+                LethalMin.Logger.LogWarning("Puffmin Failed to get player reference");
+            }
         }
         [ClientRpc]
         public void SyncPlayerLatchedOnClientRpc()

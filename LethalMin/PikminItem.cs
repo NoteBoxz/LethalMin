@@ -65,7 +65,8 @@ namespace LethalMin
             if (Root == null)
             {
                 LethalMin.Logger.LogWarning($"{name} has no root! Looking in parent...");
-                Root = GetComponentInParent<GrabbableObject>();
+                if (transform.parent != null)
+                    Root = GetComponentInParent<GrabbableObject>();
                 if (Root == null)
                 {
                     LethalMin.Logger.LogError($"{name} still has no root after checking parent!");
@@ -1016,15 +1017,10 @@ namespace LethalMin
             // Add overlay meshes
             foreach (Renderer renderer in Root.GetComponentsInChildren<Renderer>())
             {
-                if (renderer.gameObject.layer == LayerMask.NameToLayer("MapRadar")
-                || renderer.gameObject.layer == LayerMask.NameToLayer("ScanNode"))
-                {
-                    continue;
-                }
-
                 GameObject overlay = new GameObject("GlowOverlay");
                 overlay.transform.SetPositionAndRotation(renderer.transform.position, renderer.transform.rotation);
                 overlay.transform.SetParent(renderer.transform, true);
+                overlay.layer = renderer.gameObject.layer;
 
                 if (renderer is MeshRenderer meshRenderer)
                 {

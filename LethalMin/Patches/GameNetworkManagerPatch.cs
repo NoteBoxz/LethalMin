@@ -13,82 +13,70 @@ namespace LethalMin.Patches
         public static void Init(GameNetworkManager __instance)
         {
             if (HasInitalized == true) { LethalMin.Logger.LogWarning("Already initalized LethalMin"); return; }
-            GameObject pikminPrefab = LethalMin.pikminPrefab;
-            GameObject SproutPrefab = LethalMin.sproutPrefab;
-            GameObject OnionPrefab = LethalMin.OnionPrefab;
-            GameObject OnionItemPrefab = LethalMin.OnionItemPrefab;
-            GameObject leaderManagerPrefab = LethalMin.leaderManagerPrefab;
-            GameObject PikminObjectPrefab = LethalMin.PikminObjectPrefab;
-            GameObject WhistlePrefab = LethalMin.WhistlePrefab;
-            GameObject GhostPrefab = LethalMin.Ghost;
-            GameObject OnionMeunPrefab = LethalMin.CallminUI;
-            GameObject PmanPrefabb = LethalMin.PmanPrefab;
-            GameObject ShipOnionPrefab = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipOnion.prefab");
-            GameObject AttackerPrefab = LethalMin.PikminAttackerNode;
-            GameObject ManeaterPrefab = LethalMin.EaterBehavior;
-            GameObject NoticePrefab = LethalMin.NoticeZone;
-            GameObject PuffminPrefab = LethalMin.PuffminPrefab;
-            GameObject PuffminOwnerManagerPrefab = LethalMin.POMprefab;
-            GameObject SproutAnimPrefab = LethalMin.AnimSproutPrefab;
-
-            if (SproutAnimPrefab != null)
+            if (LethalMin.AnimSproutPrefab != null)
             {
-                SproutAnimPrefab.AddComponent<AnimatedSprout>();
-                NetworkManager.Singleton.AddNetworkPrefab(SproutAnimPrefab);
+                LethalMin.AnimSproutPrefab.AddComponent<AnimatedSprout>();
+                NetworkManager.Singleton.AddNetworkPrefab(LethalMin.AnimSproutPrefab);
+                LethalMin.Logger.LogInfo("Added AnimatedSprout.prefab to network prefabs!");
             }
             else
             {
                 LethalMin.Logger.LogError("Failed to load AnimatedSprout.prefab!");
             }
 
-            if (PuffminOwnerManagerPrefab != null)
+            if (LethalMin.POMprefab != null)
             {
-                PuffminOwnerManagerPrefab.AddComponent<PuffminOwnerManager>();
-                NetworkManager.Singleton.AddNetworkPrefab(PuffminOwnerManagerPrefab);
+                LethalMin.POMprefab.AddComponent<PuffminOwnerManager>();
+                NetworkManager.Singleton.AddNetworkPrefab(LethalMin.POMprefab);
+                LethalMin.Logger.LogInfo("Added PuffminOwnerManager.prefab to network prefabs!");
             }
             else
             {
                 LethalMin.Logger.LogError("Failed to load PuffminOwnerManager.prefab!");
             }
 
-            if (PuffminPrefab != null)
+            if (LethalMin.PuffminPrefab != null)
             {
-                NetworkManager.Singleton.AddNetworkPrefab(PuffminPrefab);
+                NetworkManager.Singleton.AddNetworkPrefab(LethalMin.PuffminPrefab);
+                LethalMin.Logger.LogInfo("Added Puffmin.prefab to network prefabs!");
             }
             else
             {
                 LethalMin.Logger.LogError("Failed to load Puffmin.prefab!");
             }
 
-            if (NoticePrefab != null)
+            if (LethalMin.NoticeZone != null)
             {
-                NoticePrefab.AddComponent<NoticeZone>();
-                NetworkManager.Singleton.AddNetworkPrefab(NoticePrefab);
+                LethalMin.NoticeZone.AddComponent<NoticeZone>();
+                NetworkManager.Singleton.AddNetworkPrefab(LethalMin.NoticeZone);
+                LethalMin.Logger.LogInfo("Added NoticeZone.prefab to network prefabs!");
             }
 
-            if (ManeaterPrefab != null)
+            if (LethalMin.EaterBehavior != null)
             {
-                ManeaterPrefab.AddComponent<EaterBehavior>();
-                NetworkManager.Singleton.AddNetworkPrefab(ManeaterPrefab);
+                LethalMin.EaterBehavior.AddComponent<EaterBehavior>();
+                NetworkManager.Singleton.AddNetworkPrefab(LethalMin.EaterBehavior);
+                LethalMin.Logger.LogInfo("Added EaterBehavior.prefab to network prefabs!");
             }
             else
             {
                 LethalMin.Logger.LogError("Failed to load EaterBehavior.prefab!");
             }
 
-            if (AttackerPrefab != null)
+            if (LethalMin.PikminAttackerNode != null)
             {
-                AttackerPrefab.AddComponent<PikminAttacker>();
-                NetworkManager.Singleton.AddNetworkPrefab(AttackerPrefab);
+                LethalMin.PikminAttackerNode.AddComponent<PikminAttacker>();
+                NetworkManager.Singleton.AddNetworkPrefab(LethalMin.PikminAttackerNode);
+                LethalMin.Logger.LogInfo("Added PikminAttacker.prefab to network prefabs!");
             }
             else
             {
                 LethalMin.Logger.LogError("Failed to load PikminAttacker.prefab!");
             }
 
-            if (pikminPrefab != null)
+            if (LethalMin.pikminPrefab != null)
             {
-                NetworkManager.Singleton.AddNetworkPrefab(pikminPrefab);
+                NetworkManager.Singleton.AddNetworkPrefab(LethalMin.pikminPrefab);
                 LethalMin.Logger.LogInfo("Added Pikmin.prefab to network prefabs!");
             }
             else
@@ -96,23 +84,23 @@ namespace LethalMin.Patches
                 LethalMin.Logger.LogError("Failed to load Pikmin.prefab!");
             }
 
-            if (PmanPrefabb != null)
+            if (LethalMin.PmanPrefab != null)
             {
-                PmanPrefabb.AddComponent<PikminManager>();
-                PmanPrefabb.AddComponent<DebugMenu>();
+                LethalMin.PmanPrefab.AddComponent<PikminManager>();
+                LethalMin.PmanPrefab.AddComponent<DebugMenu>();
 
-                NetworkManager.Singleton.AddNetworkPrefab(PmanPrefabb);
-                LethalMin.Logger.LogInfo("Added PmanPrefabb.prefab to network prefabs!");
+                NetworkManager.Singleton.AddNetworkPrefab(LethalMin.PmanPrefab);
+                LethalMin.Logger.LogInfo("Added LethalMin.PmanPrefab.prefab to network prefabs!");
             }
             else
             {
-                LethalMin.Logger.LogError("Failed to load PmanPrefabb.prefab!");
+                LethalMin.Logger.LogError("Failed to load LethalMin.PmanPrefab.prefab!");
             }
 
-            if (leaderManagerPrefab != null)
+            if ( LethalMin.leaderManagerPrefab != null)
             {
-                leaderManagerPrefab.AddComponent<LeaderManager>();
-                NetworkManager.Singleton.AddNetworkPrefab(leaderManagerPrefab);
+                 LethalMin.leaderManagerPrefab.AddComponent<LeaderManager>();
+                NetworkManager.Singleton.AddNetworkPrefab( LethalMin.leaderManagerPrefab);
                 LethalMin.Logger.LogInfo("Added LeaderManager.prefab to network prefabs!");
             }
             else
@@ -120,20 +108,20 @@ namespace LethalMin.Patches
                 LethalMin.Logger.LogError("Failed to load LeaderManager.prefab!");
             }
 
-            if (SproutPrefab != null)
+            if (LethalMin.sproutPrefab != null)
             {
-                SproutPrefab.AddComponent<Sprout>();
-                NetworkManager.Singleton.AddNetworkPrefab(SproutPrefab);
+                LethalMin.sproutPrefab.AddComponent<Sprout>();
+                NetworkManager.Singleton.AddNetworkPrefab(LethalMin.sproutPrefab);
                 LethalMin.Logger.LogInfo("Added Sprout.prefab to network prefabs!");
             }
             else
             {
                 LethalMin.Logger.LogError("Failed to load Sprout.prefab!");
             }
-            if (GhostPrefab != null)
+            if (LethalMin.Ghost != null)
             {
-                GhostPrefab.AddComponent<PminGhost>();
-                //NetworkManager.Singleton.AddNetworkPrefab(GhostPrefab);
+                LethalMin.Ghost.AddComponent<PminGhost>();
+                //NetworkManager.Singleton.AddNetworkPrefab(LethalMin.Ghost);
                 LethalMin.Logger.LogInfo("Added Ghost.prefab to network prefabs!");
             }
             else
@@ -142,10 +130,10 @@ namespace LethalMin.Patches
             }
 
 
-            if (OnionItemPrefab != null)
+            if (LethalMin.OnionItemPrefab != null)
             {
-                OnionItem onionItem = OnionItemPrefab.AddComponent<OnionItem>();
-                PhysicsProp physicsProp = OnionItemPrefab.GetComponent<PhysicsProp>();
+                OnionItem onionItem = LethalMin.OnionItemPrefab.AddComponent<OnionItem>();
+                PhysicsProp physicsProp = LethalMin.OnionItemPrefab.GetComponent<PhysicsProp>();
 
                 if (physicsProp != null)
                 {
@@ -156,7 +144,7 @@ namespace LethalMin.Patches
                     Object.Destroy(physicsProp);
                 }
 
-                NetworkManager.Singleton.AddNetworkPrefab(OnionItemPrefab);
+                NetworkManager.Singleton.AddNetworkPrefab(LethalMin.OnionItemPrefab);
                 LethalMin.Logger.LogInfo("Added OnionItem.prefab to network prefabs!");
             }
             else
@@ -164,50 +152,50 @@ namespace LethalMin.Patches
                 LethalMin.Logger.LogError("Failed to load OnionItem.prefab!");
             }
 
-            if (PikminObjectPrefab != null)
+            if (LethalMin.PikminObjectPrefab != null)
             {
-                PikminObjectPrefab.AddComponent<PikminItem>();
-                NetworkManager.Singleton.AddNetworkPrefab(PikminObjectPrefab);
+                LethalMin.PikminObjectPrefab.AddComponent<PikminItem>();
+                NetworkManager.Singleton.AddNetworkPrefab(LethalMin.PikminObjectPrefab);
                 LethalMin.Logger.LogInfo("Added PikminObject.prefab to network prefabs!");
             }
             else
             {
                 LethalMin.Logger.LogError("Failed to load PikminObject.prefab!");
             }
-            if (OnionMeunPrefab != null)
+            if (LethalMin.CallminUI != null)
             {
-                OnionMeunPrefab.AddComponent<OnionMenuManager>();
-                LethalMin.Logger.LogInfo("Added OnionMeunPrefab.prefab to network prefabs!");
+                LethalMin.CallminUI.AddComponent<OnionMenuManager>();
+                LethalMin.Logger.LogInfo("Added LethalMin.CallminUI.prefab to network prefabs!");
             }
             else
             {
-                LethalMin.Logger.LogError("Failed to load OnionMeunPrefab.prefab!");
+                LethalMin.Logger.LogError("Failed to load LethalMin.CallminUI.prefab!");
             }
-            if (ShipOnionPrefab != null)
+            if (AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipOnion.prefab") != null)
             {
-                ShipOnionPrefab.AddComponent<DualOnion>().type = AssetLoader.LoadAsset<OnionType>("Assets/LethalminAssets/Pikmin/Types 2/ShipOnion.asset");
-                NetworkManager.Singleton.AddNetworkPrefab(ShipOnionPrefab);
-                LethalMin.Logger.LogInfo("Added ShipOnionPrefab.prefab to network prefabs!");
+                AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipOnion.prefab").AddComponent<DualOnion>().type = AssetLoader.LoadAsset<OnionType>("Assets/LethalminAssets/Pikmin/Types 2/ShipOnion.asset");
+                NetworkManager.Singleton.AddNetworkPrefab(AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipOnion.prefab"));
+                LethalMin.Logger.LogInfo("Added Ship ONion to network prefabs!");
             }
             else
             {
-                LethalMin.Logger.LogError("Failed to load ShipOnionPrefab.prefab!");
+                LethalMin.Logger.LogError("Failed to load Ship ONion.prefab!");
             }
-            if (OnionPrefab != null)
+            if (LethalMin.OnionPrefab != null)
             {
-                OnionPrefab.AddComponent<AnimatedOnion>();
-                NetworkManager.Singleton.AddNetworkPrefab(OnionPrefab);
+                LethalMin.OnionPrefab.AddComponent<AnimatedOnion>();
+                NetworkManager.Singleton.AddNetworkPrefab(LethalMin.OnionPrefab);
                 LethalMin.Logger.LogInfo("Added Onion.prefab to network prefabs!");
             }
             else
             {
                 LethalMin.Logger.LogError("Failed to load Onion.prefab!");
             }
-            if (WhistlePrefab != null)
+            if (LethalMin.WhistlePrefab != null)
             {
-                WhistleItem whistleItem = WhistlePrefab.AddComponent<WhistleItem>();
-                PhysicsProp physicsProp = WhistlePrefab.GetComponent<PhysicsProp>();
-                whistleItem.lineRenderer = WhistlePrefab.AddComponent<LineRenderer>();
+                WhistleItem whistleItem = LethalMin.WhistlePrefab.AddComponent<WhistleItem>();
+                PhysicsProp physicsProp = LethalMin.WhistlePrefab.GetComponent<PhysicsProp>();
+                whistleItem.lineRenderer = LethalMin.WhistlePrefab.AddComponent<LineRenderer>();
 
                 if (physicsProp != null)
                 {
@@ -218,7 +206,7 @@ namespace LethalMin.Patches
                     Object.Destroy(physicsProp);
                 }
 
-                NetworkManager.Singleton.AddNetworkPrefab(WhistlePrefab);
+                NetworkManager.Singleton.AddNetworkPrefab(LethalMin.WhistlePrefab);
                 LethalMin.Logger.LogInfo("Added Whistle.prefab to network prefabs!");
             }
             else

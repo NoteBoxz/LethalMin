@@ -17,6 +17,7 @@ namespace LethalMin
         public NoticeZone? noticeZone;
         public AudioSource? whistleSound;
         public bool HasInteractedWithPuffmin;
+        public int TakeDownRequests = 0;
 
         void Awake()
         {
@@ -25,6 +26,25 @@ namespace LethalMin
             whistleSound.spatialBlend = 1f;
             whistleSound.minDistance = 5f;
             whistleSound.maxDistance = 30f;
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void AddToTakeDownRequestsServerRpc()
+        {
+            TakeDownRequests++;
+
+            if (TakeDownRequests >= StartOfRound.Instance.fullyLoadedPlayers.Count - 1)
+            {
+                LethalMin.Logger.LogFatal("All players have requested to take down the puffmin manager due to failed initalizeation. Deleting puffmin owner manager.");
+                if (noticeZone != null)
+                {
+                    noticeZone.NetworkObject.transform.SetParent(null);
+                    noticeZone.NetworkObject.Despawn(true);
+                }
+
+                NetworkObject.transform.SetParent(null);
+                NetworkObject.Despawn(true);
+            }
         }
 
         [ClientRpc]
@@ -41,6 +61,9 @@ namespace LethalMin
             else
             {
                 LethalMin.Logger.LogError("Could not find the NoticeZone network object.");
+                AddToTakeDownRequestsServerRpc();
+                zone.gameObject.SetActive(false);
+                enabled = false;
                 return;
             }
 
@@ -51,6 +74,9 @@ namespace LethalMin
             else
             {
                 LethalMin.Logger.LogError("Could not find the PuffminOwnerManager network object.");
+                AddToTakeDownRequestsServerRpc();
+                zone.gameObject.SetActive(false);
+                enabled = false;
                 return;
             }
 
@@ -61,6 +87,9 @@ namespace LethalMin
             else
             {
                 LethalMin.Logger.LogError("Could not find the MaskedPlayerEnemy network object.");
+                AddToTakeDownRequestsServerRpc();
+                zone.gameObject.SetActive(false);
+                enabled = false;
                 return;
             }
 
@@ -70,7 +99,7 @@ namespace LethalMin
             zone.gameObject.GetComponent<Renderer>().material.color = new Color(0.5f, 0f, 0.5f, 0.5f);
             zone.gameObject.AddComponent<MeshNoiseDistorter>().distortionStrength = 0.25f;
             zone.enemy = __instance;
-            pom.noticeZone = zone;
+            noticeZone = zone;
             Controller = __instance;
         }
 
@@ -92,6 +121,15 @@ namespace LethalMin
         }
         void LateUpdate()
         {
+            CheckAndDespawnIfParentDestroyed();
+            if (IsServer && noticeZone == null)
+            {
+                LethalMin.Logger.LogError("PuffminOwnerManager has no NoticeZone! Destorying to prevent further issues.");
+                NetworkObject.Despawn(true);
+                if (noticeZone != null)
+                    noticeZone.NetworkObject.Despawn(true);
+                return;
+            }
             noticeZone.gameObject.SetActive(isdoingwhistle);
             if (!HasInteractedWithPuffmin)
             {
@@ -110,7 +148,43 @@ namespace LethalMin
             maxWhistleZoneRadius = LethalMin.MaskedWhistleRange;
             whistleSound.volume = LethalMin.MaskedWhistleVolume;
         }
-
+        private void CheckAndDespawnIfParentDestroyed()
+        {
+            if (!IsServer)
+            {
+                return;
+            }
+            if (NetworkObject != null && NetworkObject.IsSpawned)
+            {
+                if (transform.parent == null || transform.parent.gameObject == null)
+                {
+                    // Parent has been destroyed, despawn this NetworkObject
+                    if (IsServer)
+                    {
+                        NetworkObject.Despawn(true);
+                        if (noticeZone != null)
+                            noticeZone.NetworkObject.Despawn(true);
+                    }
+                    LethalMin.Logger.LogInfo($"PuffminOwnerManager and notice zone {name} despawned due to destroyed parent");
+                }
+            }
+            if (Controller == null)
+            {
+                LethalMin.Logger.LogWarning($"{name} has no Controller! Looking in parent...");
+                if (transform.parent != null)
+                    Controller = GetComponentInParent<EnemyAI>();
+                if (Controller == null)
+                {
+                    LethalMin.Logger.LogError($"{name} still has no Controller after checking parent!");
+                    if (IsServer)
+                    {
+                        NetworkObject.Despawn(true);
+                        if (noticeZone != null)
+                            noticeZone.NetworkObject.Despawn(true);
+                    }
+                }
+            }
+        }
         public bool isAiming = false;
         public void DoThrow()
         {

@@ -18,6 +18,26 @@ namespace LethalMin.Patches
         [HarmonyPatch("Start")]
         private static void Start(MaskedPlayerEnemy __instance)
         {
+            if (__instance.NetworkObject == null)
+            {
+                LethalMin.Logger.LogError("MaskedPlayerEnemy has no NetworkObject.");
+                return;
+            }
+            if (!LethalMin.PuffMask)
+            {
+                return;
+            }
+            if (!__instance.NetworkObject.IsSpawned)
+            {
+                __instance.StartCoroutine(WaitTillSpawnedThenPuffminOwnerManager(__instance));
+            }
+            else
+            {
+                CreatePOM(__instance);
+            }
+        }
+        private static void CreatePOM(MaskedPlayerEnemy __instance)
+        {
             if (__instance.IsServer)
             {
                 // Create Owner Manager
@@ -40,14 +60,29 @@ namespace LethalMin.Patches
                 pom.InitalizeRefsClientRpc(zone.NetworkObject, pom.NetworkObject, __instance.NetworkObject);
             }
         }
+        private static System.Collections.IEnumerator WaitTillSpawnedThenPuffminOwnerManager(MaskedPlayerEnemy __instance)
+        {
+            if (__instance.NetworkObject == null)
+            {
+                LethalMin.Logger.LogError("MaskedPlayerEnemy has no NetworkObject.");
+                yield break;
+            }
+            while (!__instance.NetworkObject.IsSpawned)
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+            CreatePOM(__instance);
+        }
 
         [HarmonyPostfix]
         [HarmonyPatch("DoAIInterval")]
         private static void DoAIInterval(MaskedPlayerEnemy __instance)
         {
             if (!LethalMin.PuffMask) { return; }
-            if (LethalMin.FindNearestIdlePikmin(__instance.transform.position, 15f, 1).Count > 0
-             || LethalMin.FindNearestPuffmin(__instance.transform.position, 15f, 1).Count > 0)
+            if (__instance.isEnemyDead) { return; }
+            if (!__instance.IsServer) { return; }
+            if (LethalMin.FindNearestIdlePikmin(__instance.transform.position, LethalMin.MaskedWhistleRange, 1).Count > 0
+             || LethalMin.FindNearestPuffmin(__instance.transform.position, LethalMin.MaskedWhistleRange, 1).Count > 0)
             {
                 __instance.GetComponentInChildren<PuffminOwnerManager>().DoWhistle();
             }
