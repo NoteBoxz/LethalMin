@@ -198,7 +198,7 @@ namespace LethalMin
         [HideInInspector]
         public bool HasBeenRegistered;
         [HideInInspector]
-        public string version = "0.2.8";
+        public string version = "0.2.9";
     }
 
     public struct PikminMeshData
