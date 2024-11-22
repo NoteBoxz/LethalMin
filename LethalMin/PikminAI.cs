@@ -3097,8 +3097,8 @@ namespace LethalMin
                 }
                 List<Onion> UseableOnions = PikminManager._currentOnions.Where(o => o.type.CanCreateSprouts).ToList();
                 // Case 1: Majority pikmin type's target onion
-                if (!hasSelectedOinion && targetOnion == null 
-                && majorityType != null && majorityTypeInstance != null 
+                if (!hasSelectedOinion && targetOnion == null
+                && majorityType != null && majorityTypeInstance != null
                 && majorityTypeInstance.TargetOnion != null && UseableOnions.Contains(majorityTypeInstance.TargetOnion))
                 {
                     targetOnion = UseableOnions.FirstOrDefault(o => o == majorityTypeInstance?.TargetOnion);
@@ -3109,7 +3109,7 @@ namespace LethalMin
                 }
 
                 // Case 2: Minority pikmin type's target onion
-                if (!hasSelectedOinion && targetOnion == null 
+                if (!hasSelectedOinion && targetOnion == null
                 && minorityType != null && minorityTypeInstance != null
                  && minorityTypeInstance.TargetOnion != null && UseableOnions.Contains(minorityTypeInstance.TargetOnion))
                 {
@@ -4289,11 +4289,49 @@ namespace LethalMin
                     KnockBackBuffer += Time.deltaTime;
                     if (KnockBackBuffer >= 0.5f)
                     {
+                        // Ignore collisions with players and other Pikmin
+                        if (ShouldIgnoreCollision(collision.gameObject))
+                        {
+                            KnockBackBuffer = 0;
+                            return;
+                        }
                         ProcessCollisionServerRpc(collision.gameObject.name);
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Did KB check, knocked back by {collision.gameObject.name}");
+                        string[] layerNames = LethalMin.GetLayerNamesFromMask(LethalMin.Instance.PikminColideable);
+                        LethalMin.Logger.LogInfo($"Possible collidable layers: {string.Join(", ", layerNames)}");
                         ShouldDoKBcheck = false;
                     }
                 }
             }
+        }
+
+        private bool ShouldIgnoreCollision(GameObject collidedObject)
+        {
+            // Ignore collisions with players
+            if (collidedObject.CompareTag("Player"))
+            {
+                return true;
+            }
+
+            // Ignore collisions with other Pikmin
+            PikminAI otherPikmin = null!;
+            if (collidedObject.CompareTag("Enemy"))
+                otherPikmin = collidedObject.GetComponent<PikminAI>();
+
+            if (otherPikmin != null)
+            {
+                return true;
+            }
+
+            // Optionally, you can use layers to ignore specific object types
+            if (collidedObject.layer == LayerMask.NameToLayer("IgnoreCollision"))
+            {
+                return true;
+            }
+
+            // Add more conditions as needed
+
+            return false;
         }
         private void OnCollisionExit(Collision collision)
         {

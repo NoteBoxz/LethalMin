@@ -134,6 +134,7 @@ namespace LethalMin
                 StartCoroutine(SpawnOnions());
                 StartCoroutine(Spawn1());
                 StartCoroutine(Spawn2());
+                StartCoroutine(AddPikminBridge());
                 RefreshPikminItemsInMapList();
                 RefreshNonPikminEnemiesList();
                 RefreshPuffminList();
@@ -386,6 +387,29 @@ namespace LethalMin
             }
             yield return new WaitForSeconds(0.5f); // Short delay to ensure all spawns are complete
             CleanupExcessPikmin();
+        }
+
+        IEnumerator AddPikminBridge()
+        {
+            yield return new WaitUntil(() => StartOfRound.Instance.fullyLoadedPlayers.Count >= GameNetworkManager.Instance.connectedPlayers);
+            yield return new WaitUntil(() => RoundManager.Instance.dungeonCompletedGenerating);
+
+            foreach (var bridge in GameObject.FindObjectsOfType<BridgeTrigger>())
+            {
+                if (bridge.GetComponent<PikminBridgeTrigger>() == null)
+                {
+                    bridge.gameObject.AddComponent<PikminBridgeTrigger>();
+                    LethalMin.Logger.LogInfo("Added PikminBridge component to " + bridge.name);
+                }
+            }
+            foreach (var bridge in GameObject.FindObjectsOfType<BridgeTriggerType2>())
+            {
+                if (bridge.GetComponent<PikminBridgeTrigger>() == null)
+                {
+                    bridge.gameObject.AddComponent<PikminBridgeTrigger>();
+                    LethalMin.Logger.LogInfo("Added {ol,oi} component to " + bridge.name);
+                }
+            }
         }
 
         private PikminType DeterminePikminType(SelectableLevel level)

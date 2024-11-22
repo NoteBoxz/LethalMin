@@ -953,7 +953,7 @@ namespace LethalMin
         }
 
 
-        public static void RegisterPikminType(PikminType type,bool SkipOnionCheck = false)
+        public static void RegisterPikminType(PikminType type, bool SkipOnionCheck = false)
         {
             if (!type.HasBeenRegistered)
             {
@@ -1493,7 +1493,7 @@ namespace LethalMin
              };
             foreach (var item in RPtypes)
             {
-                RegisterPikminType(item,true);
+                RegisterPikminType(item, true);
             }
             OnionType[] ROnionTypes = new[] {
             AssetLoader.LoadAsset<OnionType>("Assets/LethalminAssets/Pikmin/Types/RedOnion.asset"),
@@ -1609,6 +1609,24 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
         public static bool IsDependencyLoaded(string pluginGUID)
         {
             return Chainloader.PluginInfos.ContainsKey(pluginGUID);
+        }
+
+        public static string[] GetLayerNamesFromMask(LayerMask layerMask)
+        {
+            List<string> layerNames = new List<string>();
+            for (int i = 0; i < 32; i++) // Unity supports up to 32 layers
+            {
+                int layerBit = 1 << i;
+                if ((layerMask.value & layerBit) != 0)
+                {
+                    string layerName = LayerMask.LayerToName(i);
+                    if (!string.IsNullOrEmpty(layerName))
+                    {
+                        layerNames.Add(layerName);
+                    }
+                }
+            }
+            return layerNames.ToArray();
         }
 
         private void NetcodePatcher()
