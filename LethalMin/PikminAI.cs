@@ -3097,7 +3097,9 @@ namespace LethalMin
                 }
                 List<Onion> UseableOnions = PikminManager._currentOnions.Where(o => o.type.CanCreateSprouts).ToList();
                 // Case 1: Majority pikmin type's target onion
-                if (!hasSelectedOinion && targetOnion == null && majorityType != null && majorityTypeInstance != null && majorityTypeInstance.TargetOnion != null)
+                if (!hasSelectedOinion && targetOnion == null 
+                && majorityType != null && majorityTypeInstance != null 
+                && majorityTypeInstance.TargetOnion != null && UseableOnions.Contains(majorityTypeInstance.TargetOnion))
                 {
                     targetOnion = UseableOnions.FirstOrDefault(o => o == majorityTypeInstance?.TargetOnion);
                     targetItem.TargetType = majorityType;
@@ -3107,7 +3109,9 @@ namespace LethalMin
                 }
 
                 // Case 2: Minority pikmin type's target onion
-                if (!hasSelectedOinion && targetOnion == null && minorityType != null && minorityTypeInstance != null && minorityTypeInstance.TargetOnion != null)
+                if (!hasSelectedOinion && targetOnion == null 
+                && minorityType != null && minorityTypeInstance != null
+                 && minorityTypeInstance.TargetOnion != null && UseableOnions.Contains(minorityTypeInstance.TargetOnion))
                 {
                     targetOnion = UseableOnions.FirstOrDefault(o => o == minorityTypeInstance?.TargetOnion);
                     targetItem.TargetType = minorityType;

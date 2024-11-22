@@ -1207,7 +1207,7 @@ namespace LethalMin
             TerminalNode WTN = AssetLoader.LoadAsset<TerminalNode>("Assets/LethalminAssets/Whisle/Shop/Whistle TN.asset");
             Whistle.isConductiveMetal = LethalWhistleValue;
             //TerminalKeyword WTK = AssetLoader.LoadAsset<TerminalKeyword>("Assets/LethalminAssets/Whisle/Shop/Whistle TK.asset");
-            Items.RegisterShopItem(Whistle, null, null, WTN, WhistlePriceValue);
+            Items.RegisterShopItem(Whistle, null!, null!, WTN, WhistlePriceValue);
             Items.RegisterItem(Onion);
         }
 
