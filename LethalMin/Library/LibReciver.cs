@@ -112,7 +112,12 @@ namespace LethalMin.Library
                 {
                     return;
                 }
-
+                if (hazard == HazardType.Electric)
+                {
+                    if (pikminAI.IsServer)
+                        pikminAI.DoZapDeathClientRpc();
+                    return;
+                }
                 pikminAI.EnterPanicState(true, hazard, CanWhistle, Random.Range(KillTimerMin, KillTimerMax));
             }
         }

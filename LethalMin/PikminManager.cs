@@ -388,17 +388,19 @@ namespace LethalMin
             yield return new WaitForSeconds(0.5f); // Short delay to ensure all spawns are complete
             CleanupExcessPikmin();
         }
-
+        public static List<GameObject> _BridgeColiders = new List<GameObject>();
         IEnumerator AddPikminBridge()
         {
             yield return new WaitUntil(() => StartOfRound.Instance.fullyLoadedPlayers.Count >= GameNetworkManager.Instance.connectedPlayers);
             yield return new WaitUntil(() => RoundManager.Instance.dungeonCompletedGenerating);
+            _BridgeColiders.Clear();
 
             foreach (var bridge in GameObject.FindObjectsOfType<BridgeTrigger>())
             {
                 if (bridge.GetComponent<PikminBridgeTrigger>() == null)
                 {
                     bridge.gameObject.AddComponent<PikminBridgeTrigger>();
+                    _BridgeColiders.AddRange(bridge.transform.GetComponentsInChildren<GameObject>());
                     LethalMin.Logger.LogInfo("Added PikminBridge component to " + bridge.name);
                 }
             }
@@ -407,6 +409,7 @@ namespace LethalMin
                 if (bridge.GetComponent<PikminBridgeTrigger>() == null)
                 {
                     bridge.gameObject.AddComponent<PikminBridgeTrigger>();
+                    _BridgeColiders.AddRange(bridge.transform.GetComponentsInChildren<GameObject>());
                     LethalMin.Logger.LogInfo("Added {ol,oi} component to " + bridge.name);
                 }
             }

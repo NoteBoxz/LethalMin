@@ -4307,6 +4307,11 @@ namespace LethalMin
 
         private bool ShouldIgnoreCollision(GameObject collidedObject)
         {
+            if (PikminManager._BridgeColiders.Contains(collidedObject))
+            {
+                return true;
+            }
+
             // Ignore collisions with players
             if (collidedObject.CompareTag("Player"))
             {
@@ -4734,7 +4739,21 @@ namespace LethalMin
             CanGrabItems = false;
             CanAttack = false;
         }
-
+        [ClientRpc]
+        public void DoZapDeathClientRpc()
+        {
+            GameObject go = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/Particles/elecpikiparticle/PikminZap.prefab");
+            GameObject goinst = Instantiate(go, transform.position, go.transform.rotation);
+            goinst.AddComponent<LookAtMainCamera>();
+            ToggleMeshVisibility(false);
+            StartCoroutine(DestroyAfterZap(goinst));
+        }
+        private IEnumerator DestroyAfterZap(GameObject goinst)
+        {
+            yield return new WaitForSeconds(1.5f);
+            KillEnemyOnOwnerClient(true);
+            Destroy(goinst);
+        }
         public override void KillEnemy(bool destroy = false)
         {
             if (LethalMin.DebugMode)
