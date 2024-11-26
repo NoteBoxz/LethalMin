@@ -23,6 +23,7 @@ using UnityEngine.InputSystem;
 using System.IO;
 using LethalMin.Library;
 using UnityEngine.ProBuilder;
+using LethalMinLibrary;
 
 namespace LethalMin
 {
@@ -112,10 +113,6 @@ namespace LethalMin
             }
             return PickupBlacklist.Split(',').ToList();
         }
-
-
-        public static List<EnemyType> EnemyTypes => Resources.FindObjectsOfTypeAll<EnemyType>().ToList();
-        public static List<PikminItemOverrideSettings> PIOverrideSettings => Resources.FindObjectsOfTypeAll<PikminItemOverrideSettings>().ToList();
 
         #region  Config Variables
         public static bool CustomOnionAllowedValue;
@@ -274,7 +271,6 @@ namespace LethalMin
 
             // Register everything fourth
             RegisterPikminEnemy();
-            Logger.LogMessage(EnemyTypes.Count());
             Logger.LogInfo($"{MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} has loaded!");
         }
 
@@ -833,7 +829,14 @@ namespace LethalMin
 
         public static bool CantConvertEnemy(EnemyType enemy)
         {
-            foreach (var Overridesettings in PIOverrideSettings)
+            foreach (var Overridesettings in Resources.FindObjectsOfTypeAll<PikminItemOverrideSettings>().ToList())
+            {
+                if (Overridesettings.EnemyRoot == enemy && !Overridesettings.CanBeCarried)
+                {
+                    return true;
+                }
+            }
+            foreach (var Overridesettings in Resources.FindObjectsOfTypeAll<LethalMinLibrary.PikminItemOverrideSettings>().ToList())
             {
                 if (Overridesettings.EnemyRoot == enemy && !Overridesettings.CanBeCarried)
                 {

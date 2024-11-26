@@ -2,6 +2,8 @@ using HarmonyLib;
 using UnityEngine;
 using Unity.Netcode;
 using System.Linq;
+using System;
+using LethalMin.Library;
 
 namespace LethalMin.Patches
 {
@@ -58,7 +60,7 @@ namespace LethalMin.Patches
             || overrideGrabbableCheck)
             {
                 PikminItemOverrideSettings overrides = null!;
-                foreach (var item in LethalMin.PIOverrideSettings)
+                foreach (var item in Resources.FindObjectsOfTypeAll<PikminItemOverrideSettings>().ToList())
                 {
                     if (item.Root == grabbableObject.itemProperties)
                     {
@@ -66,6 +68,18 @@ namespace LethalMin.Patches
                         break;
                     }
                     if (item.Root == grabbableObject.itemProperties && !item.CanBeCarried)
+                    {
+                        return null!;
+                    }
+                }
+                foreach (var item2 in Resources.FindObjectsOfTypeAll<LethalMinLibrary.PikminItemOverrideSettings>().ToList())
+                {
+                    if (item2.Root == grabbableObject.itemProperties)
+                    {
+                        overrides = TypeConverter.Convert_Lib_PIOStoLmPIOS(item2);
+                        break;
+                    }
+                    if (item2.Root == grabbableObject.itemProperties && !item2.CanBeCarried)
                     {
                         return null!;
                     }
