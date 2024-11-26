@@ -45,6 +45,12 @@ namespace LethalMin.Library
                 IsValidLethalMinBundle = true;
             }
 
+            LethalMinLibrary.PikminItemOverrideSettings[] overrideSettings = bundle.LoadAllAssets<LethalMinLibrary.PikminItemOverrideSettings>();
+            foreach (LethalMinLibrary.PikminItemOverrideSettings item in overrideSettings)
+            {
+                TypeConverter.Convert_Lib_PIOStoLmPIOS(item);
+            }
+
             if (IsValidLethalMinBundle == false)
             {
                 LethalMin.Logger.LogWarning($"Bundle does not contain any valid LethalMin assets: {bundle.name}");

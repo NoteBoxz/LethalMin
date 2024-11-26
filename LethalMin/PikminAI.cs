@@ -2748,6 +2748,11 @@ namespace LethalMin
                         continue;
                     }
 
+                    if (LethalMin.CantConvertEnemy(enemy.GetComponent<EnemyAI>().enemyType))
+                    {
+                        continue;
+                    }
+
                     if (enemy.GetComponentInChildren<PikminItem>() != null)
                     {
                         continue;

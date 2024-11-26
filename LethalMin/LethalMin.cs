@@ -113,6 +113,10 @@ namespace LethalMin
             return PickupBlacklist.Split(',').ToList();
         }
 
+
+        public static List<EnemyType> EnemyTypes => Resources.FindObjectsOfTypeAll<EnemyType>().ToList();
+        public static List<PikminItemOverrideSettings> PIOverrideSettings => Resources.FindObjectsOfTypeAll<PikminItemOverrideSettings>().ToList();
+
         #region  Config Variables
         public static bool CustomOnionAllowedValue;
         public static bool LethalWhistleValue;
@@ -270,7 +274,7 @@ namespace LethalMin
 
             // Register everything fourth
             RegisterPikminEnemy();
-
+            Logger.LogMessage(EnemyTypes.Count());
             Logger.LogInfo($"{MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} has loaded!");
         }
 
@@ -825,6 +829,18 @@ namespace LethalMin
             // Lethal Mon            
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(FFOM, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(FFM, false));
+        }
+
+        public static bool CantConvertEnemy(EnemyType enemy)
+        {
+            foreach (var Overridesettings in PIOverrideSettings)
+            {
+                if (Overridesettings.EnemyRoot == enemy && !Overridesettings.CanBeCarried)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public static bool IsPikminResistantToHazard(PikminType type, HazardType hazard)

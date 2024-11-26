@@ -105,19 +105,28 @@ namespace LethalMin.Library
             return lmMeshRefernces;
         }
 
+        public static PikminItemOverrideSettings Convert_Lib_PIOStoLmPIOS(LethalMinLibrary.PikminItemOverrideSettings libPIO)
+        {
+            PikminItemOverrideSettings lmPikminItemOverrideSettings = ScriptableObject.CreateInstance<PikminItemOverrideSettings>();
+            lmPikminItemOverrideSettings.name = libPIO.name;
+            CopyFields(libPIO, lmPikminItemOverrideSettings, "PikminItemOverrideSettings");
+            
+            return lmPikminItemOverrideSettings;
+        }
+
         private static void CopyFields<TSource, TDestination>(TSource source, TDestination destination, string typeName)
         {
-            if(source == null)
+            if (source == null)
             {
                 LethalMin.Logger.LogError($"(LETHALMIN_CONVERTER) Source is null for {typeName}");
                 return;
             }
-            if(destination == null)
+            if (destination == null)
             {
                 LethalMin.Logger.LogError($"(LETHALMIN_CONVERTER) Destination is null for {typeName}");
                 return;
             }
-            
+
             FieldInfo[] sourceFields = typeof(TSource).GetFields(BindingFlags.Public | BindingFlags.Instance);
             FieldInfo[] destFields = typeof(TDestination).GetFields(BindingFlags.Public | BindingFlags.Instance);
 
