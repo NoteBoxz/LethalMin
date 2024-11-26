@@ -57,6 +57,19 @@ namespace LethalMin.Patches
             || LethalMin.AllItemsToP && grabbableObject.IsServer && grabbableObject.grabbable
             || overrideGrabbableCheck)
             {
+                PikminItemOverrideSettings overrides = null!;
+                foreach (var item in LethalMin.PIOverrideSettings)
+                {
+                    if (item.Root == grabbableObject.itemProperties)
+                    {
+                        overrides = item;
+                        break;
+                    }
+                    if (item.Root == grabbableObject.itemProperties && !item.CanBeCarried)
+                    {
+                        return null!;
+                    }
+                }
                 if (grabbableObject.GetComponent<CaveDwellerPhysicsProp>() != null)
                     return null!;
                 PikminItem[] Pims = GameObject.FindObjectsOfType<PikminItem>();
@@ -80,7 +93,7 @@ namespace LethalMin.Patches
                     networkObject.Spawn();
                     PikminItem pikminItem = PikminObjectPrefabInstance.GetComponent<PikminItem>();
                     //pikminItem.Initialize(grabbableObject);
-                    if(grabbableObject.NetworkObject == null)
+                    if (grabbableObject.NetworkObject == null)
                     {
                         LethalMin.Logger.LogWarning($"NetworkObject component not found on GrabbableObject for {grabbableObject.name}");
                         return null!;
@@ -89,6 +102,8 @@ namespace LethalMin.Patches
                     PikminObjectPrefabInstance.name = grabbableObject.name + "(PikminNode)";
                     PikminObjectPrefabInstance.transform.position = grabbableObject.transform.position;
                     PikminObjectPrefabInstance.transform.SetParent(grabbableObject.transform);
+                    if (overrides != null)
+                        pikminItem.overrideSettings = overrides;
                     return pikminItem;
                 }
                 else

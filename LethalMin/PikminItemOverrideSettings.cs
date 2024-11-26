@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[CreateAssetMenu(menuName = "LethalMin/PikminItem OverrideSettings", order = 1)]
 public class PikminItemOverrideSettings : ScriptableObject
 {
     public Item Root = null!;
