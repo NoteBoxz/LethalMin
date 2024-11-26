@@ -274,19 +274,11 @@ namespace LethalMin
                 SetRootClientRpc(new NetworkObjectReference(rootNetworkObject));
             }
         }
-        public PikminItemOverrideSettings overrideSettings = null!;
         public void Initialize(GrabbableObject root)
         {
             Root = root;
             name = root.name + "(PikminNode)";
             LethalMin.Logger.LogInfo($"{name} has {root.itemProperties.weight}");
-            if (overrideSettings != null)
-            {
-                PikminNeedOnItem = overrideSettings.PikminNeedOnItem;
-                LethalMin.Logger.LogInfo($"Overriding PikminNeedOnItem with {overrideSettings.PikminNeedOnItem}");
-                CreateGoToPositions();
-                return;
-            }
 
             PikminNeedOnItem = Mathf.Max(
     (root.itemProperties.weight - 1f) * 100f <= 3f ? 1 :

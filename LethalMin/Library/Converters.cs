@@ -104,16 +104,7 @@ namespace LethalMin.Library
             CopyFields(libMeshRefernces, lmMeshRefernces, "PikminMeshRefernces");
             return lmMeshRefernces;
         }
-
-        public static PikminItemOverrideSettings Convert_Lib_PIOStoLmPIOS(LethalMinLibrary.PikminItemOverrideSettings libPIO)
-        {
-            PikminItemOverrideSettings lmPikminItemOverrideSettings = ScriptableObject.CreateInstance<PikminItemOverrideSettings>();
-            lmPikminItemOverrideSettings.name = libPIO.name;
-            CopyFields(libPIO, lmPikminItemOverrideSettings, "PikminItemOverrideSettings");
-            
-            return lmPikminItemOverrideSettings;
-        }
-
+        
         private static void CopyFields<TSource, TDestination>(TSource source, TDestination destination, string typeName)
         {
             if (source == null)

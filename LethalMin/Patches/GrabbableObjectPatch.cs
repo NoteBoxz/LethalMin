@@ -59,31 +59,6 @@ namespace LethalMin.Patches
             || LethalMin.AllItemsToP && grabbableObject.IsServer && grabbableObject.grabbable
             || overrideGrabbableCheck)
             {
-                PikminItemOverrideSettings overrides = null!;
-                foreach (var item in Resources.FindObjectsOfTypeAll<PikminItemOverrideSettings>().ToList())
-                {
-                    if (item.Root == grabbableObject.itemProperties)
-                    {
-                        overrides = item;
-                        break;
-                    }
-                    if (item.Root == grabbableObject.itemProperties && !item.CanBeCarried)
-                    {
-                        return null!;
-                    }
-                }
-                foreach (var item2 in Resources.FindObjectsOfTypeAll<LethalMinLibrary.PikminItemOverrideSettings>().ToList())
-                {
-                    if (item2.Root == grabbableObject.itemProperties)
-                    {
-                        overrides = TypeConverter.Convert_Lib_PIOStoLmPIOS(item2);
-                        break;
-                    }
-                    if (item2.Root == grabbableObject.itemProperties && !item2.CanBeCarried)
-                    {
-                        return null!;
-                    }
-                }
                 if (grabbableObject.GetComponent<CaveDwellerPhysicsProp>() != null)
                     return null!;
                 PikminItem[] Pims = GameObject.FindObjectsOfType<PikminItem>();
@@ -116,8 +91,6 @@ namespace LethalMin.Patches
                     PikminObjectPrefabInstance.name = grabbableObject.name + "(PikminNode)";
                     PikminObjectPrefabInstance.transform.position = grabbableObject.transform.position;
                     PikminObjectPrefabInstance.transform.SetParent(grabbableObject.transform);
-                    if (overrides != null)
-                        pikminItem.overrideSettings = overrides;
                     return pikminItem;
                 }
                 else

@@ -829,20 +829,6 @@ namespace LethalMin
 
         public static bool CantConvertEnemy(EnemyType enemy)
         {
-            foreach (var Overridesettings in Resources.FindObjectsOfTypeAll<PikminItemOverrideSettings>().ToList())
-            {
-                if (Overridesettings.EnemyRoot == enemy && !Overridesettings.CanBeCarried)
-                {
-                    return true;
-                }
-            }
-            foreach (var Overridesettings in Resources.FindObjectsOfTypeAll<LethalMinLibrary.PikminItemOverrideSettings>().ToList())
-            {
-                if (Overridesettings.EnemyRoot == enemy && !Overridesettings.CanBeCarried)
-                {
-                    return true;
-                }
-            }
             return false;
         }
 
