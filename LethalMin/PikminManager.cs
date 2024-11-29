@@ -44,7 +44,7 @@ namespace LethalMin
         public bool CachedSpawnPoints = false;
         public string SaveFilePath = Path.Combine(Application.persistentDataPath, "LethalMinSave.json");
         public bool IsSaving;
-        public GameObject OnionPrefab;
+        public GameObject OnionPrefab, OnionContainer;
 
         #region Initialization and Core Management
         public float CarRefreshTimer, ItemRefreshTimer, OnionRefreshTimer, PikminEntityTimer, PuffminEntityTime, NonPikminEnetityTimer;
@@ -61,6 +61,13 @@ namespace LethalMin
                 Destroy(gameObject);
             }
             DBM = GetComponent<DebugMenu>();
+            if (OnionContainer == null)
+            {
+                OnionContainer = Instantiate(AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipModeOnionContainer.prefab"));
+                OnionContainer.transform.position = new Vector3(-6.1364f, 0f, 60.136f);
+                OnionContainer.AddComponent<ShipPhaseOnionContainer>();
+            }
+            PikminManager.Instance.StartCoroutine(PikminManager.Instance.SpawnShipPhaseOnions());
         }
         void LateUpdate()
         {
@@ -114,6 +121,7 @@ namespace LethalMin
         }
         public void OnGameStarted()
         {
+            StartCoroutine(DespawnShipPhaseOnions());
             if (!IsServer) { return; }
             if (StartOfRound.Instance == null) { return; }
             if (StartOfRound.Instance.inShipPhase) { return; }
@@ -150,7 +158,42 @@ namespace LethalMin
                 StartCoroutine(SpawnOnions());
             }
         }
+        public List<GameObject> SpawnedShipPhaseOnions = new List<GameObject>();
+        public IEnumerator SpawnShipPhaseOnions()
+        {
+            List<int> LoadedOnions = new List<int>();
+            if (LethalMin.IsUsingModLib())
+            {
+                ezSaveData = new OnionEzSaveData();
+                ezSaveData.Load();
 
+                LoadedOnions = ezSaveData.OnionsCollected;
+            }
+            else
+            {
+                string json = File.ReadAllText(SaveFilePath);
+                LoadedOnions = JsonConvert.DeserializeObject<OnionSaveData>(json).OnionsCollected;
+            }
+            foreach (var item in LethalMin.RegisteredOnionTypes.Values)
+            {
+                yield return new WaitForSeconds(0.1f);
+                if (LoadedOnions.Contains(item.OnionTypeID))
+                {
+                    GameObject instance = Instantiate(
+                        AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipModeOnion.prefab"), OnionContainer.transform);
+                    SpawnedShipPhaseOnions.Add(instance);
+                }
+            }
+        }
+        public IEnumerator DespawnShipPhaseOnions()
+        {
+            foreach (var item in SpawnedShipPhaseOnions)
+            {
+                yield return new WaitForSeconds(0.1f);
+                Destroy(item);
+            }
+            SpawnedShipPhaseOnions.Clear();
+        }
         #endregion
 
         #region Spawning and Generation

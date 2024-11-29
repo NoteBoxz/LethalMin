@@ -27,8 +27,9 @@ using LethalMinLibrary;
 
 namespace LethalMin
 {
-    public enum pSFX
+    public enum GameStyle
     {
+        Pikmin1,
         Pikmin2,
         Pikmin3,
         Pikmin4
@@ -210,6 +211,8 @@ namespace LethalMin
         public static float MaskedWhistleVolume, MaskedWhistleRange;
         public static bool HideInputPrompts;
         public static bool HidePuffminPrompt;
+        //Generated Useable Varibles GoES HERE
+
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
         public static ConfigEntry<bool> SkipPluckAnimation, FF, Smartmin, Smartermin, OnlyMainV, OnlyExitV, Pattack,
@@ -238,6 +241,10 @@ namespace LethalMin
         public static ConfigEntry<ObstacleAvoidanceType> PikminDefaultAvoidanceTypeConfig;
         public static ConfigEntry<ObstacleAvoidanceType> PikminCarryingAvoidanceTypeConfig;
         public static ConfigEntry<HudPresets> HudPresetsConfig;
+
+
+        //Generated Config Varibles GoES HERE
+
         #endregion
 
         private void Awake()
@@ -410,6 +417,10 @@ namespace LethalMin
 
             FFOM = Config.Bind("LethalMon", "Make Pikmin Attack Leaders Tammed Enemy", false, "Makes Pikmin attack the leaders Pokémon");
             FFM = Config.Bind("LethalMon", "Make Pikmin Attack Tammed Enemies", false, "Makes Pikmin attack any Tamed Enemies");
+
+            //Generated ConfigBindings goes here
+
+
             #endregion
 
 
@@ -540,6 +551,9 @@ namespace LethalMin
             BeesShockCount = BeesShockCountConfig.Value;
             MeanBees = BeeChase.Value;
             FunniOnion = FunniMode.Value;
+
+            //Generated Settings Valuse Goes Here
+
             #endregion
 
 
@@ -680,6 +694,9 @@ namespace LethalMin
             BeesShockCountConfig.SettingChanged += (_, _) => BeesShockCount = BeesShockCountConfig.Value;
             BeeChase.SettingChanged += (_, _) => MeanBees = BeeChase.Value;
             FunniMode.SettingChanged += (_, _) => FunniOnion = FunniMode.Value;
+
+            //Generated Settings Events Goes here
+
             #endregion
         }
         public void BindLCconfigs()
@@ -825,6 +842,8 @@ namespace LethalMin
             // Lethal Mon            
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(FFOM, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(FFM, false));
+
+            //Generated LC bindings goes here
         }
 
         public static bool CantConvertEnemy(EnemyType enemy)
@@ -1418,7 +1437,25 @@ namespace LethalMin
 
         public static bool CanWalkAtCompany()
         {
-            return IsDependencyLoaded("dev.kittenji.NavMeshInCompany");
+            // Check if we're in the company building
+            if (RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
+            {
+                return false;
+            }
+
+            // Sample a position in the center of the scene
+            Vector3 samplePosition = Vector3.zero;
+            NavMeshHit hit;
+
+            // Try to sample the NavMesh
+            if (NavMesh.SamplePosition(samplePosition, out hit, 1000f, NavMesh.AllAreas))
+            {
+                // If we found a valid position on the NavMesh, return true
+                return true;
+            }
+
+            // If we couldn't find a valid position, there's likely no NavMesh
+            return false;
         }
 
         private void RegisterPikminEnemy()

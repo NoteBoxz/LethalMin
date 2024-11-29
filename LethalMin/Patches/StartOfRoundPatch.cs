@@ -99,6 +99,7 @@ namespace LethalMin.Patches
             }
             PikminManager.Instance.StartCoroutine(PikminManager.Instance.DespawnOnions());
             GameObject.FindAnyObjectByType<PikminHUD>().UpdateHUD();
+            PikminManager.Instance.StartCoroutine(PikminManager.Instance.SpawnShipPhaseOnions());
         }
 
         private static void CreatePikminManager()
