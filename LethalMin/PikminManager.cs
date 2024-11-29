@@ -162,26 +162,73 @@ namespace LethalMin
         public IEnumerator SpawnShipPhaseOnions()
         {
             List<int> LoadedOnions = new List<int>();
+            Dictionary<int, int[]> LoadedFusedOnions;
+            bool IsOnionFused(int onionTypeId) => FusedOnions.Any(kvp => kvp.Value.Contains(onionTypeId));
             if (LethalMin.IsUsingModLib())
             {
                 ezSaveData = new OnionEzSaveData();
                 ezSaveData.Load();
 
                 LoadedOnions = ezSaveData.OnionsCollected;
+                LoadedFusedOnions = ezSaveData.OnionsFused;
             }
             else
             {
-                string json = File.ReadAllText(SaveFilePath);
-                LoadedOnions = JsonConvert.DeserializeObject<OnionSaveData>(json).OnionsCollected;
+                string json = File.ReadAllText(Path.Combine(Application.persistentDataPath, $"{GetSaveFileName()}.json"));
+                LoadedOnions = JsonConvert.DeserializeObject<OnionSaveData>(json)?.OnionsCollected ?? new List<int>();
+                LoadedFusedOnions = JsonConvert.DeserializeObject<OnionSaveData>(json)?.OnionsFused ?? new Dictionary<int, int[]>();
             }
+            List<int> handledOnions = new List<int>();
+            if (LoadedFusedOnions != null && LoadedFusedOnions.Count > 0)
+            {
+                foreach (var fusedOnion in LoadedFusedOnions)
+                {
+                    List<OnionType> FusedTypes = new List<OnionType>();
+                    if (fusedOnion.Value.Length >= 2)
+                    {
+                        foreach (var item in fusedOnion.Value)
+                        {
+                            FusedTypes.Add(LethalMin.GetOnionTypeById(item));
+                        }
+                        
+                        GameObject instance = Instantiate(
+                            AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipModeOnion.prefab"), OnionContainer.transform);
+                        SpawnedShipPhaseOnions.Add(instance);
+
+                        Renderer onionRenderer = instance.transform.Find("SK_stg_OnyonCarry.001").GetComponent<Renderer>();
+
+                        List<Color> colors = new List<Color>();
+
+                        colors.Add(FusedTypes[0].OnionColor);
+                        foreach (var item in FusedTypes)
+                        {
+                            colors.Add(item.OnionColor);
+                        }
+
+                        Texture2D gradient = GradientTextureGenerator.Generate90DegreeGradient(colors, 0.1f);
+
+                        onionRenderer.material.color = Color.white;
+                        onionRenderer.material.SetTexture("_BaseColorMap", gradient);
+
+                        handledOnions.AddRange(fusedOnion.Value);
+                    }
+                }
+            }
+
+            foreach (int i in handledOnions)
+            {
+                LoadedOnions.RemoveAt(LoadedOnions.IndexOf(i));
+            }
+
             foreach (var item in LethalMin.RegisteredOnionTypes.Values)
             {
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForSeconds(1f);
                 if (LoadedOnions.Contains(item.OnionTypeID))
                 {
                     GameObject instance = Instantiate(
                         AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipModeOnion.prefab"), OnionContainer.transform);
                     SpawnedShipPhaseOnions.Add(instance);
+                    instance.transform.Find("SK_stg_OnyonCarry.001").GetComponent<Renderer>().material.color = item.OnionColor;
                 }
             }
         }

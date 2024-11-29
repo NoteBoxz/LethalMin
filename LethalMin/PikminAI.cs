@@ -3036,7 +3036,7 @@ namespace LethalMin
             }
 
             // Ship target (outside and not in Company Building)
-            if (RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
+            if (RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts && isOutside)
             {
                 Vector3 shipPos = GetNavmeshShipPositions()[UnityEngine.Random.Range(0, GetNavmeshShipPositions().Count)];
                 ItemRoute ShipRoute = new ItemRoute("Ship");
@@ -3048,7 +3048,8 @@ namespace LethalMin
             }
 
             // Car target
-            if (LethalMin.GoToCar && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
+            if (LethalMin.GoToCar && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts 
+            && isOutside)
             {
                 GetNearestCar();
                 if (TargetCar != null && TargetCarPos != null && TargetCar.backDoorOpen)
