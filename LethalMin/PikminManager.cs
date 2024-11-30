@@ -67,7 +67,7 @@ namespace LethalMin
                 OnionContainer.transform.position = new Vector3(-6.1364f, 0f, 60.136f);
                 OnionContainer.AddComponent<ShipPhaseOnionContainer>();
             }
-            PikminManager.Instance.StartCoroutine(PikminManager.Instance.SpawnShipPhaseOnions());
+            SpawnShipPhaseOnionsServerRpc();
         }
         void LateUpdate()
         {
@@ -121,10 +121,11 @@ namespace LethalMin
         }
         public void OnGameStarted()
         {
-            StartCoroutine(DespawnShipPhaseOnions());
             if (!IsServer) { return; }
             if (StartOfRound.Instance == null) { return; }
             if (StartOfRound.Instance.inShipPhase) { return; }
+            DespawnShipPhaseOnionsClientRpc();
+            SetSSPOBoolClientRpc(false);
             if (LethalMin.IsUsingModLib())
             {
                 LethalMin.Logger.LogMessage("Using ModLib, loading EZOnion data.");
@@ -158,7 +159,13 @@ namespace LethalMin
                 StartCoroutine(SpawnOnions());
             }
         }
+        public static bool HasSpawnedShipPhaseOnion;
         public List<GameObject> SpawnedShipPhaseOnions = new List<GameObject>();
+        [ServerRpc(RequireOwnership = false)]
+        public void SpawnShipPhaseOnionsServerRpc()
+        {
+            StartCoroutine(SpawnShipPhaseOnions());
+        }
         public IEnumerator SpawnShipPhaseOnions()
         {
             List<int> LoadedOnions = new List<int>();
@@ -190,25 +197,8 @@ namespace LethalMin
                         {
                             FusedTypes.Add(LethalMin.GetOnionTypeById(item));
                         }
-                        
-                        GameObject instance = Instantiate(
-                            AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipModeOnion.prefab"), OnionContainer.transform);
-                        SpawnedShipPhaseOnions.Add(instance);
 
-                        Renderer onionRenderer = instance.transform.Find("SK_stg_OnyonCarry.001").GetComponent<Renderer>();
-
-                        List<Color> colors = new List<Color>();
-
-                        colors.Add(FusedTypes[0].OnionColor);
-                        foreach (var item in FusedTypes)
-                        {
-                            colors.Add(item.OnionColor);
-                        }
-
-                        Texture2D gradient = GradientTextureGenerator.Generate90DegreeGradient(colors, 0.1f);
-
-                        onionRenderer.material.color = Color.white;
-                        onionRenderer.material.SetTexture("_BaseColorMap", gradient);
+                        SpawnFusedShipPhaseOnionClientRpc(fusedOnion.Value);
 
                         handledOnions.AddRange(fusedOnion.Value);
                     }
@@ -225,21 +215,67 @@ namespace LethalMin
                 yield return new WaitForSeconds(1f);
                 if (LoadedOnions.Contains(item.OnionTypeID))
                 {
-                    GameObject instance = Instantiate(
-                        AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipModeOnion.prefab"), OnionContainer.transform);
-                    SpawnedShipPhaseOnions.Add(instance);
-                    instance.transform.Find("SK_stg_OnyonCarry.001").GetComponent<Renderer>().material.color = item.OnionColor;
+                    SpawnShipPhaseOnionClientRpc(item.OnionTypeID);
                 }
             }
+
+            SetSSPOBoolClientRpc(true);
         }
-        public IEnumerator DespawnShipPhaseOnions()
+
+        [ClientRpc]
+        public void SpawnFusedShipPhaseOnionClientRpc(int[] fusedOnion)
+        {
+            if (HasSpawnedShipPhaseOnion) { LethalMin.Logger.LogInfo("Client already SpawnedSPOnions"); return; }
+            List<OnionType> FusedTypes = new List<OnionType>();
+            foreach (var item in fusedOnion)
+            {
+                FusedTypes.Add(LethalMin.GetOnionTypeById(item));
+            }
+
+            GameObject instance = Instantiate(
+                AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipModeOnion.prefab"), OnionContainer.transform);
+            SpawnedShipPhaseOnions.Add(instance);
+
+            Renderer onionRenderer = instance.transform.Find("SK_stg_OnyonCarry.001").GetComponent<Renderer>();
+
+            List<Color> colors = new List<Color>();
+
+            colors.Add(FusedTypes[0].OnionColor);
+            foreach (var item in FusedTypes)
+            {
+                colors.Add(item.OnionColor);
+            }
+
+            Texture2D gradient = GradientTextureGenerator.Generate90DegreeGradient(colors, 0.1f);
+
+            onionRenderer.material.color = Color.white;
+            onionRenderer.material.SetTexture("_BaseColorMap", gradient);
+        }
+        [ClientRpc]
+        public void SpawnShipPhaseOnionClientRpc(int onionTypeId)
+        {
+            if (HasSpawnedShipPhaseOnion) { LethalMin.Logger.LogInfo("Client already SpawnedSPOnions"); return; }
+            OnionType item = LethalMin.GetOnionTypeById(onionTypeId);
+            GameObject instance = Instantiate(
+                AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipModeOnion.prefab"), OnionContainer.transform);
+            SpawnedShipPhaseOnions.Add(instance);
+            instance.transform.Find("SK_stg_OnyonCarry.001").GetComponent<Renderer>().material.color = item.OnionColor;
+        }
+
+        [ClientRpc]
+        public void DespawnShipPhaseOnionsClientRpc()
         {
             foreach (var item in SpawnedShipPhaseOnions)
             {
-                yield return new WaitForSeconds(0.1f);
                 Destroy(item);
             }
             SpawnedShipPhaseOnions.Clear();
+        }
+
+        [ClientRpc]
+        public void SetSSPOBoolClientRpc(bool value)
+        {
+            HasSpawnedShipPhaseOnion = value;
         }
         #endregion
 

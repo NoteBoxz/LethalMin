@@ -1878,6 +1878,7 @@ namespace LethalMin
             if (!HasInitalized) { return; }
             if (LethalMin.DebugMode)
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Set Trigger: {Name}");
+            LocalAnim.ResetTrigger(Name);
             LocalAnim.SetTrigger(Name);
         }
         [ClientRpc]
@@ -2178,19 +2179,25 @@ namespace LethalMin
         public void AssignLeader(PlayerControllerB newLeader, bool PlayNoticeAnim = true)
         {
             if (currentBehaviourStateIndex == (int)PState.Leaveing) { return; }
+            if (IsOnItem && targetItem.PikminOnItemList[0] == this && targetItem.PikminOnItemList.Count > 1) { return; }
             if (newLeader != null && currentLeader == null && !IsGettingAsinged)
             {
                 IsGettingAsinged = true;
-                AssignLeaderServerRPC(new NetworkObjectReference(newLeader.NetworkObject), PlayNoticeAnim);
+                AssignLeaderServerRpc(new NetworkObjectReference(newLeader.NetworkObject), PlayNoticeAnim);
             }
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void AssignLeaderServerRPC(NetworkObjectReference leaderref, bool PlayNoticeAnim = true)
+        public void AssignLeaderServerRpc(NetworkObjectReference leaderref, bool PlayNoticeAnim = true)
         {
             if (!HasInitalized)
             {
                 AssignLeaderResponseClientRpc(); return;
+            }
+            if (IsOnItem && targetItem.PikminOnItemList[0] == this && targetItem.PikminOnItemList.Count > 1)
+            {
+                AssignLeaderResponseClientRpc();
+                return;
             }
             if (HasCustomScripts)
                 OnAssignLeaderServerRpc.Invoke();
@@ -3036,29 +3043,42 @@ namespace LethalMin
             }
 
             // Ship target (outside and not in Company Building)
-            if (RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts && isOutside)
+            if (RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
             {
                 Vector3 shipPos = GetNavmeshShipPositions()[UnityEngine.Random.Range(0, GetNavmeshShipPositions().Count)];
                 ItemRoute ShipRoute = new ItemRoute("Ship");
                 ShipRoute.AddPoint(shipPos, true);
                 ShipRoute.BypassPathableCheck = true;
-                ShipRoute.Priority = 5;
+                if (isOutside)
+                {
+                    ShipRoute.Priority = 5;
+                }
+                else
+                {
+                    ShipRoute.Priority = 1;
+                }
                 ShipRoute.InitalDistance = Vector3.Distance(transform.position, shipPos);
                 PossibleRoutes.Add(ShipRoute);
             }
 
             // Car target
-            if (LethalMin.GoToCar && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts 
-            && isOutside)
+            if (LethalMin.GoToCar && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
             {
                 GetNearestCar();
-                if (TargetCar != null && TargetCarPos != null && TargetCar.backDoorOpen)
+                if (TargetCar != null && TargetCarPos != null && TargetCar.backDoorOpen && !TargetCar.magnetedToShip)
                 {
                     ItemRoute CarRoute = new ItemRoute("Car");
                     CarRoute.AddPoint(TargetCarPos.position, false);
                     PossibleRoutes.Add(CarRoute);
                     CarRoute.BypassPathableCheck = true;
-                    CarRoute.Priority = 6;
+                    if (isOutside)
+                    {
+                        CarRoute.Priority = 6;
+                    }
+                    else
+                    {
+                        CarRoute.Priority = 2;
+                    }
                     CarRoute.InitalDistance = Vector3.Distance(transform.position, TargetCarPos.position);
                     PossibleRoutes.Add(CarRoute);
                 }
