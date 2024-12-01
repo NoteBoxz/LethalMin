@@ -64,14 +64,19 @@ namespace LethalMin
             if (OnionContainer == null)
             {
                 OnionContainer = Instantiate(AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipModeOnionContainer.prefab"));
-                OnionContainer.transform.position = new Vector3(-6.1364f, 0f, 60.136f);
                 OnionContainer.AddComponent<ShipPhaseOnionContainer>();
             }
-            SpawnShipPhaseOnionsServerRpc();
+        }
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            if (IsServer)
+                StartCoroutine(SpawnShipPhaseOnions());
         }
         void LateUpdate()
         {
             DBM.enabled = LethalMin.DebugMode;
+            OnionContainer.transform.position = new Vector3(LethalMin.ShipPhaseOnionX, LethalMin.ShipPhaseOnionY, LethalMin.ShipPhaseOnionZ);
             if (StartOfRound.Instance != null && StartOfRound.Instance.shipHasLanded)
             {
                 if (PIOMTimer >= 0)
@@ -164,10 +169,12 @@ namespace LethalMin
         [ServerRpc(RequireOwnership = false)]
         public void SpawnShipPhaseOnionsServerRpc()
         {
+            LethalMin.Logger.LogInfo("Requiring to spawn ship phase onions.");
             StartCoroutine(SpawnShipPhaseOnions());
         }
         public IEnumerator SpawnShipPhaseOnions()
         {
+            LethalMin.Logger.LogInfo("Spawning ship phase onions.");
             List<int> LoadedOnions = new List<int>();
             Dictionary<int, int[]> LoadedFusedOnions;
             bool IsOnionFused(int onionTypeId) => FusedOnions.Any(kvp => kvp.Value.Contains(onionTypeId));

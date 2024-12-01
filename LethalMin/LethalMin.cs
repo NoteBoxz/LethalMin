@@ -211,6 +211,7 @@ namespace LethalMin
         public static float MaskedWhistleVolume, MaskedWhistleRange;
         public static bool HideInputPrompts;
         public static bool HidePuffminPrompt;
+        public static float ShipPhaseOnionX,ShipPhaseOnionY,ShipPhaseOnionZ;
         //Generated Useable Varibles GoES HERE
 
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
@@ -229,7 +230,8 @@ namespace LethalMin
          PCPCountX, PCPCountY, PCPCountZ, PCRCCountX, PCRCCountY, PCRCCountZ, PCScaleCount, FallTimer, CounterOffset,
          NoticeTimer, BarberR, OnionSpawnChance, SproutSpawnChance, IndoorSpawnChance, WhistleVolumeConfig,
          ManagerRefreshRateC, WhistleRange, WhistleMinRaidus, WhistleMaxRadius, PlayerNR, SpeedMultiplierConfig,
-         DamageMultiplierConfig, MaskedWhistleVolumeConfig, MaskedWhistleRangeConfig, ThrowX, ThrowY, ThrowZ;
+         DamageMultiplierConfig, MaskedWhistleVolumeConfig, MaskedWhistleRangeConfig, ThrowX, ThrowY, ThrowZ,
+         SPOx,SPOy,SPOz;
 
         public static ConfigEntry<int> MechBurnLimmitConfig, JesterDiet, ThumperDiet, GiantDiet, BarberDiet, ManeaterDiet, SpideDiet,
         JesterBuffer, ThumperBuffer, SpiderBuffer, BeesShockCountConfig, ManeaterBuffer, MaxMin
@@ -367,6 +369,10 @@ namespace LethalMin
             whistleActionConfig = Config.Bind("Controls", "Whistle Action", "<Mouse>/leftButton", "Key binding for whistling");
             dismissActionConfig = Config.Bind("Controls", "Dismiss Action", "<Mouse>/middleButton", "Key binding for dismissing Pikmin");
 
+            SPOx = Config.Bind("Onions", "Space Onions Position X", -6.1364f, "The X Position of the onions when in space");
+            SPOy = Config.Bind("Onions", "Space Onions Position Y", 0f, "The Y Position of the onions when in space");
+            SPOz = Config.Bind("Onions", "Space Onions Position Z", 60.136f, "The Z Position of the onions when in space");
+
             CustomOnionAllowed = Config.Bind("Extra", "Allow Custom Onion spawn Position", true, "Allows onions to land on pre defined spawn points on modded moons (if there are any).");
             AllowSpawnMultiplierCF = Config.Bind("Extra", "Allow Spawn Multiplier", true, "Allows the custom Pikmin Types to use Spawn Multipliers.");
             LethalWhistle = Config.Bind("Extra", "Make whistle conductive", false, "Makes whistles conductive to stormy weather.");
@@ -429,6 +435,9 @@ namespace LethalMin
 
 
             #region Setting Config values
+            ShipPhaseOnionX = SPOx.Value;
+            ShipPhaseOnionY = SPOy.Value;
+            ShipPhaseOnionZ = SPOz.Value;
             HideInputPrompts = HideInputPromptsConfig.Value;
             HidePuffminPrompt = HidePuffminPromptConfig.Value;
             AllowConvertion = AllowConvertionConfig.Value;
@@ -563,6 +572,9 @@ namespace LethalMin
 
             #region Setting Config Events
             // Add SettingChanged events for all configs
+            SPOx.SettingChanged += (_, _) => ShipPhaseOnionX = SPOx.Value;
+            SPOy.SettingChanged += (_, _) => ShipPhaseOnionY = SPOy.Value;
+            SPOz.SettingChanged += (_, _) => ShipPhaseOnionZ = SPOz.Value;
             HidePuffminPromptConfig.SettingChanged += (_, _) => HidePuffminPrompt = HidePuffminPromptConfig.Value;
             HideInputPromptsConfig.SettingChanged += (_, _) => HideInputPrompts = HideInputPromptsConfig.Value;
             AllowConvertionConfig.SettingChanged += (_, _) => AllowConvertion = AllowConvertionConfig.Value;
@@ -729,7 +741,11 @@ namespace LethalMin
             // Puffmin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(TurnToNormalOnDeath, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(HidePuffminPromptConfig, false));
-
+            
+            // Onion
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SPOx,false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SPOy, false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SPOz, false));
 
             // Controls
             LethalConfigManager.AddConfigItem(new TextInputFieldConfigItem(throwActionConfig, false));

@@ -19,6 +19,8 @@ namespace LethalMin.Patches
         {
             PikminManager.Instance.SyncAllPikminItems();
             PikminManager.Instance.SyncAllWhistles();
+            if (StartOfRound.Instance.mostRecentlyJoinedClient)
+                PikminManager.Instance.SpawnShipPhaseOnionsServerRpc();
         }
 
 
@@ -99,7 +101,6 @@ namespace LethalMin.Patches
             }
             PikminManager.Instance.StartCoroutine(PikminManager.Instance.DespawnOnions());
             GameObject.FindAnyObjectByType<PikminHUD>().UpdateHUD();
-            PikminManager.Instance.SpawnShipPhaseOnionsServerRpc();
         }
 
         private static void CreatePikminManager()
