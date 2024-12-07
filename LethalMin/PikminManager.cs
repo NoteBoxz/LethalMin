@@ -130,7 +130,7 @@ namespace LethalMin
             if (StartOfRound.Instance == null) { return; }
             if (StartOfRound.Instance.inShipPhase) { return; }
             DespawnShipPhaseOnionsClientRpc();
-            SetSSPOBoolClientRpc(false);
+
             if (LethalMin.IsUsingModLib())
             {
                 LethalMin.Logger.LogMessage("Using ModLib, loading EZOnion data.");
@@ -164,13 +164,21 @@ namespace LethalMin
                 StartCoroutine(SpawnOnions());
             }
         }
-        public static bool HasSpawnedShipPhaseOnion;
+
+        #region This is the most hackiest networking i've ever done
         public List<GameObject> SpawnedShipPhaseOnions = new List<GameObject>();
+        Coroutine SSPOCoroutine;
+
         [ServerRpc(RequireOwnership = false)]
         public void SpawnShipPhaseOnionsServerRpc()
         {
             LethalMin.Logger.LogInfo("Requiring to spawn ship phase onions.");
-            StartCoroutine(SpawnShipPhaseOnions());
+            if (SSPOCoroutine != null)
+            {
+                LethalMin.Logger.LogWarning("Already spawning ship phase onions. Cannot cancle current coroutine!");
+                return;
+            }
+            SSPOCoroutine = StartCoroutine(SpawnShipPhaseOnions());
         }
         public IEnumerator SpawnShipPhaseOnions()
         {
@@ -178,23 +186,43 @@ namespace LethalMin
             List<int> LoadedOnions = new List<int>();
             Dictionary<int, int[]> LoadedFusedOnions;
             bool IsOnionFused(int onionTypeId) => FusedOnions.Any(kvp => kvp.Value.Contains(onionTypeId));
-            if (LethalMin.IsUsingModLib())
+            if (CollectedOnions.Count == 0)
             {
-                ezSaveData = new OnionEzSaveData();
-                ezSaveData.Load();
+                if (LethalMin.IsUsingModLib())
+                {
+                    ezSaveData = new OnionEzSaveData();
+                    ezSaveData.Load();
 
-                LoadedOnions = ezSaveData.OnionsCollected;
-                LoadedFusedOnions = ezSaveData.OnionsFused;
+                    LoadedOnions = ezSaveData.OnionsCollected;
+                    LoadedFusedOnions = ezSaveData.OnionsFused;
+                }
+                else
+                {
+                    string json = File.ReadAllText(Path.Combine(Application.persistentDataPath, $"{GetSaveFileName()}.json"));
+                    LoadedOnions = JsonConvert.DeserializeObject<OnionSaveData>(json)?.OnionsCollected ?? new List<int>();
+                    LoadedFusedOnions = JsonConvert.DeserializeObject<OnionSaveData>(json)?.OnionsFused ?? new Dictionary<int, int[]>();
+                }
             }
             else
             {
-                string json = File.ReadAllText(Path.Combine(Application.persistentDataPath, $"{GetSaveFileName()}.json"));
-                LoadedOnions = JsonConvert.DeserializeObject<OnionSaveData>(json)?.OnionsCollected ?? new List<int>();
-                LoadedFusedOnions = JsonConvert.DeserializeObject<OnionSaveData>(json)?.OnionsFused ?? new Dictionary<int, int[]>();
+                LoadedOnions = CollectedOnions;
+                LoadedFusedOnions = FusedOnions;
             }
+            // Log the loaded onions list
+            LethalMin.Logger.LogInfo($"Loaded onions: {string.Join(", ", LoadedOnions)}");
+            LethalMin.Logger.LogInfo($"Loaded fused onions: {string.Join(", ", LoadedFusedOnions.Select(kvp => $"{kvp.Key}: {string.Join(", ", kvp.Value)}"))}");
             List<int> handledOnions = new List<int>();
             if (LoadedFusedOnions != null && LoadedFusedOnions.Count > 0)
             {
+                int val1 = 0;
+                foreach (var fusedOnion in LoadedFusedOnions)
+                {
+                    if (fusedOnion.Value.Length >= 2)
+                    {
+                        val1++;
+                    }
+                }
+                SetExpectedFSPOClientRpc(val1);
                 foreach (var fusedOnion in LoadedFusedOnions)
                 {
                     List<OnionType> FusedTypes = new List<OnionType>();
@@ -205,6 +233,7 @@ namespace LethalMin
                             FusedTypes.Add(LethalMin.GetOnionTypeById(item));
                         }
 
+                        LethalMin.Logger.LogInfo("Calling to spawn fused onion: " + fusedOnion.Key);
                         SpawnFusedShipPhaseOnionClientRpc(fusedOnion.Value);
 
                         handledOnions.AddRange(fusedOnion.Value);
@@ -216,23 +245,37 @@ namespace LethalMin
             {
                 LoadedOnions.RemoveAt(LoadedOnions.IndexOf(i));
             }
-
-            foreach (var item in LethalMin.RegisteredOnionTypes.Values)
+            int val2 = LoadedOnions.Count;
+            SetExpectedSPOClientRpc(val2);
+            List<OnionType> typesToSpawn = new List<OnionType>();
+            foreach (int i in LoadedOnions)
+            {
+                typesToSpawn.Add(LethalMin.GetOnionTypeById(i));
+            }
+            foreach (OnionType item in typesToSpawn)
             {
                 yield return new WaitForSeconds(1f);
-                if (LoadedOnions.Contains(item.OnionTypeID))
-                {
-                    SpawnShipPhaseOnionClientRpc(item.OnionTypeID);
-                }
+                LethalMin.Logger.LogInfo("Calling to spawn onion: " + item.OnionTypeID);
+                SpawnShipPhaseOnionClientRpc(item.OnionTypeID);
             }
-
-            SetSSPOBoolClientRpc(true);
+            SSPOCoroutine = null!;
         }
-
+        int ExpectedSPO, CurSPO, ExpectedFSPO, CurFSPO;
+        [ClientRpc]
+        public void SetExpectedSPOClientRpc(int expected)
+        {
+            ExpectedSPO = expected;
+        }
+        [ClientRpc]
+        public void SetExpectedFSPOClientRpc(int cur)
+        {
+            ExpectedFSPO = cur;
+        }
         [ClientRpc]
         public void SpawnFusedShipPhaseOnionClientRpc(int[] fusedOnion)
         {
-            if (HasSpawnedShipPhaseOnion) { LethalMin.Logger.LogInfo("Client already SpawnedSPOnions"); return; }
+            if (ExpectedFSPO <= CurFSPO) { LethalMin.Logger.LogInfo("Client already SpawnedSPFusedOnions"); return; }
+            LethalMin.Logger.LogInfo("Spawning fused onion: " + string.Join(", ", fusedOnion));
             List<OnionType> FusedTypes = new List<OnionType>();
             foreach (var item in fusedOnion)
             {
@@ -257,16 +300,21 @@ namespace LethalMin
 
             onionRenderer.material.color = Color.white;
             onionRenderer.material.SetTexture("_BaseColorMap", gradient);
+
+            CurFSPO++;
         }
         [ClientRpc]
         public void SpawnShipPhaseOnionClientRpc(int onionTypeId)
         {
-            if (HasSpawnedShipPhaseOnion) { LethalMin.Logger.LogInfo("Client already SpawnedSPOnions"); return; }
+            if (ExpectedSPO <= CurSPO) { LethalMin.Logger.LogInfo("Client already SpawnedSPOnions"); return; }
+            LethalMin.Logger.LogInfo("Spawning onion: " + onionTypeId);
             OnionType item = LethalMin.GetOnionTypeById(onionTypeId);
             GameObject instance = Instantiate(
                 AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Onion/ShipModeOnion.prefab"), OnionContainer.transform);
             SpawnedShipPhaseOnions.Add(instance);
             instance.transform.Find("SK_stg_OnyonCarry.001").GetComponent<Renderer>().material.color = item.OnionColor;
+
+            CurSPO++;
         }
 
         [ClientRpc]
@@ -277,13 +325,11 @@ namespace LethalMin
                 Destroy(item);
             }
             SpawnedShipPhaseOnions.Clear();
+            CurSPO = 0;
+            CurFSPO = 0;
         }
-
-        [ClientRpc]
-        public void SetSSPOBoolClientRpc(bool value)
-        {
-            HasSpawnedShipPhaseOnion = value;
-        }
+        #endregion
+        
         #endregion
 
         #region Spawning and Generation

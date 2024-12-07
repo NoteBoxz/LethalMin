@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using Unity.Netcode;
 using UnityEngine;
 using System.IO;
+using UnityEngine.InputSystem.Utilities;
 
 namespace LethalMin.Patches
 {
@@ -101,6 +102,8 @@ namespace LethalMin.Patches
             }
             PikminManager.Instance.StartCoroutine(PikminManager.Instance.DespawnOnions());
             GameObject.FindAnyObjectByType<PikminHUD>().UpdateHUD();
+            if (!NetworkManager.Singleton.IsServer) { return; }
+            PikminManager.Instance.SpawnShipPhaseOnionsServerRpc();
         }
 
         private static void CreatePikminManager()

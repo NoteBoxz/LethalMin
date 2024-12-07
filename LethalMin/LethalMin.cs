@@ -211,7 +211,7 @@ namespace LethalMin
         public static float MaskedWhistleVolume, MaskedWhistleRange;
         public static bool HideInputPrompts;
         public static bool HidePuffminPrompt;
-        public static float ShipPhaseOnionX,ShipPhaseOnionY,ShipPhaseOnionZ;
+        public static float ShipPhaseOnionX, ShipPhaseOnionY, ShipPhaseOnionZ;
         //Generated Useable Varibles GoES HERE
 
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
@@ -231,7 +231,7 @@ namespace LethalMin
          NoticeTimer, BarberR, OnionSpawnChance, SproutSpawnChance, IndoorSpawnChance, WhistleVolumeConfig,
          ManagerRefreshRateC, WhistleRange, WhistleMinRaidus, WhistleMaxRadius, PlayerNR, SpeedMultiplierConfig,
          DamageMultiplierConfig, MaskedWhistleVolumeConfig, MaskedWhistleRangeConfig, ThrowX, ThrowY, ThrowZ,
-         SPOx,SPOy,SPOz;
+         SPOx, SPOy, SPOz;
 
         public static ConfigEntry<int> MechBurnLimmitConfig, JesterDiet, ThumperDiet, GiantDiet, BarberDiet, ManeaterDiet, SpideDiet,
         JesterBuffer, ThumperBuffer, SpiderBuffer, BeesShockCountConfig, ManeaterBuffer, MaxMin
@@ -248,6 +248,13 @@ namespace LethalMin
         //Generated Config Varibles GoES HERE
 
         #endregion
+
+        string AciisArt = @" 
+         ___  ___  _  __ __  __  ___  _  _ 
+        | _ \|_ _|| |/ /|  \/  ||_ _|| \| |
+        |  _/ | | |   < | |\/| | | | | .  |
+        |_|  |___||_|\_\|_|  |_||___||_|\_|
+";
 
         private void Awake()
         {
@@ -280,7 +287,8 @@ namespace LethalMin
 
             // Register everything fourth
             RegisterPikminEnemy();
-            Logger.LogInfo($"{MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} has loaded!");
+            Logger.LogInfo($"{AciisArt}");
+            Logger.LogInfo($"v{MyPluginInfo.PLUGIN_VERSION} has loaded!");
         }
 
 
@@ -341,7 +349,7 @@ namespace LethalMin
             BeesShockCountConfig = Config.Bind("Enemy AI", "Bee Shock Count", 3, "The max ammount of bees that can shock a pikmin at a time");
             BeeChase = Config.Bind("Enemy AI", "Make bees chase Pikmin", false, "Makes Bees chase Pikmin when their hive goes missing");
             HBDiet = Config.Bind("Enemy AI", "Hoarding Bug Eat Limmit", 1, "The max ammount of Hoarding Bugs can eat at a time");
-            HBBuffer = Config.Bind("Enemy AI", "Hoarding Bug Eat Buffer", 2, "The max ammount time after eating that the Hoarding Bug can eat again");
+            HBBuffer = Config.Bind("Enemy AI", "Hoarding Bug Eat Buffer", 10, "The max ammount time after eating that the Hoarding Bug can eat again");
             PuffMaskConfig = Config.Bind("Enemy AI", "Allow Masked to Make Puffmin", true, "Allows masked pikmin to convert Pikmin into Puffmin");
             MaskedWhistleVolumeConfig = Config.Bind("Enemy AI", "Masked Whistle Volume", 1f, "The volume of the whistle sound for the masked");
             MaskedWhistleRangeConfig = Config.Bind("Enemy AI", "Masked Whistle Range", 10f, "The range at which the whistle can reach for the masked");
@@ -741,9 +749,9 @@ namespace LethalMin
             // Puffmin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(TurnToNormalOnDeath, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(HidePuffminPromptConfig, false));
-            
+
             // Onion
-            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SPOx,false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SPOx, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SPOy, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SPOz, false));
 
@@ -1450,28 +1458,9 @@ namespace LethalMin
             }
             return clips;
         }
-
         public static bool CanWalkAtCompany()
         {
-            // Check if we're in the company building
-            if (RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
-            {
-                return false;
-            }
-
-            // Sample a position in the center of the scene
-            Vector3 samplePosition = Vector3.zero;
-            NavMeshHit hit;
-
-            // Try to sample the NavMesh
-            if (NavMesh.SamplePosition(samplePosition, out hit, 1000f, NavMesh.AllAreas))
-            {
-                // If we found a valid position on the NavMesh, return true
-                return true;
-            }
-
-            // If we couldn't find a valid position, there's likely no NavMesh
-            return false;
+            return IsDependencyLoaded("dev.kittenji.NavMeshInCompany");
         }
 
         private void RegisterPikminEnemy()
