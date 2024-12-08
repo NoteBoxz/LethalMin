@@ -358,20 +358,20 @@ namespace LethalMin
 
 
             HudPresetsConfig = Config.Bind("HUD", "HUD Preset", HudPresets.New, "The preset for the HUD");
-            PCPX = Config.Bind("HUD", "PikminSelected(XPos)", 262.78f, "The X position of the selected pikmin UI element");
-            PCPY = Config.Bind("HUD", "PikminSelected(YPos)", -106f, "The Y position of the selected pikmin UI element");
-            PCPZ = Config.Bind("HUD", "PikminSelected(ZPos)", -59.767f, "The Z position of the selected pikmin UI element");
+            PCPX = Config.Bind("HUD", "PikminSelected(XPos)", 8.4f, "The X position of the selected pikmin UI element");
+            PCPY = Config.Bind("HUD", "PikminSelected(YPos)", -106.6f, "The Y position of the selected pikmin UI element");
+            PCPZ = Config.Bind("HUD", "PikminSelected(ZPos)", -15.9f, "The Z position of the selected pikmin UI element");
             PCRX = Config.Bind("HUD", "PikminSelected(RotX)", 0f, "The X rotation of the selected pikmin UI element");
-            PCRY = Config.Bind("HUD", "PikminSelected(RotY)", 12f, "The Y rotation of the selected pikmin UI element");
+            PCRY = Config.Bind("HUD", "PikminSelected(RotY)", 0f, "The Y rotation of the selected pikmin UI element");
             PCRZ = Config.Bind("HUD", "PikminSelected(RotZ)", 0f, "The Z rotation of the selected pikmin UI element");
-            PCScale = Config.Bind("HUD", "PikminSelected(Scale)", 0.677937f, "The scale of the selected pikmin UI element");
-            PCPCountX = Config.Bind("HUD", "PikminCount(XPos)", 268.4f, "The X position of the pikmin count UI element");
-            PCPCountY = Config.Bind("HUD", "PikminCount(YPos)", -165.4f, "The Y position of the pikmin count UI element");
-            PCPCountZ = Config.Bind("HUD", "PikminCount(ZPos)", -45.4f, "The Z position of the pikmin count UI element");
+            PCScale = Config.Bind("HUD", "PikminSelected(Scale)", 0.6f, "The scale of the selected pikmin UI element");
+            PCPCountX = Config.Bind("HUD", "PikminCount(XPos)", 23.5f, "The X position of the pikmin count UI element");
+            PCPCountY = Config.Bind("HUD", "PikminCount(YPos)", -204.9f, "The Y position of the pikmin count UI element");
+            PCPCountZ = Config.Bind("HUD", "PikminCount(ZPos)", -47.4f, "The Z position of the pikmin count UI element");
             PCRCCountX = Config.Bind("HUD", "PikminCount(RotX)", 0f, "The X rotation of the pikmin count UI element");
-            PCRCCountY = Config.Bind("HUD", "PikminCount(RotY)", 12f, "The Y rotation of the pikmin count UI element");
+            PCRCCountY = Config.Bind("HUD", "PikminCount(RotY)", 0f, "The Y rotation of the pikmin count UI element");
             PCRCCountZ = Config.Bind("HUD", "PikminCount(RotZ)", 0f, "The Z rotation of the pikmin count UI element");
-            PCScaleCount = Config.Bind("HUD", "PikminCount(Scale)", 0.6698875f, "The scale of the pikmin count UI element");
+            PCScaleCount = Config.Bind("HUD", "PikminCount(Scale)", 0.6f, "The scale of the pikmin count UI element");
 
             throwActionConfig = Config.Bind("Controls", "Throw Action", "<Keyboard>/4", "Key binding for throwing Pikmin");
             switchForwardConfig = Config.Bind("Controls", "Switch Forward", "<Keyboard>/3", "Key binding for switching Pikmin type forward");
@@ -736,6 +736,7 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(Smartermin, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(OnlyMainV, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(OnlyExitV, false));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowLethalEscapeConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(Pattack, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(Pscale, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(Sscale, false));
@@ -874,7 +875,6 @@ namespace LethalMin
 
             //Generated LC bindings goes here
 
-            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowLethalEscapeConfig, false));
         }
 
         public static bool CantConvertEnemy(EnemyType enemy)

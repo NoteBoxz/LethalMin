@@ -3050,7 +3050,7 @@ namespace LethalMin
                 ItemRoute ShipRoute = new ItemRoute("Ship");
                 ShipRoute.AddPoint(shipPos, true);
                 ShipRoute.BypassPathableCheck = true;
-                if (isOutside && !LethalMin.AllowLethalEscape)
+                if (isOutside || LethalMin.AllowLethalEscape)
                 {
                     ShipRoute.Priority = 5;
                 }
@@ -3059,6 +3059,8 @@ namespace LethalMin
                     ShipRoute.Priority = 1;
                 }
                 ShipRoute.InitalDistance = Vector3.Distance(transform.position, shipPos);
+                if (LethalMin.AllowLethalEscape)
+                    ShipRoute.InitalDistance = 0.1f;
                 PossibleRoutes.Add(ShipRoute);
             }
 
@@ -3072,7 +3074,7 @@ namespace LethalMin
                     CarRoute.AddPoint(TargetCarPos.position, false);
                     PossibleRoutes.Add(CarRoute);
                     CarRoute.BypassPathableCheck = true;
-                    if (isOutside && !LethalMin.AllowLethalEscape)
+                    if (isOutside || LethalMin.AllowLethalEscape)
                     {
                         CarRoute.Priority = 6;
                     }
@@ -3081,6 +3083,8 @@ namespace LethalMin
                         CarRoute.Priority = 2;
                     }
                     CarRoute.InitalDistance = Vector3.Distance(transform.position, TargetCarPos.position);
+                    if (LethalMin.AllowLethalEscape)
+                        CarRoute.InitalDistance = 0.1f;
                     PossibleRoutes.Add(CarRoute);
                 }
             }
@@ -3205,7 +3209,7 @@ namespace LethalMin
             }
 
             // Main entrance and fire exit
-            if (!MineshaftInside && !isOutside && !LethalMin.AllowLethalEscape)
+            if (!MineshaftInside && !isOutside)
             {
                 Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
                 Vector3 adjustedMainEntrancePos = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
@@ -3234,7 +3238,7 @@ namespace LethalMin
             }
 
             // Mineshaft specific targets
-            if (MineshaftInside && !isOutside && !LethalMin.AllowLethalEscape)
+            if (MineshaftInside && !isOutside)
             {
                 ItemRoute MainRoute = new ItemRoute("Main");
                 ItemRoute ElevatorRoute = new ItemRoute("Elevator");
@@ -3331,7 +3335,7 @@ namespace LethalMin
                 RouteLog += $"Pathable: {route.IsPathable} \nBypassPath: {route.BypassPathableCheck} \nBypassDistance: {route.BypassDistanceCheck}\n";
                 RouteLog += $"Entrance: {route.entranceTeleport?.name ?? "None"}\n";
                 RouteLog += $"Priority: {route.Priority}, \nDistance: {route.InitalDistance}";
-                RouteLog += $"-------------------\n";
+                RouteLog += $"\n-------------------\n";
             }
             LethalMin.Logger.LogInfo($"({uniqueDebugId}) Possible routes: {RouteLog}");
 
@@ -3345,7 +3349,7 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found route: {route.RouteName}");
 
                 if (CurRoutes.Count > 1 && CurRoutes[0].RouteName == "Onion" && !isOutside
-                || CurRoutes.Count > 1 && LethalMin.AllowLethalEscape && !isOutside)
+                || LethalMin.AllowLethalEscape && !isOutside)
                 {
                     if (GetVaildExit().Item2 == null)
                     {
