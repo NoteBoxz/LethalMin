@@ -868,6 +868,7 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(FFM, false));
 
             //Generated LC bindings goes here
+            
         }
 
         public static bool CantConvertEnemy(EnemyType enemy)
