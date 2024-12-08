@@ -214,6 +214,7 @@ namespace LethalMin
         public static float ShipPhaseOnionX, ShipPhaseOnionY, ShipPhaseOnionZ;
         //Generated Useable Varibles GoES HERE
 
+public static bool AllowLethalEscape;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
         public static ConfigEntry<bool> SkipPluckAnimation, FF, Smartmin, Smartermin, OnlyMainV, OnlyExitV, Pattack,
@@ -247,6 +248,7 @@ namespace LethalMin
 
         //Generated Config Varibles GoES HERE
 
+public static ConfigEntry<bool> AllowLethalEscapeConfig;
         #endregion
 
         string AciisArt = @" 
@@ -434,6 +436,7 @@ namespace LethalMin
 
             //Generated ConfigBindings goes here
 
+AllowLethalEscapeConfig = Config.Bind("Pikmin", "Make Pikmin Only Target Outdoors", false,"Makes Pikmin only target destinatons that are outside when carrying items. Even if the Pikmin is indoors");
 
             #endregion
 
@@ -571,6 +574,7 @@ namespace LethalMin
 
             //Generated Settings Valuse Goes Here
 
+AllowLethalEscape = AllowLethalEscapeConfig.Value;
             #endregion
 
 
@@ -717,6 +721,7 @@ namespace LethalMin
 
             //Generated Settings Events Goes here
 
+AllowLethalEscapeConfig.SettingChanged += (_, _) => AllowLethalEscape = AllowLethalEscapeConfig.Value;
             #endregion
         }
         public void BindLCconfigs()
@@ -868,7 +873,8 @@ namespace LethalMin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(FFM, false));
 
             //Generated LC bindings goes here
-            
+
+LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowLethalEscapeConfig,false));            
         }
 
         public static bool CantConvertEnemy(EnemyType enemy)
