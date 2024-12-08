@@ -214,7 +214,7 @@ namespace LethalMin
         public static float ShipPhaseOnionX, ShipPhaseOnionY, ShipPhaseOnionZ;
         //Generated Useable Varibles GoES HERE
 
-public static bool AllowLethalEscape;
+        public static bool AllowLethalEscape;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
         public static ConfigEntry<bool> SkipPluckAnimation, FF, Smartmin, Smartermin, OnlyMainV, OnlyExitV, Pattack,
@@ -248,7 +248,7 @@ public static bool AllowLethalEscape;
 
         //Generated Config Varibles GoES HERE
 
-public static ConfigEntry<bool> AllowLethalEscapeConfig;
+        public static ConfigEntry<bool> AllowLethalEscapeConfig;
         #endregion
 
         string AciisArt = @" 
@@ -436,7 +436,7 @@ public static ConfigEntry<bool> AllowLethalEscapeConfig;
 
             //Generated ConfigBindings goes here
 
-AllowLethalEscapeConfig = Config.Bind("Pikmin", "Make Pikmin Only Target Outdoors", false,"Makes Pikmin only target destinatons that are outside when carrying items. Even if the Pikmin is indoors");
+            AllowLethalEscapeConfig = Config.Bind("Pikmin", "Make Pikmin Only Target Outdoors", false, "Makes Pikmin only target destinatons that are outside when carrying items. Even if the Pikmin is indoors");
 
             #endregion
 
@@ -574,7 +574,7 @@ AllowLethalEscapeConfig = Config.Bind("Pikmin", "Make Pikmin Only Target Outdoor
 
             //Generated Settings Valuse Goes Here
 
-AllowLethalEscape = AllowLethalEscapeConfig.Value;
+            AllowLethalEscape = AllowLethalEscapeConfig.Value;
             #endregion
 
 
@@ -721,7 +721,7 @@ AllowLethalEscape = AllowLethalEscapeConfig.Value;
 
             //Generated Settings Events Goes here
 
-AllowLethalEscapeConfig.SettingChanged += (_, _) => AllowLethalEscape = AllowLethalEscapeConfig.Value;
+            AllowLethalEscapeConfig.SettingChanged += (_, _) => AllowLethalEscape = AllowLethalEscapeConfig.Value;
             #endregion
         }
         public void BindLCconfigs()
@@ -874,7 +874,7 @@ AllowLethalEscapeConfig.SettingChanged += (_, _) => AllowLethalEscape = AllowLet
 
             //Generated LC bindings goes here
 
-LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowLethalEscapeConfig,false));            
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowLethalEscapeConfig, false));
         }
 
         public static bool CantConvertEnemy(EnemyType enemy)

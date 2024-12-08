@@ -3024,6 +3024,7 @@ namespace LethalMin
             }
 
 
+
             // CaveDweller target
             if (targetItem.GetComponentInParent<CaveDwellerPhysicsProp>() != null)
             {
@@ -3049,7 +3050,7 @@ namespace LethalMin
                 ItemRoute ShipRoute = new ItemRoute("Ship");
                 ShipRoute.AddPoint(shipPos, true);
                 ShipRoute.BypassPathableCheck = true;
-                if (isOutside)
+                if (isOutside && !LethalMin.AllowLethalEscape)
                 {
                     ShipRoute.Priority = 5;
                 }
@@ -3071,7 +3072,7 @@ namespace LethalMin
                     CarRoute.AddPoint(TargetCarPos.position, false);
                     PossibleRoutes.Add(CarRoute);
                     CarRoute.BypassPathableCheck = true;
-                    if (isOutside)
+                    if (isOutside && !LethalMin.AllowLethalEscape)
                     {
                         CarRoute.Priority = 6;
                     }
@@ -3204,7 +3205,7 @@ namespace LethalMin
             }
 
             // Main entrance and fire exit
-            if (!MineshaftInside && !isOutside)
+            if (!MineshaftInside && !isOutside && !LethalMin.AllowLethalEscape)
             {
                 Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
                 Vector3 adjustedMainEntrancePos = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
@@ -3233,7 +3234,7 @@ namespace LethalMin
             }
 
             // Mineshaft specific targets
-            if (MineshaftInside && !isOutside)
+            if (MineshaftInside && !isOutside && !LethalMin.AllowLethalEscape)
             {
                 ItemRoute MainRoute = new ItemRoute("Main");
                 ItemRoute ElevatorRoute = new ItemRoute("Elevator");
@@ -3343,7 +3344,8 @@ namespace LethalMin
                 CurRoutes = PossibleRoutes;
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found route: {route.RouteName}");
 
-                if (CurRoutes.Count > 1 && CurRoutes[0].RouteName == "Onion" && !isOutside)
+                if (CurRoutes.Count > 1 && CurRoutes[0].RouteName == "Onion" && !isOutside
+                || CurRoutes.Count > 1 && LethalMin.AllowLethalEscape && !isOutside)
                 {
                     if (GetVaildExit().Item2 == null)
                     {
