@@ -73,7 +73,6 @@ namespace LethalMin
             LeftPrompt = transform.Find("PikminSelected/Prompts/Buttons/SwitchL").GetComponent<TMP_Text>();
             RightPrompt = transform.Find("PikminSelected/Prompts/Buttons/SwitchR").GetComponent<TMP_Text>();
 
-            SetHudPresets(LethalMin.CurrentHudPreset);
             PromptcanvasGroup.alpha = 0;
         }
         public void SetHudPresets(HudPresets preset)
