@@ -3013,11 +3013,24 @@ namespace LethalMin
                 (int, EntranceTeleport) result = (-1, null);
                 for (int i = 0; i < PossibleRoutes.Count; i++)
                 {
-                    if (PossibleRoutes[i].entranceTeleport != null)
+                    if (PossibleRoutes[i].IsPathable && PossibleRoutes[i].entranceTeleport != null)
                     {
                         result = (i, PossibleRoutes[i].entranceTeleport);
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found valid exit at {i} {PossibleRoutes[i].RouteName}");
                         break;
+                    }
+                }
+                if (result == (-1, null))
+                {
+                    LethalMin.Logger.LogWarning($"({uniqueDebugId}) No pathable exits found");
+                    for (int i = 0; i < PossibleRoutes.Count; i++)
+                    {
+                        if (PossibleRoutes[i].entranceTeleport != null)
+                        {
+                            result = (i, PossibleRoutes[i].entranceTeleport);
+                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found valid exit at {i} {PossibleRoutes[i].RouteName}");
+                            break;
+                        }
                     }
                 }
                 return result;
@@ -3044,7 +3057,8 @@ namespace LethalMin
             }
 
             // Ship target (outside and not in Company Building)
-            if (RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
+            if ((isOutside || LethalMin.AllowLethalEscape)
+             && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
             {
                 Vector3 shipPos = GetNavmeshShipPositions()[UnityEngine.Random.Range(0, GetNavmeshShipPositions().Count)];
                 ItemRoute ShipRoute = new ItemRoute("Ship");
@@ -3065,7 +3079,8 @@ namespace LethalMin
             }
 
             // Car target
-            if (LethalMin.GoToCar && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
+            if ((isOutside || LethalMin.AllowLethalEscape) && LethalMin.GoToCar
+            && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
             {
                 GetNearestCar();
                 if (TargetCar != null && TargetCarPos != null && TargetCar.backDoorOpen && !TargetCar.magnetedToShip)
@@ -3090,7 +3105,7 @@ namespace LethalMin
             }
 
             // Onion Target
-            if (targetItem.CanBeConvertedIntoSprouts && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" &&
+            if (LethalMin.AllowProduction && targetItem.CanBeConvertedIntoSprouts && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" &&
                 PikminManager._currentOnions.Where(o => o.type.CanCreateSprouts).ToList().Count > 0)
             {
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion");

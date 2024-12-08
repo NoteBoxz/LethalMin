@@ -1,6 +1,9 @@
 import re
+import os
 
-LethalMincsPath = r"C:\Users\ervin\OneDrive\Documents\NotezMain\Scripting Projects\LethalMin AT2\LethalMin\LethalMin\LethalMin.cs"
+LethalMincsPath = os.getcwd() + r"\LethalMin\LethalMin.cs"
+
+
 
 class ConfigItem:
     def __init__(self, type:str, InternalName:str, defultVal:str, name: str, section:str, description: str, NeedsRestart : bool):

@@ -382,8 +382,10 @@ namespace LethalMin
             SPOx = Config.Bind("Onions", "Space Onions Position X", -6.1364f, "The X Position of the onions when in space");
             SPOy = Config.Bind("Onions", "Space Onions Position Y", 0f, "The Y Position of the onions when in space");
             SPOz = Config.Bind("Onions", "Space Onions Position Z", 60.136f, "The Z Position of the onions when in space");
-
-            CustomOnionAllowed = Config.Bind("Extra", "Allow Custom Onion spawn Position", true, "Allows onions to land on pre defined spawn points on modded moons (if there are any).");
+            AllowProductionConfig = Config.Bind("Onions", "Allow Onions to produce Sprouts", true, "Allows Onions to produce sprouts.");
+            AllowOnionFuseConfig = Config.Bind("Onions", "Allow Onion Fuse", true, "Allows onions to fuse after the ship leaves.");
+            CustomOnionAllowed = Config.Bind("Onions", "Allow Custom Onion spawn Position", true, "Allows onions to land on pre defined spawn points on modded moons (if there are any).");
+            
             AllowSpawnMultiplierCF = Config.Bind("Extra", "Allow Spawn Multiplier", true, "Allows the custom Pikmin Types to use Spawn Multipliers.");
             LethalWhistle = Config.Bind("Extra", "Make whistle conductive", false, "Makes whistles conductive to stormy weather.");
             LethalLandmines = Config.Bind("Extra", "Make Pikmin Trigger Landmines", true, "Allows pikmin to trigger landmines");
@@ -393,12 +395,10 @@ namespace LethalMin
             CounterOffset = Config.Bind("Extra", "Item Fraction Y Position Offset", 2.5f, "Offsets the Y position of the item fraction");
             NoticeTimer = Config.Bind("Extra", "Working state change timer", 1f, "The time it takes for a player to stand next to a pikmin before they notice them if they are carrying an item.");
             LimmitItemGrab = Config.Bind("Extra", "Limmit Pikmin on item", true, "Limmits the max ammount of pikmin that can grab an item.");
-            AllowOnionFuseConfig = Config.Bind("Extra", "Allow Onion Fuse", true, "Allows onions to fuse after the ship leaves.");
             WhistleVolumeConfig = Config.Bind("Extra", "Whistle Volume", 1f, "The volume of the whistle sound (I'm only implumenting this because the whistle sound is bugged and I can't fix it)");
             ManagerRefreshRateC = Config.Bind("Extra", "PikminManager Refersh Rate", 0.75f, "The rate at which the PikminManager refreshes it's object refernces. Warning! Having this value too low could cause lag.");
             MWon = Config.Bind("Extra", "Mesh Wrapping", false, "Enables mesh wrapping for the target object");
             ShowSafetyConfig = Config.Bind("Extra", "Show Safety areas", false, "Shows the range in which Pikmin are safe from being left behind");
-            AllowProductionConfig = Config.Bind("Extra", "Allow Onions to produce Sprouts", true, "Allows Onions to produce sprouts.");
             ThrowX = Config.Bind("Extra", "ThrowOrigen X", 0.1f, "The X Position of the throw origen");
             ThrowY = Config.Bind("Extra", "ThrowOrigen Y", 0f, "The Y Position of the throw origen");
             ThrowZ = Config.Bind("Extra", "ThrowOrigen Z", 0f, "The Z Position of the throw origen");
