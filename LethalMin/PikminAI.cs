@@ -142,6 +142,7 @@ namespace LethalMin
     public class PikminAI : EnemyAI, IDebuggable
     {
         #region Fields and Properties
+        [IDebuggable.Debug] public bool OurDoor;
         public PikminType PminType = null!; // <- this should never be null after initalizeing, if it is, then it's a bug.
         public System.Random? enemyRandom; // I broken rng in lethal company because I forgot to call AddEnemy() before initializing.
         [IDebuggable.Debug] public LeaderManager? currentLeader; // The current player the pikmin is following
@@ -1423,7 +1424,7 @@ namespace LethalMin
         {
             base.Update();
             //Client and server side logic
-
+            OurDoor = isOutside;
             if (HasInitalized)
                 CheckAnim();
 
@@ -3058,7 +3059,8 @@ namespace LethalMin
 
             // Ship target (outside and not in Company Building)
             if ((isOutside || LethalMin.AllowLethalEscape)
-             && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
+             && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && (!targetItem.CanBeConvertedIntoSprouts
+             || targetItem.CanBeConvertedIntoSprouts && !LethalMin.AllowProduction))
             {
                 Vector3 shipPos = GetNavmeshShipPositions()[UnityEngine.Random.Range(0, GetNavmeshShipPositions().Count)];
                 ItemRoute ShipRoute = new ItemRoute("Ship");
@@ -3080,7 +3082,8 @@ namespace LethalMin
 
             // Car target
             if ((isOutside || LethalMin.AllowLethalEscape) && LethalMin.GoToCar
-            && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !targetItem.CanBeConvertedIntoSprouts)
+            && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && (!targetItem.CanBeConvertedIntoSprouts
+             || targetItem.CanBeConvertedIntoSprouts && !LethalMin.AllowProduction))
             {
                 GetNearestCar();
                 if (TargetCar != null && TargetCarPos != null && TargetCar.backDoorOpen && !TargetCar.magnetedToShip)
@@ -3364,7 +3367,7 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found route: {route.RouteName}");
 
                 if (CurRoutes.Count > 1 && CurRoutes[0].RouteName == "Onion" && !isOutside
-                || LethalMin.AllowLethalEscape && !isOutside)
+                || LethalMin.AllowLethalEscape && !isOutside && CurRoutes[i].RouteName != "Onion")
                 {
                     if (GetVaildExit().Item2 == null)
                     {
@@ -3540,8 +3543,11 @@ namespace LethalMin
             {
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Escaping to {escapePos}");
                 agent.Warp(escapePos);
-                transform2.Teleport(escapePos, Quaternion.identity, transform.localScale);
-                isOutside = isOVutside;
+                foreach (var item in targetItem.PikminOnItemList)
+                {
+                    item.transform2.Teleport(escapePos, Quaternion.identity, transform.localScale);
+                    item.isOutside = isOVutside;
+                }
             }
             if (HasArrivedAtDestonation(0f, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
             {

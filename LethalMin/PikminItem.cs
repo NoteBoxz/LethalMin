@@ -99,6 +99,7 @@ namespace LethalMin
                 PikminNeed = Counter.transform.Find("Text (TMP)").GetComponent<TMP_Text>();
                 Devider = Counter.transform.Find("Text (TMP) (1)").GetComponent<TMP_Text>();
                 PikminOn = Counter.transform.Find("Text (TMP) (2)").GetComponent<TMP_Text>();
+                Counter.SetActive(false);
             }
             else
             {
@@ -155,6 +156,7 @@ namespace LethalMin
                 {
                     Vector3 targetFloorPosition = RoundManager.Instance.RandomlyOffsetPosition(Root.GetItemFloorPosition(), 1.2f, 0.4f);
                     UnparentItemServerRpc(targetFloorPosition);
+                    SetCurColorClientRpc(basecolor);
                 }
                 else
                 {
