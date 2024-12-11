@@ -57,6 +57,11 @@ namespace LethalMin.Patches
                 }
                 if (pikmin != null)
                 {
+                    if (LethalMin.IsPikminResistantToHazard(pikmin.PminType, HazardType.Exsplosive))
+                    {
+                        LethalMin.Logger.LogInfo($"Pikmin {pikmin.name} is immune to explosions!");
+                        continue;
+                    }
                     float distance = Vector3.Distance(pikmin.transform.position, explosionPosition);
                     bool isLethal = distance <= lethalRadius;
 
