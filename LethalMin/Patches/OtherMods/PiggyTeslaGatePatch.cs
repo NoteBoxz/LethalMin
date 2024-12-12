@@ -9,10 +9,14 @@ namespace LethalMin.Patches.OtherMods
     public static class PiggyTeslaGatePatch
     {
         [HarmonyPatch("Start")]
-        [HarmonyPrefix]
-        public static void StartPrefix(TeslaGate __instance)
+        [HarmonyPostfix]
+        public static void StartPostfix(TeslaGate __instance)
         {
-            __instance.gameObject.AddComponent<PiggyTeslaGate>();
+            PikminProtector Protection = __instance.gameObject.AddComponent<PikminProtector>();
+            Protection.HazardTypez = new HazardType[1];
+            Protection.HazardTypez[0] = HazardType.Electric;
+            //Protection.ProtectTime = 1f;
         }
+
     }
 }
