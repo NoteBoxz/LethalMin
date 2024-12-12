@@ -7,13 +7,13 @@ namespace LethalMin
 {
     public static class AssetLoader
     {
-        private static AssetBundle? _assetBundle;
+        private static AssetBundle _assetBundle;
 
         public static AssetBundle LoadAssetBundle()
         {
             if (_assetBundle == null)
             {
-                string? assemblyLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                string assemblyLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 if (assemblyLocation == null)
                 {
                     throw new InvalidOperationException("Unable to determine assembly location.");

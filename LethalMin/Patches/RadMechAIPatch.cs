@@ -80,7 +80,7 @@ namespace LethalMin.Patches
         public static void GrabPikminServerRpc(NetworkObjectReference __instanceRef, NetworkObjectReference[] pikmins)
         {
             // Get the RadMechAI instance from the network object reference
-            RadMechAI radMechAI = null!;
+            RadMechAI radMechAI = ;
             if (__instanceRef.TryGet(out NetworkObject __instance))
             {
                 radMechAI = __instance.GetComponent<RadMechAI>();
@@ -115,7 +115,7 @@ namespace LethalMin.Patches
             // Get the RadMechAI instance from the network object reference
             LethalMin.Logger.LogInfo("Grabed " + pikmins.ToArray().Length + " Pikmin on client");
             List<PikminAI> pikminAIs = new List<PikminAI>();
-            RadMechAI radMechAI = null!;
+            RadMechAI radMechAI = ;
             if (__instanceRef.TryGet(out NetworkObject __instance))
             {
                 radMechAI = __instance.GetComponent<RadMechAI>();

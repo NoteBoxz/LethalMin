@@ -47,7 +47,7 @@ namespace LethalMin
             //LethalMin.Logger.LogInfo("Checking for Pikmin in range.");
             
             List<PikminAI> MinsInWay = LethalMin.FindNearestPikmin(
-                SABOBJ.CheckAtGrabPos == true ? __instance.transform.Find(SABOBJ.PikminGrabPath).position : __instance.transform.position,
+                SABOBJ.CheckAtGrabPos == true  __instance.transform.Find(SABOBJ.PikminGrabPath).position : __instance.transform.position,
                 SABOBJ.AttackRange, SABOBJ.MaxPikminEatCount);
 
             //LethalMin.Logger.LogInfo($"Found {MinsInWay.Count} Pikmin in range.");
@@ -85,7 +85,7 @@ namespace LethalMin
             LethalMin.Logger.LogInfo($"Playing sfx");
             if (SABOBJ.AttackSound != null)
             {
-                instance?.creatureSFX.PlayOneShot(SABOBJ.AttackSound);
+                instance.creatureSFX.PlayOneShot(SABOBJ.AttackSound);
                 if (LethalMin.DebugMode)
                     LethalMin.Logger.LogInfo($"Played sfx");
             }
@@ -93,13 +93,13 @@ namespace LethalMin
             {
                 if (LethalMin.DebugMode)
                     LethalMin.Logger.LogInfo($"Playing attack anim {SABOBJ.AttackAnimName}.");
-                instance?.creatureAnimator.Play(SABOBJ.AttackAnimName);
+                instance.creatureAnimator.Play(SABOBJ.AttackAnimName);
             }
             if (!string.IsNullOrEmpty(SABOBJ.AttackAnimTrigger))
             {
                 if (LethalMin.DebugMode)
                     LethalMin.Logger.LogInfo($"Playing attack anim trigger {SABOBJ.AttackAnimTrigger}.");
-                instance?.creatureAnimator.SetTrigger(SABOBJ.AttackAnimTrigger);
+                instance.creatureAnimator.SetTrigger(SABOBJ.AttackAnimTrigger);
             }
             instance = null;
         }

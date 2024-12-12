@@ -10,8 +10,8 @@ namespace LethalMin
 		[Tooltip("The onion's color")]
 		public Color OnionColor;
 		[Tooltip("The Onion's texture")]
-		public Texture2D? OnionTexture;
-		public Material? OnionMaterial;
+		public Texture2D OnionTexture;
+		public Material OnionMaterial;
 		[Tooltip("The name of the onion's type.")]
 		public string TypeName = "";
 
@@ -36,10 +36,10 @@ namespace LethalMin
 		[Header("Unused / Not Implemented")]
 		
 		[Tooltip("The onion's custom script")]
-		public Onion? OnionScript;
+		public Onion OnionScript;
 
 		[Tooltip("The onion's icon")]
-		public Sprite? OnionIcon;
+		public Sprite OnionIcon;
 
 		[Tooltip("Whether the onion can be fused with other onions.")]
 		public bool CanBeFused;
@@ -54,6 +54,6 @@ namespace LethalMin
 		public bool HasBeenRegistered;
 
 		[HideInInspector]
-		public string version = "0.2.15";
+		public string version = "0.2.16";
 	}
 }

@@ -38,18 +38,18 @@ namespace LethalMin
 
         private const string BUNDLE_EXTENSION = "*.lethalmin";
         internal static DirectoryInfo lethalMinFile = new DirectoryInfo(Assembly.GetExecutingAssembly().Location);
-        internal static DirectoryInfo? lethalMinFolder;
-        internal static DirectoryInfo? pluginsFolder;
+        internal static DirectoryInfo lethalMinFolder;
+        internal static DirectoryInfo pluginsFolder;
         private Dictionary<string, AssetBundle> loadedBundles = new Dictionary<string, AssetBundle>();
 
         private void LoadLethalMinBundles()
         {
             lethalMinFolder = lethalMinFile.Parent;
-            pluginsFolder = lethalMinFolder?.Parent;
+            pluginsFolder = lethalMinFolder.Parent;
 
             if (pluginsFolder == null || !pluginsFolder.Exists)
             {
-                LethalMin.Logger.LogError($"Plugins folder not found: {pluginsFolder?.FullName}");
+                LethalMin.Logger.LogError($"Plugins folder not found: {pluginsFolder.FullName}");
                 return;
             }
             if (LethalMin.IsDependencyLoaded("NoteBoxz.LethalMinLibrary"))
