@@ -279,12 +279,12 @@ namespace LethalMin
         {
             if (curonion == null)
             {
-                LethalMin.Logger.LogError("CurOnion Is some how null!");
+                LethalMin.Logger.LogError("CurOnion Is some how ");
                 return;
             }
             if (curLeader == null)
             {
-                LethalMin.Logger.LogError("CurLeader is null!");
+                LethalMin.Logger.LogError("CurLeader is ");
                 return;
             }
             onion = curonion;
@@ -435,7 +435,7 @@ namespace LethalMin
                         // Withdraw Pikmin from onion to squad
                         int toWithdraw = Mathf.Min(amount, pikminInOnion);
                         Vector3 spawnPosition = onion.transform.Find("SpawnPos") != null
-                            ? onion.transform.Find("SpawnPos").position
+                             onion.transform.Find("SpawnPos").position
                             : leaderManager.transform.position;
 
                         onion.CreatePikminServerRpc(toWithdraw, pikminType.PikminTypeID, spawnPosition, new NetworkObjectReference(leaderManager.Controller.NetworkObject));

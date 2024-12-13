@@ -145,7 +145,7 @@ namespace LethalMin.Patches
         public static void PikminEndgame(HUDManager __instance, EndOfGameStats stats)
         {
             PikminManager pikminManager = PikminManager.Instance;
-            if (pikminManager == null) { LethalMin.Logger.LogWarning("How tf is the PikminManger NULL?!?!?!"); return; }
+            if (pikminManager == null) { LethalMin.Logger.LogWarning("How tf is the PikminManger !!"); return; }
 
             // Update killed and left behind counts
             Killed.text = $"{pikminManager.TotalPikminKilled}";
@@ -180,7 +180,7 @@ namespace LethalMin.Patches
             for (int i = 0; i < StartOfRound.Instance.allPlayerScripts.Length; i++)
             {
                 ulong playerId = StartOfRound.Instance.allPlayerScripts[i].playerClientId;
-                int raisedCount = pikminManager.PikminRaisedPerPlayer.ContainsKey(playerId) ? pikminManager.PikminRaisedPerPlayer[playerId] : 0;
+                int raisedCount = pikminManager.PikminRaisedPerPlayer.ContainsKey(playerId)  pikminManager.PikminRaisedPerPlayer[playerId] : 0;
                 switch (i)
                 {
                     case 0:

@@ -55,7 +55,7 @@ namespace LethalMin.Patches
             }
 
             // Call the AttackNearby
-            pikminAttacker?.AttackNearbyPikmin(__instance);
+            pikminAttacker.AttackNearbyPikmin(__instance);
         }
     }
 }

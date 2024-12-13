@@ -11,7 +11,7 @@ namespace LethalMin
         [Header("Not Implemented")]
 
         [Tooltip("An array of Texture2D objects representing the textures to be used for fusing onions. If this is null, the textures will be generated automatically.")]
-        public Texture2D[]? FuseTextures;
+        public Texture2D[] FuseTextures;
 
         [Tooltip("Determines whether onions should fuse in order or not.")]
         public bool FuseInOrder;
@@ -33,7 +33,7 @@ namespace LethalMin
         [HideInInspector]
         public int FuseID;
         [HideInInspector]
-        public string version = "0.2.15";
+        public string version = "0.2.16";
 
         /// <summary>
         /// Checks if an onion can fuse with the given OnionType.

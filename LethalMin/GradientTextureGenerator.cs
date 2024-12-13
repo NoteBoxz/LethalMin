@@ -9,7 +9,7 @@ namespace LethalMin
             if (colors == null || colors.Count < 2)
             {
                 Debug.LogError("At least two colors are required to create a gradient.");
-                return null!;
+                return ;
             }
 
             Texture2D texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBA32, false);

@@ -22,27 +22,27 @@ namespace LethalMin
         public Color PikminColor2;
 
         [Tooltip("The pikmin's icon")]
-        public Sprite? PikminIcon;
+        public Sprite PikminIcon;
 
         [Tooltip("The pikmin's the Idle Glow Sprite")]
-        public Sprite? PikminGlow;
+        public Sprite PikminGlow;
         public bool ReplaceGlowFXwithDefult = true;
 
         [Tooltip("The pikmin's custom AI scripts")]
-        public NetworkBehaviour[]? PikminScripts;
+        public NetworkBehaviour[] PikminScripts;
 
         [Tooltip("In the pikmin's prefab, the path of the GameObject that contains the pikmin's mesh.")]
-        public GameObject? MeshPrefab;
+        public GameObject MeshPrefab;
 
         [Tooltip("If null, the sprout will use the mesh prefab")]
-        public GameObject? SproutMeshPrefab;
+        public GameObject SproutMeshPrefab;
 
         [Tooltip("Set by mod, do not change.")]
         [HideInInspector]
         public int PikminTypeID;
 
         [Tooltip("The pikmin's sound pack.")]
-        public PikminSoundPack? soundPack;
+        public PikminSoundPack soundPack;
 
 
         [Tooltip("The path of the pikmin's plants in the pikmin's prefab.")]
@@ -55,7 +55,7 @@ namespace LethalMin
         public string PikminGlowPath;
 
         [HideInInspector]
-        public PikminMeshRefernces MeshRefernces = null!;
+        public PikminMeshRefernces MeshRefernces = ;
 
         [Header("Pikmin Stats")]
 
@@ -108,10 +108,10 @@ namespace LethalMin
         public float ItemDetectionRange = 5f;
 
         [Tooltip("The Attack animation for the pikmin")]
-        public AnimationClip? AttackAnimation;
+        public AnimationClip AttackAnimation;
 
         [Tooltip("The Non-Latched Attack animation for the pikmin")]
-        public AnimationClip? NonLatchAttackAnimation;
+        public AnimationClip NonLatchAttackAnimation;
 
         [Tooltip("The frame of your Attack animaiton when the Pikmin should hit the enemy")]
         public int AttackAnimationHitFrame;
@@ -156,10 +156,10 @@ namespace LethalMin
         public int MaxKnockBackResistance;
 
         [Tooltip("Material for the pikmin")]
-        public Material? PikminMaterial;
+        public Material PikminMaterial;
 
         [Tooltip("Material for the pikmin sprout")]
-        public Material? SproutMaterial;
+        public Material SproutMaterial;
 
         [Tooltip("The type of onion this pikmin targets")]
         public OnionType TargetOnion;
@@ -198,7 +198,7 @@ namespace LethalMin
         [HideInInspector]
         public bool HasBeenRegistered;
         [HideInInspector]
-        public string version = "0.2.15";
+        public string version = "0.2.16";
     }
 
     public struct PikminMeshData
