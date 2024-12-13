@@ -259,17 +259,18 @@ namespace LethalMin
 
             GameObject CreateDebugCube(Vector3 LocalPos)
             {
-                GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                //GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                GameObject cube = new GameObject("Floor Ref Pos");
                 cube.transform.SetParent(ElevatorSystem.animator.transform.parent);
                 cube.transform.localPosition = LocalPos;
-                cube.GetComponent<Renderer>().material = AssetLoader.LoadAsset<Material>("Assets/LethalminAssets/Pikmin/Materials/DebugMin.mat");
+                //cube.GetComponent<Renderer>().material = AssetLoader.LoadAsset<Material>("Assets/LethalminAssets/Pikmin/Materials/DebugMin.mat");
                 return cube;
             }
 
             FloorData F1 = new FloorData();
             F1.FloorTitle = "(Floor1) Basement";
             F1.Elevators.Add(ElevatorSystem.animator.transform);
-            F1.ElevatorBounds = ElevatorSystem.animator.transform.Find("AIelevatorFloor (4 Picles)").GetComponent<Collider>();
+            F1.ElevatorBounds = ElevatorSystem.animator.transform.Find("ELevator Zone (4 Picles)").GetComponent<Collider>();
             GameObject cubeA = CreateDebugCube(new Vector3(-2.32f, -9.71f, 1.01f));
             F1.FloorRoot = cubeA.transform.position;
 
@@ -278,7 +279,7 @@ namespace LethalMin
             FloorData F2 = new FloorData();
             F2.FloorTitle = "(Floor2) Upper Basement";
             F2.Elevators.Add(ElevatorSystem.animator.transform);
-            F2.ElevatorBounds = ElevatorSystem.animator.transform.Find("AIelevatorFloor (4 Picles)").GetComponent<Collider>();
+            F2.ElevatorBounds = ElevatorSystem.animator.transform.Find("ELevator Zone (4 Picles)").GetComponent<Collider>();
             GameObject cubeB = CreateDebugCube(new Vector3(-2.32f, 23.79f, 1.01f));
             F2.FloorRoot = cubeB.transform.position;
             F2.MainExits.Add(RoundManager.FindMainEntranceScript());
@@ -288,7 +289,7 @@ namespace LethalMin
             FloorData F3 = new FloorData();
             F3.FloorTitle = "(Floor3) Central Basement";
             F3.Elevators.Add(ElevatorSystem.animator.transform);
-            F3.ElevatorBounds = ElevatorSystem.animator.transform.Find("AIelevatorFloor (4 Picles)").GetComponent<Collider>();
+            F3.ElevatorBounds = ElevatorSystem.animator.transform.Find("ELevator Zone (4 Picles)").GetComponent<Collider>();
             GameObject cubeC = CreateDebugCube(new Vector3(-2.32f, 63.14f, 1.01f));
             F3.FloorRoot = cubeC.transform.position;
 

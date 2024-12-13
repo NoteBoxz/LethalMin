@@ -109,8 +109,7 @@ namespace LethalMin.Patches.OtherMods
                 surface.BuildNavMesh();
 
                 //Remove the colider to prevent player bull shiz
-                cube.GetComponent<Collider>().isTrigger = true;
-                cube.AddComponent<PikminOnlyZone>();
+                GameObject.Destroy(cube.GetComponent<Collider>());
 
                 LethalMin.Logger.LogInfo("Adding link...");
 
@@ -141,8 +140,8 @@ namespace LethalMin.Patches.OtherMods
                 GameObject.Destroy(cubeB.GetComponent<Collider>());
 
                 //Debugging purposes: colorize the cubes and add a material
-                // Renderer renderer = cube.GetComponent<Renderer>();
-                // renderer.material = AssetLoader.LoadAsset<Material>("Assets/LethalminAssets/Pikmin/Materials/DebugMin.mat");
+                //Renderer renderer = cube.GetComponent<Renderer>();
+                //renderer.material = AssetLoader.LoadAsset<Material>("Assets/LethalminAssets/Pikmin/Materials/DebugMin.mat");
                 // cubeA.GetComponent<Renderer>().material = AssetLoader.LoadAsset<Material>("Assets/LethalminAssets/Pikmin/Materials/DebugMin.mat");
                 // cubeB.GetComponent<Renderer>().material = AssetLoader.LoadAsset<Material>("Assets/LethalminAssets/Pikmin/Materials/DebugMin.mat");
                 // cubeA.GetComponent<Renderer>().material.color = Color.red;
@@ -150,9 +149,18 @@ namespace LethalMin.Patches.OtherMods
                 // cubeA.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
                 // cubeB.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
 
-                cubeA.GetComponent<Renderer>().enabled = false;
-                cubeB.GetComponent<Renderer>().enabled = false;
-                //cube.GetComponent<Renderer>().enabled = false;
+
+                GameObject Zone = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                Zone.name = $"ELevator Zone (4 Picles)";
+                Zone.transform.SetParent(ElevatorSystem.animator.transform);
+                // Zone.transform.position = new Vector3(1.84899998f,0.119999997f,2.15199995f);
+                // Zone.transform.localScale = new Vector3(4.64883041f,0.454273105f,4.64883041f);
+                Zone.transform.localPosition = new Vector3(1.84899998f, 1.82f, 2.15199995f);
+                Zone.transform.localScale = new Vector3(4.2346f, 2.8306f, 3.1085f);
+                Zone.transform.localRotation = Quaternion.Euler(0, 0, 0);
+                Zone.GetComponent<Collider>().isTrigger = true;
+                if (__instance.IsServer)
+                    Zone.AddComponent<PikminOnlyZone>();
 
                 LethalMin.Logger.LogInfo("Pikmin can now use the LC_Office Elevator!!!");
                 HasCreatedNavMeshOnElevate = true;
