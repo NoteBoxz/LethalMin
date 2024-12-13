@@ -345,6 +345,8 @@ namespace LethalMin
         public static List<GameObject> NonPikminEnemies = new List<GameObject>();
         public GameObject CurParticleInstance;
         public bool IsPoisoned;
+
+        public FloorData FloorOn;
         #endregion
 
 
@@ -3000,11 +3002,45 @@ namespace LethalMin
             agent.SetDestination(circlePosition);
         }
 
+        public FloorData GetFloorOn()
+        {
+            Vector3 pikminPosition = transform.position;
+            FloorData currentFloor = null;
+            float closestDistance = float.MaxValue;
+
+            foreach (FloorData floor in PikminManager.CurrentFloorData)
+            {
+                // Calculate the horizontal distance between the Pikmin and the floor's root
+                float distance = Vector2.Distance(
+                    new Vector2(pikminPosition.x, pikminPosition.z),
+                    new Vector2(floor.FloorRoot.x, floor.FloorRoot.z)
+                );
+
+                // Check if this floor is closer than the previously found closest floor
+                if (distance < closestDistance)
+                {
+                    // Check if the Pikmin's y-position is within an acceptable range of the floor's y-position
+                    float heightDifference = Mathf.Abs(pikminPosition.y - floor.FloorRoot.y);
+                    if (heightDifference <= 2f) // You can adjust this value based on your game's scale
+                    {
+                        closestDistance = distance;
+                        currentFloor = floor;
+                    }
+                }
+            }
+            LethalMin.Logger.LogInfo($"{uniqueDebugId}) Current floor: {currentFloor.FloorTitle}");
+
+            FloorOn = currentFloor;
+            return currentFloor;
+        }
+
         private void GetItemTarget()
         {
             List<ItemRoute> PossibleRoutes = new List<ItemRoute>();
 
             Transform targetPos2 = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
+
+            GetFloorOn();
 
             (int, EntranceTeleport) GetVaildExit()
             {

@@ -166,10 +166,45 @@ namespace LethalMin
         public static List<FloorData> CurrentFloorData = new List<FloorData>();
         public void GetFloorData()
         {
-            CurrentFloorData.Clear();
-            if (RoundManager.Instance.currentMineshaftElevator != null){
-                CurrentFloorData
+            List<EntranceTeleport> FindFireExits()
+            {
+                EntranceTeleport[] allEntrances = UnityEngine.Object.FindObjectsOfType<EntranceTeleport>(includeInactive: false);
+                List<EntranceTeleport> allExits = new List<EntranceTeleport>();
+                foreach (EntranceTeleport entrance in allEntrances)
+                {
+                    if (entrance.entranceId != 0)
+                    {
+                        allExits.Add(entrance);
+                    }
+                }
+                if (allExits.Count == 0)
+                {
+                    return null!;
+                }
+                return allExits.OrderBy(exit => Vector3.Distance(transform.position, exit.transform.position)).ToList();
             }
+
+            CurrentFloorData.Clear();
+            if (RoundManager.Instance.currentMineshaftElevator != null)
+            {
+                FloorData F1 = new FloorData();
+                F1.Exits.Add(RoundManager.FindMainEntranceScript());
+                F1.FloorRoot = RoundManager.FindMainEntrancePosition();
+                F1.Elevators.Add(RoundManager.Instance.currentMineshaftElevator.transform);
+                F1.FloorTitle = "(Floor1) Entrance";
+                CurrentFloorData.Add(F1);
+
+                FloorData F2 = new FloorData();
+                F2.Exits.AddRange(FindFireExits());
+                F2.FloorRoot = RoundManager.Instance.currentMineshaftElevator.elevatorBottomPoint.position;
+                F2.Elevators.Add(RoundManager.Instance.currentMineshaftElevator.transform);
+                F2.FloorTitle = "(Floor2) Mineshaft";
+                CurrentFloorData.Add(F2);
+
+                LethalMin.Logger.LogInfo("Registered Vanilla Minshaft Floors");
+                return;
+            }
+
         }
 
         #region This is the most hackiest networking i've ever done

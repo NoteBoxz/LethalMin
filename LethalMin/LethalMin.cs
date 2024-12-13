@@ -48,6 +48,7 @@ namespace LethalMin
     public class FloorData
     {
         public Vector3 FloorRoot;
+        public string FloorTitle;
         public List<Transform> Elevators;
         public List<EntranceTeleport> Exits;
         public List<Transform> AlterntiveExits;
