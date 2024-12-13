@@ -121,8 +121,8 @@ namespace LethalMin
                 return;
             }
 
-            Material onionMaterial = null!;
-            Texture2D OnionTexture = null!;
+            Material onionMaterial = ;
+            Texture2D OnionTexture = ;
             if (type.OnionMaterial != null)
             {
                 onionMaterial = type.OnionMaterial;
@@ -302,7 +302,7 @@ namespace LethalMin
         [ClientRpc]
         public void DoSproutAnimationClientRpc(NetworkObjectReference sproutRef, Vector3 start, Vector3 end, int pikminTypeID)
         {
-            GameObject sprout = null!;
+            GameObject sprout = ;
 
             sproutRef.TryGet(out NetworkObject sproutNetObj);
 

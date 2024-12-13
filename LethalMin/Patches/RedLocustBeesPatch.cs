@@ -35,13 +35,13 @@ namespace LethalMin.Patches
                             return true;
                         }
                         __instance.lastKnownHivePosition = __instance.hive.transform.position + Vector3.up * 0.5f;
-                        PikminAI pikminAI = null!;
+                        PikminAI pikminAI = ;
                         pikminAI = LethalMin.FindNearestPikmin(__instance.hive.transform.position, __instance.defenseDistance, 1).FirstOrDefault();
                         if (pikminAI != null && Vector3.Distance(pikminAI.transform.position, __instance.hive.transform.position) < (float)__instance.defenseDistance)
                         {
                             __instance.SetDestinationToPosition(pikminAI.transform.position);
                             __instance.SwitchToBehaviourState(1);
-                            __instance.SwitchOwnershipOfBeesToClient(pikminAI.previousLeader?.Controller);
+                            __instance.SwitchOwnershipOfBeesToClient(pikminAI.previousLeader.Controller);
                             return false;
                         }
                         else
@@ -87,7 +87,7 @@ namespace LethalMin.Patches
                     {
                         __instance.SetDestinationToPosition(pikminAI3.transform.position);
                         __instance.SwitchToBehaviourState(1);
-                        __instance.SwitchOwnershipOfBeesToClient(pikminAI3.previousLeader?.Controller);
+                        __instance.SwitchOwnershipOfBeesToClient(pikminAI3.previousLeader.Controller);
                     }
                     break;
                 case 1:

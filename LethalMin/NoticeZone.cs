@@ -18,8 +18,8 @@ namespace LethalMin
         public bool InstantNotice = false;
         public bool UseCheckSpher = false;
         public bool CanConvertPikmin = false;
-        [IDebuggable.Debug] public PlayerControllerB? leader;
-        [IDebuggable.Debug] public EnemyAI? enemy;
+        [IDebuggable.Debug] public PlayerControllerB leader;
+        [IDebuggable.Debug] public EnemyAI enemy;
         [ServerRpc(RequireOwnership = false)]
         public void SetLeaderOnServerRpc(NetworkObjectReference leaderref)
         {
@@ -57,7 +57,7 @@ namespace LethalMin
                     }
                     else
                     {
-                        pikmin.SetWhistleingPlayerServerRpc(new NetworkObjectReference(leader?.NetworkObject));
+                        pikmin.SetWhistleingPlayerServerRpc(new NetworkObjectReference(leader.NetworkObject));
                     }
                     pikmin.NoticeInstant(leader, true);
                 }
@@ -74,7 +74,7 @@ namespace LethalMin
                     }
                     else
                     {
-                        pikmin.SetWhistleingPlayerServerRpc(new NetworkObjectReference(leader?.NetworkObject));
+                        pikmin.SetWhistleingPlayerServerRpc(new NetworkObjectReference(leader.NetworkObject));
                     }
                 }
             }

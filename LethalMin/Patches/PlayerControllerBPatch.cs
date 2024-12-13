@@ -309,7 +309,7 @@ namespace LethalMin.Patches
         [HarmonyPrefix]
         private static void KillAndRemovePrefix(PlayerControllerB __instance)
         {
-            __instance.GetComponentInChildren<LeaderManager>()?.RemoveAllPikminServerRpc();
+            __instance.GetComponentInChildren<LeaderManager>().RemoveAllPikminServerRpc();
         }
     }
 }

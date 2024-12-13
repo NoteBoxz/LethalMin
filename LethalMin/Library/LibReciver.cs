@@ -8,7 +8,7 @@ namespace LethalMin.Library
     {
         public static void KillPikmin(GameObject pikmin, Transform SnapToTarget, float KillTimer, HazardType[] type)
         {
-            PikminAI pikminAI = null!;
+            PikminAI pikminAI = ;
             Transform parent = pikmin.transform.parent;
             if (parent != null)
             {
@@ -36,7 +36,7 @@ namespace LethalMin.Library
 
         public static void KillPikmin(GameObject pikmin, Vector3 KnockBackForce, bool KillOnLand, float KillTimer, HazardType[] type)
         {
-            PikminAI pikminAI = null!;
+            PikminAI pikminAI = ;
             Transform parent = pikmin.transform.parent;
             if (parent != null)
             {
@@ -63,7 +63,7 @@ namespace LethalMin.Library
         }
         public static void KillPikmin(GameObject pikmin, float KillTimer, HazardType[] type)
         {
-            PikminAI pikminAI = null!;
+            PikminAI pikminAI = ;
             Transform parent = pikmin.transform.parent;
             if (parent != null)
             {
@@ -86,12 +86,12 @@ namespace LethalMin.Library
                 }
             }
 
-            pikminAI.SnapPikminToPosition(null!, false, true, KillTimer);
+            pikminAI.SnapPikminToPosition(, false, true, KillTimer);
         }
 
         public static void ApplyAffectToPikmin(GameObject pikmin, HazardType[] type, bool CanWhistle, float KillTimerMin, float KillTimerMax)
         {
-            PikminAI pikminAI = null!;
+            PikminAI pikminAI = ;
             Transform parent = pikmin.transform.parent;
             if (parent != null)
             {
