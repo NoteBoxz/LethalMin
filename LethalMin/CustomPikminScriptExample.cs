@@ -6,7 +6,7 @@ namespace LethalMin
 {
     public class CustomPikminScriptExample : NetworkBehaviour
     {
-        public PikminAI BaseScript = ;
+        public PikminAI BaseScript = null!;
 
         public override void OnNetworkSpawn()
         {
@@ -22,7 +22,7 @@ namespace LethalMin
                 SubscribeToEvents();
             }
             if (LethalMin.DebugMode)
-                LethalMin.Logger.LogInfo("Custom Pikmin script attached to " + BaseScript.uniqueDebugId);
+                LethalMin.Logger.LogInfo("Custom Pikmin script attached to " + BaseScript?.uniqueDebugId);
         }
         public override void OnNetworkDespawn()
         {

@@ -330,7 +330,7 @@ namespace LethalMin
         {
             if (playerHeldBy == null || noticeZone == null) return;
 
-            Vector3 rayDirection = IsOwner  playerCamera.transform.forward : syncedCameraRotation * Vector3.forward;
+            Vector3 rayDirection = IsOwner ? playerCamera.transform.forward : syncedCameraRotation * Vector3.forward;
             Vector3 startPosition = playerCamera.transform.position;
             Vector3 endPosition = startPosition + rayDirection * whistleZoneOffset;
 
@@ -370,7 +370,7 @@ namespace LethalMin
         public override void Update()
         {
             base.Update();
-            playerCamera = playerHeldBy == null  Camera.main : playerHeldBy.gameplayCamera;
+            playerCamera = playerHeldBy == null ? Camera.main : playerHeldBy.gameplayCamera;
 
             if (IsServer)
             {

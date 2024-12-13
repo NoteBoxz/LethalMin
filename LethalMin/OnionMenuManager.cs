@@ -16,11 +16,9 @@ namespace LethalMin
         public GameObject mainPanel;
         private bool isMenuOpen = false;
         public static OnionMenuManager instance;
-        private InputAction EscAction;
         private LeaderManager leaderManager;
         private Animator UIAnim;
         public Onion onion;
-        private OnionPikmin[] pikminInOnion;
         private Coroutine addCoroutine;
         private Coroutine subtractCoroutine;
         private Button confirmButton;
@@ -279,12 +277,12 @@ namespace LethalMin
         {
             if (curonion == null)
             {
-                LethalMin.Logger.LogError("CurOnion Is some how ");
+                LethalMin.Logger.LogError("CurOnion Is some how null!");
                 return;
             }
             if (curLeader == null)
             {
-                LethalMin.Logger.LogError("CurLeader is ");
+                LethalMin.Logger.LogError("CurLeader is null!");
                 return;
             }
             onion = curonion;
@@ -435,7 +433,7 @@ namespace LethalMin
                         // Withdraw Pikmin from onion to squad
                         int toWithdraw = Mathf.Min(amount, pikminInOnion);
                         Vector3 spawnPosition = onion.transform.Find("SpawnPos") != null
-                             onion.transform.Find("SpawnPos").position
+                            ? onion.transform.Find("SpawnPos").position
                             : leaderManager.transform.position;
 
                         onion.CreatePikminServerRpc(toWithdraw, pikminType.PikminTypeID, spawnPosition, new NetworkObjectReference(leaderManager.Controller.NetworkObject));

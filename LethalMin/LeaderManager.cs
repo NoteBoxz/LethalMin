@@ -146,7 +146,7 @@ namespace LethalMin
 
         private void InitializeTrajectoryPredictor()
         {
-            trajectoryPredictor = GetComponent<TrajectoryPredictor>()  gameObject.AddComponent<TrajectoryPredictor>();
+            trajectoryPredictor = GetComponent<TrajectoryPredictor>() ?? gameObject.AddComponent<TrajectoryPredictor>();
             trajectoryPredictor.SetThrowOrigin(throwOrigin);
         }
 
@@ -229,15 +229,15 @@ namespace LethalMin
         #region Input Handling
         private void OnEnable()
         {
-            throwAction.Enable();
-            switchPikminTypeAction.Enable();
+            throwAction?.Enable();
+            switchPikminTypeAction?.Enable();
         }
 
         private void OnDisable()
         {
             StopAllCoroutines();
-            throwAction.Disable();
-            switchPikminTypeAction.Disable();
+            throwAction?.Disable();
+            switchPikminTypeAction?.Disable();
         }
 
         public PikminType GetCurrentSelectedType()
@@ -331,13 +331,13 @@ namespace LethalMin
 
         private PikminAI GetNearestPikminOfType(PikminType type)
         {
-            PikminAI nearest = ;
+            PikminAI nearest = null!;
             float nearestDistance = float.MaxValue;
 
             if (followingPikmin == null || followingPikmin.Count == 0)
             {
                 LethalMin.Logger.LogWarning("FollowingPikmin list is empty!");
-                return ;
+                return null!;
             }
 
             LethalMin.Logger.LogInfo($"Finding nearest Pikmin of type {type.PikminName}... (Total: {followingPikmin.Count})");
@@ -345,7 +345,7 @@ namespace LethalMin
             {
                 if (pikmin == null || pikmin.PminType == null)
                 {
-                    LethalMin.Logger.LogWarning("PikminAI or PikminType is ");
+                    LethalMin.Logger.LogWarning("PikminAI or PikminType is null!");
                     continue;
                 }
                 if (pikmin.IsThrown)
@@ -373,7 +373,7 @@ namespace LethalMin
             StopAllCoroutines();
         }
         public bool IsWaitingForThrowResponce;
-        Coroutine IsHoldingThrowButtonFailSafe = ;
+        Coroutine IsHoldingThrowButtonFailSafe = null!;
         private void OnThrowStarted(InputAction.CallbackContext context)
         {
             if (IsWaitingForThrowResponce)
@@ -457,7 +457,7 @@ namespace LethalMin
             }
             else
             {
-                LethalMin.Logger.LogWarning("Trjectory Predictor is ");
+                LethalMin.Logger.LogWarning("Trjectory Predictor is null!");
             }
         }
         public IEnumerator ThrowCanceledBuffer()
@@ -566,9 +566,7 @@ namespace LethalMin
                 }
             }
         }
-
-        private float lastSyncTime = 0f;
-        private const float syncInterval = 0.1f; // Sync every 0.1 seconds
+        
         private void UpdatePikminAimPosition()
         {
             if (selectedPikmin != null && selectedPikmin.isHeld)
@@ -587,7 +585,7 @@ namespace LethalMin
         {
             if (selectedPikmin == null || trajectoryPredictor == null)
             {
-                //LethalMin.Logger.LogError("Selected Pikmin or Trjectory Predictor is ");
+                //LethalMin.Logger.LogError("Selected Pikmin or Trjectory Predictor is null!");
                 return;
             }
 
@@ -763,7 +761,7 @@ namespace LethalMin
         [ServerRpc(RequireOwnership = false)]
         private void TeleportPikminToPlayerServerRpc(bool Setoutside = false, bool isOutside = false)
         {
-            //Vector3 teleportPosition = Controller.isInsideFactory Controller.transform.position : GetSafeOutsidePosition();
+            //Vector3 teleportPosition = Controller.isInsideFactory ?Controller.transform.position : GetSafeOutsidePosition();
 
             Vector3 teleportPosition = Controller.transform.position;
             if (Setoutside)
@@ -820,7 +818,7 @@ namespace LethalMin
             }
 
             if (LethalMin.DebugMode)
-                LethalMin.Logger.LogInfo($"AddPikminServerRpc called on {(IsHost  "host" : "server")}");
+                LethalMin.Logger.LogInfo($"AddPikminServerRpc called on {(IsHost ? "host" : "server")}");
 
             if (LethalMin.DebugMode)
                 LethalMin.Logger.LogMessage("Adding pikmin to server....");

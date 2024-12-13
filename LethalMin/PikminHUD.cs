@@ -195,7 +195,7 @@ namespace LethalMin
             }
             else
             {
-                ThrowPrompt.text = "";
+                ThrowPrompt.text = "???";
             }
 
             if (switchPikminTypeAction != null && switchPikminTypeAction.controls.Count > 0)
@@ -205,7 +205,7 @@ namespace LethalMin
             }
             else
             {
-                RightPrompt.text = "";
+                RightPrompt.text = "???";
             }
 
             if (switchPikminPrevTypeAction != null && switchPikminPrevTypeAction.controls.Count > 0)
@@ -215,7 +215,7 @@ namespace LethalMin
             }
             else
             {
-                LeftPrompt.text = "";
+                LeftPrompt.text = "???";
             }
             if (HasSeenMin && HasSwaped1 && HasSwaped2 && HasThrown && !hasHiddenPrompts)
             {
@@ -245,7 +245,7 @@ namespace LethalMin
                 PromptcanvasGroup.alpha = Mathf.Lerp(0, 1, time);
                 yield return null;
             }
-            promptRoutine = ;
+            promptRoutine = null!;
         }
         public void HidePrompts()
         {
@@ -262,7 +262,7 @@ namespace LethalMin
                 PromptcanvasGroup.alpha = Mathf.Lerp(1, 0, time);
                 yield return null;
             }
-            promptRoutine = ;
+            promptRoutine = null!;
         }
         private float promptActiveTime = 0f;
         private bool isPromptActive = false;

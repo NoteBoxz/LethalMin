@@ -51,7 +51,6 @@ namespace LethalMin.Patches
 
         public static PikminAI CheckForPikminInLineOfSight(Turret __instance, float radius = 2f, bool angleRangeCheck = false)
         {
-            PikminAI hitPikmin;
             Vector3 forward = __instance.aimPoint.forward;
             forward = Quaternion.Euler(0f, (float)(int)(0f - __instance.rotationRange) / radius, 0f) * forward;
             float num = __instance.rotationRange / radius * 2f;

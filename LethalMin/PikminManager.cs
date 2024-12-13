@@ -185,7 +185,7 @@ namespace LethalMin
             LethalMin.Logger.LogInfo("Spawning ship phase onions.");
             List<int> LoadedOnions = new List<int>();
             Dictionary<int, int[]> LoadedFusedOnions;
-            bool IsOnionFused(int onionTypeId) => FusedOnions.Any(kvp => kvp.Value.Contains(onionTypeId));
+            
             if (CollectedOnions.Count == 0)
             {
                 if (LethalMin.IsUsingModLib())
@@ -199,8 +199,8 @@ namespace LethalMin
                 else
                 {
                     string json = File.ReadAllText(Path.Combine(Application.persistentDataPath, $"{GetSaveFileName()}.json"));
-                    LoadedOnions = JsonConvert.DeserializeObject<OnionSaveData>(json).OnionsCollected  new List<int>();
-                    LoadedFusedOnions = JsonConvert.DeserializeObject<OnionSaveData>(json).OnionsFused  new Dictionary<int, int[]>();
+                    LoadedOnions = JsonConvert.DeserializeObject<OnionSaveData>(json)?.OnionsCollected ?? new List<int>();
+                    LoadedFusedOnions = JsonConvert.DeserializeObject<OnionSaveData>(json)?.OnionsFused ?? new Dictionary<int, int[]>();
                 }
             }
             else
@@ -258,7 +258,7 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo("Calling to spawn onion: " + item.OnionTypeID);
                 SpawnShipPhaseOnionClientRpc(item.OnionTypeID);
             }
-            SSPOCoroutine = ;
+            SSPOCoroutine = null!;
         }
         int ExpectedSPO, CurSPO, ExpectedFSPO, CurFSPO;
         [ClientRpc]
@@ -757,7 +757,7 @@ namespace LethalMin
                 yield return new WaitForSeconds(0.1f);
             }
             pikminAI.isOutside = false;
-            LethalMin.Logger.LogInfo($"Pikmin {pikminAI.uniqueDebugId} has initalized {(pikminAI.isOutside  "outside" : "inside")}");
+            LethalMin.Logger.LogInfo($"Pikmin {pikminAI.uniqueDebugId} has initalized {(pikminAI.isOutside ? "outside" : "inside")}");
         }
 
         #endregion
@@ -935,7 +935,7 @@ namespace LethalMin
         {
             if (LethalMin.IsDependencyLoaded("Entity378.sellbodies")) return;
 
-            EnemyAI __instance = ;
+            EnemyAI __instance = null!;
 
             EnemyRef.TryGet(out NetworkObject enemyNetObj);
             if (enemyNetObj != null)
@@ -989,7 +989,7 @@ namespace LethalMin
             bool shouldothrick = false;
             if (IsServer)
                 return;
-            EnemyAI __instance = ;
+            EnemyAI __instance = null!;
             EnemyRef.TryGet(out NetworkObject enemyNetObj);
             if (enemyNetObj != null)
             {
@@ -1029,7 +1029,7 @@ namespace LethalMin
         {
             if (IsServer)
                 return;
-            PikminItem pikminItem = ;
+            PikminItem pikminItem = null!;
             PminRef.TryGet(out NetworkObject pminNetObj);
             if (pminNetObj != null)
             {
@@ -1045,7 +1045,7 @@ namespace LethalMin
 
         public static bool IsPlayerInCar(PlayerControllerB player, out VehicleController car)
         {
-            car = ;
+            car = null!;
             if (_currentCars.Length == 1)
             {
                 if (_currentCars[0].currentDriver == player)

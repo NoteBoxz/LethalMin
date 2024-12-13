@@ -40,14 +40,14 @@ namespace LethalMin.Patches
         public static PikminItem CreatePikminItemForBody(GrabbableObject grabbableObject)
         {
             if (grabbableObject.GetComponent<CaveDwellerPhysicsProp>() != null)
-                return ;
+                return null!;
             PikminItem[] Pims = GameObject.FindObjectsOfType<PikminItem>();
             foreach (var item in Pims)
             {
                 if (item.Root == grabbableObject)
                 {
                     LethalMin.Logger.LogWarning($"{grabbableObject.itemProperties.name} already has a pikmin node!");
-                    return ;
+                    return null!;
                 }
             }
             GameObject PikminObjectPrefab = LethalMin.PikminObjectPrefab;
@@ -72,7 +72,7 @@ namespace LethalMin.Patches
             {
                 LethalMin.Logger.LogError($"NetworkObject component not found on PikminItemNode for {grabbableObject.name}");
             }
-            return ;
+            return null!;
         }
     }
 }

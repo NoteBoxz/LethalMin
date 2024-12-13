@@ -31,7 +31,6 @@ namespace LethalMin
         private List<int> _onionsCollected = new List<int>();
         private Dictionary<int, int[]> _onionsFused = new Dictionary<int, int[]>();
         private List<OnionPikminStorage> _pikminStored = new List<OnionPikminStorage>();
-        private int _pikminLeftLastRound;
 
         public OnionEzSaveData()
         {

@@ -269,29 +269,7 @@ namespace LethalMin.Patches
                 UnityEngine.Object.Destroy(leaderManagerInstance);
             }
         }
-
-        private static InputAction danceAction, actionD;
-        private static void SetupCustomInput(PlayerControllerB __instance)
-        {
-            // Create a new input action for dancing
-            danceAction = new InputAction("Dance", InputActionType.Button);
-
-            // Bind the G key to the dance action
-            danceAction.AddBinding("<Keyboard>/g");
-
-            // Set up the callback for when the dance action is performed
-            danceAction.performed += ctx => PlayCustomAnimation(__instance);
-
-            // Enable the action
-            danceAction.Enable();
-
-            LethalMin.Logger.LogInfo("Custom dance input set up");
-        }
-        private static void AddCustomAnimationToPlayer(PlayerControllerB __instance)
-        {
-
-        }
-
+        
         public static bool AnimationClipExists(Animator animator, string clipName)
         {
             if (animator == null || string.IsNullOrEmpty(clipName))
@@ -309,7 +287,7 @@ namespace LethalMin.Patches
         [HarmonyPrefix]
         private static void KillAndRemovePrefix(PlayerControllerB __instance)
         {
-            __instance.GetComponentInChildren<LeaderManager>().RemoveAllPikminServerRpc();
+            __instance.GetComponentInChildren<LeaderManager>()?.RemoveAllPikminServerRpc();
         }
     }
 }

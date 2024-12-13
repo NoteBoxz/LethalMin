@@ -45,11 +45,11 @@ namespace LethalMin
         private void LoadLethalMinBundles()
         {
             lethalMinFolder = lethalMinFile.Parent;
-            pluginsFolder = lethalMinFolder.Parent;
+            pluginsFolder = lethalMinFolder?.Parent;
 
             if (pluginsFolder == null || !pluginsFolder.Exists)
             {
-                LethalMin.Logger.LogError($"Plugins folder not found: {pluginsFolder.FullName}");
+                LethalMin.Logger.LogError($"Plugins folder not found: {pluginsFolder?.FullName}");
                 return;
             }
             if (LethalMin.IsDependencyLoaded("NoteBoxz.LethalMinLibrary"))

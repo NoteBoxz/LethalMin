@@ -15,7 +15,7 @@ namespace LethalMin.Patches
         private static PikminAttackable pikminAttackable = new PikminAttackable
         {
             PikminGrabPath = "HoarderBugModel/AnimContainer/Armature/Abdomen/Chest/HoldItemsTarget",
-            AttackSound = , // This will be set dynamically
+            AttackSound = null!, // This will be set dynamically
             AttackAnimTrigger = "",
             AttackInAnyState = false,
             AttackRange = 3f,
@@ -80,7 +80,7 @@ namespace LethalMin.Patches
             }
 
             // Call the AttackNearby
-            pikminAttacker.AttackNearbyPikmin(__instance);
+            pikminAttacker?.AttackNearbyPikmin(__instance);
         }
     }
 }

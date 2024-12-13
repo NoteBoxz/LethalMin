@@ -4,11 +4,13 @@ using BepInEx.Logging;
 using HarmonyLib;
 using LethalLib.Modules;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using LethalConfig;
 using LethalConfig.ConfigItems;
 using LethalConfig.ConfigItems.Options;
@@ -17,7 +19,11 @@ using LethalLib.Extras;
 using LethalMin.Patches.OtherMods;
 using System.Text;
 using UnityEngine.AI;
+using UnityEngine.InputSystem;
 using System.IO;
+using LethalMin.Library;
+using UnityEngine.ProBuilder;
+using LethalMinLibrary;
 
 namespace LethalMin
 {
@@ -49,12 +55,10 @@ namespace LethalMin
     [BepInDependency("MaxWasUnavailable.LethalModDataLib", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.rune580.LethalCompanyInputUtils", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("Entity378.sellbodies", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("Piggy.LCOffice", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("Piggy.PiggyVarietyMod", BepInDependency.DependencyFlags.SoftDependency)]
     public class LethalMin : BaseUnityPlugin
     {
-        public static LethalMin Instance { get; private set; } = ;
-        internal new static ManualLogSource Logger { get; private set; } = ;
+        public static LethalMin Instance { get; private set; } = null!;
+        internal new static ManualLogSource Logger { get; private set; } = null!;
         internal static Harmony Harmony { get; set; }
         public static bool SmartMinMov = true, SmarterMinMov = false;
         public static string ThrowAction;
@@ -63,16 +67,16 @@ namespace LethalMin
         public static string WhisleAction;
         public static string DismissAction;
 
-        public static InputClass InputClassInstace = ;
+        public static InputClass InputClassInstace = null!;
 
         public static string ManeaterName = "Maneater";
-        public static EnemyType pikminEnemyType = ;
-        public static EnemyType puffminEnemyType = ;
-        private static TerminalNode pikminTerminalNode = ;
-        private TerminalKeyword pikminTerminalKeyword = ;
-        private static TerminalNode puffminTerminalNode = ;
-        private TerminalKeyword puffminTerminalKeyword = ;
-        public GameObject PikminPrefab = ;
+        public static EnemyType pikminEnemyType = null!;
+        public static EnemyType puffminEnemyType = null!;
+        private static TerminalNode pikminTerminalNode = null!;
+        private TerminalKeyword pikminTerminalKeyword = null!;
+        private static TerminalNode puffminTerminalNode = null!;
+        private TerminalKeyword puffminTerminalKeyword = null!;
+        public GameObject PikminPrefab = null!;
         public static Dictionary<int, PikminType> RegisteredPikminTypes = new Dictionary<int, PikminType>();
         public static Dictionary<int, PikminType> IndoorTypes = new Dictionary<int, PikminType>();
         public static Dictionary<int, PikminType> OutdoorTypes = new Dictionary<int, PikminType>();
@@ -82,7 +86,7 @@ namespace LethalMin
         public static Dictionary<int, OnionType> SpawnableOnionTypes = new Dictionary<int, OnionType>();
         public static Dictionary<int, OnionFuseRules> RegisteredFuseRules = new Dictionary<int, OnionFuseRules>();
         public LayerMask PikminColideable = 1107298561 | (1 << 28);
-        public static AssetBundleLoader Loader = ;
+        public static AssetBundleLoader Loader = null!;
 
         public static bool IsUsingModLib()
         {
@@ -1258,7 +1262,7 @@ namespace LethalMin
             TerminalNode WTN = AssetLoader.LoadAsset<TerminalNode>("Assets/LethalminAssets/Whisle/Shop/Whistle TN.asset");
             Whistle.isConductiveMetal = LethalWhistleValue;
             //TerminalKeyword WTK = AssetLoader.LoadAsset<TerminalKeyword>("Assets/LethalminAssets/Whisle/Shop/Whistle TK.asset");
-            Items.RegisterShopItem(Whistle, , , WTN, WhistlePriceValue);
+            Items.RegisterShopItem(Whistle, null!, null!, WTN, WhistlePriceValue);
             Items.RegisterItem(Onion);
         }
 
@@ -1718,7 +1722,7 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
         public static List<Type> LibraryTypes = new List<Type>();
         internal static void Patch()
         {
-            Harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
+            Harmony ??= new Harmony(MyPluginInfo.PLUGIN_GUID);
 
             Logger.LogDebug("Patching...");
 
@@ -1821,7 +1825,7 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
         {
             Logger.LogDebug("Unpatching...");
 
-            Harmony.UnpatchSelf();
+            Harmony?.UnpatchSelf();
 
             Logger.LogDebug("Finished unpatching!");
         }

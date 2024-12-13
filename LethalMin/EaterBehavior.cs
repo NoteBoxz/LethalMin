@@ -85,7 +85,7 @@ namespace LethalMin
                 // }
             }
             PikminAI majorityPikmin = FindPikminOfType(GetMajorityType(pikmins), pikmins);
-            PlayerControllerB PCB = ;
+            PlayerControllerB PCB = null!;
             if (majorityPikmin != null)
             {
                 if (majorityPikmin.previousLeader != null)
@@ -227,7 +227,7 @@ namespace LethalMin
             }
 
             int maxCount = 0;
-            PikminType majorityType = ;
+            PikminType majorityType = null!;
 
             foreach (var count in counts)
             {
@@ -250,7 +250,7 @@ namespace LethalMin
                 }
             }
 
-            return ;
+            return null!;
         }
         void LateUpdate()
         {

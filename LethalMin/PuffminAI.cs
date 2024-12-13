@@ -26,19 +26,19 @@ namespace LethalMin
         public Animator LocalAnim;
         public AudioSource LocalSFX;
         public AudioSource LocalVoice;
-        [IDebuggable.Debug] public EnemyAI OwnerAI = ;
-        [IDebuggable.Debug] public EnemyAI PrevOwnerAI = ;
-        public Rigidbody rb = ;
+        [IDebuggable.Debug] public EnemyAI OwnerAI = null!;
+        [IDebuggable.Debug] public EnemyAI PrevOwnerAI = null!;
+        public Rigidbody rb = null!;
         GameObject Ghost;
-        public NetworkTransform transform2 = ;
+        public NetworkTransform transform2 = null!;
         GameObject PminColider, scanNode, NoticeColider;
         public float InternalAirbornTimer, AbTimer;
-        public System.Random enemyRandom = ;
+        public System.Random enemyRandom = null!;
         public bool IsHeld, IsThrown;
         NetworkVariable<bool> newIsMoving = new NetworkVariable<bool>(false);
-        SphereCollider Pcollider = ;
+        SphereCollider Pcollider = null!;
         [IDebuggable.Debug] public bool HasFreeWill = true;
-        public PikminType OriginalType = ;
+        public PikminType OriginalType = null!;
         public bool IsDying = false;
         public bool PreDefinedType = false;
         [IDebuggable.Debug] public bool HasInitalized = false;
@@ -293,7 +293,7 @@ namespace LethalMin
             DoThrowSFXClientRpc();
             IsThrown = true;
             IsHeld = false;
-            SnapTopPos = ;
+            SnapTopPos = null!;
 
             transform.position = StartPos;
             transform.rotation = Quaternion.LookRotation(ThrowForward);
@@ -353,9 +353,9 @@ namespace LethalMin
         [ClientRpc]
         public void SyncPlayerLatchedOnClientRpc()
         {
-            PlayerLatchedOn = ;
+            PlayerLatchedOn = null!;
         }
-        public PlayerControllerB PlayerLatchedOn = ;
+        public PlayerControllerB PlayerLatchedOn = null!;
         private float wiggleThreshold = 5f; // Degrees of rotation to consider a wiggle
         private float wiggleTimeFrame = 1f; // Timeframe in seconds to detect wiggle
         private float lastWiggleTime = 0f;
@@ -415,7 +415,7 @@ namespace LethalMin
         {
             if (CurTempLatchPoint != null && SnapTopPos == CurTempLatchPoint)
             {
-                SnapTopPos = ;
+                SnapTopPos = null!;
                 Destroy(CurTempLatchPoint.gameObject);
                 SyncPlayerLatchedOnClientRpc();
             }
@@ -426,8 +426,8 @@ namespace LethalMin
             yield return new WaitForSeconds(enemyRandom.Next(3, 12));
             IsOnCooldown = false;
         }
-        Transform CurTempLatchPoint = ;
-        Transform SnapTopPos = ;
+        Transform CurTempLatchPoint = null!;
+        Transform SnapTopPos = null!;
         bool HasStartedSnapTo = false;
         public override void Update()
         {
@@ -474,7 +474,7 @@ namespace LethalMin
                     StartCoroutine(SetOnCooldown());
                     ApplyKnockbackServerRpc(KnockbackForce, false, false, 3);
                     LethalMin.Logger.LogInfo($"{DebugID} was too far to be latched on!");
-                    PlayerLatchedOn = ;
+                    PlayerLatchedOn = null!;
                 }
             }
             if (!HasFreeWill && currentBehaviourStateIndex == (int)PuffState.following)
@@ -490,7 +490,7 @@ namespace LethalMin
                 }
                 else
                 {
-                    PlayerControllerB targetplayer = ;
+                    PlayerControllerB targetplayer = null!;
                     if (targetplayer = GetClosestPlayer(transform.position, 2))
                     {
                         if (!IsHitting)
@@ -506,7 +506,7 @@ namespace LethalMin
         [ClientRpc]
         public void DoHitClientRpc(NetworkObjectReference playerRef, int damage)
         {
-            PlayerControllerB targetplayer = ;
+            PlayerControllerB targetplayer = null!;
             if (playerRef.TryGet(out NetworkObject targetplayerNetworkObject))
             {
                 targetplayer = targetplayerNetworkObject.GetComponent<PlayerControllerB>();
@@ -555,7 +555,7 @@ namespace LethalMin
             IsThrown = true;
             IsKnockedBack = true;
             IsHeld = false;
-            SnapTopPos = ;
+            SnapTopPos = null!;
             if (OwnerAI == null)
             {
                 LethalMin.Logger.LogWarning($"{DebugID} has no owner");
@@ -788,7 +788,7 @@ namespace LethalMin
         public static List<PlayerControllerB> Players = new List<PlayerControllerB>();
         public static PlayerControllerB GetClosestPlayer(Vector3 position, float MaxRange, bool DoLinecast = true)
         {
-            PlayerControllerB closestPlayer = ;
+            PlayerControllerB closestPlayer = null!;
             float closestDistance = float.MaxValue;
             foreach (var player in Players)
             {
@@ -809,7 +809,7 @@ namespace LethalMin
                     return closestPlayer;
                 }
             }
-            return ;
+            return null!;
         }
     }
 }

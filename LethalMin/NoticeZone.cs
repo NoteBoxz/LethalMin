@@ -57,7 +57,7 @@ namespace LethalMin
                     }
                     else
                     {
-                        pikmin.SetWhistleingPlayerServerRpc(new NetworkObjectReference(leader.NetworkObject));
+                        pikmin.SetWhistleingPlayerServerRpc(new NetworkObjectReference(leader?.NetworkObject));
                     }
                     pikmin.NoticeInstant(leader, true);
                 }
@@ -74,7 +74,7 @@ namespace LethalMin
                     }
                     else
                     {
-                        pikmin.SetWhistleingPlayerServerRpc(new NetworkObjectReference(leader.NetworkObject));
+                        pikmin.SetWhistleingPlayerServerRpc(new NetworkObjectReference(leader?.NetworkObject));
                     }
                 }
             }

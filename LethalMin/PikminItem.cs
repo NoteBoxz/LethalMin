@@ -28,7 +28,7 @@ namespace LethalMin
         public Color CurColor;
         public bool CanBeConvertedIntoSprouts;
         public bool DontParentToObjects;
-        public PikminType FavoredType = ;
+        public PikminType FavoredType = null!;
 
         [ClientRpc]
         public void SetCurColorClientRpc(Color color)
@@ -284,7 +284,7 @@ namespace LethalMin
             LethalMin.Logger.LogInfo($"{name} has {root.itemProperties.weight}");
 
             PikminNeedOnItem = Mathf.Max(
-    (root.itemProperties.weight - 1f) * 100f <= 3f  1 :
+    (root.itemProperties.weight - 1f) * 100f <= 3f ? 1 :
     Mathf.CeilToInt(((root.itemProperties.weight - 1f) * 100f - 3f) / 10f) + 1 - LethalMin.ItemRequireSubracterValue, 1);
             isInitialized = true;
 
@@ -398,7 +398,7 @@ namespace LethalMin
                 cube.transform.position = goToPositions[i];
                 cube.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
                 Renderer renderer = cube.GetComponent<Renderer>();
-                renderer.material.color = goToPositionsOccupied[i]  Color.red : Color.green;
+                renderer.material.color = goToPositionsOccupied[i] ? Color.red : Color.green;
             }
         }
         public (Vector3 position, int index) GetNearestAvailableGoToPosition(Vector3 pikminPosition)
@@ -431,10 +431,10 @@ namespace LethalMin
             }
 
             // If all positions are occupied or no positions available, return the item's position
-            LethalMin.Logger.LogInfo($"All positions ocupied/No positions avaible for {name}");
+            LethalMin.Logger.LogInfo("LOL!!");
             return (ObjectPosition, -1);
         }
-        public Vector3 GetGoToPos((Vector3 position, int index) Pair, string DebugName = "")
+        public Vector3 GetGoToPos((Vector3? position, int index) Pair, string DebugName = "???")
         {
             //LethalMin.Logger.LogInfo($"{DebugName}: Has the goto pos of ({Pair.position.Value}) ({Pair.index})");
             if (Pair.index == -1 && Pair.position.HasValue)
@@ -451,7 +451,7 @@ namespace LethalMin
             }
             else if (Pair.index != -1 && !Pair.position.HasValue || Pair.index != -1 && Pair.position.HasValue)
             {
-                if (DebugName != "")
+                if (DebugName != "???")
                 {
                     //LethalMin.Logger.LogInfo($"{DebugName}: Has a non negetive Pair.index ({Pair.position.Value}) ({Pair.index})");
                 }
@@ -534,14 +534,14 @@ namespace LethalMin
                 ParentToFirstPikminServerRpc(firstPikmin.NetworkObjectId);
             }
         }
-        DepositItemsDesk HomeDepo;
+        
         private void UnparentItem(Vector3 targetFloorPosition)
         {
             if (Root != null)
             {
                 LethalMin.Logger.LogInfo("DroppinItemTo: " + targetFloorPosition);
                 Vector3 placePosition = default(Vector3);
-                NetworkObject parentObjectTo = ;
+                NetworkObject parentObjectTo = null!;
                 bool matchRotationOfParent = true;
                 Root.parentObject = null;
                 if (firstPikminG != null && ManEater != null)
@@ -562,7 +562,7 @@ namespace LethalMin
                             PlaceGrabbableObject(parentObjectTo.transform, placePosition, matchRotationOfParent, Root);
                             Root.DiscardItemFromEnemy();
                             isParented = false;
-                            firstPikminG = ;
+                            firstPikminG = null!;
                             return;
                         }
                     }
@@ -672,7 +672,7 @@ namespace LethalMin
                     }
                 }
                 LethalMin.Logger.LogInfo($"Dropped Item with {Root.transform.localPosition.y - Root.targetFloorPosition.y} distance from floor ({Root.parentObject}) parent '{Root.isHeld}' Is held '{Root.hasHitGround}' has hit gound");
-                firstPikminG = ;
+                firstPikminG = null!;
             }
         }
         public void PlaceGrabbableObject(Transform parentObject, Vector3 positionOffset, bool matchRotationOfParent, GrabbableObject placeObject)
@@ -745,7 +745,7 @@ namespace LethalMin
                         hitPoint = componentInChildren.physicsTransform.InverseTransformPoint(hitInfo.point + Vector3.up * 0.04f + Root.itemProperties.verticalOffset * Vector3.up + addPositionOffsetToItems);
                         return parentNetworkObject;
                     }
-                    Debug.LogError("Error: physics region transform does not have network object: " + transform.gameObject.name);
+                    Debug.LogError("Error: physics region transform does not have network object?: " + transform.gameObject.name);
                 }
             }
             hitPoint = Vector3.zero;

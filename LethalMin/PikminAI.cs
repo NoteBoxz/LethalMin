@@ -47,7 +47,7 @@ namespace LethalMin
         {
             RouteName = name;
         }
-        public Vector3 GetExitPoint()
+        public Vector3? GetExitPoint()
         {
             if (entranceTeleport != null && entranceTeleport.FindExitPoint())
             {
@@ -56,10 +56,10 @@ namespace LethalMin
             }
             else
             {
-                return ;
+                return null!;
             }
         }
-        public Vector3 GetEntreancePoint()
+        public Vector3? GetEntreancePoint()
         {
             if (entranceTeleport != null)
             {
@@ -68,7 +68,7 @@ namespace LethalMin
             }
             else
             {
-                return ;
+                return null!;
             }
         }
         public int TotalPointCount()
@@ -143,7 +143,7 @@ namespace LethalMin
     {
         #region Fields and Properties
         [IDebuggable.Debug] public bool OurDoor;
-        public PikminType PminType = ; // <- this should never be null after initalizeing, if it is, then it's a bug.
+        public PikminType PminType = null!; // <- this should never be null after initalizeing, if it is, then it's a bug.
         public System.Random enemyRandom; // I broken rng in lethal company because I forgot to call AddEnemy() before initializing.
         [IDebuggable.Debug] public LeaderManager currentLeader; // The current player the pikmin is following
         public LeaderManager previousLeader; // The previous player the pikmin was following
@@ -173,8 +173,6 @@ namespace LethalMin
         [IDebuggable.Debug] public float Speed;
         [IDebuggable.Debug] public float Acceleration;
         [IDebuggable.Debug] public bool isKine, IsUp, IsUr; // For DB
-        private ParticleSystem ThrowSparkle, ThrowTrail; // Unused because I don't know how to use unity's particle effects
-        // Useing custom animator, audio source variables and keeping the ones in EnemyAI null to prevent the game from having a stroke.
         public Animator LocalAnim;
         public AudioSource LocalSFX;
         public AudioSource LocalVoice;
@@ -214,13 +212,13 @@ namespace LethalMin
         public PlayerControllerB whistlingPlayer;
         public AudioSource DrowingAud;
         public Transform SnapToPos;
-        Vector3 PositionOffset, rotationOffset;
+        Vector3? PositionOffset, rotationOffset;
         public Coroutine SnapTopPosition;
         public bool IsOnItem;
         public bool HasPlayedLift;
         public bool IsColideingWithTargetEnemy;
         public int ClientsInitalizedOn;
-        [IDebuggable.Debug] public (Vector3, int) AssingedGoToNode = (null, -1);
+        [IDebuggable.Debug] public (Vector3?, int) AssingedGoToNode = (null, -1);
         bool IsGettingAsinged;
         // I should remove this
         public enum Cstate
@@ -235,7 +233,7 @@ namespace LethalMin
         MineshaftElevatorController elevator;
         public EnemyAI EnemyAttacking;
         public PikminDamager EnemyDamager;
-        public NetworkTransform transform2 = ;
+        public NetworkTransform transform2 = null!;
         [IDebuggable.Debug] public bool IsDrowing, IsLeaderOnElevator, HasCustomScripts;
         public bool IsWhistled;
         float KnockBackBuffer, AttackTimer;
@@ -243,7 +241,6 @@ namespace LethalMin
         float SnapToBuffer, SnapToBuffer2;
         public Vector3 formationTarget;
         [IDebuggable.Debug] string CurState = ""; // for DB
-        MaskedPlayerEnemy FakeLeader = ; // unsused for now
         public float InternalAirbornTimer;
         public float AttackBuffer;
         int KnockBackResistance = 3;
@@ -934,7 +931,7 @@ namespace LethalMin
                 return;
             }
 
-            VehicleController NextCar = ;
+            VehicleController NextCar = null!;
             //Set Target Car
             if (LethalMin.TargetCar)
             {
@@ -1393,7 +1390,7 @@ namespace LethalMin
         {
             if (Bounds == null)
             {
-                LethalMin.Logger.LogWarning($"Pikmin {uniqueDebugId}: Bounds is !");
+                LethalMin.Logger.LogWarning($"Pikmin {uniqueDebugId}: Bounds is null?!?!");
                 return transform.position;
             }
 
@@ -1434,7 +1431,7 @@ namespace LethalMin
                 IdleGlowAnim.SetBool("IsIdle", currentBehaviourStateIndex == (int)PState.Idle && !KncockedBack && !IsThrown && !IsDying && !FinnaBeDed && !IsDrowing);
 
             if (currentBehaviourStateIndex != (int)PState.Idle)
-                LocalAnim.SetInteger("IdelInt", 0);
+                LocalAnim?.SetInteger("IdelInt", 0);
 
             //Debuggers
             if (rb != null)
@@ -1845,7 +1842,7 @@ namespace LethalMin
         #region Movement and Navigation    
         private void CheckAnim()
         {
-            LocalAnim.SetBool("IsMoving", newIsMoving.Value);
+            LocalAnim?.SetBool("IsMoving", newIsMoving.Value);
 
             if (!IsServer) { return; }
 
@@ -2202,7 +2199,7 @@ namespace LethalMin
             }
             if (HasCustomScripts)
                 OnAssignLeaderServerRpc.Invoke();
-            PlayerControllerB newLeader = ;
+            PlayerControllerB newLeader = null!;
             leaderref.TryGet(out NetworkObject LeaderOBJ);
             if (LeaderOBJ != null)
                 newLeader = LeaderOBJ.GetComponent<PlayerControllerB>();
@@ -2342,7 +2339,7 @@ namespace LethalMin
         [ClientRpc]
         public void SetDrowingClientRpc()
         {
-            if (LethalMin.IsPikminResistantToHazard(PminType, HazardType.Water)) { LethalMin.Logger.LogWarning("Why tf is a pikmin that cannot drown, drowning"); return; }
+            if (LethalMin.IsPikminResistantToHazard(PminType, HazardType.Water)) { LethalMin.Logger.LogWarning("Why tf is a pikmin that cannot drown, drowning?????"); return; }
             if (LethalMin.UselessblueMinValue) { return; }
 
             if (HasCustomScripts)
@@ -2735,7 +2732,7 @@ namespace LethalMin
             if (HasCustomScripts)
                 OnCheckLineOfSightForItem.Invoke();
             IsCallingCLOSFI = true;
-            GameObject closestItem = ;
+            GameObject closestItem = null!;
             float closestDistance = float.MaxValue;
 
             //if(LethalMin.DebugMode)
@@ -2821,7 +2818,7 @@ namespace LethalMin
                 }
 
                 PikminItem pikminItem = item.GetComponent<PikminItem>();
-                if (pikminItem == null || pikminItem.Root == null)
+                if (pikminItem == null || pikminItem?.Root == null)
                 {
                     //if(LethalMin.DebugMode)
                     //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Item {item.name} has no PikminItem or Root. Skipping.");
@@ -2946,7 +2943,7 @@ namespace LethalMin
                         GetItemTarget();
                     }
 
-                    if (CurRoutes[0].RouteName == "")
+                    if (CurRoutes[0].RouteName == "???")
                     {
                         MoveInCircles();
                     }
@@ -2954,7 +2951,7 @@ namespace LethalMin
                     {
                         agent.SetDestination(CurRoutes[0].GetRoutePoint().Item1);
                     }
-                    if (CurRoutes[0].RouteName != "")
+                    if (CurRoutes[0].RouteName != "???")
                     {
                         agent.updateRotation = false;
                         transform.rotation = targetCarryRotaion;
@@ -2963,7 +2960,7 @@ namespace LethalMin
                     RefeshItemTargets();
                     CarryingItemTo = CurRoutes[0].RouteName;
 
-                    if (CurRoutes[0].RouteName != "")
+                    if (CurRoutes[0].RouteName != "???")
                         CheckToDropItem();
                 }
                 else
@@ -3007,7 +3004,7 @@ namespace LethalMin
         {
             List<ItemRoute> PossibleRoutes = new List<ItemRoute>();
 
-            Transform targetPos2 = previousLeader != null  previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
+            Transform targetPos2 = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
 
             (int, EntranceTeleport) GetVaildExit()
             {
@@ -3042,7 +3039,7 @@ namespace LethalMin
             // CaveDweller target
             if (targetItem.GetComponentInParent<CaveDwellerPhysicsProp>() != null)
             {
-                Transform targetPos = previousLeader != null  previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
+                Transform targetPos = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
                 ItemRoute CaveDwellerRoute = new ItemRoute("CaveDweller");
                 CaveDwellerRoute.AddPoint(targetPos2, isOutside);
                 CaveDwellerRoute.BypassDistanceCheck = true;
@@ -3150,11 +3147,11 @@ namespace LethalMin
                 && majorityType != null && majorityTypeInstance != null
                 && majorityTypeInstance.TargetOnion != null && UseableOnions.Contains(majorityTypeInstance.TargetOnion))
                 {
-                    targetOnion = UseableOnions.FirstOrDefault(o => o == majorityTypeInstance.TargetOnion);
+                    targetOnion = UseableOnions.FirstOrDefault(o => o == majorityTypeInstance?.TargetOnion);
                     targetItem.TargetType = majorityType;
                     targetItem.SetCurColorClientRpc(majorityType.PikminColor);
                     hasSelectedOinion = true;
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with majority {majorityType.PikminName} pikmin: {targetOnion.type.TypeName}");
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with majority {majorityType.PikminName} pikmin: {targetOnion?.type.TypeName}");
                 }
 
                 // Case 2: Minority pikmin type's target onion
@@ -3162,11 +3159,11 @@ namespace LethalMin
                 && minorityType != null && minorityTypeInstance != null
                  && minorityTypeInstance.TargetOnion != null && UseableOnions.Contains(minorityTypeInstance.TargetOnion))
                 {
-                    targetOnion = UseableOnions.FirstOrDefault(o => o == minorityTypeInstance.TargetOnion);
+                    targetOnion = UseableOnions.FirstOrDefault(o => o == minorityTypeInstance?.TargetOnion);
                     targetItem.TargetType = minorityType;
                     targetItem.SetCurColorClientRpc(minorityType.PikminColor);
                     hasSelectedOinion = true;
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with minority pikmin {minorityType.PikminName}: {targetOnion.type}");
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with minority pikmin {minorityType.PikminName}: {targetOnion?.type}");
                 }
 
                 // Case 3: Onion that needs more pikmin the most
@@ -3193,15 +3190,15 @@ namespace LethalMin
                         targetItem.TargetType = typeWithMin;
                         targetItem.SetCurColorClientRpc(typeWithMin.PikminColor);
                         targetOnion = onionwithmin;
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with least pikmin: {targetOnion.type}");
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with least pikmin: {targetOnion?.type}");
                     }
                     hasSelectedOinion = true;
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with least pikmin: {targetOnion.type}");
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion with least pikmin: {targetOnion?.type}");
                 }
 
-                LethalMin.Logger.LogInfo($"Evaluation done. Varibles: (TargetOnion: {targetOnion.type.TypeName})," +
-                $"(Majotity Type: {majorityType.PikminName}), (Minority Type: {minorityType.PikminName})," +
-                $"(Majority Instance: {majorityTypeInstance.name}), (Minority Instance: {minorityTypeInstance.name})");
+                LethalMin.Logger.LogInfo($"Evaluation done. Varibles: (TargetOnion: {targetOnion?.type.TypeName})," +
+                $"(Majotity Type: {majorityType?.PikminName}), (Minority Type: {minorityType?.PikminName})," +
+                $"(Majority Instance: {majorityTypeInstance?.name}), (Minority Instance: {minorityTypeInstance?.name})");
 
                 // Add the target onion to possible targets
                 if (targetOnion != null)
@@ -3301,8 +3298,8 @@ namespace LethalMin
             }
 
             // Sort routes by their distance (lowest to highest)if ByPassDistanceCheck is false and their priority if true
-            PossibleRoutes = PossibleRoutes.OrderBy(route => route.BypassDistanceCheck  0 : 1)
-                               .ThenBy(route => route.BypassDistanceCheck  -route.Priority : route.InitalDistance)
+            PossibleRoutes = PossibleRoutes.OrderBy(route => route.BypassDistanceCheck ? 0 : 1)
+                               .ThenBy(route => route.BypassDistanceCheck ? -route.Priority : route.InitalDistance)
                                .ToList();
             for (int i = 0; i < PossibleRoutes.Count; i++)
             {
@@ -3321,7 +3318,7 @@ namespace LethalMin
             PossibleRoutes = PossibleRoutes
                 .OrderBy(route => route.InitalDistance)
                 .ThenByDescending(route => route.IsPathable)
-                .ThenBy(route => route.BypassDistanceCheck  -route.Priority : 0)
+                .ThenBy(route => route.BypassDistanceCheck ? -route.Priority : 0)
                 .ToList();
 
             //Force the onion route to the front if it exists
@@ -3351,7 +3348,7 @@ namespace LethalMin
                 RouteLog += $"\n-------------------\n";
                 RouteLog += route.RouteName + "\n";
                 RouteLog += $"Pathable: {route.IsPathable} \nBypassPath: {route.BypassPathableCheck} \nBypassDistance: {route.BypassDistanceCheck}\n";
-                RouteLog += $"Entrance: {route.entranceTeleport.name  "None"}\n";
+                RouteLog += $"Entrance: {route.entranceTeleport?.name ?? "None"}\n";
                 RouteLog += $"Priority: {route.Priority}, \nDistance: {route.InitalDistance}";
                 RouteLog += $"\n-------------------\n";
             }
@@ -3390,7 +3387,7 @@ namespace LethalMin
             // If no pathable target found
             HasFoundCaryTarget = true;
             targetCarryRotaion = CalculateYAxisRotation(targetItem.Root.transform.position);
-            PossibleRoutes.Add(new ItemRoute(""));
+            PossibleRoutes.Add(new ItemRoute("???"));
             CurRoutes = PossibleRoutes;
 
             LethalMin.Logger.LogWarning($"({uniqueDebugId}) No pathable target found!");
@@ -3411,8 +3408,8 @@ namespace LethalMin
                 return;
 
             ItemRoute firstRoute = CurRoutes[0];
-            //Check if the First route is not "" and check if it's still pathable
-            if (firstRoute.RouteName != "")
+            //Check if the First route is not "???" and check if it's still pathable
+            if (firstRoute.RouteName != "???")
             {
                 if (firstRoute.BypassPathableCheck)
                     return;
@@ -3426,9 +3423,9 @@ namespace LethalMin
             {
                 return;
             }
-            if (firstRoute.RouteName == "")
+            if (firstRoute.RouteName == "???")
             {
-                LethalMin.Logger.LogWarning($"({uniqueDebugId}) The First route is still '' which is not pathable. Refreshing routes.");
+                LethalMin.Logger.LogWarning($"({uniqueDebugId}) The First route is still '???' which is not pathable. Refreshing routes.");
                 CurRoutes.Clear();
                 GetItemTarget();
                 return;
@@ -3457,7 +3454,7 @@ namespace LethalMin
                     RouteLog += $"\n-------------------\n";
                     RouteLog += route.RouteName + "\n";
                     RouteLog += $"Pathable: {route.IsPathable} \nBypassPath: {route.BypassPathableCheck} \nBypassDistance: {route.BypassDistanceCheck}\n";
-                    RouteLog += $"Entrance: {route.entranceTeleport.name  "None"}\n";
+                    RouteLog += $"Entrance: {route.entranceTeleport?.name ?? "None"}\n";
                     RouteLog += $"Priority: {route.Priority}, \nDistance: {route.InitalDistance}\n";
                     RouteLog += $"-------------------\n";
                 }
@@ -3666,7 +3663,7 @@ namespace LethalMin
             if (allExits.Count == 0)
             {
                 LethalMin.Logger.LogWarning("No fire exit found. Returning null.");
-                return ;
+                return null!;
             }
 
             return allExits.OrderBy(exit => Vector3.Distance(transform.position, exit.transform.position)).ToList();
@@ -3841,7 +3838,7 @@ namespace LethalMin
             SwitchToBehaviourClientRpc((int)PState.Airborn);
             ReqeustThrowSFXClientRpc();
 
-            LeaderManager targetLeader = ;
+            LeaderManager targetLeader = null!;
 
             if (target.TryGet(out NetworkObject targetL))
             {
@@ -4291,8 +4288,8 @@ namespace LethalMin
                 return false;
             }
             return
-            (!LethalMin.FriendlyFireOmon && enemy.ownerPlayer == previousLeader.Controller) ||
-            (!LethalMin.FriendlyFireOmon && enemy.ownerPlayer == previousLeader.Controller) ||
+            (!LethalMin.FriendlyFireOmon && enemy.ownerPlayer == previousLeader?.Controller) ||
+            (!LethalMin.FriendlyFireOmon && enemy.ownerPlayer == previousLeader?.Controller) ||
             (!LethalMin.FriendlyFireMon && enemy.IsTamed);
         }
         public override void OnCollideWithEnemy(Collider other, EnemyAI collidedEnemy)
@@ -4372,7 +4369,7 @@ namespace LethalMin
             }
 
             // Ignore collisions with other Pikmin
-            PikminAI otherPikmin = ;
+            PikminAI otherPikmin = null!;
             if (collidedObject.CompareTag("Enemy"))
                 otherPikmin = collidedObject.GetComponent<PikminAI>();
 
@@ -4538,11 +4535,11 @@ namespace LethalMin
             base.HitEnemy(force, playerWhoHit, playHitSFX, hitID);
             if (Invincible.Value) { return; }
             if (KncockedBack) { return; }
-            if (!LethalMin.FriendlyFire && playerWhoHit != null && playerWhoHit == currentLeader.Controller
-            || !LethalMin.FriendlyFire && playerWhoHit != null && playerWhoHit == previousLeader.Controller && currentBehaviourStateIndex == (int)PState.Attacking)
+            if (!LethalMin.FriendlyFire && playerWhoHit != null && playerWhoHit == currentLeader?.Controller
+            || !LethalMin.FriendlyFire && playerWhoHit != null && playerWhoHit == previousLeader?.Controller && currentBehaviourStateIndex == (int)PState.Attacking)
             {
                 if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo($"{uniqueDebugId} was hit by their leader: {playerWhoHit.name}");
+                    LethalMin.Logger.LogInfo($"{uniqueDebugId} was hit by their leader: {playerWhoHit?.name}");
                 return;
             }
             if (LethalMin.DebugMode)
@@ -4594,7 +4591,7 @@ namespace LethalMin
         {
             if (currentBehaviourStateIndex == (int)PState.Leaveing || KncockedBack || !IsServer) { return; }
             if (LethalMin.DebugMode)
-                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Snaping to position ({Positio.gameObject.name})");
+                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Snaping to position ({Positio?.gameObject.name})");
             if (Positio == null)
             {
                 LethalMin.Logger.LogWarning($"({uniqueDebugId}) Tried to snap to a null position");

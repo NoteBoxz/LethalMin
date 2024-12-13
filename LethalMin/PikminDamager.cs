@@ -11,14 +11,14 @@ namespace LethalMin
     public class PikminDamager : NetworkBehaviour, IDebuggable
     {
         public float FakeHP;
-        public EnemyAI RootScript = ;
+        public EnemyAI RootScript = null!;
         [IDebuggable.Debug] public List<PikminAI> PikminLatchedOn = new List<PikminAI>();
 
         public void LateUpdate()
         {
             if (RootScript == null)
             {
-                LethalMin.Logger.LogError($"{name}'s RootScript is !");
+                LethalMin.Logger.LogError($"{name}'s RootScript is null!!");
                 enabled = false;
             }
         }

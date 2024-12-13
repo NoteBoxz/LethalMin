@@ -121,8 +121,8 @@ namespace LethalMin
                 return;
             }
 
-            Material onionMaterial = ;
-            Texture2D OnionTexture = ;
+            Material onionMaterial = null!;
+            Texture2D OnionTexture = null!;
             if (type.OnionMaterial != null)
             {
                 onionMaterial = type.OnionMaterial;
@@ -208,7 +208,7 @@ namespace LethalMin
             transform.Find("mesh/SK_stg_Onyon/root/S_j000/S_j001/S_j030/MapDot").GetComponent<Renderer>().material.color = Color.white;
             transform.Find("mesh/SK_stg_Onyon/root/S_j000/S_j001/S_j030/MapDot").GetComponent<Renderer>().material.SetTexture("_UnlitColorMap", gradient);
         }
-        bool IsDoingSpawning = false;
+        
         public override void LateUpdate()
         {
             base.LateUpdate();
@@ -302,7 +302,7 @@ namespace LethalMin
         [ClientRpc]
         public void DoSproutAnimationClientRpc(NetworkObjectReference sproutRef, Vector3 start, Vector3 end, int pikminTypeID)
         {
-            GameObject sprout = ;
+            GameObject sprout = null!;
 
             sproutRef.TryGet(out NetworkObject sproutNetObj);
 

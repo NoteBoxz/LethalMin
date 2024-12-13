@@ -7,7 +7,7 @@ namespace LethalMin
 {
     public class PuffminOwnerManager : NetworkBehaviour, IDebuggable
     {
-        public EnemyAI Controller = ;
+        public EnemyAI Controller = null!;
         [IDebuggable.Debug] public List<PuffminAI> followingPuffmin = new List<PuffminAI>();
         [SerializeField] private float whistleZoneRadius = 5f;
         [SerializeField] private float minWhistleZoneRadius = 1f;
@@ -50,9 +50,9 @@ namespace LethalMin
         [ClientRpc]
         public void InitalizeRefsClientRpc(NetworkObjectReference zoneRef, NetworkObjectReference POMref, NetworkObjectReference MPEref)
         {
-            NoticeZone zone = ;
-            EnemyAI __instance = ;
-            PuffminOwnerManager pom = ;
+            NoticeZone zone = null!;
+            EnemyAI __instance = null!;
+            PuffminOwnerManager pom = null!;
 
             if (zoneRef.TryGet(out NetworkObject zoneNetworkObject))
             {

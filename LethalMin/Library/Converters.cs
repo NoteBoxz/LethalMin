@@ -143,7 +143,7 @@ namespace LethalMin.Library
     {
         public static HazardType Convert_Lib_HazardToLmHazard(LibHazardType libHazardType)
         {
-            HazardType hazardType = Enum.TryParse<HazardType>(libHazardType.ToString(), out var result)  result : HazardType.Lethal;
+            HazardType hazardType = Enum.TryParse<HazardType>(libHazardType.ToString(), out var result) ? result : HazardType.Lethal;
             LethalMin.Logger.LogDebug($"(LETHALMIN_CONVERTER) Converted {libHazardType} to {hazardType}");
             return hazardType;
         }
@@ -155,7 +155,7 @@ namespace LethalMin.Library
 
         public static LibHazardType Convert_LethalMin_HazardToLibHazard(HazardType hazardType)
         {
-            LibHazardType libHazardType = Enum.TryParse<LibHazardType>(hazardType.ToString(), out var result)  result : LibHazardType.Lethal;
+            LibHazardType libHazardType = Enum.TryParse<LibHazardType>(hazardType.ToString(), out var result) ? result : LibHazardType.Lethal;
             LethalMin.Logger.LogDebug($"(LETHALMIN_CONVERTER) Converted {hazardType} to {libHazardType}");
             return libHazardType;
         }

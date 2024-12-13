@@ -52,15 +52,15 @@ namespace LethalMin.Patches
         {
             if (grabbableObject == null)
             {
-                LethalMin.Logger.LogWarning("GrabbableObject is  When creating PikminItem");
-                return ;
+                LethalMin.Logger.LogWarning("GrabbableObject is null! When creating PikminItem");
+                return null!;
             }
             if (!LethalMin.AllItemsToP && grabbableObject.IsServer && grabbableObject.grabbableToEnemies
             || LethalMin.AllItemsToP && grabbableObject.IsServer && grabbableObject.grabbable
             || overrideGrabbableCheck)
             {
                 if (grabbableObject.GetComponent<CaveDwellerPhysicsProp>() != null)
-                    return ;
+                    return null!;
                 PikminItem[] Pims = GameObject.FindObjectsOfType<PikminItem>();
                 foreach (var item in Pims)
                 {
@@ -71,7 +71,7 @@ namespace LethalMin.Patches
                     if (item.Root == grabbableObject)
                     {
                         LethalMin.Logger.LogWarning($"{grabbableObject.itemProperties.name} already has a pikmin node!");
-                        return ;
+                        return null!;
                     }
                 }
                 GameObject PikminObjectPrefab = LethalMin.PikminObjectPrefab;
@@ -85,7 +85,7 @@ namespace LethalMin.Patches
                     if (grabbableObject.NetworkObject == null)
                     {
                         LethalMin.Logger.LogWarning($"NetworkObject component not found on GrabbableObject for {grabbableObject.name}");
-                        return ;
+                        return null!;
                     }
                     pikminItem.SetRootServerRpc(new NetworkObjectReference(grabbableObject.NetworkObject));
                     PikminObjectPrefabInstance.name = grabbableObject.name + "(PikminNode)";
@@ -98,7 +98,7 @@ namespace LethalMin.Patches
                     LethalMin.Logger.LogError($"NetworkObject component not found on PikminItemNode for {grabbableObject.name}");
                 }
             }
-            return ;
+            return null!;
         }
 
         public static NetworkObject GetPhysicsRegionOfDroppedObject(GrabbableObject grabbableObject, out Vector3 hitPoint)
@@ -126,7 +126,7 @@ namespace LethalMin.Patches
                         hitPoint = componentInChildren.physicsTransform.InverseTransformPoint(hitInfo.point + Vector3.up * 0.04f + grabbableObject.itemProperties.verticalOffset * Vector3.up + addPositionOffsetToItems);
                         return parentNetworkObject;
                     }
-                    LethalMin.Logger.LogError("Error: physics region transform does not have network object: " + transform.gameObject.name);
+                    LethalMin.Logger.LogError("Error: physics region transform does not have network object?: " + transform.gameObject.name);
                 }
             }
 

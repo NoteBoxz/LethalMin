@@ -55,7 +55,7 @@ namespace LethalMin
         public string PikminGlowPath;
 
         [HideInInspector]
-        public PikminMeshRefernces MeshRefernces = ;
+        public PikminMeshRefernces MeshRefernces = null!;
 
         [Header("Pikmin Stats")]
 
@@ -198,7 +198,7 @@ namespace LethalMin
         [HideInInspector]
         public bool HasBeenRegistered;
         [HideInInspector]
-        public string version = "0.2.16";
+        public string version = "0.2.15";
     }
 
     public struct PikminMeshData

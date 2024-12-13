@@ -112,7 +112,7 @@ namespace LethalMin.Patches
                 __instance.SwitchToBehaviourState(3);
                 __instance.endingLunge = false;
                 __instance.ray = new Ray(__instance.transform.position + Vector3.up, __instance.transform.forward);
-                Vector3 pos = ((!Physics.Raycast(__instance.ray, out __instance.rayHit, 17f, StartOfRound.Instance.collidersAndRoomMask))  __instance.ray.GetPoint(17f) : __instance.rayHit.point);
+                Vector3 pos = ((!Physics.Raycast(__instance.ray, out __instance.rayHit, 17f, StartOfRound.Instance.collidersAndRoomMask)) ? __instance.ray.GetPoint(17f) : __instance.rayHit.point);
                 pos = __instance.roundManager.GetNavMeshPosition(pos);
                 __instance.agent.SetDestination(closestPikmin.transform.position);
                 __instance.agent.speed = 13f;

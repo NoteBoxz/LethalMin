@@ -125,7 +125,7 @@ namespace LethalMin
                 {
                     if (GUI.Button(new Rect(10, yOffset, MenuWidth - 40, 30), $"{className} ({debugItems[className].Count})"))
                     {
-                        selectedClassName = (selectedClassName == className)  null : className;
+                        selectedClassName = (selectedClassName == className) ? null : className;
                     }
                     yOffset += 35;
                     classContentHeight += 35;
@@ -158,9 +158,9 @@ namespace LethalMin
                                 try
                                 {
                                     rawValue = item.field != null
-                                         item.field.GetValue(item.target)
+                                        ? item.field.GetValue(item.target)
                                         : item.property.GetValue(item.target);
-                                    value = rawValue.ToString()  "null";
+                                    value = rawValue?.ToString() ?? "null";
                                 }
                                 catch (Exception e)
                                 {
@@ -210,7 +210,7 @@ namespace LethalMin
             int index = 0;
             foreach (var item in enumerable)
             {
-                GUI.Label(new Rect(20, classYOffset, width - 100, 20), $"[{index}]: {item.ToString()  "null"}");
+                GUI.Label(new Rect(20, classYOffset, width - 100, 20), $"[{index}]: {item?.ToString() ?? "null"}");
                 classYOffset += 25;
                 index++;
 

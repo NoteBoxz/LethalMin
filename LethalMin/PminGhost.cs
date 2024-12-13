@@ -11,7 +11,6 @@ namespace LethalMin
         public GameObject GhostOBJ;
         private Animator animator;
         public PikminType pmintype;
-        float like;
 
         void Start()
         {
