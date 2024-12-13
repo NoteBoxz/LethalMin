@@ -493,6 +493,11 @@ namespace LethalMin
                 UpdateSelectedPikmin();
                 UpdateTrajectoryIfAiming();
                 UpdateTransformPosition();
+
+                if (isAiming && Controller.isPlayerDead)
+                {
+                    OnThrowCanceled(new InputAction.CallbackContext());
+                }
             }
             else
             {
@@ -566,7 +571,7 @@ namespace LethalMin
                 }
             }
         }
-        
+
         private void UpdatePikminAimPosition()
         {
             if (selectedPikmin != null && selectedPikmin.isHeld)
