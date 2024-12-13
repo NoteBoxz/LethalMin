@@ -53,6 +53,7 @@ namespace LethalMin
         public List<EntranceTeleport> MainExits = new List<EntranceTeleport>();
         public List<EntranceTeleport> FireExits = new List<EntranceTeleport>();
         public List<Transform> AlterntiveExits = new List<Transform>();
+        public Collider ElevatorBounds;
     }
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     [BepInDependency("evaisa.lethallib")]

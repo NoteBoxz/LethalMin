@@ -578,7 +578,7 @@ namespace LethalMin
                             Root.transform.SetParent(StartOfRound.Instance.elevatorTransform, worldPositionStays: true);
                         }
                     }
-                    else if (firstPikminG != null && firstPikminG.IsOnElevator)
+                    else if (firstPikminG != null && firstPikminG.FloorOn != null && firstPikminG.FloorOn.ElevatorBounds.bounds.Contains(firstPikminG.transform.position))
                     {
                         //Parent To Elevator
                         if (Root.NetworkObject != null)

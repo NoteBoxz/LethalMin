@@ -224,7 +224,6 @@ namespace LethalMin
         }
         [IDebuggable.Debug] public Cstate stk = Cstate.none;
         // end of I should remove this
-        MineshaftElevatorController elevator;
         public EnemyAI EnemyAttacking;
         public PikminDamager EnemyDamager;
         public NetworkTransform transform2 = null!;
@@ -322,7 +321,6 @@ namespace LethalMin
         [IDebuggable.Debug] public bool CachedIsPlayerInCar = false;
         Transform TargetCarPos;
         List<GameObject> TempObjects = new List<GameObject>();
-        Vector3 MineshaftMainEntrancePosition;
         NetworkVariable<bool> newIsMoving = new NetworkVariable<bool>(false);
         bool IsCallingCLOSFI;
         GameObject NoticeColider;
@@ -2982,29 +2980,50 @@ namespace LethalMin
             }
             Vector3 pikminPosition = transform.position;
             FloorData currentFloor = null;
-            float closestDistance = float.MaxValue;
+            float closestHorizontalDistance = float.MaxValue;
 
             foreach (FloorData floor in PikminManager.CurrentFloorData)
             {
                 // Calculate the horizontal distance between the Pikmin and the floor's root
-                float distance = Vector2.Distance(
+                float horizontalDistance = Vector2.Distance(
                     new Vector2(pikminPosition.x, pikminPosition.z),
                     new Vector2(floor.FloorRoot.x, floor.FloorRoot.z)
                 );
 
-                // Check if this floor is closer than the previously found closest floor
-                if (distance < closestDistance)
+                // Check if this floor is closer horizontally than the previously found closest floor
+                if (horizontalDistance < closestHorizontalDistance)
                 {
-                    // Check if the Pikmin's y-position is within an acceptable range of the floor's y-position
-                    float heightDifference = Mathf.Abs(pikminPosition.y - floor.FloorRoot.y);
-                    if (heightDifference <= 2f) // You can adjust this value based on your game's scale
+                    // Check if the Pikmin is above this floor and below the next floor (if any)
+                    bool isAboveThisFloor = pikminPosition.y >= floor.FloorRoot.y;
+                    bool isBelowNextFloor = true;
+
+                    // Find the next floor above (if any)
+                    FloorData nextFloorAbove = PikminManager.CurrentFloorData
+                        .Where(f => f.FloorRoot.y > floor.FloorRoot.y)
+                        .OrderBy(f => f.FloorRoot.y)
+                        .FirstOrDefault();
+
+                    if (nextFloorAbove != null)
                     {
-                        closestDistance = distance;
+                        isBelowNextFloor = pikminPosition.y < nextFloorAbove.FloorRoot.y;
+                    }
+
+                    if (isAboveThisFloor && isBelowNextFloor)
+                    {
+                        closestHorizontalDistance = horizontalDistance;
                         currentFloor = floor;
                     }
                 }
             }
-            LethalMin.Logger.LogInfo($"{uniqueDebugId}) Current floor: {currentFloor.FloorTitle}");
+
+            if (currentFloor != null)
+            {
+                LethalMin.Logger.LogInfo($"({uniqueDebugId}) Current floor: {currentFloor.FloorTitle}");
+            }
+            else
+            {
+                LethalMin.Logger.LogWarning($"({uniqueDebugId}) No valid floor found for Pikmin");
+            }
 
             FloorOn = currentFloor;
             return currentFloor;
@@ -3024,7 +3043,7 @@ namespace LethalMin
                     }
                     return pathLength;
                 }
-                return -1f; // Return -1 if no path is found
+                return Vector3.Distance(start, end);
             }
 
             List<ItemRoute> PossibleRoutes = new List<ItemRoute>();
@@ -3282,7 +3301,7 @@ namespace LethalMin
             if (PikminManager.CurrentFloorData.Count > 0 && !isOutside)
             {
                 GetFloorOn();
-                
+
                 if (FloorOn != null)
                 {
                     //Get all the exits To A floor

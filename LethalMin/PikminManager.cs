@@ -173,6 +173,10 @@ namespace LethalMin
                 List<EntranceTeleport> allExits = new List<EntranceTeleport>();
                 foreach (EntranceTeleport entrance in allEntrances)
                 {
+                    if (entrance.isEntranceToBuilding)
+                    {
+                        continue;
+                    }
                     if (entrance.entranceId != 0)
                     {
                         allExits.Add(entrance);
@@ -187,6 +191,7 @@ namespace LethalMin
 
             yield return new WaitUntil(() => StartOfRound.Instance.fullyLoadedPlayers.Count >= GameNetworkManager.Instance.connectedPlayers);
             yield return new WaitUntil(() => RoundManager.Instance.dungeonFinishedGeneratingForAllPlayers);
+            yield return new WaitForSeconds(2f);
 
             CurrentFloorData.Clear();
             if (RoundManager.Instance.currentMineshaftElevator != null)
@@ -195,6 +200,8 @@ namespace LethalMin
                 F1.MainExits.Add(RoundManager.FindMainEntranceScript());
                 F1.FloorRoot = RoundManager.FindMainEntrancePosition();
                 F1.Elevators.Add(RoundManager.Instance.currentMineshaftElevator.transform);
+                F1.ElevatorBounds = RoundManager.Instance.currentMineshaftElevator.
+                elevatorInsidePoint.transform.parent.GetComponentInChildren<PlayerPhysicsRegion>().GetComponent<Collider>();
                 F1.FloorTitle = "(Floor1) Entrance";
                 CurrentFloorData.Add(F1);
 
@@ -202,6 +209,8 @@ namespace LethalMin
                 F2.FireExits.AddRange(FindFireExits());
                 F2.FloorRoot = RoundManager.Instance.currentMineshaftElevator.elevatorBottomPoint.position;
                 F2.Elevators.Add(RoundManager.Instance.currentMineshaftElevator.transform);
+                F1.ElevatorBounds = RoundManager.Instance.currentMineshaftElevator.
+                elevatorInsidePoint.transform.parent.GetComponentInChildren<PlayerPhysicsRegion>().GetComponent<Collider>();
                 F2.FloorTitle = "(Floor2) Mineshaft";
                 CurrentFloorData.Add(F2);
 
@@ -222,6 +231,32 @@ namespace LethalMin
             {
                 return;
             }
+
+
+            LethalMin.Logger.LogInfo("Office detected. Loading Piggy LCOffice data.");
+
+            List<EntranceTeleport> FindFireExits()
+            {
+                EntranceTeleport[] allEntrances = UnityEngine.Object.FindObjectsOfType<EntranceTeleport>(includeInactive: false);
+                List<EntranceTeleport> allExits = new List<EntranceTeleport>();
+                foreach (EntranceTeleport entrance in allEntrances)
+                {
+                    if (entrance.isEntranceToBuilding)
+                    {
+                        continue;
+                    }
+                    if (entrance.entranceId != 0)
+                    {
+                        allExits.Add(entrance);
+                    }
+                }
+                if (allExits.Count == 0)
+                {
+                    return null!;
+                }
+                return allExits.OrderBy(exit => Vector3.Distance(transform.position, exit.transform.position)).ToList();
+            }
+
             GameObject CreateDebugCube(Vector3 LocalPos)
             {
                 GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -230,25 +265,69 @@ namespace LethalMin
                 cube.GetComponent<Renderer>().material = AssetLoader.LoadAsset<Material>("Assets/LethalminAssets/Pikmin/Materials/DebugMin.mat");
                 return cube;
             }
-            
+
             FloorData F1 = new FloorData();
             F1.FloorTitle = "(Floor1) Basement";
             F1.Elevators.Add(ElevatorSystem.animator.transform);
+            F1.ElevatorBounds = ElevatorSystem.animator.transform.Find("AIelevatorFloor (4 Picles)").GetComponent<Collider>();
             GameObject cubeA = CreateDebugCube(new Vector3(-2.32f, -9.71f, 1.01f));
             F1.FloorRoot = cubeA.transform.position;
+
+            CurrentFloorData.Add(F1);
 
             FloorData F2 = new FloorData();
             F2.FloorTitle = "(Floor2) Upper Basement";
             F2.Elevators.Add(ElevatorSystem.animator.transform);
+            F2.ElevatorBounds = ElevatorSystem.animator.transform.Find("AIelevatorFloor (4 Picles)").GetComponent<Collider>();
             GameObject cubeB = CreateDebugCube(new Vector3(-2.32f, 23.79f, 1.01f));
             F2.FloorRoot = cubeB.transform.position;
             F2.MainExits.Add(RoundManager.FindMainEntranceScript());
 
+            CurrentFloorData.Add(F2);
+
             FloorData F3 = new FloorData();
             F3.FloorTitle = "(Floor3) Central Basement";
             F3.Elevators.Add(ElevatorSystem.animator.transform);
+            F3.ElevatorBounds = ElevatorSystem.animator.transform.Find("AIelevatorFloor (4 Picles)").GetComponent<Collider>();
             GameObject cubeC = CreateDebugCube(new Vector3(-2.32f, 63.14f, 1.01f));
             F3.FloorRoot = cubeC.transform.position;
+
+            CurrentFloorData.Add(F3);
+
+            FloorData DetermineFloor(GameObject obj)
+            {
+                Vector3 objPosition = obj.transform.position;
+                return CurrentFloorData.OrderBy(floor =>
+                    Mathf.Abs(objPosition.y - floor.FloorRoot.y))
+                    .FirstOrDefault();
+            }
+
+            Dictionary<FloorData, EntranceTeleport> FireExitsWithFloorData = new Dictionary<FloorData, EntranceTeleport>();
+            foreach (EntranceTeleport exit in FindFireExits())
+            {
+                FloorData floorData = DetermineFloor(exit.gameObject);
+                if (floorData != null)
+                {
+                    FireExitsWithFloorData.Add(floorData, exit);
+                }
+            }
+
+            foreach (KeyValuePair<FloorData, EntranceTeleport> kvp in FireExitsWithFloorData)
+            {
+                FloorData floorData = kvp.Key;
+                EntranceTeleport exit = kvp.Value;
+
+                foreach (var floor in CurrentFloorData)
+                {
+                    if (floorData == CurrentFloorData[CurrentFloorData.IndexOf(floor)])
+                    {
+                        CurrentFloorData[CurrentFloorData.IndexOf(floor)].FireExits.Add(exit);
+                        LethalMin.Logger.LogInfo($"Added {exit.name} to {floorData.FloorTitle} floor.");
+                    }
+                }
+            }
+
+            LethalMin.Logger.LogInfo("Registered LC-Office Floors");
         }
 
         #region This is the most hackiest networking i've ever done
