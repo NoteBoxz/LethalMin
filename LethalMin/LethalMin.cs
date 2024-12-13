@@ -49,9 +49,10 @@ namespace LethalMin
     {
         public Vector3 FloorRoot;
         public string FloorTitle;
-        public List<Transform> Elevators;
-        public List<EntranceTeleport> Exits;
-        public List<Transform> AlterntiveExits;
+        public List<Transform> Elevators = new List<Transform>();
+        public List<EntranceTeleport> MainExits = new List<EntranceTeleport>();
+        public List<EntranceTeleport> FireExits = new List<EntranceTeleport>();
+        public List<Transform> AlterntiveExits = new List<Transform>();
     }
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     [BepInDependency("evaisa.lethallib")]

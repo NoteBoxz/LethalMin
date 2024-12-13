@@ -178,12 +178,6 @@ namespace LethalMin
         public AudioSource LocalVoice;
         [IDebuggable.Debug] public Onion TargetOnion;
         public bool HasInitalized;
-        //Mineshaft related fields
-        private bool MineshaftInside;
-        [IDebuggable.Debug] public bool IsOnElevator { get; private set; }
-        [IDebuggable.Debug] public bool IsOnUpperLevel { get; private set; }
-        [IDebuggable.Debug] public bool IsOnLowerLevel { get; private set; }
-        //Mineshaft related fields end
         public float itemDetectionRange = 5f;
         public float itemDetectionAngle = 360f; // Unused :(
         [IDebuggable.Debug] public PikminItem targetItem;
@@ -453,8 +447,6 @@ namespace LethalMin
             if (LethalMin.DebugMode)
                 LethalMin.Logger.LogInfo($"Pikmin {uniqueDebugId} has been spawned with type {PminType} and index {thisEnemyIndex}");
 
-            StartCoroutine(WaitToCheckForMineshaft());
-
             yield return null;  // Wait another frame
         }
         private IEnumerator ShowMeshFailSafe()
@@ -466,21 +458,6 @@ namespace LethalMin
                 Mesh = transform.Find("PikminMesh").gameObject;
             }
             ToggleMeshVisibility(true);
-        }
-
-        IEnumerator WaitToCheckForMineshaft()
-        {
-            //Wait until the dungeon is fully generated and the elevator is found
-            while (RoundManager.Instance.currentDungeonType == -1 || !RoundManager.Instance.dungeonFinishedGeneratingForAllPlayers)
-            {
-                yield return new WaitForSeconds(0.1f);
-            }
-            if (RoundManager.Instance.currentDungeonType == 4 && RoundManager.Instance.currentMineshaftElevator != null)
-            {
-                MineshaftInside = true;
-                elevator = RoundManager.Instance.currentMineshaftElevator;
-                MineshaftMainEntrancePosition = RoundManager.FindMainEntrancePosition();
-            }
         }
 
         /// <summary>
@@ -1748,33 +1725,6 @@ namespace LethalMin
             IsInShip = StartOfRound.Instance.shipInnerRoomBounds.bounds.Contains(transform.position) && isOutside;
             IsInCar = TargetCarNavMeshSurface != null && TargetCarNavMeshSurface.bounds.Contains(transform.position);
 
-            // Check if the Pikmin is in the mineshaft
-            if (MineshaftInside)
-            {
-                float distanceToElevator = Vector3.Distance(transform.position, elevator.elevatorInsidePoint.position);
-                float elevatorThreshold = 1f;
-                if (currentLeader != null)
-                {
-                    float distanceToElevator2 = Vector3.Distance(currentLeader.Controller.transform.position, elevator.elevatorInsidePoint.position);
-                    IsLeaderOnElevator = distanceToElevator2 < elevatorThreshold + 0.6f;
-                }
-                else
-                {
-                    IsLeaderOnElevator = false;
-                }
-                IsOnElevator = distanceToElevator < elevatorThreshold;
-                // Check if Pikmin is above or below the elevator
-                IsOnUpperLevel = transform.position.y > MineshaftMainEntrancePosition.y - 20;
-                IsOnLowerLevel = !IsOnUpperLevel;
-            }
-            else
-            {
-                // Not in a dungeon with an elevator, reset all flags
-                IsOnElevator = false;
-                IsOnUpperLevel = false;
-                IsOnLowerLevel = false;
-            }
-
             if (LethalMin.SpeedMultiplier != 1)
             {
                 for (int i = 0; i < PlantSpeeds.Length; i++)
@@ -2913,6 +2863,9 @@ namespace LethalMin
         }
 
         public List<ItemRoute> CurRoutes = new List<ItemRoute>();
+        private Vector3 lastPathablePoint;
+        private bool isMovingInCircles = false;
+
         private void HandleItemCarrying()
         {
             if (targetItem == null || targetItem.Root == null)
@@ -2945,13 +2898,31 @@ namespace LethalMin
                         GetItemTarget();
                     }
 
-                    if (CurRoutes[0].RouteName == "???")
+                    if (CurRoutes[0].RouteName == "???" || (!CurRoutes[0].IsPathable && isMovingInCircles))
                     {
                         MoveInCircles();
                     }
                     else
                     {
-                        agent.SetDestination(CurRoutes[0].GetRoutePoint().Item1);
+                        Vector3 targetPoint = CurRoutes[0].GetRoutePoint().Item1;
+                        if (CurRoutes[0].IsPathable)
+                        {
+                            agent.SetDestination(targetPoint);
+                            lastPathablePoint = agent.pathEndPosition;
+                            isMovingInCircles = false;
+                        }
+                        else
+                        {
+                            NavMeshPath path = new NavMeshPath();
+                            agent.CalculatePath(targetPoint, path);
+                            lastPathablePoint = path.corners[path.corners.Length - 1];
+                            agent.SetDestination(lastPathablePoint);
+                            if (HasArrivedAtDestonation(1f, lastPathablePoint))
+                            {
+                                isMovingInCircles = true;
+                                InitalCirclePos = lastPathablePoint;
+                            }
+                        }
                     }
                     if (CurRoutes[0].RouteName != "???")
                     {
@@ -3004,6 +2975,7 @@ namespace LethalMin
 
         public FloorData GetFloorOn()
         {
+            FloorOn = null;
             if (PikminManager.CurrentFloorData.Count == 0)
             {
                 return null;
@@ -3040,11 +3012,25 @@ namespace LethalMin
 
         private void GetItemTarget()
         {
+            float CalculatePathLength(Vector3 start, Vector3 end)
+            {
+                NavMeshPath path = new NavMeshPath();
+                if (NavMesh.CalculatePath(start, end, NavMesh.AllAreas, path))
+                {
+                    float pathLength = 0f;
+                    for (int i = 1; i < path.corners.Length; i++)
+                    {
+                        pathLength += Vector3.Distance(path.corners[i - 1], path.corners[i]);
+                    }
+                    return pathLength;
+                }
+                return -1f; // Return -1 if no path is found
+            }
+
             List<ItemRoute> PossibleRoutes = new List<ItemRoute>();
 
             Transform targetPos2 = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
 
-            GetFloorOn();
 
             (int, EntranceTeleport) GetVaildExit()
             {
@@ -3111,7 +3097,7 @@ namespace LethalMin
                 {
                     ShipRoute.Priority = 1;
                 }
-                ShipRoute.InitalDistance = Vector3.Distance(transform.position, shipPos);
+                ShipRoute.InitalDistance = CalculatePathLength(transform.position, shipPos);
                 if (LethalMin.AllowLethalEscape)
                     ShipRoute.InitalDistance = 0.1f;
                 PossibleRoutes.Add(ShipRoute);
@@ -3137,7 +3123,7 @@ namespace LethalMin
                     {
                         CarRoute.Priority = 2;
                     }
-                    CarRoute.InitalDistance = Vector3.Distance(transform.position, TargetCarPos.position);
+                    CarRoute.InitalDistance = CalculatePathLength(transform.position, TargetCarPos.position);
                     if (LethalMin.AllowLethalEscape)
                         CarRoute.InitalDistance = 0.1f;
                     PossibleRoutes.Add(CarRoute);
@@ -3245,7 +3231,7 @@ namespace LethalMin
                 {
                     targetItem.SetTargetOnionClientRpc(targetOnion.NetworkObject);
                     OnionRoute.AddPoint(targetOnion.transform.position, true);
-                    OnionRoute.InitalDistance = Vector3.Distance(transform.position, targetOnion.transform.position);
+                    OnionRoute.InitalDistance = CalculatePathLength(transform.position, targetOnion.transform.position);
                     PossibleRoutes.Add(OnionRoute);
                 }
             }
@@ -3259,12 +3245,12 @@ namespace LethalMin
                 CounterRoute.BypassPathableCheck = true;
                 CounterRoute.Priority = 5;
                 CounterRoute.AddPoint(counterPos, true);
-                CounterRoute.InitalDistance = Vector3.Distance(transform.position, counterPos);
+                CounterRoute.InitalDistance = CalculatePathLength(transform.position, counterPos);
                 PossibleRoutes.Add(CounterRoute);
             }
 
             // Main entrance and fire exit
-            if (!MineshaftInside && !isOutside)
+            if (PikminManager.CurrentFloorData.Count == 0 && !isOutside)
             {
                 Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
                 Vector3 adjustedMainEntrancePos = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
@@ -3272,7 +3258,7 @@ namespace LethalMin
                 if (!LethalMin.OnlyExit)
                 {
                     MainRoute.AddPoint(adjustedMainEntrancePos, true);
-                    MainRoute.InitalDistance = Vector3.Distance(transform.position, adjustedMainEntrancePos);
+                    MainRoute.InitalDistance = CalculatePathLength(transform.position, adjustedMainEntrancePos);
                     MainRoute.entranceTeleport = RoundManager.FindMainEntranceScript();
                     PossibleRoutes.Add(MainRoute);
                 }
@@ -3284,7 +3270,7 @@ namespace LethalMin
                     {
                         ItemRoute FireExitRoute = new ItemRoute($"FireExit ({i})");
                         FireExitRoute.AddPoint(fireExit.transform.position, false);
-                        FireExitRoute.InitalDistance = Vector3.Distance(transform.position, fireExit.transform.position);
+                        FireExitRoute.InitalDistance = CalculatePathLength(transform.position, fireExit.transform.position);
                         FireExitRoute.entranceTeleport = fireExit;
                         PossibleRoutes.Add(FireExitRoute);
                         i++;
@@ -3292,47 +3278,62 @@ namespace LethalMin
                 }
             }
 
-            // Mineshaft specific targets
-            if (MineshaftInside && !isOutside)
+            // Multi-Floor specific targets
+            if (PikminManager.CurrentFloorData.Count > 0 && !isOutside)
             {
-                ItemRoute MainRoute = new ItemRoute("Main");
-                ItemRoute ElevatorRoute = new ItemRoute("Elevator");
-                if (IsOnUpperLevel)
+                GetFloorOn();
+                
+                if (FloorOn != null)
                 {
-                    Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
-                    Vector3 adjustedMainEntrancePos = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
-                    if (!LethalMin.OnlyExit)
+                    //Get all the exits To A floor
+                    int i = 0;
+                    foreach (var Exit in FloorOn.MainExits)
                     {
-                        MainRoute.AddPoint(adjustedMainEntrancePos, true);
-                        MainRoute.InitalDistance = Vector3.Distance(transform.position, adjustedMainEntrancePos);
-                        MainRoute.entranceTeleport = RoundManager.FindMainEntranceScript();
-                        PossibleRoutes.Add(MainRoute);
-                    }
-                }
-                else
-                {
-                    if (!LethalMin.OnlyExit)
-                    {
-                        Vector3 elevatorPos = RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint.position;
-                        ElevatorRoute.InitalDistance = Vector3.Distance(transform.position, elevatorPos);
-                        ElevatorRoute.AddPoint(elevatorPos, false);
-                        ElevatorRoute.BypassPathableCheck = true;
-                        ElevatorRoute.Priority = 7;
-                        PossibleRoutes.Add(ElevatorRoute);
+                        if (LethalMin.OnlyExit) { continue; }
+
+                        ItemRoute ExitRoute = new ItemRoute($"MainExit ({i})");
+                        ExitRoute.AddPoint(Exit.transform.position, false);
+                        ExitRoute.InitalDistance = CalculatePathLength(transform.position, Exit.transform.position);
+                        ExitRoute.entranceTeleport = Exit;
+                        PossibleRoutes.Add(ExitRoute);
+                        i++;
                     }
 
-                    if (FindFireExits().Count > 0 && !LethalMin.OnlyMain)
+                    int i2 = 0;
+                    foreach (var fireExit in FloorOn.FireExits)
                     {
-                        int i = 0;
-                        foreach (var fireExit in FindFireExits())
-                        {
-                            ItemRoute FireExitRoute = new ItemRoute($"(Mineshaft)FireExit ({i})");
-                            FireExitRoute.AddPoint(fireExit.transform.position, false);
-                            FireExitRoute.InitalDistance = Vector3.Distance(transform.position, fireExit.transform.position);
-                            FireExitRoute.entranceTeleport = fireExit;
-                            PossibleRoutes.Add(FireExitRoute);
-                            i++;
-                        }
+                        if (LethalMin.OnlyMain) { continue; }
+
+                        ItemRoute FireExitRoute = new ItemRoute($"FireExit ({i2})");
+                        FireExitRoute.AddPoint(fireExit.transform.position, false);
+                        FireExitRoute.InitalDistance = CalculatePathLength(transform.position, fireExit.transform.position);
+                        FireExitRoute.entranceTeleport = fireExit;
+                        PossibleRoutes.Add(FireExitRoute);
+                        i2++;
+                    }
+
+                    int i3 = 0;
+                    foreach (var Elevate in FloorOn.Elevators)
+                    {
+                        if (LethalMin.OnlyExit) { continue; }
+
+                        ItemRoute ElevateRoute = new ItemRoute($"Elevator ({i3})");
+                        ElevateRoute.AddPoint(Elevate.transform.position, false);
+                        ElevateRoute.InitalDistance = CalculatePathLength(transform.position, Elevate.transform.position);
+                        PossibleRoutes.Add(ElevateRoute);
+                        i3++;
+                    }
+
+                    int i4 = 0;
+                    foreach (var Alt in FloorOn.AlterntiveExits)
+                    {
+                        if (LethalMin.OnlyExit) { continue; }
+
+                        ItemRoute AltRoute = new ItemRoute($"AltExit ({i4})");
+                        AltRoute.AddPoint(Alt.transform.position, false);
+                        AltRoute.InitalDistance = CalculatePathLength(transform.position, Alt.transform.position);
+                        PossibleRoutes.Add(AltRoute);
+                        i4++;
                     }
                 }
             }
@@ -3445,7 +3446,13 @@ namespace LethalMin
             // Run the LastTargetSwitchTimer
             float curTime = Time.time;
             if (curTime - lastTargetSwitchTime < TARGET_SWITCH_COOLDOWN)
+            {
                 return;
+            }
+            else
+            {
+                lastTargetSwitchTime = curTime;
+            }
 
             ItemRoute firstRoute = CurRoutes[0];
             //Check if the First route is not "???" and check if it's still pathable

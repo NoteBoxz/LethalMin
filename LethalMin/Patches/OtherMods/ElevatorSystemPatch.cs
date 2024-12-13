@@ -107,7 +107,8 @@ namespace LethalMin.Patches.OtherMods
                 surface.BuildNavMesh();
 
                 //Remove the colider to prevent player bull shiz
-                GameObject.Destroy(cube.GetComponent<Collider>());
+                cube.GetComponent<Collider>().isTrigger = true;
+                cube.AddComponent<PikminOnlyZone>();
 
                 LethalMin.Logger.LogInfo("Adding link...");
 
@@ -146,9 +147,10 @@ namespace LethalMin.Patches.OtherMods
                 // cubeB.GetComponent<Renderer>().material.color = Color.blue;
                 // cubeA.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
                 // cubeB.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+                
                 cubeA.GetComponent<Renderer>().enabled = false;
                 cubeB.GetComponent<Renderer>().enabled = false;
-                cube.GetComponent<Renderer>().enabled = false;
+                //cube.GetComponent<Renderer>().enabled = false;
 
                 LethalMin.Logger.LogInfo("Pikmin can now use the LC_Office Elevator!!!");
                 HasCreatedNavMeshOnElevate = true;

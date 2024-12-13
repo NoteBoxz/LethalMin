@@ -11,6 +11,7 @@ using System.Collections;
 using System;
 using GameNetcodeStuff;
 using LethalMin.Patches.AI;
+using LCOffice.Patches;
 
 
 namespace LethalMin
@@ -146,6 +147,7 @@ namespace LethalMin
                 StartCoroutine(Spawn1());
                 StartCoroutine(Spawn2());
                 StartCoroutine(AddPikminBridge());
+                StartCoroutine(GetFloorData());
                 RefreshPikminItemsInMapList();
                 RefreshNonPikminEnemiesList();
                 RefreshPuffminList();
@@ -153,7 +155,6 @@ namespace LethalMin
                 RefreshOnionsList();
                 RefreshCarsList();
                 RefreshLocks();
-                GetFloorData();
             }
             else if (LethalMin.CanWalkAtCompany())
             {
@@ -164,7 +165,7 @@ namespace LethalMin
         }
 
         public static List<FloorData> CurrentFloorData = new List<FloorData>();
-        public void GetFloorData()
+        public IEnumerator GetFloorData()
         {
             List<EntranceTeleport> FindFireExits()
             {
@@ -184,34 +185,70 @@ namespace LethalMin
                 return allExits.OrderBy(exit => Vector3.Distance(transform.position, exit.transform.position)).ToList();
             }
 
+            yield return new WaitUntil(() => StartOfRound.Instance.fullyLoadedPlayers.Count >= GameNetworkManager.Instance.connectedPlayers);
+            yield return new WaitUntil(() => RoundManager.Instance.dungeonFinishedGeneratingForAllPlayers);
+
             CurrentFloorData.Clear();
             if (RoundManager.Instance.currentMineshaftElevator != null)
             {
                 FloorData F1 = new FloorData();
-                F1.Exits.Add(RoundManager.FindMainEntranceScript());
+                F1.MainExits.Add(RoundManager.FindMainEntranceScript());
                 F1.FloorRoot = RoundManager.FindMainEntrancePosition();
                 F1.Elevators.Add(RoundManager.Instance.currentMineshaftElevator.transform);
                 F1.FloorTitle = "(Floor1) Entrance";
                 CurrentFloorData.Add(F1);
 
                 FloorData F2 = new FloorData();
-                F2.Exits.AddRange(FindFireExits());
+                F2.FireExits.AddRange(FindFireExits());
                 F2.FloorRoot = RoundManager.Instance.currentMineshaftElevator.elevatorBottomPoint.position;
                 F2.Elevators.Add(RoundManager.Instance.currentMineshaftElevator.transform);
                 F2.FloorTitle = "(Floor2) Mineshaft";
                 CurrentFloorData.Add(F2);
 
                 LethalMin.Logger.LogInfo("Registered Vanilla Minshaft Floors");
-                return;
+                yield break;
             }
 
-            if(LethalMin.IsDependencyLoaded("Piggy.LCOffice")){
+            if (LethalMin.IsDependencyLoaded("Piggy.LCOffice"))
+            {
                 GetPiggyFloorData();
+                yield break;
             }
         }
 
-        public void GetPiggyFloorData(){
+        public void GetPiggyFloorData()
+        {
+            if (FindAnyObjectByType<ElevatorSystem>() == null)
+            {
+                return;
+            }
+            GameObject CreateDebugCube(Vector3 LocalPos)
+            {
+                GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cube.transform.SetParent(ElevatorSystem.animator.transform.parent);
+                cube.transform.localPosition = LocalPos;
+                cube.GetComponent<Renderer>().material = AssetLoader.LoadAsset<Material>("Assets/LethalminAssets/Pikmin/Materials/DebugMin.mat");
+                return cube;
+            }
+            
+            FloorData F1 = new FloorData();
+            F1.FloorTitle = "(Floor1) Basement";
+            F1.Elevators.Add(ElevatorSystem.animator.transform);
+            GameObject cubeA = CreateDebugCube(new Vector3(-2.32f, -9.71f, 1.01f));
+            F1.FloorRoot = cubeA.transform.position;
 
+            FloorData F2 = new FloorData();
+            F2.FloorTitle = "(Floor2) Upper Basement";
+            F2.Elevators.Add(ElevatorSystem.animator.transform);
+            GameObject cubeB = CreateDebugCube(new Vector3(-2.32f, 23.79f, 1.01f));
+            F2.FloorRoot = cubeB.transform.position;
+            F2.MainExits.Add(RoundManager.FindMainEntranceScript());
+
+            FloorData F3 = new FloorData();
+            F3.FloorTitle = "(Floor3) Central Basement";
+            F3.Elevators.Add(ElevatorSystem.animator.transform);
+            GameObject cubeC = CreateDebugCube(new Vector3(-2.32f, 63.14f, 1.01f));
+            F3.FloorRoot = cubeC.transform.position;
         }
 
         #region This is the most hackiest networking i've ever done
