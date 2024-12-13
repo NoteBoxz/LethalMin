@@ -33,6 +33,7 @@ namespace LethalMin
         [ClientRpc]
         public void SetCurColorClientRpc(Color color)
         {
+            LethalMin.Logger.LogInfo($"{name} Setting color");
             CurColor = color;
         }
 

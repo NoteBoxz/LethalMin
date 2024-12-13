@@ -16,7 +16,7 @@ using LethalConfig.ConfigItems;
 using LethalConfig.ConfigItems.Options;
 using BepInEx.Configuration;
 using LethalLib.Extras;
-using LethalMin.Patches;
+using LethalMin.Patches.OtherMods;
 using System.Text;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;

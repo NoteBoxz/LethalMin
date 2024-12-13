@@ -2,7 +2,7 @@ using HarmonyLib;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LethalMin.Patches
+namespace LethalMin.Patches.OtherMods
 {
     [HarmonyPatch(typeof(LethalMon.Utils))]
     public class FilterEnemyTypesPatch
