@@ -1879,10 +1879,6 @@ namespace LethalMin
                     {
                         agent.Warp(teleportPosition);
                     }
-                    else
-                    {
-                        transform.position = teleportPosition;
-                    }
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Teleported Pikmin to: {teleportPosition}");
                 }
@@ -1927,7 +1923,7 @@ namespace LethalMin
         private Vector3 FindNearestNavMeshPoint(Vector3 sourcePosition)
         {
             NavMeshHit hit;
-            if (NavMesh.SamplePosition(sourcePosition, out hit, 100f, NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(sourcePosition, out hit, float.MaxValue, NavMesh.AllAreas))
             {
                 return hit.position;
             }

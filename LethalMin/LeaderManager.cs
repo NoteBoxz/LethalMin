@@ -367,7 +367,7 @@ namespace LethalMin
 
             if (LethalMin.DebugMode)
                 LethalMin.Logger.LogInfo($"Nearest Pikmin of type {type.PikminName}: {nearest.name} ({nearestDistance:F2} units)");
-            
+
             return nearest;
         }
 
@@ -618,7 +618,7 @@ namespace LethalMin
             while (true)
             {
                 bool currentState = Controller.isInsideFactory;
-                if (currentState != previousBooleanState)
+                if (currentState != previousBooleanState && !Controller.isPlayerDead)
                 {
                     if (currentState == true)
                     {
