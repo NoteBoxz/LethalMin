@@ -2978,43 +2978,10 @@ namespace LethalMin
             {
                 return null;
             }
-            Vector3 pikminPosition = transform.position;
-            FloorData currentFloor = null;
-            float closestHorizontalDistance = float.MaxValue;
 
-            foreach (FloorData floor in PikminManager.CurrentFloorData)
-            {
-                // Calculate the horizontal distance between the Pikmin and the floor's root
-                float horizontalDistance = Vector2.Distance(
-                    new Vector2(pikminPosition.x, pikminPosition.z),
-                    new Vector2(floor.FloorRoot.x, floor.FloorRoot.z)
-                );
-
-                // Check if this floor is closer horizontally than the previously found closest floor
-                if (horizontalDistance < closestHorizontalDistance)
-                {
-                    // Check if the Pikmin is above this floor and below the next floor (if any)
-                    bool isAboveThisFloor = pikminPosition.y >= floor.FloorRoot.y;
-                    bool isBelowNextFloor = true;
-
-                    // Find the next floor above (if any)
-                    FloorData nextFloorAbove = PikminManager.CurrentFloorData
-                        .Where(f => f.FloorRoot.y > floor.FloorRoot.y)
-                        .OrderBy(f => f.FloorRoot.y)
-                        .FirstOrDefault();
-
-                    if (nextFloorAbove != null)
-                    {
-                        isBelowNextFloor = pikminPosition.y < nextFloorAbove.FloorRoot.y;
-                    }
-
-                    if (isAboveThisFloor && isBelowNextFloor)
-                    {
-                        closestHorizontalDistance = horizontalDistance;
-                        currentFloor = floor;
-                    }
-                }
-            }
+            FloorData currentFloor = PikminManager.CurrentFloorData.OrderBy(floor =>
+                    Mathf.Abs(transform.position.y - floor.FloorRoot.y))
+                    .FirstOrDefault();
 
             if (currentFloor != null)
             {

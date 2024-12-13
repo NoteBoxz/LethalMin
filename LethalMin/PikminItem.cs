@@ -583,11 +583,11 @@ namespace LethalMin
                         //Parent To Elevator
                         if (Root.NetworkObject != null)
                         {
-                            Root.transform.SetParent(RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint, worldPositionStays: true);
+                            Root.transform.SetParent(firstPikminG.FloorOn.ElevatorBounds.transform, worldPositionStays: true);
                         }
                         else
                         {
-                            Root.transform.SetParent(RoundManager.Instance.currentMineshaftElevator.elevatorInsidePoint, worldPositionStays: true);
+                            Root.transform.SetParent(firstPikminG.FloorOn.ElevatorBounds.transform, worldPositionStays: true);
                         }
                     }
                     else

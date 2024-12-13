@@ -226,6 +226,7 @@ namespace LethalMin
         public static float ShipPhaseOnionX, ShipPhaseOnionY, ShipPhaseOnionZ;
         //Generated Useable Varibles GoES HERE
 
+        public static bool GenNavMehsOnElevate;
         public static bool AllowLethalEscape;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
 
@@ -260,6 +261,7 @@ namespace LethalMin
 
         //Generated Config Varibles GoES HERE
 
+        public static ConfigEntry<bool> GenNavMehsOnElevateConfig;
         public static ConfigEntry<bool> AllowLethalEscapeConfig;
         #endregion
 
@@ -448,6 +450,7 @@ namespace LethalMin
 
             //Generated ConfigBindings goes here
 
+            GenNavMehsOnElevateConfig = Config.Bind("LC-Office", "Genorate Navmesh On Elevator", true, "Genorates a NavMesh on the Elevator in the LC-Office Interor. This makes it so Pikmin can path to, and walk on the elevator.");
             AllowLethalEscapeConfig = Config.Bind("Pikmin", "Make Pikmin Only Target Outdoors", false, "Makes Pikmin only target destinatons that are outside when carrying items. Even if the Pikmin is indoors");
 
             #endregion
@@ -586,6 +589,7 @@ namespace LethalMin
 
             //Generated Settings Valuse Goes Here
 
+            GenNavMehsOnElevate = GenNavMehsOnElevateConfig.Value;
             AllowLethalEscape = AllowLethalEscapeConfig.Value;
             #endregion
 
@@ -733,6 +737,7 @@ namespace LethalMin
 
             //Generated Settings Events Goes here
 
+            GenNavMehsOnElevateConfig.SettingChanged += (_, _) => GenNavMehsOnElevate = GenNavMehsOnElevateConfig.Value;
             AllowLethalEscapeConfig.SettingChanged += (_, _) => AllowLethalEscape = AllowLethalEscapeConfig.Value;
             #endregion
         }
@@ -887,6 +892,7 @@ namespace LethalMin
 
             //Generated LC bindings goes here
 
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(GenNavMehsOnElevateConfig, true));
         }
 
         public static bool CantConvertEnemy(EnemyType enemy)
@@ -1756,8 +1762,9 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
                         Logger.LogMessage($"Skipping FilterEnemyTypesPatch script. Because LethalMon is not installed");
                         continue;
                     }
-                    if (!IsDependencyLoaded("Piggy.PiggyVarietyMod") && 
-                    (type == typeof(PiggyTeslaGatePatch) || type == typeof(PiggyTouchTriggerPatch))){
+                    if (!IsDependencyLoaded("Piggy.PiggyVarietyMod") &&
+                    (type == typeof(PiggyTeslaGatePatch) || type == typeof(PiggyTouchTriggerPatch)))
+                    {
                         Logger.LogMessage("Skipping VarietyMod scripts. Because Piggy.PiggyVarietyMod is not installed");
                         continue;
                     }

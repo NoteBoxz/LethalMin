@@ -19,6 +19,7 @@ namespace LethalMin.Patches.OtherMods
         [HarmonyPostfix]
         public static void LateUpdatePostfix(ElevatorSystem __instance)
         {
+            if (!LethalMin.GenNavMehsOnElevate) { return; }
             if (!__instance.IsServer) { return; }
             //Only Update when the elevator is moving
             if (HasCreatedNavMeshOnElevate && Vector3.Distance(LastPosition, ElevatorSystem.animator.transform.position) < 0.01f)
@@ -74,6 +75,7 @@ namespace LethalMin.Patches.OtherMods
         [HarmonyPostfix]
         public static void SetupPostfix(ElevatorSystem __instance)
         {
+            if (!LethalMin.GenNavMehsOnElevate) { return; }
             if (!HasCreatedNavMeshOnElevate)
             {
                 LethalMin.Logger.LogInfo("Creating NavMesh Cube on elevator...");
@@ -147,7 +149,7 @@ namespace LethalMin.Patches.OtherMods
                 // cubeB.GetComponent<Renderer>().material.color = Color.blue;
                 // cubeA.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
                 // cubeB.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
-                
+
                 cubeA.GetComponent<Renderer>().enabled = false;
                 cubeB.GetComponent<Renderer>().enabled = false;
                 //cube.GetComponent<Renderer>().enabled = false;

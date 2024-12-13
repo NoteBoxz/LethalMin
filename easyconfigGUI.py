@@ -6,6 +6,12 @@ import os
 
 LethalMincsPath = os.getcwd() + r"\LethalMin\LethalMin.cs"
 
+def LowerCaseBoolean(val: bool):
+    if val == True:
+        return "true"
+    else:
+        return "false"
+
 class ConfigItem:
     def __init__(self, type:str, InternalName:str, defultVal:str, name: str, section:str, description: str, NeedsRestart : bool):
         self.type = type
@@ -58,10 +64,10 @@ def ConstructConfigItemCode(item: ConfigItem):
     ConfigEventsToAdd.append(f'{item.InternalName}Config.SettingChanged += (_, _) => {item.InternalName} = {item.InternalName}Config.Value;')
     #Check if KnownLCTypes contains the item type
     if item.type in KnownLCTypes:
-        ConfigLCBindingsToAdd.append(f'LethalConfigManager.AddConfigItem(new {KnownLCTypes[item.type]}({item.InternalName}Config,{str.lower(item.NeedsRestart)}));')
+        ConfigLCBindingsToAdd.append(f'LethalConfigManager.AddConfigItem(new {KnownLCTypes[item.type]}({item.InternalName}Config,{LowerCaseBoolean(item.NeedsRestart)}));')
     else:
         print(f"Unknown type {item.type} for {item.name}. Resorting to enums")
-        ConfigLCBindingsToAdd.append(f'LethalConfigManager.AddConfigItem(new EnumDropDownConfigItem<{item.type}>({item.InternalName}Config,{str.lower(item.NeedsRestart)}));')
+        ConfigLCBindingsToAdd.append(f'LethalConfigManager.AddConfigItem(new EnumDropDownConfigItem<{item.type}>({item.InternalName}Config,{LowerCaseBoolean(item.NeedsRestart)}));')
         pass
     pass
 
