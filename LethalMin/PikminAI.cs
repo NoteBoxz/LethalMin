@@ -2489,7 +2489,7 @@ namespace LethalMin
             }
 
             // Check if near the main entrance
-            if (RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !isOutside)
+            if (RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !isOutside && !LethalMin.AllowLethalEscape)
             {
                 Vector3 mainEntrancePos = RoundManager.FindMainEntrancePosition();
                 if (Vector3.Distance(position, mainEntrancePos) <= thresholdB)
@@ -3004,6 +3004,10 @@ namespace LethalMin
 
         public FloorData GetFloorOn()
         {
+            if (PikminManager.CurrentFloorData.Count == 0)
+            {
+                return null;
+            }
             Vector3 pikminPosition = transform.position;
             FloorData currentFloor = null;
             float closestDistance = float.MaxValue;

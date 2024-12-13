@@ -11,19 +11,19 @@ namespace LethalMin.Patches.OtherMods
     {
         [HarmonyPatch("OnTriggerStay")]
         [HarmonyPrefix]
-        public static void OnTriggerStayPrefix(CustomTouchInteractTrigger __instance, Collider other)
+        public static void OnTriggerStayPrefix(Collider collider, CustomTouchInteractTrigger __instance)
         {
             if (__instance.isKillTrigger)
             {
-                if (__instance.teslaGate != null && other.GetComponentInParent<PikminAI>() != null)
+                if (__instance.teslaGate != null && collider.GetComponentInParent<PikminAI>() != null)
                 {
-                    __instance.teslaGate.GetComponent<PikminProtector>().ProtectPikmin(other.GetComponentInParent<PikminAI>());
+                    __instance.teslaGate.GetComponent<PikminProtector>().ProtectPikmin(collider.GetComponentInParent<PikminAI>());
                 }
             }
         }
         [HarmonyPatch("OnTriggerStay")]
         [HarmonyPostfix]
-        public static void OnTriggerStayPostfix(CustomTouchInteractTrigger __instance, Collider other)
+        public static void OnTriggerStayPostfix(Collider collider, CustomTouchInteractTrigger __instance)
         {
             if (__instance.isKillTrigger)
             {
