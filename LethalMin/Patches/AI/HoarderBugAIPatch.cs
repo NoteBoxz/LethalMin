@@ -7,7 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace LethalMin.Patches
+namespace LethalMin.Patches.AI
 {
     [HarmonyPatch(typeof(HoarderBugAI))]
     public class HoarderBugAIPatch

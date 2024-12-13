@@ -10,10 +10,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System;
 using GameNetcodeStuff;
-using LethalMin.Patches;
-using LethalModDataLib.Events;
-using LethalModDataLib.Features;
-using LethalModDataLib.Helpers;
+using LethalMin.Patches.AI;
 
 
 namespace LethalMin
@@ -156,12 +153,22 @@ namespace LethalMin
                 RefreshOnionsList();
                 RefreshCarsList();
                 RefreshLocks();
+                GetFloorData();
             }
             else if (LethalMin.CanWalkAtCompany())
             {
                 ResetCountersServerRpc();
                 StartCoroutine(CacheOnionSpawnPoints());
                 StartCoroutine(SpawnOnions());
+            }
+        }
+
+        public static List<FloorData> CurrentFloorData = new List<FloorData>();
+        public void GetFloorData()
+        {
+            CurrentFloorData.Clear();
+            if (RoundManager.Instance.currentMineshaftElevator != null){
+                CurrentFloorData
             }
         }
 
@@ -185,7 +192,7 @@ namespace LethalMin
             LethalMin.Logger.LogInfo("Spawning ship phase onions.");
             List<int> LoadedOnions = new List<int>();
             Dictionary<int, int[]> LoadedFusedOnions;
-            
+
             if (CollectedOnions.Count == 0)
             {
                 if (LethalMin.IsUsingModLib())
@@ -329,7 +336,7 @@ namespace LethalMin
             CurFSPO = 0;
         }
         #endregion
-        
+
         #endregion
 
         #region Spawning and Generation

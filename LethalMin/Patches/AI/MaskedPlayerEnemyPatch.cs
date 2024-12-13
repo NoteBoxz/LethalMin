@@ -9,7 +9,7 @@ using System.Diagnostics;
 using Unity.Multiplayer.Tools.MetricTypes;
 using LethalMon.Behaviours;
 
-namespace LethalMin.Patches
+namespace LethalMin.Patches.AI
 {
     [HarmonyPatch(typeof(MaskedPlayerEnemy))]
     internal class MaskedPlayerEnemyPatch

@@ -7,7 +7,7 @@ using LethalMin;
 using System.Collections;
 using System.Diagnostics;
 
-namespace LethalMin.Patches
+namespace LethalMin.Patches.AI
 {
     [HarmonyPatch(typeof(EnemyAI))]
     internal class EnemyAIPatch

@@ -7,7 +7,7 @@ using LethalMin;
 using System.Collections;
 using System.Linq;
 
-namespace LethalMin.Patches
+namespace LethalMin.Patches.AI
 {
     [HarmonyPatch(typeof(RadMechAI))]
     internal class RadMechAIPatch
@@ -77,10 +77,11 @@ namespace LethalMin.Patches
         }
 
         [ServerRpc]
-        public static void GrabPikminServerRpc(NetworkObjectReference __instanceRef, NetworkObjectReference[] pikmins)
+        public static void GrabPikminServerRpc(NetworkObjectReference instanceRef, NetworkObjectReference[] pikmins)
         {
             // Get the RadMechAI instance from the network object reference
             RadMechAI radMechAI = null!;
+            NetworkObjectReference __instanceRef = instanceRef;
             if (__instanceRef.TryGet(out NetworkObject __instance))
             {
                 radMechAI = __instance.GetComponent<RadMechAI>();
@@ -110,12 +111,13 @@ namespace LethalMin.Patches
         }
 
         [ClientRpc]
-        public static void GrabPikminClientRpc(NetworkObjectReference __instanceRef, NetworkObjectReference[] pikmins, Vector3 enemyPosition, int enemyYRot)
+        public static void GrabPikminClientRpc(NetworkObjectReference instanceRef, NetworkObjectReference[] pikmins, Vector3 enemyPosition, int enemyYRot)
         {
             // Get the RadMechAI instance from the network object reference
             LethalMin.Logger.LogInfo("Grabed " + pikmins.ToArray().Length + " Pikmin on client");
             List<PikminAI> pikminAIs = new List<PikminAI>();
             RadMechAI radMechAI = null!;
+            NetworkObjectReference __instanceRef = instanceRef;
             if (__instanceRef.TryGet(out NetworkObject __instance))
             {
                 radMechAI = __instance.GetComponent<RadMechAI>();

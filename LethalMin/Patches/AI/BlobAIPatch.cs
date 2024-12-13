@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using LethalMin;
 using System.Collections;
 
-namespace LethalMin.Patches
+namespace LethalMin.Patches.AI
 {
     [HarmonyPatch(typeof(BlobAI))]
     internal class BlobAIPatch

@@ -5,8 +5,9 @@ using Unity.Netcode;
 using System.Collections.Generic;
 using LethalMin;
 using System.Collections;
+using LethalMon.Behaviours;
 
-namespace LethalMin.Patches
+namespace LethalMin.Patches.AI
 {
     [HarmonyPatch(typeof(ClaySurgeonAI))]
     internal class ClaySurgeonAIPatch
@@ -16,6 +17,7 @@ namespace LethalMin.Patches
         private static void DanceBeatPostfix(ClaySurgeonAI __instance)
         {
             if (!LethalMin.LethalBarber) { return; }
+            if (LethalMin.IsDependencyLoaded("LethalMon") && LETHALMON_ISTAMED(__instance)) { return; }
             bool HasSnipped = false;
             if (__instance.stunNormalizedTimer <= 0f && __instance.IsServer)
             {
@@ -54,5 +56,11 @@ namespace LethalMin.Patches
             }
         }
 
+        public static bool LETHALMON_ISTAMED(ClaySurgeonAI __instance)
+        {
+            TamedEnemyBehaviour enemy = __instance.GetComponent<TamedEnemyBehaviour>();
+            if (enemy == null) return false;
+            return enemy.IsTamed;
+        }
     }
 }

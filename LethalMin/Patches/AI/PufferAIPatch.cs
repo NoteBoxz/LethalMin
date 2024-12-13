@@ -8,7 +8,7 @@ using System.Collections;
 using System.Diagnostics;
 using Unity.Multiplayer.Tools.MetricTypes;
 
-namespace LethalMin.Patches
+namespace LethalMin.Patches.AI
 {
     [HarmonyPatch(typeof(PufferAI))]
     internal class PufferAIPatch

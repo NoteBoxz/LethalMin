@@ -6,34 +6,34 @@ using System.Collections.Generic;
 using LethalMin;
 using System.Collections;
 
-namespace LethalMin.Patches
+namespace LethalMin.Patches.AI
 {
-    [HarmonyPatch(typeof(SandSpiderAI))]
-    internal class SandSpiderAIPatch
+    [HarmonyPatch(typeof(CrawlerAI))]
+    internal class CrawlerAIPatch
     {
         private static PikminAttackable pikminAttackable = new PikminAttackable
         {
-            PikminGrabPath = "MeshContainer/AnimContainer/MouthTarget",
+            PikminGrabPath = "CrawlerModel/AnimContainer/metarig/spine/spine.003/spine.004/MouthTarget",
             AttackSound = null, // This will be set dynamically
-            AttackAnimTrigger = "attack",
+            AttackAnimTrigger = "HitPlayer",
             AttackInAnyState = false,
             AttackRange = 2f,
             CheckAtGrabPos = true,
-            AttackStates = new int[] { 2 }
+            AttackStates = new int[] { 1 }
         };
 
         [HarmonyPatch("DoAIInterval")]
         [HarmonyPostfix]
-        public static void UpdateAttacker(SandSpiderAI __instance)
+        public static void UpdateAttacker(CrawlerAI __instance)
         {
-            if (__instance.isEnemyDead)
+            if (StartOfRound.Instance.livingPlayers == 0 || __instance.isEnemyDead)
             {
                 return;
             }
             // Set the PikminAttackable component's values
-            pikminAttackable.MaxPikminEatCount = LethalMin.SpiderEatLimmit;
-            pikminAttackable.AttackBuffer = LethalMin.SpiderEatBuffer;
-            pikminAttackable.HarmfulToPikmin = LethalMin.LethalSpider;
+            pikminAttackable.MaxPikminEatCount = LethalMin.ThumperEatLimmit;
+            pikminAttackable.AttackBuffer = LethalMin.ThumperEatBuffer;
+            pikminAttackable.HarmfulToPikmin = LethalMin.LethalThumper;
 
             PikminAttacker pikminAttacker = __instance.GetComponentInChildren<PikminAttacker>();
 
@@ -42,7 +42,7 @@ namespace LethalMin.Patches
             {
                 GameObject NodeInstance = GameObject.Instantiate(LethalMin.PikminAttackerNode, __instance.transform);
                 pikminAttacker = NodeInstance.GetComponent<PikminAttacker>();
-                pikminAttackable.AttackSound = __instance.attackSFX;
+                pikminAttackable.AttackSound = __instance.bitePlayerSFX;
                 pikminAttackable = pikminAttacker.SABOBJ = pikminAttackable;
                 if (__instance.IsServer)
                 {

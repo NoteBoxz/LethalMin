@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace LethalMin.Patches
+namespace LethalMin.Patches.AI
 {
     public class BlobPikminKiller : MonoBehaviour
     {

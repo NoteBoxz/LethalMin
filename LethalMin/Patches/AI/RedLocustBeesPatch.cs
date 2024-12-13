@@ -8,7 +8,7 @@ using System.Collections;
 using System.Linq;
 using System.Reflection.Emit;
 
-namespace LethalMin.Patches
+namespace LethalMin.Patches.AI
 {
     [HarmonyPatch(typeof(RedLocustBees))]
     internal class RedLocustBeesPatch

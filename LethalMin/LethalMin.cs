@@ -45,6 +45,13 @@ namespace LethalMin
         Spore,
         Crush
     }
+    public class FloorData
+    {
+        public Vector3 FloorRoot;
+        public List<Transform> Elevators;
+        public List<EntranceTeleport> Exits;
+        public List<Transform> AlterntiveExits;
+    }
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     [BepInDependency("evaisa.lethallib")]
     [BepInDependency("LethalMon", BepInDependency.DependencyFlags.SoftDependency)]
@@ -385,7 +392,7 @@ namespace LethalMin
             AllowProductionConfig = Config.Bind("Onions", "Allow Onions to produce Sprouts", true, "Allows Onions to produce sprouts.");
             AllowOnionFuseConfig = Config.Bind("Onions", "Allow Onion Fuse", true, "Allows onions to fuse after the ship leaves.");
             CustomOnionAllowed = Config.Bind("Onions", "Allow Custom Onion spawn Position", true, "Allows onions to land on pre defined spawn points on modded moons (if there are any).");
-            
+
             AllowSpawnMultiplierCF = Config.Bind("Extra", "Allow Spawn Multiplier", true, "Allows the custom Pikmin Types to use Spawn Multipliers.");
             LethalWhistle = Config.Bind("Extra", "Make whistle conductive", false, "Makes whistles conductive to stormy weather.");
             LethalLandmines = Config.Bind("Extra", "Make Pikmin Trigger Landmines", true, "Allows pikmin to trigger landmines");
