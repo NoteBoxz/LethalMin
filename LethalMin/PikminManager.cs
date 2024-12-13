@@ -165,6 +165,7 @@ namespace LethalMin
         }
 
         public static List<FloorData> CurrentFloorData = new List<FloorData>();
+        public static FloorData DefultFloorData = null;
         public IEnumerator GetFloorData()
         {
             List<EntranceTeleport> FindFireExits()
@@ -194,6 +195,7 @@ namespace LethalMin
             yield return new WaitForSeconds(2f);
 
             CurrentFloorData.Clear();
+            DefultFloorData = null;
             if (RoundManager.Instance.currentMineshaftElevator != null)
             {
                 FloorData F1 = new FloorData();
@@ -204,6 +206,8 @@ namespace LethalMin
                 elevatorInsidePoint.transform.parent.GetComponentInChildren<PlayerPhysicsRegion>().GetComponent<Collider>();
                 F1.FloorTitle = "(Floor1) Entrance";
                 CurrentFloorData.Add(F1);
+
+                DefultFloorData = F1;
 
                 FloorData F2 = new FloorData();
                 F2.FireExits.AddRange(FindFireExits());
@@ -277,7 +281,7 @@ namespace LethalMin
             CurrentFloorData.Add(F1);
 
             FloorData F2 = new FloorData();
-            F2.FloorTitle = "(Floor2) Upper Basement";
+            F2.FloorTitle = "(Floor2) Lobby";
             F2.Elevators.Add(ElevatorSystem.animator.transform.Find("AIelevatorFloor (4 Picles)"));
             F2.ElevatorBounds = ElevatorSystem.animator.transform.Find("ELevator Zone (4 Picles)").GetComponent<Collider>();
             GameObject cubeB = CreateDebugCube(new Vector3(-2.32f, 23.79f, 1.01f));
@@ -286,8 +290,10 @@ namespace LethalMin
 
             CurrentFloorData.Add(F2);
 
+            DefultFloorData = F2;
+
             FloorData F3 = new FloorData();
-            F3.FloorTitle = "(Floor3) Central Basement";
+            F3.FloorTitle = "(Floor3) Upstairs Basement";
             F3.Elevators.Add(ElevatorSystem.animator.transform.Find("AIelevatorFloor (4 Picles)"));
             F3.ElevatorBounds = ElevatorSystem.animator.transform.Find("ELevator Zone (4 Picles)").GetComponent<Collider>();
             GameObject cubeC = CreateDebugCube(new Vector3(-2.32f, 63.14f, 1.01f));

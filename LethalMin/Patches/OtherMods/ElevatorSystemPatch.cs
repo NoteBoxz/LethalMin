@@ -32,6 +32,8 @@ namespace LethalMin.Patches.OtherMods
                 }
             }
 
+            LethalMin.Logger.LogWarning("Cannot access elevator floor property!!");
+
             // Return a default value if the property couldn't be accessed
             return 0;
         }

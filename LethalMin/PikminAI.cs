@@ -1722,7 +1722,10 @@ namespace LethalMin
         {
             IsInShip = StartOfRound.Instance.shipInnerRoomBounds.bounds.Contains(transform.position) && isOutside;
             IsInCar = TargetCarNavMeshSurface != null && TargetCarNavMeshSurface.bounds.Contains(transform.position);
-
+            if (currentLeader != null && PikminManager.DefultFloorData != null && !isOutside)
+            {
+                IsLeaderOnElevator = PikminManager.DefultFloorData.ElevatorBounds.bounds.Contains(currentLeader.transform.position);
+            }
             if (LethalMin.SpeedMultiplier != 1)
             {
                 for (int i = 0; i < PlantSpeeds.Length; i++)

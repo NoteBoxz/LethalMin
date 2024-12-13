@@ -49,6 +49,7 @@ namespace LethalMin
     {
         public Vector3 FloorRoot;
         public string FloorTitle;
+        //There can only really be one elevator at a time so if there are multiple elevators we are screwed.
         public List<Transform> Elevators = new List<Transform>();
         public List<EntranceTeleport> MainExits = new List<EntranceTeleport>();
         public List<EntranceTeleport> FireExits = new List<EntranceTeleport>();
