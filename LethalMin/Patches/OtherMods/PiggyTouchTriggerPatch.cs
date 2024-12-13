@@ -17,7 +17,7 @@ namespace LethalMin.Patches.OtherMods
             {
                 if (__instance.teslaGate != null && other.GetComponentInParent<PikminAI>() != null)
                 {
-                    __instance.GetComponent<PikminProtector>().ProtectPikmin(other.GetComponentInParent<PikminAI>());
+                    __instance.teslaGate.GetComponent<PikminProtector>().ProtectPikmin(other.GetComponentInParent<PikminAI>());
                 }
             }
         }
@@ -28,7 +28,7 @@ namespace LethalMin.Patches.OtherMods
             if (__instance.isKillTrigger)
             {
                 if (__instance.teslaGate != null)
-                    __instance.GetComponent<PikminProtector>().UnprotectPikmin();
+                    __instance.teslaGate.GetComponent<PikminProtector>().UnprotectPikmin();
             }
         }
     }

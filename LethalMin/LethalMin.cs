@@ -63,6 +63,8 @@ namespace LethalMin
     [BepInDependency("MaxWasUnavailable.LethalModDataLib", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.rune580.LethalCompanyInputUtils", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("Entity378.sellbodies", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("Piggy.LCOffice", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("Piggy.PiggyVarietyMod", BepInDependency.DependencyFlags.SoftDependency)]
     public class LethalMin : BaseUnityPlugin
     {
         public static LethalMin Instance { get; private set; } = null!;
@@ -1750,6 +1752,16 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
                     if (!IsDependencyLoaded("LethalMon") && type == typeof(FilterEnemyTypesPatch))
                     {
                         Logger.LogMessage($"Skipping FilterEnemyTypesPatch script. Because LethalMon is not installed");
+                        continue;
+                    }
+                    if (!IsDependencyLoaded("Piggy.PiggyVarietyMod") && 
+                    (type == typeof(PiggyTeslaGatePatch) || type == typeof(PiggyTouchTriggerPatch))){
+                        Logger.LogMessage("Skipping VarietyMod scripts. Because Piggy.PiggyVarietyMod is not installed");
+                        continue;
+                    }
+                    if (!IsDependencyLoaded("Piggy.LCOffice") && type == typeof(ElevatorSystemPatch))
+                    {
+                        Logger.LogMessage("Skipping LC office scripts. Because Piggy.LCOffice is not installed");
                         continue;
                     }
                     try

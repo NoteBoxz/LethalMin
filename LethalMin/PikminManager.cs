@@ -205,6 +205,13 @@ namespace LethalMin
                 return;
             }
 
+            if(LethalMin.IsDependencyLoaded("Piggy.LCOffice")){
+                GetPiggyFloorData();
+            }
+        }
+
+        public void GetPiggyFloorData(){
+
         }
 
         #region This is the most hackiest networking i've ever done
