@@ -213,7 +213,7 @@ namespace LethalMin
                 F2.FireExits.AddRange(FindFireExits());
                 F2.FloorRoot = RoundManager.Instance.currentMineshaftElevator.elevatorBottomPoint.position;
                 F2.Elevators.Add(RoundManager.Instance.currentMineshaftElevator.transform);
-                F1.ElevatorBounds = RoundManager.Instance.currentMineshaftElevator.
+                F2.ElevatorBounds = RoundManager.Instance.currentMineshaftElevator.
                 elevatorInsidePoint.transform.parent.GetComponentInChildren<PlayerPhysicsRegion>().GetComponent<Collider>();
                 F2.FloorTitle = "(Floor2) Mineshaft";
                 CurrentFloorData.Add(F2);

@@ -18,21 +18,28 @@ namespace LethalMin.Patches.OtherMods
         public static Vector3 LastPosition;
         private static int GetElevatorFloorValue()
         {
-            Type elevatorSystemType = typeof(ElevatorSystem);
-            PropertyInfo elevatorFloorProperty = elevatorSystemType.GetProperty("elevatorFloor", BindingFlags.Public | BindingFlags.Static);
-
-            if (elevatorFloorProperty != null)
+            try
             {
-                object elevatorFloor = elevatorFloorProperty.GetValue(null);
-                PropertyInfo valueProperty = elevatorFloor.GetType().GetProperty("Value");
+                Type elevatorSystemType = typeof(ElevatorSystem);
+                FieldInfo elevatorFloorField = elevatorSystemType.GetField("elevatorFloor", BindingFlags.Public | BindingFlags.Static);
 
-                if (valueProperty != null)
+                if (elevatorFloorField != null)
                 {
-                    return (int)valueProperty.GetValue(elevatorFloor);
-                }
-            }
+                    object elevatorFloor = elevatorFloorField.GetValue(null);
+                    PropertyInfo valueProperty = elevatorFloor.GetType().GetProperty("Value");
 
-            LethalMin.Logger.LogWarning("Cannot access elevator floor property!!");
+                    if (valueProperty != null)
+                    {
+                        return (int)valueProperty.GetValue(elevatorFloor);
+                    }
+                }
+
+                LethalMin.Logger.LogWarning("Cannot access elevator floor value!");
+            }
+            catch (Exception ex)
+            {
+                LethalMin.Logger.LogError($"Error accessing elevator floor value: {ex.Message}");
+            }
 
             // Return a default value if the property couldn't be accessed
             return 0;
@@ -45,7 +52,7 @@ namespace LethalMin.Patches.OtherMods
             if (!LethalMin.GenNavMehsOnElevate) { return; }
             if (!__instance.IsServer) { return; }
             pikminOnlyZone.enabled = GetElevatorFloorValue() != 0 && LethalMin.RasistElevator;
-            
+
             //Only Update when the elevator is moving
             if (HasCreatedNavMeshOnElevate && Vector3.Distance(LastPosition, ElevatorSystem.animator.transform.position) < 0.01f)
             {

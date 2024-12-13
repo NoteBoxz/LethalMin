@@ -1854,6 +1854,7 @@ namespace LethalMin
         }
         public bool HasArrivedAtDestonation(float Offest, Vector3 Target)
         {
+            //LethalMin.Logger.LogInfo($"{uniqueDebugId}: Checking if arrived at destination Distance({Vector3.Distance(transform.position, Target)})");
             return Vector3.Distance(transform.position, Target) <= agent.stoppingDistance + Offest;
         }
         public void CheckIfOnNavMesh()
@@ -2914,10 +2915,9 @@ namespace LethalMin
                         }
                         else
                         {
-                            NavMeshPath path = new NavMeshPath();
-                            agent.CalculatePath(targetPoint, path);
-                            lastPathablePoint = path.corners[path.corners.Length - 1];
-                            agent.SetDestination(lastPathablePoint);
+                            agent.SetDestination(targetPoint);
+                            lastPathablePoint = agent.pathEndPosition;
+
                             if (HasArrivedAtDestonation(1f, lastPathablePoint))
                             {
                                 isMovingInCircles = true;
@@ -3346,10 +3346,15 @@ namespace LethalMin
             }
 
             PossibleRoutes = PossibleRoutes
-                .OrderBy(route => route.InitalDistance)
-                .ThenByDescending(route => route.IsPathable)
-                .ThenBy(route => route.BypassDistanceCheck ? -route.Priority : 0)
-                .ToList();
+            .OrderByDescending(route => route.BypassDistanceCheck)
+            .ThenBy(route => route.InitalDistance)
+            .ToList();
+
+
+            PossibleRoutes = PossibleRoutes
+            .OrderByDescending(route => route.IsPathable)
+            .ThenByDescending(route => route.BypassDistanceCheck ? -route.Priority : 0)
+            .ToList();
 
             //Force the onion route to the front if it exists
             int OnionIndex = -1;
@@ -3585,7 +3590,7 @@ namespace LethalMin
             if (HasArrivedAtDestonation(0f, CurRoutes[0].GetRoutePoint().Item1) && CarryingItemTo == "CaveDweller" && LethalMin.DontFormidOak)
             {
                 if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Elevator");
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Player");
                 DoDrop();
                 return;
             }
@@ -3635,7 +3640,11 @@ namespace LethalMin
                 }
                 else
                 {
-                    if (HasArrivedAtDestonation(0.4f, CurRoutes[0].GetRoutePoint().Item1))
+                    if (FloorOn.ElevatorBounds.bounds.Contains(transform.position))
+                    {
+                        InShipBuffer += Time.deltaTime;
+                    }
+                    if (HasArrivedAtDestonation(0.4f, CurRoutes[0].GetRoutePoint().Item1) || FloorOn.ElevatorBounds.bounds.Contains(transform.position) && InShipBuffer >= PminType.DropItemInShipBuffer)
                     {
                         if (LethalMin.DebugMode)
                             LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Elevator");
@@ -4304,7 +4313,7 @@ namespace LethalMin
 
 
         #region Collision and Landing
-        public bool CantAttack(EnemyAI Enemy)
+        public bool CantAttack(EnemyAI Enemy,bool BypassTypeCheck = false)
         {
             return
             KncockedBack || Enemy == null || Enemy != null && Enemy.isEnemyDead
@@ -4313,7 +4322,7 @@ namespace LethalMin
             //Check if enemy is a pikmin
             || LethalMin.PassiveToManEater && Enemy.enemyType.enemyName == LethalMin.ManeaterName && Enemy.GetComponent<CaveDwellerAI>().babyContainer.activeSelf
             //Maneater Checks
-            || !Enemy.enemyType.canDie || !PminType.CanLatchOnToEnemies || LethalMin.IsDependencyLoaded("LethalMon") && LETHALMON_CantAttack(Enemy)
+            || !Enemy.enemyType.canDie || !PminType.CanLatchOnToEnemies && !BypassTypeCheck || LethalMin.IsDependencyLoaded("LethalMon") && LETHALMON_CantAttack(Enemy)
             //Blacklist Checks
             || LethalMin.GetParsedAttackBlacklist().Contains(Enemy.enemyType.enemyName);
         }
@@ -5070,7 +5079,7 @@ namespace LethalMin
                 return;
             }
 
-            if (CantAttack(nearestEnemy))
+            if (CantAttack(nearestEnemy,true))
             {
                 //LethalMin.Logger.LogWarning($"({uniqueDebugId}) Nearest enemy is not attackable.");
                 return;
