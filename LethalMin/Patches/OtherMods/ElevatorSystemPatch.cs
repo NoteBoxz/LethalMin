@@ -1,3 +1,5 @@
+using System;
+using System.Reflection;
 using HarmonyLib;
 using LCOffice.Patches;
 using Unity.AI.Navigation;
@@ -12,8 +14,27 @@ namespace LethalMin.Patches.OtherMods
         public static bool HasCreatedNavMeshOnElevate;
         public static NavMeshLink Link;
         public static GameObject DebugCubeA, DebugCubeB;
+        public static PikminOnlyZone pikminOnlyZone;
         public static Vector3 LastPosition;
+        private static int GetElevatorFloorValue()
+        {
+            Type elevatorSystemType = typeof(ElevatorSystem);
+            PropertyInfo elevatorFloorProperty = elevatorSystemType.GetProperty("elevatorFloor", BindingFlags.Public | BindingFlags.Static);
 
+            if (elevatorFloorProperty != null)
+            {
+                object elevatorFloor = elevatorFloorProperty.GetValue(null);
+                PropertyInfo valueProperty = elevatorFloor.GetType().GetProperty("Value");
+
+                if (valueProperty != null)
+                {
+                    return (int)valueProperty.GetValue(elevatorFloor);
+                }
+            }
+
+            // Return a default value if the property couldn't be accessed
+            return 0;
+        }
 
         [HarmonyPatch("LateUpdate")]
         [HarmonyPostfix]
@@ -21,6 +42,8 @@ namespace LethalMin.Patches.OtherMods
         {
             if (!LethalMin.GenNavMehsOnElevate) { return; }
             if (!__instance.IsServer) { return; }
+            pikminOnlyZone.enabled = GetElevatorFloorValue() != 0 && LethalMin.RasistElevator;
+            
             //Only Update when the elevator is moving
             if (HasCreatedNavMeshOnElevate && Vector3.Distance(LastPosition, ElevatorSystem.animator.transform.position) < 0.01f)
             {
@@ -155,12 +178,12 @@ namespace LethalMin.Patches.OtherMods
                 Zone.transform.SetParent(ElevatorSystem.animator.transform);
                 // Zone.transform.position = new Vector3(1.84899998f,0.119999997f,2.15199995f);
                 // Zone.transform.localScale = new Vector3(4.64883041f,0.454273105f,4.64883041f);
-                Zone.transform.localPosition = new Vector3(1.84899998f, 1.82f, 2.15199995f);
-                Zone.transform.localScale = new Vector3(4.2346f, 2.8306f, 3.1085f);
+                Zone.transform.localPosition = new Vector3(1.8964f, 1.82f, 2.1831f);
+                Zone.transform.localScale = new Vector3(4.298542f, 2.8306f, 4.338413f);
                 Zone.transform.localRotation = Quaternion.Euler(0, 0, 0);
                 Zone.GetComponent<Collider>().isTrigger = true;
                 if (__instance.IsServer)
-                    Zone.AddComponent<PikminOnlyZone>();
+                    pikminOnlyZone = Zone.AddComponent<PikminOnlyZone>();
 
                 LethalMin.Logger.LogInfo("Pikmin can now use the LC_Office Elevator!!!");
                 HasCreatedNavMeshOnElevate = true;

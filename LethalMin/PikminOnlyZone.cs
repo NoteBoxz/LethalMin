@@ -23,7 +23,7 @@ namespace LethalMin
 
                     if (LethalMin.DebugMode)
                     {
-                        LethalMin.Logger.LogInfo($"Warped enemy {component3.mainScript.name} to position: {hit.position}");
+                        LethalMin.Logger.LogInfo($"{name} Warped enemy {component3.mainScript.name} to position: {hit.position}");
                     }
                 }
                 else

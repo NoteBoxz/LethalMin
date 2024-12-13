@@ -3621,7 +3621,7 @@ namespace LethalMin
             }
             else
             {
-                if (CarryingItemTo != "Elevator")
+                if (!CarryingItemTo.Contains("Elevator"))
                 {
                     if (HasArrivedAtDestonation(4, CurRoutes[0].GetRoutePoint().Item1))
                     {
@@ -3636,6 +3636,7 @@ namespace LethalMin
                     {
                         if (LethalMin.DebugMode)
                             LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Elevator");
+                        InShipBuffer = 0;
                         DoDrop();
                     }
                 }

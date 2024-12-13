@@ -226,6 +226,7 @@ namespace LethalMin
         public static float ShipPhaseOnionX, ShipPhaseOnionY, ShipPhaseOnionZ;
         //Generated Useable Varibles GoES HERE
 
+        public static bool RasistElevator;
         public static bool GenNavMehsOnElevate;
         public static bool AllowLethalEscape;
         //public LayerMask PikminColideable_DECREPAED = 1107298561 | (1 << 19) | (1 << 28);
@@ -261,6 +262,7 @@ namespace LethalMin
 
         //Generated Config Varibles GoES HERE
 
+        public static ConfigEntry<bool> RasistElevatorConfig;
         public static ConfigEntry<bool> GenNavMehsOnElevateConfig;
         public static ConfigEntry<bool> AllowLethalEscapeConfig;
         #endregion
@@ -450,6 +452,7 @@ namespace LethalMin
 
             //Generated ConfigBindings goes here
 
+            RasistElevatorConfig = Config.Bind("LC-Office", "Make Only Pikmin Use Elevator", true, "Makes it so that only Pikmin can enter the elevator (On floors 2 and 3 only). Any other entity just gets instantly teleported out if they get in.");
             GenNavMehsOnElevateConfig = Config.Bind("LC-Office", "Genorate Navmesh On Elevator", true, "Genorates a NavMesh on the Elevator in the LC-Office Interor. This makes it so Pikmin can path to, and walk on the elevator.");
             AllowLethalEscapeConfig = Config.Bind("Pikmin", "Make Pikmin Only Target Outdoors", false, "Makes Pikmin only target destinatons that are outside when carrying items. Even if the Pikmin is indoors");
 
@@ -589,6 +592,7 @@ namespace LethalMin
 
             //Generated Settings Valuse Goes Here
 
+            RasistElevator = RasistElevatorConfig.Value;
             GenNavMehsOnElevate = GenNavMehsOnElevateConfig.Value;
             AllowLethalEscape = AllowLethalEscapeConfig.Value;
             #endregion
@@ -737,6 +741,7 @@ namespace LethalMin
 
             //Generated Settings Events Goes here
 
+            RasistElevatorConfig.SettingChanged += (_, _) => RasistElevator = RasistElevatorConfig.Value;
             GenNavMehsOnElevateConfig.SettingChanged += (_, _) => GenNavMehsOnElevate = GenNavMehsOnElevateConfig.Value;
             AllowLethalEscapeConfig.SettingChanged += (_, _) => AllowLethalEscape = AllowLethalEscapeConfig.Value;
             #endregion
@@ -892,6 +897,7 @@ namespace LethalMin
 
             //Generated LC bindings goes here
 
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(RasistElevatorConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(GenNavMehsOnElevateConfig, true));
         }
 
