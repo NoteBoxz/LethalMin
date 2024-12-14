@@ -1923,7 +1923,7 @@ namespace LethalMin
         private Vector3 FindNearestNavMeshPoint(Vector3 sourcePosition)
         {
             NavMeshHit hit;
-            if (NavMesh.SamplePosition(sourcePosition, out hit, float.MaxValue, NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(sourcePosition, out hit, 100, NavMesh.AllAreas))
             {
                 return hit.position;
             }

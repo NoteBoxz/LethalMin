@@ -1775,7 +1775,7 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
                         Logger.LogMessage("Skipping VarietyMod scripts. Because Piggy.PiggyVarietyMod is not installed");
                         continue;
                     }
-                    if (!IsDependencyLoaded("Piggy.LCOffice") && type == typeof(ElevatorSystemPatch))
+                    if (!IsDependencyLoaded("Piggy.LCOffice") && type == typeof(PiggyElevatorSystemPatch))
                     {
                         Logger.LogMessage("Skipping LC office scripts. Because Piggy.LCOffice is not installed");
                         continue;

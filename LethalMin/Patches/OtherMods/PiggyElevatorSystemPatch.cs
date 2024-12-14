@@ -9,7 +9,7 @@ using UnityEngine.AI;
 namespace LethalMin.Patches.OtherMods
 {
     [HarmonyPatch(typeof(ElevatorSystem))]
-    public static class ElevatorSystemPatch
+    public static class PiggyElevatorSystemPatch
     {
         public static bool HasCreatedNavMeshOnElevate;
         public static NavMeshLink Link;
