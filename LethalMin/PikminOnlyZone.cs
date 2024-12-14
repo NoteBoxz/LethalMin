@@ -9,6 +9,7 @@ namespace LethalMin
 
         public void OnTriggerEnter(Collider other)
         {
+            if (!enabled) { return; }
             EnemyAICollisionDetect component3 = other.gameObject.GetComponent<EnemyAICollisionDetect>();
             if (component3 != null && component3.mainScript.enemyType != LethalMin.pikminEnemyType && component3.mainScript.TryGetComponent(out NavMeshAgent agent))
             {

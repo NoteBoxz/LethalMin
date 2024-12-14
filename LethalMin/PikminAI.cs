@@ -4839,6 +4839,7 @@ namespace LethalMin
             goinst.AddComponent<LookAtMainCamera>();
             ToggleMeshVisibility(false);
             StartCoroutine(DestroyAfterZap(goinst));
+            IsDying = true;
         }
         private IEnumerator DestroyAfterZap(GameObject goinst)
         {

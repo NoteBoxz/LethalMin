@@ -19,7 +19,13 @@ namespace LethalMin.Patches.OtherMods
                 EnemyAICollisionDetect component3 = collider.gameObject.GetComponent<EnemyAICollisionDetect>();
                 if (component3 != null && component3.mainScript.GetComponent<PikminAI>() != null && __instance.GetComponentInParent<PikminProtector>() != null)
                 {
-                    __instance.GetComponentInParent<PikminProtector>().ProtectPikmin(component3.mainScript.GetComponent<PikminAI>());
+                    PikminAI pik = component3.mainScript.GetComponent<PikminAI>();
+                    __instance.GetComponentInParent<PikminProtector>().ProtectPikmin(pik);
+
+                    if (!LethalMin.IsPikminResistantToHazard(pik.PminType, HazardType.Electric))
+                    {
+                        pik.DoZapDeathClientRpc();
+                    }
                 }
             }
         }
