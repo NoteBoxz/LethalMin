@@ -283,10 +283,17 @@ namespace LethalMin
             name = root.name + "(PikminNode)";
             LethalMin.Logger.LogInfo($"{name} has {root.itemProperties.weight}");
 
-            PikminNeedOnItem = Mathf.Max(
-    (root.itemProperties.weight - 1f) * 100f <= 3f ? 1 :
-    Mathf.CeilToInt(((root.itemProperties.weight - 1f) * 100f - 3f) / 10f) + 1 - LethalMin.ItemRequireSubracterValue, 1);
-            isInitialized = true;
+            if (Root.GetComponentInChildren<PikminItemOverrideSettings>() != null)
+            {
+                PikminNeedOnItem = Mathf.Max(
+        (root.itemProperties.weight - 1f) * 100f <= 3f ? 1 :
+        Mathf.CeilToInt(((root.itemProperties.weight - 1f) * 100f - 3f) / 10f) + 1 - LethalMin.ItemRequireSubracterValue, 1);
+                isInitialized = true;
+            }
+            else
+            {
+                PikminNeedOnItem = Root.GetComponentInChildren<PikminItemOverrideSettings>().PikminNeededOnItem;
+            }
 
             CreateGoToPositions();
         }
@@ -534,7 +541,7 @@ namespace LethalMin
                 ParentToFirstPikminServerRpc(firstPikmin.NetworkObjectId);
             }
         }
-        
+
         private void UnparentItem(Vector3 targetFloorPosition)
         {
             if (Root != null)

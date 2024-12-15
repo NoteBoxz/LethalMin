@@ -52,11 +52,20 @@ namespace LethalMin.Patches.OtherMods
             if (!LethalMin.GenNavMehsOnElevate) { return; }
             if (!__instance.IsServer) { return; }
 
+            if (StartOfRound.Instance.shipIsLeaving)
+            {
+                return;
+            }
+
             if (pikminOnlyZone != null)
             {
                 pikminOnlyZone.enabled = GetElevatorFloorValue() != 0 && LethalMin.RasistElevator;
             }
-            
+
+            if (ElevatorSystem.animator == null)
+            {
+                return;
+            }
             //Only Update when the elevator is moving
             if (HasCreatedNavMeshOnElevate && Vector3.Distance(LastPosition, ElevatorSystem.animator.transform.position) < 0.01f)
             {

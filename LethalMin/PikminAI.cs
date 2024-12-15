@@ -1259,7 +1259,7 @@ namespace LethalMin
             if (SnapToPos == null)
             {
                 if (EnemyAttacking != null && currentBehaviourStateIndex == (int)PState.Attacking
-                && Vector3.Distance(transform.position, EnemyAttacking.transform.position) <= 1f)
+                && Vector3.Distance(transform.position, EnemyAttacking.transform.position) <= PminType.AttackRange)
                 {
                     if (AttackBufferB >= 0f)
                     {
@@ -4309,7 +4309,7 @@ namespace LethalMin
 
 
         #region Collision and Landing
-        public bool CantAttack(EnemyAI Enemy,bool BypassTypeCheck = false)
+        public bool CantAttack(EnemyAI Enemy, bool BypassTypeCheck = false)
         {
             return
             KncockedBack || Enemy == null || Enemy != null && Enemy.isEnemyDead
@@ -4468,12 +4468,14 @@ namespace LethalMin
 
             if (!KncockedBack)
             {
-                SetTriggerClientRpc("Land");
+                if (IsServer)
+                    SetTriggerClientRpc("Land");
                 //PlayAnimClientRpc("Idle");
             }
             else
             {
-                SetTriggerClientRpc("Land");
+                if (IsServer)
+                    SetTriggerClientRpc("Land");
                 //PlayAnimClientRpc("Lay");
             }
             if (IsServer)
@@ -5076,7 +5078,7 @@ namespace LethalMin
                 return;
             }
 
-            if (CantAttack(nearestEnemy,true))
+            if (CantAttack(nearestEnemy, true))
             {
                 //LethalMin.Logger.LogWarning($"({uniqueDebugId}) Nearest enemy is not attackable.");
                 return;

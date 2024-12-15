@@ -104,7 +104,19 @@ namespace LethalMin.Library
             CopyFields(libMeshRefernces, lmMeshRefernces, "PikminMeshRefernces");
             return lmMeshRefernces;
         }
-        
+
+        public static void CheckAndConvertOverrideSettings(GrabbableObject obj)
+        {
+            if (obj.GetComponentInChildren<LethalMinLibrary.PikminItemOverrideSettings>() != null)
+            {
+                LethalMinLibrary.PikminItemOverrideSettings OV1 = obj.GetComponentInChildren<LethalMinLibrary.PikminItemOverrideSettings>();
+                PikminItemOverrideSettings OV2 = obj.gameObject.AddComponent<PikminItemOverrideSettings>();
+                CopyFields(OV1,OV2,"PikminItemOverideSettings");
+                GameObject.Destroy(OV1);
+                LethalMin.Logger.LogInfo($"Converted overide settings for {obj.gameObject.name}");
+            }
+        }
+
         private static void CopyFields<TSource, TDestination>(TSource source, TDestination destination, string typeName)
         {
             if (source == null)

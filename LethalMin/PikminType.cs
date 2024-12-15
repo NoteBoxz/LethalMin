@@ -107,6 +107,9 @@ namespace LethalMin
         [Tooltip("The ammount of distance the pikmin can detect items")]
         public float ItemDetectionRange = 5f;
 
+        [Tooltip(("The ammount of distance a Pikmin can hit enemies at."))]
+        public float AttackRange = 1f;
+
         [Tooltip("The Attack animation for the pikmin")]
         public AnimationClip AttackAnimation;
 

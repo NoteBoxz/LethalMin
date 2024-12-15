@@ -87,6 +87,9 @@ namespace LethalMin.Patches
                         LethalMin.Logger.LogWarning($"NetworkObject component not found on GrabbableObject for {grabbableObject.name}");
                         return null!;
                     }
+                    if(LethalMin.IsDependencyLoaded("NoteBoxz.LethalMinLibrary")){
+                        TypeConverter.CheckAndConvertOverrideSettings(grabbableObject);
+                    }
                     pikminItem.SetRootServerRpc(new NetworkObjectReference(grabbableObject.NetworkObject));
                     PikminObjectPrefabInstance.name = grabbableObject.name + "(PikminNode)";
                     PikminObjectPrefabInstance.transform.position = grabbableObject.transform.position;
