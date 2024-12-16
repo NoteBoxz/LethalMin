@@ -6,6 +6,7 @@ using GameNetcodeStuff;
 using System.Collections;
 using System;
 using System.Linq;
+using LethalMin.Library;
 
 namespace LethalMin
 {
@@ -72,7 +73,14 @@ namespace LethalMin
                 {
                     LethalMin.Logger.LogError($"{name} still has no root after checking parent!");
                     if (IsServer)
+                    {
+                        if(IsSpawned){
                         NetworkObject.Despawn(true);
+                        }
+                        else{
+                            GameObject.Destroy(gameObject);
+                        }
+                    }
                 }
             }
         }
@@ -262,6 +270,10 @@ namespace LethalMin
                 if (root.GetComponent<GrabbableObject>() != null)
                 {
                     LethalMin.Logger.LogInfo($"syncing {root.name} Root");
+                    if (LethalMin.IsDependencyLoaded("NoteBoxz.LethalMinLibrary"))
+                    {
+                        TypeConverter.CheckAndConvertOverrideSettings(root.GetComponent<GrabbableObject>());
+                    }
                     Initialize(root.GetComponent<GrabbableObject>());
                 }
             }
