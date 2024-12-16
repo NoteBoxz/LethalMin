@@ -147,7 +147,6 @@ namespace LethalMin
                 StartCoroutine(Spawn1());
                 StartCoroutine(Spawn2());
                 StartCoroutine(AddPikminBridge());
-                StartCoroutine(GetFloorData());
                 RefreshPikminItemsInMapList();
                 RefreshNonPikminEnemiesList();
                 RefreshPuffminList();
@@ -189,13 +188,14 @@ namespace LethalMin
                 }
                 return allExits.OrderBy(exit => Vector3.Distance(transform.position, exit.transform.position)).ToList();
             }
-
-            yield return new WaitUntil(() => StartOfRound.Instance.fullyLoadedPlayers.Count >= GameNetworkManager.Instance.connectedPlayers);
-            yield return new WaitUntil(() => RoundManager.Instance.dungeonFinishedGeneratingForAllPlayers);
+            
             yield return new WaitForSeconds(2f);
+
+            LethalMin.Logger.LogInfo("Getting floor data");
 
             CurrentFloorData.Clear();
             DefultFloorData = null;
+
             if (RoundManager.Instance.currentMineshaftElevator != null)
             {
                 FloorData F1 = new FloorData();

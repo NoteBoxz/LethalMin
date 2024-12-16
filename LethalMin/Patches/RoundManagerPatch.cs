@@ -11,5 +11,13 @@ namespace LethalMin.Patches
         {
             PikminManager.Instance.SpawnOnionItems();
         }
+        
+        [HarmonyPatch("FinishGeneratingNewLevelClientRpc")]
+        [HarmonyPostfix]
+        public static void FinishGeneratingNewLevelClientRpcPostfix(StartOfRound __instance)
+        {
+            PikminManager.Instance.StartCoroutine(PikminManager.Instance.GetFloorData());
+        }
+
     }
 }

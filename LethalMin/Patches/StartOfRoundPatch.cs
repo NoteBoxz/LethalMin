@@ -25,7 +25,6 @@ namespace LethalMin.Patches
                 PikminManager.Instance.SpawnShipPhaseOnionsServerRpc();
         }
 
-
         [HarmonyPatch("StartGame")]
         [HarmonyPostfix]
         private static void Imp()
@@ -73,9 +72,6 @@ namespace LethalMin.Patches
             PikminManager.Instance.HandlePikminWhenShipLeaving();
         }
 
-
-        // In StartOfRoundPatch.cs
-
         [HarmonyPatch("ShipHasLeft")]
         [HarmonyPostfix]
         private static void SyncEndgameData()
@@ -85,6 +81,8 @@ namespace LethalMin.Patches
 
             PikminManager.Instance.DespawnSprouts();
             PikminManager.Instance.RemoveAllRadiuses();
+            PikminManager.CurrentFloorData.Clear();
+            PikminManager.DefultFloorData = null;
         }
 
         [HarmonyPatch("SetShipReadyToLand")]
