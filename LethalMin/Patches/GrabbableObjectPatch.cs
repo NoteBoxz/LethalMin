@@ -87,7 +87,8 @@ namespace LethalMin.Patches
                         LethalMin.Logger.LogWarning($"NetworkObject component not found on GrabbableObject for {grabbableObject.name}");
                         return null!;
                     }
-                    if(LethalMin.IsDependencyLoaded("NoteBoxz.LethalMinLibrary")){
+                    if (LethalMin.IsDependencyLoaded("NoteBoxz.LethalMinLibrary"))
+                    {
                         TypeConverter.CheckAndConvertOverrideSettings(grabbableObject);
                     }
                     pikminItem.SetRootServerRpc(new NetworkObjectReference(grabbableObject.NetworkObject));
@@ -135,6 +136,20 @@ namespace LethalMin.Patches
 
             hitPoint = Vector3.zero;
             return null;
+        }
+
+
+        [HarmonyPatch("GrabItemFromEnemy")]
+        [HarmonyPostfix]
+        private static void GrabItemFromEnemyPostfix(GrabbableObject __instance, EnemyAI enemy)
+        {
+            PikminItem itm = __instance.GetComponentInChildren<PikminItem>();
+            if (itm != null && itm.PikminOnItemList.Count > 0 && enemy.enemyType != LethalMin.pikminEnemyType)
+            {
+                itm.RemoveAllPikminFromItem();
+                itm.wasGrabbed = true;
+                LethalMin.Logger.LogInfo("Enemy grabbed " + itm.name + "Removing Pikmin");
+            }
         }
     }
 

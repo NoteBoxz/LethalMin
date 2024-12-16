@@ -20,7 +20,7 @@ namespace LethalMin
         public List<int> GrowthStagesOnItem = new List<int>();
         public float SFXInterval = 0.2f;
         private bool isInitialized = false;
-        private bool wasGrabbed = false;
+        public bool wasGrabbed = false;
         public CaveDwellerAI ManEater;
         private NetworkObject rootNetworkObject;
         [IDebuggable.Debug] Vector3 ObjectPosition;
@@ -283,18 +283,18 @@ namespace LethalMin
             name = root.name + "(PikminNode)";
             LethalMin.Logger.LogInfo($"{name} has {root.itemProperties.weight}");
 
-            if (Root.GetComponentInChildren<PikminItemOverrideSettings>() != null)
+            if (Root.GetComponentInChildren<PikminItemOverrideSettings>() == null)
             {
                 PikminNeedOnItem = Mathf.Max(
         (root.itemProperties.weight - 1f) * 100f <= 3f ? 1 :
         Mathf.CeilToInt(((root.itemProperties.weight - 1f) * 100f - 3f) / 10f) + 1 - LethalMin.ItemRequireSubracterValue, 1);
-                isInitialized = true;
             }
             else
             {
                 PikminNeedOnItem = Root.GetComponentInChildren<PikminItemOverrideSettings>().PikminNeededOnItem;
             }
 
+            isInitialized = true;
             CreateGoToPositions();
         }
 
@@ -313,7 +313,7 @@ namespace LethalMin
                 LethalMin.Logger.LogWarning($"No collider found on {Root.name}. Using default radius.");
             }
 
-            int positionCount = Mathf.Min(50, PikminNeedOnItem * 5);
+            int positionCount = Mathf.Min(PikminNeedOnItem * 2, LethalMin.MaxMinValue);
 
             goToPositions.Clear();
             goToPositionsOccupied.Clear();
@@ -815,12 +815,11 @@ namespace LethalMin
 
         private void CheckIfGrabbed()
         {
-            if ((Root.isHeldByEnemy && PikminOnItem <= PikminNeedOnItem || Root.isHeld) && !wasGrabbed)
+            if ((Root.isHeldByEnemy && PikminOnItem < PikminNeedOnItem || Root.isHeld) && !wasGrabbed)
             {
                 wasGrabbed = true;
-                RemoveAllPikminFromItem();
             }
-            else if (!(Root.isHeldByEnemy && PikminOnItem <= PikminNeedOnItem || Root.isHeld))
+            else if (!(Root.isHeldByEnemy && PikminOnItem < PikminNeedOnItem || Root.isHeld))
             {
                 wasGrabbed = false;
             }

@@ -8,6 +8,7 @@ using Unity.Netcode;
 using UnityEngine;
 using System.IO;
 using UnityEngine.InputSystem.Utilities;
+using LethalMin.Patches.OtherMods;
 
 namespace LethalMin.Patches
 {
@@ -90,6 +91,10 @@ namespace LethalMin.Patches
         [HarmonyPostfix]
         private static void SaveOnions()
         {
+            if (LethalMin.IsDependencyLoaded("Piggy.LCOffice"))
+            {
+                ResetPiggyElevator();
+            }
             PikminManager.Instance.FuseOnions();
             if (LethalMin.IsUsingModLib())
             {
@@ -104,6 +109,11 @@ namespace LethalMin.Patches
             GameObject.FindAnyObjectByType<PikminHUD>().UpdateHUD();
             if (!NetworkManager.Singleton.IsServer) { return; }
             PikminManager.Instance.SpawnShipPhaseOnionsServerRpc();
+        }
+
+        public static void ResetPiggyElevator()
+        {
+            PiggyElevatorSystemPatch.HasCreatedNavMeshOnElevate = false;
         }
 
         private static void CreatePikminManager()

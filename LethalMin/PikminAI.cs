@@ -1268,7 +1268,7 @@ namespace LethalMin
                     else
                     {
                         SetTriggerClientRpc("Attack");
-                        AttackBufferB = 0.7f;
+                        AttackBufferB = 0.1f;
                     }
                 }
                 if (EnemyAttacking != null && !EnemyAttacking.isEnemyDead && Vector3.Distance(transform.position, EnemyAttacking.transform.position) <= LethalMin.ChaseRange)
@@ -2455,6 +2455,8 @@ namespace LethalMin
                     return true;
                 }
             }
+
+            //Check if in elevator, no other exits on the floor
 
             return false;
         }
@@ -4468,14 +4470,12 @@ namespace LethalMin
 
             if (!KncockedBack)
             {
-                if (IsServer)
-                    SetTriggerClientRpc("Land");
+                SetTriggerClientRpc("Land");
                 //PlayAnimClientRpc("Idle");
             }
             else
             {
-                if (IsServer)
-                    SetTriggerClientRpc("Land");
+                SetTriggerClientRpc("Land");
                 //PlayAnimClientRpc("Lay");
             }
             if (IsServer)
