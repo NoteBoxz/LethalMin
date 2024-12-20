@@ -472,6 +472,7 @@ namespace LethalMin
                 CurPikminBox.color = currentType.PikminColor2;
                 CurPikminCount.text = LeaderScript.GetFollowingPikminByType(currentType).Count.ToString();
                 CurPort.sprite = currentType.PikminIcon;
+                CurPort.color = new Color(1, 1, 1, 1);
                 CurPikminCount.color = Color.white;
 
 
@@ -479,6 +480,7 @@ namespace LethalMin
                 PrevPikminBox.color = prevType.PikminColor2;
                 PrevPikminCount.text = LeaderScript.GetFollowingPikminByType(prevType).Count.ToString();
                 PrevPort.sprite = prevType.PikminIcon;
+                PrevPort.color = new Color(1, 1, 1, 1);
                 PrevPikminCount.color = Color.white;
 
 
@@ -486,21 +488,25 @@ namespace LethalMin
                 NextPikminBox.color = nextType.PikminColor2;
                 NextPikminCount.text = LeaderScript.GetFollowingPikminByType(nextType).Count.ToString();
                 NextPort.sprite = nextType.PikminIcon;
+                NextPort.color = new Color(1, 1, 1, 1);
                 NextPikminCount.color = Color.white;
             }
             else
             {
-                CurPikminCount.color = Color.black;
+                CurPikminCount.color = new Color(0, 0, 0, 0);
+                CurPort.color = new Color(0, 0, 0, 0);
                 CurPort.sprite = LethalMin.NoPikmin;
-                CurPikminBox.color = Color.black;
+                CurPikminBox.color = new Color(0, 0, 0, 0);
                 CurPikminCount.text = "0";
-                PrevPikminCount.color = Color.black;
+                PrevPort.color = new Color(0, 0, 0, 0);
+                PrevPikminCount.color = new Color(0, 0, 0, 0);
                 PrevPort.sprite = LethalMin.NoPikmin;
-                PrevPikminBox.color = Color.black;
+                PrevPikminBox.color = new Color(0, 0, 0, 0);
                 PrevPikminCount.text = "0";
-                NextPikminCount.color = Color.black;
+                NextPort.color = new Color(0, 0, 0, 0);
+                NextPikminCount.color = new Color(0, 0, 0, 0);
                 NextPort.sprite = LethalMin.NoPikmin;
-                NextPikminBox.color = Color.black;
+                NextPikminBox.color = new Color(0, 0, 0, 0);
                 NextPikminCount.text = "0";
             }
 

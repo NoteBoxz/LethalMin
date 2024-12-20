@@ -3351,7 +3351,7 @@ namespace LethalMin
 
             PossibleRoutes = PossibleRoutes
             .OrderByDescending(route => route.IsPathable)
-            .ThenByDescending(route => route.BypassDistanceCheck ? -route.Priority : 0)
+            .ThenByDescending(route => route.BypassPathableCheck ? -route.Priority : 0)
             .ToList();
 
             //Force the onion route to the front if it exists

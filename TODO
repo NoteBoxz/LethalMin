@@ -10,6 +10,7 @@ Fix bug that causes the whistle to break when Remnants is installed. (Not Starte
 Make Onions visible from ship windows mod (Done)
 Fix item holding bug with pluck animation. (done)
 Add in Zap death Animation (done)
+Allow Pikmin to "LethalEscape" when carrying items. (Done)
 
 (0.3.x)
 
@@ -17,7 +18,6 @@ Add in config that switches the models and sounds with the ones from other Pikmi
 Inprove Throwing system on the client side. (Not Started)
 Reduce realay on client side when plucking. (Not Started)
 Reduce lag when converting an enemy to an item. (Not Started)
-Allow Pikmin to "LethalEscape" when carrying items. (Not Started)
 Add Pluck-a-phone. (Not Started)
 Add Ship Global Whistle. (Not Started)
 ...
