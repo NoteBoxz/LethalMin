@@ -3085,7 +3085,7 @@ namespace LethalMin
                     ShipRoute.Priority = 1;
                 }
                 ShipRoute.InitalDistance = CalculatePathLength(transform.position, shipPos);
-                if (LethalMin.AllowLethalEscape)
+                if (!isOutside && LethalMin.AllowLethalEscape)
                     ShipRoute.InitalDistance = 0.1f;
                 PossibleRoutes.Add(ShipRoute);
             }
@@ -3099,7 +3099,7 @@ namespace LethalMin
                 if (TargetCar != null && TargetCarPos != null && TargetCar.backDoorOpen && !TargetCar.magnetedToShip)
                 {
                     ItemRoute CarRoute = new ItemRoute("Car");
-                    CarRoute.AddPoint(TargetCarPos.position, false);
+                    CarRoute.AddPoint(TargetCarPos.position, true);
                     PossibleRoutes.Add(CarRoute);
                     CarRoute.BypassPathableCheck = true;
                     if (isOutside || LethalMin.AllowLethalEscape)
@@ -3111,8 +3111,8 @@ namespace LethalMin
                         CarRoute.Priority = 2;
                     }
                     CarRoute.InitalDistance = CalculatePathLength(transform.position, TargetCarPos.position);
-                    if (LethalMin.AllowLethalEscape)
-                        CarRoute.InitalDistance = 0.1f;
+                    if (!isOutside && LethalMin.AllowLethalEscape)
+                        CarRoute.InitalDistance = 0.09f;
                     PossibleRoutes.Add(CarRoute);
                 }
             }
@@ -3351,7 +3351,7 @@ namespace LethalMin
 
             PossibleRoutes = PossibleRoutes
             .OrderByDescending(route => route.IsPathable)
-            .ThenByDescending(route => route.BypassPathableCheck ? -route.Priority : 0)
+            .ThenByDescending(route => route.BypassDistanceCheck ? -route.Priority : 0)
             .ToList();
 
             //Force the onion route to the front if it exists
@@ -3380,6 +3380,7 @@ namespace LethalMin
             {
                 RouteLog += $"\n-------------------\n";
                 RouteLog += route.RouteName + "\n";
+                RouteLog += $"InitalPos: {route.Points[0]}\n";
                 RouteLog += $"Pathable: {route.IsPathable} \nBypassPath: {route.BypassPathableCheck} \nBypassDistance: {route.BypassDistanceCheck}\n";
                 RouteLog += $"Entrance: {route.entranceTeleport?.name ?? "None"}\n";
                 RouteLog += $"Priority: {route.Priority}, \nDistance: {route.InitalDistance}";
@@ -3552,7 +3553,7 @@ namespace LethalMin
                 if (CurRoutes[0].CurPathIndex < CurRoutes[0].TotalPointCount() - 1)
                 {
                     //Switch to the next point
-                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Switching to next point ");
+                    LethalMin.Logger.LogInfo($"({uniqueDebugId}) Switching to next point {CurRoutes[0].Points[CurRoutes[0].CurPathIndex + 1]}");
                     ItemRoute route = CurRoutes[0];
                     route.AdvanceToNextPoint();
                     CurRoutes[0] = route;
