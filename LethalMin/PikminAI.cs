@@ -3329,6 +3329,9 @@ namespace LethalMin
             PossibleRoutes = PossibleRoutes.OrderBy(route => route.BypassDistanceCheck ? 0 : 1)
                                .ThenBy(route => route.BypassDistanceCheck ? -route.Priority : route.InitalDistance)
                                .ToList();
+            
+
+            // Pathable Check
             for (int i = 0; i < PossibleRoutes.Count; i++)
             {
                 ItemRoute route = PossibleRoutes[i];
@@ -3343,16 +3346,31 @@ namespace LethalMin
                 PossibleRoutes[i] = route;
             }
 
+            // Sort routes by their inital distance (lowest to highest) if BypassDistanceCheck is true, sort it high
             PossibleRoutes = PossibleRoutes
             .OrderByDescending(route => route.BypassDistanceCheck)
             .ThenBy(route => route.InitalDistance)
             .ToList();
 
-
+            //Sort by pathable and priority
             PossibleRoutes = PossibleRoutes
             .OrderByDescending(route => route.IsPathable)
             .ThenByDescending(route => route.BypassDistanceCheck ? -route.Priority : 0)
             .ToList();
+
+            //Calculate the Outside Distances
+            
+            // for (int i = 0; PossibleRoutes.Count > 0 && i < PossibleRoutes.Count; i++)
+            // {
+            //     if (LethalMin.AllowLethalEscape && !isOutside && CurRoutes[i].RouteName != "Onion")
+            //     {
+            //         if (GetVaildExit().Item2 != null)
+            //         {
+            //             (int, EntranceTeleport) ProbableExit = GetVaildExit();
+                       
+            //         }
+            //     }
+            // }
 
             //Force the onion route to the front if it exists
             int OnionIndex = -1;
@@ -3380,7 +3398,6 @@ namespace LethalMin
             {
                 RouteLog += $"\n-------------------\n";
                 RouteLog += route.RouteName + "\n";
-                RouteLog += $"InitalPos: {route.Points[0]}\n";
                 RouteLog += $"Pathable: {route.IsPathable} \nBypassPath: {route.BypassPathableCheck} \nBypassDistance: {route.BypassDistanceCheck}\n";
                 RouteLog += $"Entrance: {route.entranceTeleport?.name ?? "None"}\n";
                 RouteLog += $"Priority: {route.Priority}, \nDistance: {route.InitalDistance}";
