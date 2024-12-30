@@ -181,8 +181,6 @@ namespace LethalMin
         public float itemDetectionRange = 5f;
         public float itemDetectionAngle = 360f; // Unused :(
         [IDebuggable.Debug] public PikminItem targetItem;
-        public static List<GameObject> PikminItemsInMap = new List<GameObject>();
-        public static List<GameObject> PikminItemsExclusion = new List<GameObject>();
         public Transform HoldPos;
         public string uniqueDebugId;
         public bool PreDefinedType = false;
@@ -334,7 +332,6 @@ namespace LethalMin
         public bool IsTurningIntoPuffmin = false;
         public bool ShouldDoLethalEscape;
         public bool DeathBuffer;
-        public static List<GameObject> NonPikminEnemies = new List<GameObject>();
         public GameObject CurParticleInstance;
         public bool IsPoisoned;
 
@@ -421,7 +418,6 @@ namespace LethalMin
             yield return new WaitForSeconds(0.1f);  // Wait for one frame
             enemyBehaviourStates = new EnemyBehaviourState[Enum.GetValues(typeof(PState)).Length];
 
-            GetPikminItemsInMapList();
             InitalizeType(); // It is very important that this method is ran BEFORE referncing the PminType variable
             InitializeProjectileProperties();
             CheckForOnion();
@@ -2363,56 +2359,7 @@ namespace LethalMin
 
 
         #region Item Detection and Interaction
-
-        public static void RefreshPikminItemsInMapList()
-        {
-            PikminItemsInMap.Clear();
-            PikminItem[] allGrabbables = UnityEngine.Object.FindObjectsOfType<PikminItem>();
-            foreach (PikminItem grabbable in allGrabbables)
-            {
-                if (PikminItemsExclusion.Contains(grabbable.gameObject)) { continue; }
-                if (grabbable == null) { continue; }
-                if (grabbable.Root == null) { continue; }
-                if (!grabbable.Root.deactivated)
-                {
-                    PikminItemsInMap.Add(grabbable.gameObject);
-                }
-            }
-        }
-        public static void RefreshPikminEnemiesInMapList()
-        {
-            NonPikminEnemies.Clear();
-            EnemyAI[] allEnemies = UnityEngine.Object.FindObjectsOfType<EnemyAI>();
-            foreach (EnemyAI item in allEnemies)
-            {
-                if (item.GetComponent<PikminAI>() != null) { continue; }
-                if (item.isEnemyDead) { continue; }
-                NonPikminEnemies.Add(item.gameObject);
-            }
-        }
-        public static void GetPikminItemsInMapList()
-        {
-            if (PikminManager.GetPikminItemsInMap().Count == 0)
-            {
-                if (LethalMin.DebugMode)
-                    LethalMin.Logger.LogInfo("PikminItemsInMap is empty, refreshing list...");
-                RefreshPikminItemsInMapList();
-            }
-            else
-            {
-                PikminItemsInMap = PikminManager.GetPikminItemsInMap();
-                PikminItemsExclusion = PikminManager.PikminItemsExclusion;
-            }
-
-            if (PikminManager.GetNonPikminEnemies().Count == 0)
-            {
-                RefreshPikminEnemiesInMapList();
-            }
-            else
-            {
-                NonPikminEnemies = PikminManager.GetNonPikminEnemies();
-            }
-        }
+    
         public List<Vector3> GetNavmeshShipPositions()
         {
             List<Vector3> list = new List<Vector3>();
@@ -2504,14 +2451,14 @@ namespace LethalMin
                 else
                 {
                     LethalMin.Logger.LogError($"Found NetworkObject but it doesn't have a PikminItem component: {itemObject.name}");
-                    PikminItemsExclusion.Add(targetItem.gameObject);
+                    PikminManager.PikminItemsExclusion.Add(targetItem);
                     targetItem = null;
                 }
             }
             else
             {
                 LethalMin.Logger.LogError($"Failed to resolve NetworkObjectReference");
-                PikminItemsExclusion.Add(targetItem.gameObject);
+                PikminManager.PikminItemsExclusion.Add(targetItem);
                 targetItem = null;
             }
 
@@ -2610,13 +2557,11 @@ namespace LethalMin
                         else
                         {
                             LethalMin.Logger.LogError($"Found item doesn't have NetworkObject component: {nearestItem.name}");
-                            PikminItemsInMap.Remove(nearestItem);
                         }
                     }
                     else
                     {
-                        LethalMin.Logger.LogError($"Found item doesn't have PikminItem component: {nearestItem.name}");
-                        PikminItemsInMap.Remove(nearestItem);
+                        LethalMin.Logger.LogError($"Found item doesn't have PikminItem node: {nearestItem.name}");
                     }
                 }
             }
@@ -2694,18 +2639,18 @@ namespace LethalMin
             {
                 for (int i = 0; i < PikminManager.GetNonPikminEnemies().Count; i++)
                 {
-                    GameObject enemy = PikminManager.GetNonPikminEnemies()[i];
+                    EnemyAI enemy = PikminManager.GetNonPikminEnemies()[i];
                     if (enemy == null)
                     {
                         continue;
                     }
 
-                    if (!enemy.GetComponent<EnemyAI>().isEnemyDead)
+                    if (!enemy.isEnemyDead)
                     {
                         continue;
                     }
 
-                    if (LethalMin.CantConvertEnemy(enemy.GetComponent<EnemyAI>().enemyType))
+                    if (LethalMin.CantConvertEnemy(enemy.enemyType))
                     {
                         continue;
                     }
@@ -2735,7 +2680,7 @@ namespace LethalMin
 
                     if (distanceToEnemy < closestDistance)
                     {
-                        closestItem = enemy;
+                        closestItem = enemy.gameObject;
                         closestDistance = distanceToEnemy;
                         if (LethalMin.DebugMode)
                             LethalMin.Logger.LogInfo($"({uniqueDebugId}) New closest enemy: {enemy.name} at distance {Mathf.Sqrt(distanceToEnemy)}");
@@ -2744,14 +2689,14 @@ namespace LethalMin
                 }
             }
 
-            for (int i = 0; i < PikminItemsInMap.Count; i++)
+            for (int i = 0; i < PikminManager.GetPikminItemsInMap().Count; i++)
             {
-                GameObject item = PikminItemsInMap[i];
+                PikminItem item = PikminManager.GetPikminItemsInMap()[i];
                 if (item == null)
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Removing null item at index {i}");
-                    PikminItemsInMap.RemoveAt(i--);
+                    PikminManager.GetPikminItemsInMap().RemoveAt(i--);
                     continue;
                 }
 
@@ -2769,29 +2714,28 @@ namespace LethalMin
                     continue;
                 }
 
-                PikminItem pikminItem = item.GetComponent<PikminItem>();
-                if (pikminItem == null || pikminItem?.Root == null)
+                if (item == null || item?.Root == null)
                 {
                     //if(LethalMin.DebugMode)
                     //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Item {item.name} has no PikminItem or Root. Skipping.");
                     continue;
                 }
 
-                if (LethalMin.GetParsedPickupBlacklist().Contains(pikminItem.Root.itemProperties.itemName))
+                if (LethalMin.GetParsedPickupBlacklist().Contains(item.Root.itemProperties.itemName))
                 {
                     //if(LethalMin.DebugMode)
                     //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Item {item.name} is blacklisted. Skipping.");
                     continue;
                 }
 
-                if (pikminItem.Root.isInShipRoom && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
+                if (item.Root.isInShipRoom && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
                 {
                     //if(LethalMin.DebugMode)
                     //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Item {item.name} is in ship room. Skipping.");
                     continue;
                 }
 
-                if (pikminItem.Root.isHeld || pikminItem.Root.isHeldByEnemy)
+                if (item.Root.isHeld || item.Root.isHeldByEnemy)
                 {
                     //if(LethalMin.DebugMode)
                     //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Item {item.name} is held. Skipping.");
@@ -2807,7 +2751,7 @@ namespace LethalMin
 
                 if (distanceToItem < closestDistance)
                 {
-                    closestItem = item;
+                    closestItem = item.gameObject;
                     closestDistance = distanceToItem;
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) New closest item: {item.name} at distance {Mathf.Sqrt(distanceToItem)}");
@@ -5076,13 +5020,18 @@ namespace LethalMin
             if (!IsServer) return;
             if (!HasInitalized) { return; }
             if (targetItem != null && !LethalMin.PrioitizeAttacking) { return; }
-            if (NonPikminEnemies == null || NonPikminEnemies.Count == 0)
+            if (PikminManager.GetNonPikminEnemies() == null || PikminManager.GetNonPikminEnemies().Count == 0)
             {
                 //LethalMin.Logger.LogWarning($"({uniqueDebugId}) NonPikminEnemies list is null or empty.");
                 return;
             }
 
-            GameObject nearestEnemyObject = CheckLineOfSight(NonPikminEnemies, width: 360, range: 12, proximityAwareness: -1);
+            GameObject nearestEnemyObject = CheckLineOfSight(
+            PikminManager.GetNonPikminEnemies()
+            .Where(np => np != null)
+            .Select(np => np.gameObject)
+            .ToList(), width: 360, range: 12, proximityAwareness: -1);
+
             if (nearestEnemyObject == null)
             {
                 //LethalMin.Logger.LogWarning($"({uniqueDebugId}) No enemy found in line of sight.");

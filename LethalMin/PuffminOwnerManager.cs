@@ -240,8 +240,14 @@ namespace LethalMin
         }
 
         bool isdoingwhistle = false;
+        int whistleinterval = 3;
         public void DoWhistle()
         {
+            if (whistleinterval > 0)
+            {
+                whistleinterval--;
+                return;
+            }
             if (isdoingwhistle)
                 return;
 
@@ -298,7 +304,7 @@ namespace LethalMin
             float whistleZoneOffset = 5f; // How far in front of the player the whistle zone should be
 
             bool puffminInRange = false;
-            foreach (GameObject puffmin in PikminManager._currentPuffminEnemies)
+            foreach (PuffminAI puffmin in PikminManager.GetPuffminEnemies())
             {
                 if (Vector3.Distance(Controller.transform.position, puffmin.transform.position) <= checkRange)
                 {

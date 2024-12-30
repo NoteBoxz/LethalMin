@@ -75,51 +75,47 @@ namespace LethalMin
         {
             DBM.enabled = LethalMin.DebugMode;
             OnionContainer.transform.position = new Vector3(LethalMin.ShipPhaseOnionX, LethalMin.ShipPhaseOnionY, LethalMin.ShipPhaseOnionZ);
-            if (StartOfRound.Instance != null && StartOfRound.Instance.shipHasLanded)
-            {
-                if (PIOMTimer >= 0)
-                {
-                    PIOMTimer -= Time.deltaTime;
-                }
-                else
-                {
-                    RefreshPikminItemsInMapList();
-                    RefreshNonPikminEnemiesList();
-                    RefreshPuffminList();
-                    RefreshPikminList();
-                    RefreshOnionsList();
-                    RefreshCarsList();
-                    RefreshLocks();
-
-                    foreach (var item in _currentPuffminEnemies)
-                    {
-                        if (LethalMin.HidePuffminPrompt)
-                        {
-                            PikminHUD.pikminHUDInstance.WigglePrompt.SetActive(false);
-                            break;
-                        }
-                        if (item.GetComponent<PuffminAI>().PlayerLatchedOn == StartOfRound.Instance.localPlayerController && !item.GetComponent<PuffminAI>().IsDying)
-                        {
-                            PikminHUD.pikminHUDInstance.WigglePrompt.SetActive(true);
-                            break;
-                        }
-                        PikminHUD.pikminHUDInstance.WigglePrompt.SetActive(false);
-                    }
-                    if (_currentPuffminEnemies.Count == 0)
-                    {
-                        PikminHUD.pikminHUDInstance.WigglePrompt.SetActive(false);
-                    }
-
-                    PIOMTimer = LethalMin.ManagerRefreshRate;
-                }
-            }
-            else
+            if (StartOfRound.Instance == null || !StartOfRound.Instance.shipHasLanded)
             {
                 if (_currentPikminItemsInMap.Count > 0)
                 {
                     _currentPikminItemsInMap.Clear();
                     PikminItemsExclusion.Clear();
                 }
+                return;
+            }
+            if (PIOMTimer >= 0)
+            {
+                PIOMTimer -= Time.deltaTime;
+            }
+            else
+            {
+                RefreshPikminItemsInMapList();
+                RefreshNonPikminEnemiesList();
+                RefreshPuffminList();
+                RefreshPikminList();
+                RefreshOnionsList();
+                RefreshCarsList();
+                RefreshLocks();
+
+                if (!LethalMin.HidePuffminPrompt)
+                {
+                    foreach (var item in _currentPuffminEnemies)
+                    {
+                        if (item.PlayerLatchedOn == StartOfRound.Instance.localPlayerController && !item.IsDying)
+                        {
+                            PikminHUD.pikminHUDInstance.WigglePrompt.SetActive(true);
+                            break;
+                        }
+                        PikminHUD.pikminHUDInstance.WigglePrompt.SetActive(false);
+                    }
+                }
+                if (_currentPuffminEnemies.Count == 0 || LethalMin.HidePuffminPrompt)
+                {
+                    PikminHUD.pikminHUDInstance.WigglePrompt.SetActive(false);
+                }
+
+                PIOMTimer = LethalMin.ManagerRefreshRate;
             }
         }
         public void OnGameStarted()
@@ -188,7 +184,7 @@ namespace LethalMin
                 }
                 return allExits.OrderBy(exit => Vector3.Distance(transform.position, exit.transform.position)).ToList();
             }
-            
+
             yield return new WaitForSeconds(2f);
 
             LethalMin.Logger.LogInfo("Getting floor data");
@@ -936,18 +932,18 @@ namespace LethalMin
 
         #region Pikmin and Item Management
         float PIOMTimer;
-        private static List<GameObject> _currentPikminItemsInMap = new List<GameObject>();
-        private static List<GameObject> _nextPikminItemsInMap = new List<GameObject>();
-        private static List<GameObject> _currentNonPikminEnemies = new List<GameObject>();
-        private static List<GameObject> _nextNonPikminEnemies = new List<GameObject>();
-        private static List<GameObject> _currentPikminEnemies = new List<GameObject>();
-        private static List<GameObject> _nextPikminEnemies = new List<GameObject>();
-        public static List<GameObject> _currentPuffminEnemies = new List<GameObject>();
-        public static List<GameObject> _nextPuffminEnemies = new List<GameObject>();
-        private static object _listLock = new object();
-        public static List<GameObject> PikminItemsExclusion = new List<GameObject>();
+        private static List<PikminItem> _currentPikminItemsInMap = new List<PikminItem>();
+        private static List<PikminItem> _nextPikminItemsInMap = new List<PikminItem>();
+        private static List<EnemyAI> _currentNonPikminEnemies = new List<EnemyAI>();
+        private static List<EnemyAI> _nextNonPikminEnemies = new List<EnemyAI>();
+        private static List<PikminAI> _currentPikminEnemies = new List<PikminAI>();
+        private static List<PikminAI> _nextPikminEnemies = new List<PikminAI>();
+        private static List<PuffminAI> _currentPuffminEnemies = new List<PuffminAI>();
+        private static List<PuffminAI> _nextPuffminEnemies = new List<PuffminAI>();
         public static Onion[] _currentOnions = new Onion[0];
         public static VehicleController[] _currentCars = new VehicleController[0];
+        private static object _listLock = new object();
+        public static List<PikminItem> PikminItemsExclusion = new List<PikminItem>();
 
         public static void RefreshPikminItemsInMapList()
         {
@@ -958,10 +954,10 @@ namespace LethalMin
             foreach (PikminItem grabbable in allGrabbables)
             {
                 if (grabbable == null || grabbable.Root == null) continue;
-                if (PikminItemsExclusion.Contains(grabbable.gameObject)) continue;
+                if (PikminItemsExclusion.Contains(grabbable)) continue;
                 if (!grabbable.Root.deactivated)
                 {
-                    _nextPikminItemsInMap.Add(grabbable.gameObject);
+                    _nextPikminItemsInMap.Add(grabbable);
                 }
             }
         }
@@ -977,7 +973,7 @@ namespace LethalMin
                 if (!enemy.enemyType.canDie) continue;
                 if (enemy.enemyType != LethalMin.pikminEnemyType) // Check if it doesn't have PikminAI component
                 {
-                    _nextNonPikminEnemies.Add(enemy.gameObject);
+                    _nextNonPikminEnemies.Add(enemy);
                 }
             }
         }
@@ -989,7 +985,7 @@ namespace LethalMin
             foreach (PikminAI Pikmin in allEnemies)
             {
                 if (Pikmin == null) continue;
-                _nextPikminEnemies.Add(Pikmin.gameObject);
+                _nextPikminEnemies.Add(Pikmin);
             }
         }
         public static void RefreshOnionsList()
@@ -1024,7 +1020,7 @@ namespace LethalMin
             foreach (PuffminAI puffmin in allPuffmin)
             {
                 if (puffmin == null) continue;
-                _nextPuffminEnemies.Add(puffmin.gameObject);
+                _nextPuffminEnemies.Add(puffmin);
             }
         }
 
@@ -1052,32 +1048,37 @@ namespace LethalMin
             //LethalMin.Logger.LogInfo($"Refreshed PikminItemsInMap. Current count: {_currentPikminItemsInMap.Count}");
             //LethalMin.Logger.LogInfo($"Refreshed puffminEnemies. Current count: {_currentPuffminEnemies.Count}");
             //LethalMin.Logger.LogInfo($"Refreshed NonPikminEnemies. Current count: {_currentNonPikminEnemies.Count}");
-
-            // Call GetPikminItemsInMapList for all Pikmin
-            PikminAI.GetPikminItemsInMapList();
         }
 
-        public static List<GameObject> GetPikminItemsInMap()
+        public static List<PikminItem> GetPikminItemsInMap()
         {
             lock (_listLock)
             {
-                return new List<GameObject>(_currentPikminItemsInMap);
+                return new List<PikminItem>(_currentPikminItemsInMap);
             }
         }
 
-        public static List<GameObject> GetNonPikminEnemies()
+        public static List<EnemyAI> GetNonPikminEnemies()
         {
             lock (_listLock)
             {
-                return new List<GameObject>(_currentNonPikminEnemies);
+                return new List<EnemyAI>(_currentNonPikminEnemies);
             }
         }
 
-        public static List<GameObject> GetPikminEnemies()
+        public static List<PikminAI> GetPikminEnemies()
         {
             lock (_listLock)
             {
-                return new List<GameObject>(_currentPikminEnemies);
+                return new List<PikminAI>(_currentPikminEnemies);
+            }
+        }
+
+        public static List<PuffminAI> GetPuffminEnemies()
+        {
+            lock (_listLock)
+            {
+                return new List<PuffminAI>(_currentPuffminEnemies);
             }
         }
 

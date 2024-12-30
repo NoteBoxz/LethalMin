@@ -4,13 +4,11 @@ using BepInEx.Logging;
 using HarmonyLib;
 using LethalLib.Modules;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using LethalConfig;
 using LethalConfig.ConfigItems;
 using LethalConfig.ConfigItems.Options;
@@ -19,11 +17,8 @@ using LethalLib.Extras;
 using LethalMin.Patches.OtherMods;
 using System.Text;
 using UnityEngine.AI;
-using UnityEngine.InputSystem;
 using System.IO;
-using LethalMin.Library;
-using UnityEngine.ProBuilder;
-using LethalMinLibrary;
+using Newtonsoft.Json;
 
 namespace LethalMin
 {
@@ -100,6 +95,7 @@ namespace LethalMin
         public static Dictionary<int, OnionFuseRules> RegisteredFuseRules = new Dictionary<int, OnionFuseRules>();
         public LayerMask PikminColideable = 1107298561 | (1 << 28);
         public static AssetBundleLoader Loader = null!;
+        public static string PluginsFolder = Path.Combine(Paths.ConfigPath, "LethalMin Pikmin Types");
 
         public static bool IsUsingModLib()
         {
@@ -227,6 +223,7 @@ namespace LethalMin
         public static float ShipPhaseOnionX, ShipPhaseOnionY, ShipPhaseOnionZ;
         //Generated Useable Varibles GoES HERE
 
+        public static bool UsePConfigs;
         public static bool RasistElevator;
         public static bool GenNavMehsOnElevate;
         public static bool AllowLethalEscape;
@@ -263,6 +260,7 @@ namespace LethalMin
 
         //Generated Config Varibles GoES HERE
 
+        public static ConfigEntry<bool> UsePConfigsConfig;
         public static ConfigEntry<bool> RasistElevatorConfig;
         public static ConfigEntry<bool> GenNavMehsOnElevateConfig;
         public static ConfigEntry<bool> AllowLethalEscapeConfig;
@@ -453,6 +451,7 @@ namespace LethalMin
 
             //Generated ConfigBindings goes here
 
+            UsePConfigsConfig = Config.Bind("Pikmin", "Allow Config File Override", false, "Allows a Pikmin Type's config file's values to override the values in game.");
             RasistElevatorConfig = Config.Bind("LC-Office", "Make Only Pikmin Use Elevator", true, "Makes it so that only Pikmin can enter the elevator (On floors 2 and 3 only). Any other entity just gets instantly teleported out if they get in.");
             GenNavMehsOnElevateConfig = Config.Bind("LC-Office", "Genorate Navmesh On Elevator", true, "Genorates a NavMesh on the Elevator in the LC-Office Interor. This makes it so Pikmin can path to, and walk on the elevator.");
             AllowLethalEscapeConfig = Config.Bind("Pikmin", "Make Pikmin Only Target Outdoors", false, "Makes Pikmin only target destinatons that are outside when carrying items. Even if the Pikmin is indoors");
@@ -593,6 +592,7 @@ namespace LethalMin
 
             //Generated Settings Valuse Goes Here
 
+            UsePConfigs = UsePConfigsConfig.Value;
             RasistElevator = RasistElevatorConfig.Value;
             GenNavMehsOnElevate = GenNavMehsOnElevateConfig.Value;
             AllowLethalEscape = AllowLethalEscapeConfig.Value;
@@ -742,6 +742,7 @@ namespace LethalMin
 
             //Generated Settings Events Goes here
 
+            UsePConfigsConfig.SettingChanged += (_, _) => UsePConfigs = UsePConfigsConfig.Value;
             RasistElevatorConfig.SettingChanged += (_, _) => RasistElevator = RasistElevatorConfig.Value;
             GenNavMehsOnElevateConfig.SettingChanged += (_, _) => GenNavMehsOnElevate = GenNavMehsOnElevateConfig.Value;
             AllowLethalEscapeConfig.SettingChanged += (_, _) => AllowLethalEscape = AllowLethalEscapeConfig.Value;
@@ -898,8 +899,124 @@ namespace LethalMin
 
             //Generated LC bindings goes here
 
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(UsePConfigsConfig, true));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(RasistElevatorConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(GenNavMehsOnElevateConfig, true));
+        }
+        public static void BindPIKconfig(PikminType type)
+        {
+            if (!Directory.Exists(PluginsFolder))
+                Directory.CreateDirectory(PluginsFolder);
+
+            if (!File.Exists($"{PluginsFolder}/{type.name}.json"))
+            {
+                GeneratePikminTypeConfig(type);
+            }
+        }
+        public static void GeneratePikminTypeConfig(PikminType type)
+        {
+            var configDict = new Dictionary<string, object>();
+            var fields = typeof(PikminType).GetFields(BindingFlags.Public | BindingFlags.Instance);
+
+            string[] exludedFields = new string[] { "version", "GenerateConfigFile", "HasBeenRegistered", "PikminTypeID" };
+
+            foreach (var field in fields)
+            {
+                var value = field.GetValue(type);
+                if (IsSerializableType(field.FieldType))
+                {
+                    if (field.FieldType == typeof(Color))
+                    {
+                        configDict[field.Name] = ColorToHex((Color)value);
+                    }
+                    else if (field.FieldType.IsEnum)
+                    {
+                        configDict[field.Name] = value.ToString();
+                    }
+                    else if (field.FieldType.IsArray && field.FieldType.GetElementType() == typeof(HazardType))
+                    {
+                        configDict[field.Name] = ((HazardType[])value).Select(h => h.ToString()).ToArray();
+                    }
+                    else
+                    {
+                        if (!exludedFields.Contains(field.Name))
+                            configDict[field.Name] = value;
+                    }
+                }
+            }
+
+            string json = JsonConvert.SerializeObject(configDict, Formatting.Indented);
+            File.WriteAllText($"{PluginsFolder}/{type.name}.json", json);
+        }
+        private static bool IsSerializableType(Type type)
+        {
+            return type.IsPrimitive || type == typeof(string) || type == typeof(Color) ||
+                   type.IsEnum || (type.IsArray && IsSerializableType(type.GetElementType())) ||
+                   (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) &&
+                    IsSerializableType(type.GetGenericArguments()[0]));
+        }
+        private static string ColorToHex(Color color)
+        {
+            return $"#{ColorUtility.ToHtmlStringRGBA(color)}";
+        }
+
+        public static void LoadPikminTypeConfig(PikminType type)
+        {
+            string configPath = $"{PluginsFolder}/{type.name}.json";
+            if (!File.Exists(configPath))
+            {
+                Logger.LogWarning($"Config file for {type.name} not found. Using default values.");
+                return;
+            }
+
+            string json = File.ReadAllText(configPath);
+            Dictionary<string, object> configDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+
+            var fields = typeof(PikminType).GetFields(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (var field in fields)
+            {
+                if (configDict.TryGetValue(field.Name, out object value))
+                {
+                    try
+                    {
+                        if (field.FieldType == typeof(Color))
+                        {
+                            field.SetValue(type, HexToColor((string)value));
+                        }
+                        else if (field.FieldType.IsEnum)
+                        {
+                            field.SetValue(type, Enum.Parse(field.FieldType, (string)value));
+                        }
+                        else if (field.FieldType.IsArray && field.FieldType.GetElementType() == typeof(HazardType))
+                        {
+                            var hazardStrings = ((Newtonsoft.Json.Linq.JArray)value).ToObject<string[]>();
+                            var hazardTypes = hazardStrings.Select(s => (HazardType)Enum.Parse(typeof(HazardType), s)).ToArray();
+                            field.SetValue(type, hazardTypes);
+                        }
+                        else
+                        {
+                            var convertedValue = Convert.ChangeType(value, field.FieldType);
+                            field.SetValue(type, convertedValue);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogError($"Error setting {field.Name} for {type.name}: {e.Message}");
+                    }
+                }
+            }
+
+            Logger.LogInfo($"Loaded config for {type.name}");
+        }
+        private static Color HexToColor(string hex)
+        {
+            ColorUtility.TryParseHtmlString(hex, out Color color);
+            return color;
+        }
+        public static bool PtypeHasConfig(PikminType type)
+        {
+            return File.Exists($"{PluginsFolder}/{type.name}.json");
         }
 
         public static bool CantConvertEnemy(EnemyType enemy)
@@ -936,75 +1053,11 @@ namespace LethalMin
 
             return pikminEnemies
                 .Where(gameObject => gameObject != null)
-                .Select(gameObject => gameObject.GetComponent<PikminAI>())
                 .Where(pikmin => pikmin != null && Vector3.Distance(position, pikmin.transform.position) <= maxDistance)
                 .OrderBy(pikmin => Vector3.Distance(position, pikmin.transform.position))
                 .Take(maxCount)
                 .ToList();
 
-        }
-        public static List<PuffminAI> FindNearestPuffmin(Vector3 position, float maxDistance, int maxCount)
-        {
-            var PuffminEnemies = PikminManager._currentPuffminEnemies;
-            if (PuffminEnemies == null || PuffminEnemies.Count == 0)
-            {
-                //Logger.LogWarning("No Pikmin enemies found.");
-                return new List<PuffminAI>();
-            }
-
-            return PuffminEnemies
-                .Where(gameObject => gameObject != null)
-                .Select(gameObject => gameObject.GetComponent<PuffminAI>())
-                .Where(pikmin => pikmin != null && Vector3.Distance(position, pikmin.transform.position) <= maxDistance)
-                .OrderBy(pikmin => Vector3.Distance(position, pikmin.transform.position))
-                .Take(maxCount)
-                .Where(gameObject => gameObject.GetComponent<PuffminAI>().currentBehaviourStateIndex != (int)PuffState.following)
-                .ToList();
-        }
-        public static List<PikminAI> FindNearestIdlePikmin(Vector3 position, float maxDistance, int maxCount)
-        {
-            var pikminEnemies = PikminManager.GetPikminEnemies();
-            if (pikminEnemies == null || pikminEnemies.Count == 0)
-            {
-                //Logger.LogWarning("No Pikmin enemies found.");
-                return new List<PikminAI>();
-            }
-
-            return pikminEnemies
-                .Where(gameObject => gameObject != null)
-                .Select(gameObject => gameObject.GetComponent<PikminAI>())
-                .Where(pikmin => pikmin != null && Vector3.Distance(position, pikmin.transform.position) <= maxDistance)
-                .OrderBy(pikmin => Vector3.Distance(position, pikmin.transform.position))
-                .Where(gameObject => gameObject.GetComponent<PikminAI>().currentBehaviourStateIndex == (int)PState.Idle)
-                .Take(maxCount)
-                .ToList();
-
-        }
-        public static List<PikminAI> FindPikminInBox(Vector3 position, Vector3 size, int maxCount)
-        {
-            List<PikminAI> ais = new List<PikminAI>();
-            foreach (var item in Physics.OverlapBox(position, size))
-            {
-                if (item.gameObject.GetComponent<PikminAI>() != null && ais.Contains(item.gameObject.GetComponent<PikminAI>()) == false)
-                    ais.Add(item.gameObject.GetComponent<PikminAI>());
-                if (item.gameObject.GetComponentInParent<PikminAI>() != null && ais.Contains(item.gameObject.GetComponentInParent<PikminAI>()) == false)
-                    ais.Add(item.gameObject.GetComponentInParent<PikminAI>());
-            }
-            ais.Take(maxCount);
-            return ais;
-        }
-        public static List<PikminAI> FindPikminInSphere(Vector3 position, float size, int maxCount)
-        {
-            List<PikminAI> ais = new List<PikminAI>();
-            foreach (var item in Physics.OverlapSphere(position, size))
-            {
-                if (item.gameObject.GetComponent<PikminAI>() != null && ais.Contains(item.gameObject.GetComponent<PikminAI>()) == false)
-                    ais.Add(item.gameObject.GetComponent<PikminAI>());
-                if (item.gameObject.GetComponentInParent<PikminAI>() != null && ais.Contains(item.gameObject.GetComponentInParent<PikminAI>()) == false)
-                    ais.Add(item.gameObject.GetComponentInParent<PikminAI>());
-            }
-            ais.Take(maxCount);
-            return ais;
         }
 
         public static PikminType GetPikminTypeById(int id)
@@ -1037,6 +1090,8 @@ namespace LethalMin
         {
             if (!type.HasBeenRegistered)
             {
+                if (UsePConfigs)
+                    LoadPikminTypeConfig(type);
                 //Do Fatal Checks
                 if (type.MeshRefernces == null)
                 {
@@ -1218,6 +1273,10 @@ namespace LethalMin
                 type.MeshData.Initalize();
                 UpdateBeastairy();
                 type.HasBeenRegistered = true;
+                if (!PtypeHasConfig(type) && type.GenerateConfigFile)
+                {
+                    BindPIKconfig(type);
+                }
                 Logger.LogMessage("Registered Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName);
             }
             else

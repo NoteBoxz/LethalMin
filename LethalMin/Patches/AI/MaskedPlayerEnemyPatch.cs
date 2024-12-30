@@ -1,13 +1,8 @@
 using HarmonyLib;
-using GameNetcodeStuff;
 using UnityEngine;
-using Unity.Netcode;
 using System.Collections.Generic;
-using LethalMin;
-using System.Collections;
-using System.Diagnostics;
-using Unity.Multiplayer.Tools.MetricTypes;
 using LethalMon.Behaviours;
+using System.Linq;
 
 namespace LethalMin.Patches.AI
 {
@@ -28,6 +23,8 @@ namespace LethalMin.Patches.AI
             {
                 return;
             }
+
+            if (LethalMin.IsDependencyLoaded("LethalMon") && LETHALMON_ISTAMED(__instance)) { return; }
             if (!__instance.NetworkObject.IsSpawned)
             {
                 __instance.StartCoroutine(WaitTillSpawnedThenPuffminOwnerManager(__instance));
@@ -83,8 +80,7 @@ namespace LethalMin.Patches.AI
             if (__instance.isEnemyDead) { return; }
             if (!__instance.IsServer) { return; }
             if (LethalMin.IsDependencyLoaded("LethalMon") && LETHALMON_ISTAMED(__instance)) { return; }
-            if (LethalMin.FindNearestIdlePikmin(__instance.transform.position, LethalMin.MaskedWhistleRange, 1).Count > 0
-             || LethalMin.FindNearestPuffmin(__instance.transform.position, LethalMin.MaskedWhistleRange, 1).Count > 0)
+            if (GetNumberOfWhistleabelePikmin(__instance.transform.position, LethalMin.MaskedWhistleRange) > 0)
             {
                 __instance.GetComponentInChildren<PuffminOwnerManager>().DoWhistle();
             }
@@ -93,6 +89,32 @@ namespace LethalMin.Patches.AI
             {
                 __instance.GetComponentInChildren<PuffminOwnerManager>().DoThrow();
             }
+        }
+
+        private static int GetNumberOfWhistleabelePikmin(Vector3 position, float range)
+        {
+            var PuffminEnemies = PikminManager.GetPuffminEnemies();
+            var PikminEnemies = PikminManager.GetPikminEnemies();
+            if ((PuffminEnemies == null || PuffminEnemies.Count == 0) && (PikminEnemies == null || PikminEnemies.Count == 0))
+            {
+                //Logger.LogWarning("No Pikmin enemies found.");
+                return 0;
+            }
+
+            var nearbyPuffmin = PuffminEnemies?
+                .Where(p => p != null && Vector3.Distance(p.transform.position, position) <= range 
+                && (p.currentBehaviourStateIndex == (int)PuffState.idle || p.currentBehaviourStateIndex == (int)PuffState.attacking)
+                && p.SnapTopPos == null)
+                .ToList() ?? new List<PuffminAI>();
+
+            var nearbyPikmin = PikminEnemies?
+                .Where(p => p != null && Vector3.Distance(p.transform.position, position) <= range 
+                && !LethalMin.IsPikminResistantToHazard(p.PminType, HazardType.Spore) 
+                && p.currentBehaviourStateIndex == (int)PState.Idle 
+                && !p.CannotEscape && !p.IsDying)
+                .ToList() ?? new List<PikminAI>();
+
+            return nearbyPikmin.Count + nearbyPuffmin.Count;
         }
 
         public static bool LETHALMON_ISTAMED(MaskedPlayerEnemy __instance)

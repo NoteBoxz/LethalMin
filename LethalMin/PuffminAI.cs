@@ -427,7 +427,7 @@ namespace LethalMin
             IsOnCooldown = false;
         }
         Transform CurTempLatchPoint = null!;
-        Transform SnapTopPos = null!;
+        public Transform SnapTopPos = null!;
         bool HasStartedSnapTo = false;
         public override void Update()
         {

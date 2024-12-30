@@ -143,6 +143,8 @@ namespace LethalMin
         public bool UsesPikminContainer;
 
         [Header("Other")]
+        [Tooltip("Generates a configuration file for the pikmin type")]
+        public bool GenerateConfigFile = true;
         [Tooltip("Whether the pikmin instantly enters the onion")]
         public bool InstaEnterOnion;
 
