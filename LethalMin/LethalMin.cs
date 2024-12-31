@@ -19,6 +19,7 @@ using System.Text;
 using UnityEngine.AI;
 using System.IO;
 using Newtonsoft.Json;
+using System.Collections;
 
 namespace LethalMin
 {
@@ -95,7 +96,7 @@ namespace LethalMin
         public static Dictionary<int, OnionFuseRules> RegisteredFuseRules = new Dictionary<int, OnionFuseRules>();
         public LayerMask PikminColideable = 1107298561 | (1 << 28);
         public static AssetBundleLoader Loader = null!;
-        public static string PluginsFolder = Path.Combine(Paths.ConfigPath, "LethalMin Pikmin Types");
+        public static string LMConfigFolder = Path.Combine(Paths.ConfigPath, "LethalMin Pikmin Types");
 
         public static bool IsUsingModLib()
         {
@@ -123,6 +124,12 @@ namespace LethalMin
             }
             return PickupBlacklist.Split(',').ToList();
         }
+
+        public static string ParseEnumToString<T>() where T : Enum
+        {
+            return string.Join(", ", Enum.GetNames(typeof(T)));
+        }
+
 
         #region  Config Variables
         public static bool CustomOnionAllowedValue;
@@ -223,6 +230,7 @@ namespace LethalMin
         public static float ShipPhaseOnionX, ShipPhaseOnionY, ShipPhaseOnionZ;
         //Generated Useable Varibles GoES HERE
 
+public static bool GeneratePConfig;
         public static bool UsePConfigs;
         public static bool RasistElevator;
         public static bool GenNavMehsOnElevate;
@@ -260,6 +268,7 @@ namespace LethalMin
 
         //Generated Config Varibles GoES HERE
 
+public static ConfigEntry<bool> GeneratePConfigConfig;
         public static ConfigEntry<bool> UsePConfigsConfig;
         public static ConfigEntry<bool> RasistElevatorConfig;
         public static ConfigEntry<bool> GenNavMehsOnElevateConfig;
@@ -451,6 +460,7 @@ namespace LethalMin
 
             //Generated ConfigBindings goes here
 
+GeneratePConfigConfig = Config.Bind("Pikmin", "Generate PikminType Configs", true,"Generates a config file for each Pikmin type.");
             UsePConfigsConfig = Config.Bind("Pikmin", "Allow Config File Override", false, "Allows a Pikmin Type's config file's values to override the values in game.");
             RasistElevatorConfig = Config.Bind("LC-Office", "Make Only Pikmin Use Elevator", true, "Makes it so that only Pikmin can enter the elevator (On floors 2 and 3 only). Any other entity just gets instantly teleported out if they get in.");
             GenNavMehsOnElevateConfig = Config.Bind("LC-Office", "Genorate Navmesh On Elevator", true, "Genorates a NavMesh on the Elevator in the LC-Office Interor. This makes it so Pikmin can path to, and walk on the elevator.");
@@ -592,6 +602,7 @@ namespace LethalMin
 
             //Generated Settings Valuse Goes Here
 
+GeneratePConfig = GeneratePConfigConfig.Value;
             UsePConfigs = UsePConfigsConfig.Value;
             RasistElevator = RasistElevatorConfig.Value;
             GenNavMehsOnElevate = GenNavMehsOnElevateConfig.Value;
@@ -742,6 +753,7 @@ namespace LethalMin
 
             //Generated Settings Events Goes here
 
+GeneratePConfigConfig.SettingChanged += (_, _) => GeneratePConfig = GeneratePConfigConfig.Value;
             UsePConfigsConfig.SettingChanged += (_, _) => UsePConfigs = UsePConfigsConfig.Value;
             RasistElevatorConfig.SettingChanged += (_, _) => RasistElevator = RasistElevatorConfig.Value;
             GenNavMehsOnElevateConfig.SettingChanged += (_, _) => GenNavMehsOnElevate = GenNavMehsOnElevateConfig.Value;
@@ -899,125 +911,173 @@ namespace LethalMin
 
             //Generated LC bindings goes here
 
+LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(GeneratePConfigConfig,true));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(UsePConfigsConfig, true));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(RasistElevatorConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(GenNavMehsOnElevateConfig, true));
         }
-        public static void BindPIKconfig(PikminType type)
+        public static void BindPIKconfig(PikminType type, bool shouldLoad)
         {
-            if (!Directory.Exists(PluginsFolder))
-                Directory.CreateDirectory(PluginsFolder);
+            if (!Directory.Exists(LMConfigFolder))
+                Directory.CreateDirectory(LMConfigFolder);
 
-            if (!File.Exists($"{PluginsFolder}/{type.name}.json"))
+            GenerateOrLoadPikminTypeConfig(type, shouldLoad);
+        }
+        private static T BindAndLoadPikConfig<T>(ConfigFile configFile, string section, string key, T defaultValue, string description)
+        {
+            if (typeof(T).IsArray || (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(List<>)))
             {
-                GeneratePikminTypeConfig(type);
+                Type elementType = typeof(T).IsArray ? typeof(T).GetElementType() : typeof(T).GetGenericArguments()[0];
+                string arrayType = elementType.Name;
+
+                if (elementType.IsEnum)
+                {
+                    string enumString = ParseEnumToString<HazardType>();
+                    description += $" (Possible values: {enumString})";
+                    string stringValue = string.Join(",", ((IEnumerable)defaultValue).Cast<Enum>().Select(e => e.ToString()));
+                    description += $" (This is a list, separated by commas, no spaces in between) (item1,item2,item3...) (type: Enum[{arrayType}])";
+                    var entry = configFile.Bind<string>(section, key, stringValue, description);
+
+                    string[] values = entry.Value.Split(',');
+                    if (typeof(T).IsArray)
+                    {
+                        Array array = Array.CreateInstance(elementType, values.Length);
+                        for (int i = 0; i < values.Length; i++)
+                        {
+                            try
+                            {
+                                array.SetValue(Enum.Parse(elementType, values[i], true), i);
+                            }
+                            catch (ArgumentException)
+                            {
+                                Logger.LogWarning($"Invalid enum value '{values[i]}' for {key}. Using default value.");
+                                array.SetValue(Enum.GetValues(elementType).GetValue(0), i);
+                            }
+                        }
+                        return (T)(object)array;
+                    }
+                    else // List<T>
+                    {
+                        var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
+                        foreach (var value in values)
+                        {
+                            try
+                            {
+                                list.Add(Enum.Parse(elementType, value, true));
+                            }
+                            catch (ArgumentException)
+                            {
+                                Logger.LogWarning($"Invalid enum value '{value}' for {key}. Using default value.");
+                                list.Add(Enum.GetValues(elementType).GetValue(0));
+                            }
+                        }
+                        return (T)list;
+                    }
+                }
+                else
+                {
+                    string stringValue = string.Join(",", ((IEnumerable)defaultValue).Cast<object>());
+                    description += $" (This is a list, separated by commas, no spaces in between) (item1,item2,item3...) (type:{arrayType})";
+                    var entry = configFile.Bind<string>(section, key, stringValue, description);
+
+                    string[] values = entry.Value.Split(',');
+                    if (typeof(T).IsArray)
+                    {
+                        Array array = Array.CreateInstance(elementType, values.Length);
+                        for (int i = 0; i < values.Length; i++)
+                        {
+                            array.SetValue(Convert.ChangeType(values[i], elementType), i);
+                        }
+                        return (T)(object)array;
+                    }
+                    else // List<T>
+                    {
+                        var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
+                        foreach (var value in values)
+                        {
+                            list.Add(Convert.ChangeType(value, elementType));
+                        }
+                        return (T)list;
+                    }
+                }
+            }
+            else
+            {
+                try
+                {
+                    return configFile.Bind(section, key, defaultValue, description).Value;
+                }
+                catch (Exception)
+                {
+                    Logger.LogWarning($"Failed to bind config for {key}, likely due to a missmatch");// {e}");
+                    return defaultValue;
+                }
             }
         }
-        public static void GeneratePikminTypeConfig(PikminType type)
+        public static void GenerateOrLoadPikminTypeConfig(PikminType type, bool loadValues)
         {
-            var configDict = new Dictionary<string, object>();
-            var fields = typeof(PikminType).GetFields(BindingFlags.Public | BindingFlags.Instance);
+            string configPath = Path.Combine(LMConfigFolder, $"{type.name}.cfg");
+            ConfigFile configFile = new ConfigFile(configPath, true);
 
-            string[] exludedFields = new string[] { "version", "GenerateConfigFile", "HasBeenRegistered", "PikminTypeID" };
+            Type pikminTypeClass = typeof(PikminType);
+            FieldInfo[] fields = pikminTypeClass.GetFields(BindingFlags.Public | BindingFlags.Instance);
 
-            foreach (var field in fields)
+            string currentSection = "";
+            string[] ExcludedFields = new string[] { "PikminTypeID", "HasBeenRegistered", "version", "GenerateConfigFile", "MeshData", "PikminScripts", "MeshRefernces" };
+
+            foreach (FieldInfo field in fields)
             {
-                var value = field.GetValue(type);
-                if (IsSerializableType(field.FieldType))
+                if (field.IsInitOnly || ExcludedFields.Contains(field.Name))
+                    continue;
+
+                HeaderAttribute[] headerAttrs = (HeaderAttribute[])field.GetCustomAttributes(typeof(HeaderAttribute), false);
+                if (headerAttrs.Length > 0)
                 {
-                    if (field.FieldType == typeof(Color))
+                    currentSection = headerAttrs[headerAttrs.Length - 1].header;
+                }
+
+                string description = "";
+                TooltipAttribute[] tooltipAttrs = (TooltipAttribute[])field.GetCustomAttributes(typeof(TooltipAttribute), false);
+                if (tooltipAttrs.Length > 0)
+                {
+                    description = tooltipAttrs[tooltipAttrs.Length - 1].tooltip;
+                }
+
+                object value = field.GetValue(type);
+
+                if (value != null)
+                {
+                    Type fieldType = field.FieldType;
+
+                    if (loadValues)
                     {
-                        configDict[field.Name] = ColorToHex((Color)value);
-                    }
-                    else if (field.FieldType.IsEnum)
-                    {
-                        configDict[field.Name] = value.ToString();
-                    }
-                    else if (field.FieldType.IsArray && field.FieldType.GetElementType() == typeof(HazardType))
-                    {
-                        configDict[field.Name] = ((HazardType[])value).Select(h => h.ToString()).ToArray();
+                        object loadedValue = typeof(LethalMin).GetMethod("BindAndLoadPikConfig", BindingFlags.NonPublic | BindingFlags.Static)
+                            .MakeGenericMethod(fieldType)
+                            .Invoke(null, new object[] { configFile, currentSection, field.Name, value, description });
+
+                        if (loadedValue != null)
+                            field.SetValue(type, loadedValue);
                     }
                     else
                     {
-                        if (!exludedFields.Contains(field.Name))
-                            configDict[field.Name] = value;
+                        typeof(LethalMin).GetMethod("BindAndLoadPikConfig", BindingFlags.NonPublic | BindingFlags.Static)
+                            .MakeGenericMethod(fieldType)
+                            .Invoke(null, new object[] { configFile, currentSection, field.Name, value, description });
                     }
+
+                    Logger.LogDebug($"{(loadValues ? "Loaded" : "Generated")} config for ({field.Name}, {value}, {fieldType})");
                 }
             }
 
-            string json = JsonConvert.SerializeObject(configDict, Formatting.Indented);
-            File.WriteAllText($"{PluginsFolder}/{type.name}.json", json);
-        }
-        private static bool IsSerializableType(Type type)
-        {
-            return type.IsPrimitive || type == typeof(string) || type == typeof(Color) ||
-                   type.IsEnum || (type.IsArray && IsSerializableType(type.GetElementType())) ||
-                   (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) &&
-                    IsSerializableType(type.GetGenericArguments()[0]));
-        }
-        private static string ColorToHex(Color color)
-        {
-            return $"#{ColorUtility.ToHtmlStringRGBA(color)}";
-        }
-
-        public static void LoadPikminTypeConfig(PikminType type)
-        {
-            string configPath = $"{PluginsFolder}/{type.name}.json";
-            if (!File.Exists(configPath))
-            {
-                Logger.LogWarning($"Config file for {type.name} not found. Using default values.");
-                return;
-            }
-
-            string json = File.ReadAllText(configPath);
-            Dictionary<string, object> configDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
-
-            var fields = typeof(PikminType).GetFields(BindingFlags.Public | BindingFlags.Instance);
-
-            foreach (var field in fields)
-            {
-                if (configDict.TryGetValue(field.Name, out object value))
-                {
-                    try
-                    {
-                        if (field.FieldType == typeof(Color))
-                        {
-                            field.SetValue(type, HexToColor((string)value));
-                        }
-                        else if (field.FieldType.IsEnum)
-                        {
-                            field.SetValue(type, Enum.Parse(field.FieldType, (string)value));
-                        }
-                        else if (field.FieldType.IsArray && field.FieldType.GetElementType() == typeof(HazardType))
-                        {
-                            var hazardStrings = ((Newtonsoft.Json.Linq.JArray)value).ToObject<string[]>();
-                            var hazardTypes = hazardStrings.Select(s => (HazardType)Enum.Parse(typeof(HazardType), s)).ToArray();
-                            field.SetValue(type, hazardTypes);
-                        }
-                        else
-                        {
-                            var convertedValue = Convert.ChangeType(value, field.FieldType);
-                            field.SetValue(type, convertedValue);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.LogError($"Error setting {field.Name} for {type.name}: {e.Message}");
-                    }
-                }
-            }
-
-            Logger.LogInfo($"Loaded config for {type.name}");
-        }
-        private static Color HexToColor(string hex)
-        {
-            ColorUtility.TryParseHtmlString(hex, out Color color);
-            return color;
+            configFile.Save();
+            Logger.LogInfo($"{(loadValues ? "Loaded" : "Generated")} config for {type.name}");
         }
         public static bool PtypeHasConfig(PikminType type)
         {
-            return File.Exists($"{PluginsFolder}/{type.name}.json");
+            return File.Exists($"{LMConfigFolder}/{type.name}.cfg");
         }
+
+
 
         public static bool CantConvertEnemy(EnemyType enemy)
         {
@@ -1090,8 +1150,6 @@ namespace LethalMin
         {
             if (!type.HasBeenRegistered)
             {
-                if (UsePConfigs)
-                    LoadPikminTypeConfig(type);
                 //Do Fatal Checks
                 if (type.MeshRefernces == null)
                 {
@@ -1273,9 +1331,9 @@ namespace LethalMin
                 type.MeshData.Initalize();
                 UpdateBeastairy();
                 type.HasBeenRegistered = true;
-                if (!PtypeHasConfig(type) && type.GenerateConfigFile)
+                if (type.GenerateConfigFile && GeneratePConfig)
                 {
-                    BindPIKconfig(type);
+                    BindPIKconfig(type, PtypeHasConfig(type) && UsePConfigs);
                 }
                 Logger.LogMessage("Registered Pikmin type with ID " + type.PikminTypeID + " " + type.PikminName);
             }

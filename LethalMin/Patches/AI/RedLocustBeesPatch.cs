@@ -41,7 +41,17 @@ namespace LethalMin.Patches.AI
                         {
                             __instance.SetDestinationToPosition(pikminAI.transform.position);
                             __instance.SwitchToBehaviourState(1);
-                            __instance.SwitchOwnershipOfBeesToClient(pikminAI.previousLeader?.Controller);
+                            if (pikminAI.previousLeader != null)
+                            {
+                                __instance.SwitchOwnershipOfBeesToClient(pikminAI.previousLeader?.Controller);
+                            }
+                            else if (pikminAI.currentLeader != null)
+                            {
+                                __instance.SwitchOwnershipOfBeesToClient(pikminAI.currentLeader?.Controller);
+                            }
+                            else{
+                                LethalMin.Logger.LogWarning("No leader found for PikminAI when chaseing.");
+                            }
                             return false;
                         }
                         else
@@ -112,7 +122,7 @@ namespace LethalMin.Patches.AI
                 __instance.BeesZap();
                 foreach (var item in MinsInWay)
                 {
-                    if (!item.IsDying && !item.FinnaBeDed && !item.isEnemyDead && 
+                    if (!item.IsDying && !item.FinnaBeDed && !item.isEnemyDead &&
                     !item.isHeld && !LethalMin.IsPikminResistantToHazard(item.PminType, HazardType.Electric))
                     {
                         // Calculate knockback direction (away from the turret)

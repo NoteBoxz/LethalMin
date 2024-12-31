@@ -198,7 +198,7 @@ namespace LethalMin
                 }
                 else
                 {
-                    if (puffmin != null && !puffmin.IsDying &&
+                    if (puffmin != null && !puffmin.IsDying && !puffmin.IsThrown && puffmin.SnapTopPos == null&&
                     (puffmin.currentBehaviourStateIndex == (int)PuffState.attacking || puffmin.currentBehaviourStateIndex == (int)PuffState.idle))
                     {
                         puffmin.HasFreeWill = false;
