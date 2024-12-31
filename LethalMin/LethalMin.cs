@@ -950,7 +950,8 @@ namespace LethalMin
                             }
                             catch (ArgumentException)
                             {
-                                Logger.LogWarning($"Invalid enum value '{values[i]}' for {key}. Using default value.");
+                                if (DebugMode)
+                                    Logger.LogWarning($"Invalid enum value '{values[i]}' for {key}. Using default value.");
                                 array.SetValue(null, i);
                             }
                         }
@@ -967,7 +968,8 @@ namespace LethalMin
                             }
                             catch (ArgumentException)
                             {
-                                Logger.LogWarning($"Invalid enum value '{value}' for {key}. Using default value.");
+                                if (DebugMode)
+                                    Logger.LogWarning($"Invalid enum value '{value}' for {key}. Using default value.");
                                 list.Add(null);
                             }
                         }
@@ -1009,7 +1011,8 @@ namespace LethalMin
                 }
                 catch (Exception)
                 {
-                    Logger.LogWarning($"Failed to bind config for {key}, likely due to a missmatch");// {e}");
+                    if (DebugMode)
+                        Logger.LogWarning($"Failed to bind config for {key}, likely due to a missmatch");// {e}");
                     return defaultValue;
                 }
             }
