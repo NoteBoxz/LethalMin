@@ -1,6 +1,5 @@
 (0.2.x)
 
-Add Config options for Hud Visibilty (Not Started)
 Redo Latch On system to fix positioning issues with modded entitys and spiders (Not Started)
 Make Pikmin carry bodies out of the ship to the onion (Not Started)
 Fix buggy Dynamic Positioning (Not Started)
@@ -12,6 +11,7 @@ Fix bug that causes the whistle to break when Remnants is installed. (Not Starte
 Add telport trigger/system for Offence and Assurance's fire exits (Not Started)
 Add in late company support (Not Started)
 
+Add Config options for Hud Visibilty (Done)
 Add Pikmin autonomy Configs (Done)
 Make Pikmin that spawn indoors invinicble until whistled (Done)
 Fix bulbmin not being able to deal dammage when latched on to enemies (Done)

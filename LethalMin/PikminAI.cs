@@ -1441,7 +1441,7 @@ namespace LethalMin
                 // {
                 //     SnapToBuffer = 0.1f;
                 // }
-                
+
                 if (rotationOffset != null && PositionOffset != null && RandomizedSnapTo)
                 {
                     rb.rotation = Quaternion.Euler(
@@ -2301,7 +2301,7 @@ namespace LethalMin
         {
             if (LethalMin.IsPikminResistantToHazard(PminType, HazardType.Water)) { LethalMin.Logger.LogWarning("Why tf is a pikmin that cannot drown, drowning?????"); return; }
             if (LethalMin.UselessblueMinValue) { return; }
-            
+
             if (Invincible.Value) { return; }
             if (!LethalMin.AllowWildPToDie && !HasInteractedWithPlayers) { return; }
             if (LethalMin.InvinciMinValue) { return; }
@@ -3382,6 +3382,15 @@ namespace LethalMin
                     if (GetVaildExit().Item2 == null)
                     {
                         LethalMin.Logger.LogWarning($"({uniqueDebugId}) No exit point for this route");
+
+                        if (FloorOn != null && FloorOn.Elevators.Count > 0)
+                        {
+                            ItemRoute ElevateRoute = new ItemRoute($"Elevator (No Outside Route)");
+                            ElevateRoute.AddPoint(FloorOn.Elevators[0].transform.position, false);
+                            ElevateRoute.InitalDistance = CalculatePathLength(transform.position, FloorOn.Elevators[0].transform.position);
+                            PossibleRoutes.Add(ElevateRoute);
+                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Defulting to Elevator route");
+                        }
                     }
                     else
                     {
