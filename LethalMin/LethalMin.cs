@@ -230,7 +230,7 @@ namespace LethalMin
         public static float ShipPhaseOnionX, ShipPhaseOnionY, ShipPhaseOnionZ;
         //Generated Useable Varibles GoES HERE
 
-public static bool GeneratePConfig;
+        public static bool GeneratePConfig;
         public static bool UsePConfigs;
         public static bool RasistElevator;
         public static bool GenNavMehsOnElevate;
@@ -268,7 +268,7 @@ public static bool GeneratePConfig;
 
         //Generated Config Varibles GoES HERE
 
-public static ConfigEntry<bool> GeneratePConfigConfig;
+        public static ConfigEntry<bool> GeneratePConfigConfig;
         public static ConfigEntry<bool> UsePConfigsConfig;
         public static ConfigEntry<bool> RasistElevatorConfig;
         public static ConfigEntry<bool> GenNavMehsOnElevateConfig;
@@ -460,7 +460,7 @@ public static ConfigEntry<bool> GeneratePConfigConfig;
 
             //Generated ConfigBindings goes here
 
-GeneratePConfigConfig = Config.Bind("Pikmin", "Generate PikminType Configs", true,"Generates a config file for each Pikmin type.");
+            GeneratePConfigConfig = Config.Bind("Pikmin", "Generate PikminType Configs", true, "Generates a config file for each Pikmin type. (Note: The game will need to be restarted in order for the type configureation changes to take effect.)");
             UsePConfigsConfig = Config.Bind("Pikmin", "Allow Config File Override", false, "Allows a Pikmin Type's config file's values to override the values in game.");
             RasistElevatorConfig = Config.Bind("LC-Office", "Make Only Pikmin Use Elevator", true, "Makes it so that only Pikmin can enter the elevator (On floors 2 and 3 only). Any other entity just gets instantly teleported out if they get in.");
             GenNavMehsOnElevateConfig = Config.Bind("LC-Office", "Genorate Navmesh On Elevator", true, "Genorates a NavMesh on the Elevator in the LC-Office Interor. This makes it so Pikmin can path to, and walk on the elevator.");
@@ -602,7 +602,7 @@ GeneratePConfigConfig = Config.Bind("Pikmin", "Generate PikminType Configs", tru
 
             //Generated Settings Valuse Goes Here
 
-GeneratePConfig = GeneratePConfigConfig.Value;
+            GeneratePConfig = GeneratePConfigConfig.Value;
             UsePConfigs = UsePConfigsConfig.Value;
             RasistElevator = RasistElevatorConfig.Value;
             GenNavMehsOnElevate = GenNavMehsOnElevateConfig.Value;
@@ -753,7 +753,7 @@ GeneratePConfig = GeneratePConfigConfig.Value;
 
             //Generated Settings Events Goes here
 
-GeneratePConfigConfig.SettingChanged += (_, _) => GeneratePConfig = GeneratePConfigConfig.Value;
+            GeneratePConfigConfig.SettingChanged += (_, _) => GeneratePConfig = GeneratePConfigConfig.Value;
             UsePConfigsConfig.SettingChanged += (_, _) => UsePConfigs = UsePConfigsConfig.Value;
             RasistElevatorConfig.SettingChanged += (_, _) => RasistElevator = RasistElevatorConfig.Value;
             GenNavMehsOnElevateConfig.SettingChanged += (_, _) => GenNavMehsOnElevate = GenNavMehsOnElevateConfig.Value;
@@ -911,7 +911,7 @@ GeneratePConfigConfig.SettingChanged += (_, _) => GeneratePConfig = GeneratePCon
 
             //Generated LC bindings goes here
 
-LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(GeneratePConfigConfig,true));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(GeneratePConfigConfig, true));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(UsePConfigsConfig, true));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(RasistElevatorConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(GenNavMehsOnElevateConfig, true));
@@ -951,7 +951,7 @@ LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(GeneratePConfigConf
                             catch (ArgumentException)
                             {
                                 Logger.LogWarning($"Invalid enum value '{values[i]}' for {key}. Using default value.");
-                                array.SetValue(Enum.GetValues(elementType).GetValue(0), i);
+                                array.SetValue(null, i);
                             }
                         }
                         return (T)(object)array;
@@ -968,7 +968,7 @@ LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(GeneratePConfigConf
                             catch (ArgumentException)
                             {
                                 Logger.LogWarning($"Invalid enum value '{value}' for {key}. Using default value.");
-                                list.Add(Enum.GetValues(elementType).GetValue(0));
+                                list.Add(null);
                             }
                         }
                         return (T)list;

@@ -126,6 +126,11 @@ namespace LethalMin
             grabbable = false;
             LethalMin.Logger.LogInfo($"Starting spawn sequence for {onionType.TypeName} Onion");
 
+            foreach (var item in GetComponentsInChildren<Collider>())
+            {
+                item.enabled = false;
+            }
+
             GetComponentInChildren<Animator>().Play("OnionActive");
 
             yield return new WaitForSeconds(5f);
