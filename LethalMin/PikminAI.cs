@@ -1431,7 +1431,17 @@ namespace LethalMin
             //Constantly the rotaion
             if (SnapToPos != null)
             {
-                //inSpecialAnimation = true;
+                // inSpecialAnimation = true;
+
+                // if (SnapToBuffer >= 0f)
+                // {
+                //     SnapToBuffer -= Time.deltaTime;
+                // }
+                // else
+                // {
+                //     SnapToBuffer = 0.1f;
+                // }
+                
                 if (rotationOffset != null && PositionOffset != null && RandomizedSnapTo)
                 {
                     rb.rotation = Quaternion.Euler(
@@ -1444,6 +1454,7 @@ namespace LethalMin
                 {
                     rb.rotation = SnapToPos.rotation;
                 }
+
                 //Buffer the position
                 if (SnapToBuffer2 >= 0f)
                 {
@@ -1453,8 +1464,11 @@ namespace LethalMin
                 {
                     if (rotationOffset != null && PositionOffset != null && RandomizedSnapTo)
                     {
-                        rb.position = new Vector3(SnapToPos.position.x + PositionOffset.Value.x,
-                        SnapToPos.position.y + PositionOffset.Value.y, SnapToPos.position.z + PositionOffset.Value.z);
+                        rb.position = new Vector3(
+                        SnapToPos.position.x + PositionOffset.Value.x,
+                        SnapToPos.position.y + PositionOffset.Value.y,
+                        SnapToPos.position.z + PositionOffset.Value.z
+                        );
                     }
                     else
                     {
@@ -1463,16 +1477,6 @@ namespace LethalMin
 
                     SnapToBuffer2 = 0.01f;
                 }
-                //Buffer the position
-                if (SnapToBuffer >= 0f)
-                {
-                    SnapToBuffer -= Time.deltaTime;
-                }
-                else
-                {
-                    SnapToBuffer = 0.1f;
-                }
-
             }
 
             if (!IsServer) { return; }

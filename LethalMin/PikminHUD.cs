@@ -9,6 +9,7 @@ using System.Linq;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using Unity.Multiplayer.Tools.NetStats;
 namespace LethalMin
 {
     public enum HudPresets
@@ -23,6 +24,154 @@ namespace LethalMin
         AlwaysShow,
         OnlyShowWhenChanged,
     }
+    public class PikminHudElement
+    {
+        public CanvasGroup Group;
+        Coroutine Routine;
+        private float ActiveTime = 0f;
+        private bool isActive = false;
+        public ElementBehavior behavior;
+        public float AlphaWhenActive = 1f;
+        public float AlphaWhenInactive = 0.2f;
+        public float FadeTime = 1f;
+        public Vector3 Position, Rotaion, Scale;
+
+        public Vector3 ParseStringToVector3()
+        {
+            string[] split = Position.ToString().Split(',');
+            float x = float.Parse(split[0].Replace("(", ""));
+            float y = float.Parse(split[1]);
+            float z = float.Parse(split[2].Replace(")", ""));
+            return new Vector3(x, y, z);
+        }
+
+        public PikminHudElement(CanvasGroup group, ElementBehavior behavior)
+        {
+            Group = group;
+            this.behavior = behavior;
+
+            switch (behavior)
+            {
+                case ElementBehavior.AlwaysHide:
+                    Group.alpha = 0;
+                    break;
+                case ElementBehavior.AlwaysShow:
+                    Group.alpha = 1;
+                    break;
+            }
+        }
+
+        public void UpdateElement()
+        {
+            switch (behavior)
+            {
+                case ElementBehavior.AlwaysHide:
+                    Group.alpha = 0;
+                    break;
+                case ElementBehavior.AlwaysShow:
+                    Group.alpha = 1;
+                    break;
+                case ElementBehavior.OnlyShowWhenChanged:
+                    Ping();
+                    break;
+            }
+        }
+
+        public void Ping()
+        {
+            if (Routine != null)
+            {
+                // If the  is already active, just reset the timer
+                ActiveTime = 0f;
+            }
+            else
+            {
+                // If the  is not active, start the coroutine
+                ActiveTime = 0f;
+                Routine = PikminHUD.pikminHUDInstance.StartCoroutine(PingRoutine());
+            }
+        }
+
+        public IEnumerator PingRoutine()
+        {
+            isActive = true;
+            Group.alpha = AlphaWhenActive;
+
+            while (isActive)
+            {
+                ActiveTime += Time.deltaTime;
+
+                if (ActiveTime >= FadeTime)
+                {
+                    // Start fading out after 1.5 seconds of inactivity
+                    float fadeTime = 0f;
+                    while (fadeTime < 1f)
+                    {
+                        fadeTime += Time.deltaTime;
+                        Group.alpha = Mathf.Lerp(AlphaWhenActive, AlphaWhenInactive, fadeTime);
+
+                        // If Ping is called again during fade out, reset
+                        if (ActiveTime < FadeTime)
+                        {
+                            Group.alpha = AlphaWhenActive;
+                            break;
+                        }
+
+                        yield return null;
+                    }
+
+                    // If we completed the fade out, end the coroutine
+                    if (fadeTime >= 1f)
+                    {
+                        isActive = false;
+                    }
+                }
+
+                yield return null;
+            }
+
+            Routine = null;
+        }
+
+
+        public void Show()
+        {
+            if (behavior != ElementBehavior.OnlyShowWhenChanged) { return; }
+
+            PikminHUD.pikminHUDInstance.StartCoroutine(ShowRoutine());
+        }
+        public IEnumerator ShowRoutine()
+        {
+            //tween the canva's group alpha to 0
+            float time = 0;
+            while (time < 1)
+            {
+                time += Time.deltaTime;
+                Group.alpha = Mathf.Lerp(0, 1, time);
+                yield return null;
+            }
+            Routine = null!;
+        }
+
+        public void Hide()
+        {
+            if (behavior != ElementBehavior.OnlyShowWhenChanged) { return; }
+
+            PikminHUD.pikminHUDInstance.StartCoroutine(HideRoutine());
+        }
+        public IEnumerator HideRoutine()
+        {
+            //tween the canva's group alpha to 0
+            float time = 0;
+            while (time < 1)
+            {
+                time += Time.deltaTime;
+                Group.alpha = Mathf.Lerp(1, 0, time);
+                yield return null;
+            }
+            Routine = null!;
+        }
+    }
     public class PikminHUD : MonoBehaviour
     {
         public static PikminHUD pikminHUDInstance;
@@ -34,8 +183,8 @@ namespace LethalMin
         private RectTransform PikminCountRect, PikminInSquadRect, PikminInFieldRect, PikminInExsistanceRect;
         private TMP_Text ThrowPrompt, LeftPrompt, RightPrompt;
         public GameObject WigglePrompt;
-        public CanvasGroup PromptcanvasGroup, CountGroup;
         public HudPresets CurrentHUDPreset = HudPresets.New;
+        public PikminHudElement PromptElement, CounterElement, PortElement;
 
         void Awake()
         {
@@ -50,6 +199,10 @@ namespace LethalMin
         }
         public void Start()
         {
+            PromptElement = new PikminHudElement(transform.Find("PikminSelected/Prompts/Buttons").GetComponent<CanvasGroup>(), ElementBehavior.OnlyShowWhenChanged);
+            CounterElement = new PikminHudElement(transform.Find("PikminCount").GetComponent<CanvasGroup>(), ElementBehavior.OnlyShowWhenChanged);
+            PortElement = new PikminHudElement(transform.Find("PikminSelected").GetComponent<CanvasGroup>(), ElementBehavior.OnlyShowWhenChanged);
+
             NextPikminCount = transform.Find("PikminSelected/Next/Counter").GetComponent<TMP_Text>();
             NextPort = transform.Find("PikminSelected/Next/Portrait").GetComponent<Image>();
             CurPikminCount = transform.Find("PikminSelected/Cur/Counter").GetComponent<TMP_Text>();
@@ -71,15 +224,13 @@ namespace LethalMin
             PikminInSquadRect = transform.Find("PikminCount/InSquad").GetComponent<RectTransform>();
             PikminInFieldRect = transform.Find("PikminCount/In Field").GetComponent<RectTransform>();
             PikminInExsistanceRect = transform.Find("PikminCount/In Exisistance").GetComponent<RectTransform>();
-            CountGroup = transform.Find("PikminCount").GetComponent<CanvasGroup>();
 
             WigglePrompt = transform.Find("PikminSelected/Prompts/Wiggle").gameObject;
-            PromptcanvasGroup = transform.Find("PikminSelected/Prompts/Buttons").GetComponent<CanvasGroup>();
             ThrowPrompt = transform.Find("PikminSelected/Prompts/Buttons/ThrowPrompt").GetComponent<TMP_Text>();
             LeftPrompt = transform.Find("PikminSelected/Prompts/Buttons/SwitchL").GetComponent<TMP_Text>();
             RightPrompt = transform.Find("PikminSelected/Prompts/Buttons/SwitchR").GetComponent<TMP_Text>();
 
-            PromptcanvasGroup.alpha = 0;
+            UpdatePelements();
         }
         public void SetHudPresets(HudPresets preset)
         {
@@ -178,11 +329,26 @@ namespace LethalMin
             }
         }
 
+        public void UpdatePelements()
+        {
+            if(PromptElement == null || CounterElement == null || PortElement == null) { return; }
+            
+            PromptElement.behavior = LethalMin.PromptBehavior;
+            
+            CounterElement.behavior = LethalMin.CounterBehavior;
+            CounterElement.AlphaWhenInactive = LethalMin.CounterDefultAlpha;
+            CounterElement.AlphaWhenActive = 0.75f;
+
+            PortElement.behavior = LethalMin.SquadHudBehavior;
+            PortElement.AlphaWhenInactive = LethalMin.SelectedDefultAlpha;
+        }
 
         public InputAction throwAction;
 
         public InputAction switchPikminTypeAction, switchPikminPrevTypeAction;
 
+        bool hasHiddenPrompts = false;
+        public bool HasSeenMin, HasSwaped1, HasSwaped2, HasThrown;
         public void LateUpdate()
         {
             PikminSelectedRect.localPosition = new Vector3(LethalMin.PikminSelectedPosX, LethalMin.PikminSelectedPosY, LethalMin.PikminSelectedPosZ);
@@ -223,175 +389,12 @@ namespace LethalMin
             {
                 LeftPrompt.text = "???";
             }
+
             if (HasSeenMin && HasSwaped1 && HasSwaped2 && HasThrown && !hasHiddenPrompts)
             {
-                HidePrompts();
+                PromptElement.Hide();
                 hasHiddenPrompts = true;
             }
-
-            if (LethalMin.HideInputPrompts)
-                PromptcanvasGroup.alpha = 0;
-        }
-        bool hasHiddenPrompts = false;
-        public bool HasSeenMin, HasSwaped1, HasSwaped2, HasThrown;
-        Coroutine promptRoutine;
-        public void ShowPrompts()
-        {
-            if (LethalMin.HideInputPrompts) { return; }
-            HasSeenMin = true;
-            StartCoroutine(ShowPromptsRoutine());
-        }
-        public IEnumerator ShowPromptsRoutine()
-        {
-            //tween the canva's group alpha to 0
-            float time = 0;
-            while (time < 1)
-            {
-                time += Time.deltaTime;
-                PromptcanvasGroup.alpha = Mathf.Lerp(0, 1, time);
-                yield return null;
-            }
-            promptRoutine = null!;
-        }
-        public void HidePrompts()
-        {
-            if (LethalMin.HideInputPrompts) { return; }
-            StartCoroutine(HidePromptsRoutine());
-        }
-        public IEnumerator HidePromptsRoutine()
-        {
-            //tween the canva's group alpha to 0
-            float time = 0;
-            while (time < 1)
-            {
-                time += Time.deltaTime;
-                PromptcanvasGroup.alpha = Mathf.Lerp(1, 0, time);
-                yield return null;
-            }
-            promptRoutine = null!;
-        }
-        private float promptActiveTime = 0f;
-        private bool isPromptActive = false;
-
-        public void PingPrompts()
-        {
-            if (LethalMin.HideInputPrompts) { return; }
-            if (!HasSwaped1 || !HasSwaped2 || !HasThrown)
-            {
-                return;
-            }
-
-            if (promptRoutine != null)
-            {
-                // If the prompt is already active, just reset the timer
-                promptActiveTime = 0f;
-            }
-            else
-            {
-                // If the prompt is not active, start the coroutine
-                promptActiveTime = 0f;
-                promptRoutine = StartCoroutine(PingPromptsRoutine());
-            }
-        }
-
-        public IEnumerator PingPromptsRoutine()
-        {
-            isPromptActive = true;
-            PromptcanvasGroup.alpha = 1f;
-
-            while (isPromptActive)
-            {
-                promptActiveTime += Time.deltaTime;
-
-                if (promptActiveTime >= 1.5f)
-                {
-                    // Start fading out after 1.5 seconds of inactivity
-                    float fadeTime = 0f;
-                    while (fadeTime < 1f)
-                    {
-                        fadeTime += Time.deltaTime;
-                        PromptcanvasGroup.alpha = Mathf.Lerp(1f, 0f, fadeTime);
-
-                        // If PingPrompts is called again during fade out, reset
-                        if (promptActiveTime < 1.5f)
-                        {
-                            PromptcanvasGroup.alpha = 1f;
-                            break;
-                        }
-
-                        yield return null;
-                    }
-
-                    // If we completed the fade out, end the coroutine
-                    if (fadeTime >= 1f)
-                    {
-                        isPromptActive = false;
-                    }
-                }
-
-                yield return null;
-            }
-
-            promptRoutine = null;
-        }
-        Coroutine CounterRoutine;
-        private float counterActiveTime = 0f;
-        private bool isCounterActive = false;
-
-        public void PingCounter()
-        {
-            if (CounterRoutine != null)
-            {
-                // If the counter is already active, just reset the timer
-                counterActiveTime = 0f;
-            }
-            else
-            {
-                // If the counter is not active, start the coroutine
-                counterActiveTime = 0f;
-                CounterRoutine = StartCoroutine(PingCounterRoutine());
-            }
-        }
-
-        public IEnumerator PingCounterRoutine()
-        {
-            isCounterActive = true;
-            CountGroup.alpha = 0.75f;
-
-            while (isCounterActive)
-            {
-                counterActiveTime += Time.deltaTime;
-
-                if (counterActiveTime >= 1.5f)
-                {
-                    // Start fading out after 1.5 seconds of inactivity
-                    float fadeTime = 0f;
-                    while (fadeTime < 1f)
-                    {
-                        fadeTime += Time.deltaTime;
-                        CountGroup.alpha = Mathf.Lerp(0.75f, 0.2f, fadeTime);
-
-                        // If PingCounter is called again during fade out, reset
-                        if (counterActiveTime < 1.5f)
-                        {
-                            CountGroup.alpha = 0.75f;
-                            break;
-                        }
-
-                        yield return null;
-                    }
-
-                    // If we completed the fade out, end the coroutine
-                    if (fadeTime >= 1f)
-                    {
-                        isCounterActive = false;
-                    }
-                }
-
-                yield return null;
-            }
-
-            CounterRoutine = null;
         }
 
         public float UpdateInterval = 1f;
@@ -450,19 +453,22 @@ namespace LethalMin
                 if (LeaderScript.followingPikmin.Count != LastSquadCount)
                 {
                     LastSquadCount = LeaderScript.followingPikmin.Count;
-                    PingCounter();
+                    CounterElement.UpdateElement();
                     if (!HasSeenMin)
-                        ShowPrompts();
+                    {
+                        HasSeenMin = true;
+                        PromptElement.Show();
+                    }
                 }
                 if (PikminInExistenceI != LastExistCount)
                 {
                     LastExistCount = PikminInExistenceI;
-                    PingCounter();
+                    CounterElement.UpdateElement();
                 }
                 if (PikminInFieldI != LastFieldCount)
                 {
                     LastFieldCount = PikminInFieldI;
-                    PingCounter();
+                    CounterElement.UpdateElement();
                 }
             }
 
@@ -474,6 +480,7 @@ namespace LethalMin
 
             if (LeaderScript.AvailableTypes.Count > 0)
             {
+                CounterElement.Show();
                 //CurPikminCount.color = LethalMin.GetColorFromPType(currentType);
                 CurPikminBox.color = currentType.PikminColor2;
                 CurPikminCount.text = LeaderScript.GetFollowingPikminByType(currentType).Count.ToString();
@@ -499,20 +506,18 @@ namespace LethalMin
             }
             else
             {
-                CurPikminCount.color = new Color(0, 0, 0, 0);
-                CurPort.color = new Color(0, 0, 0, 0);
+                CounterElement.Hide();
+                CurPikminCount.color = Color.black;
                 CurPort.sprite = LethalMin.NoPikmin;
-                CurPikminBox.color = new Color(0, 0, 0, 0);
+                CurPikminBox.color = Color.black;
                 CurPikminCount.text = "0";
-                PrevPort.color = new Color(0, 0, 0, 0);
-                PrevPikminCount.color = new Color(0, 0, 0, 0);
+                PrevPikminCount.color = Color.black;
                 PrevPort.sprite = LethalMin.NoPikmin;
-                PrevPikminBox.color = new Color(0, 0, 0, 0);
+                PrevPikminBox.color = Color.black;
                 PrevPikminCount.text = "0";
-                NextPort.color = new Color(0, 0, 0, 0);
-                NextPikminCount.color = new Color(0, 0, 0, 0);
+                NextPikminCount.color = Color.black;
                 NextPort.sprite = LethalMin.NoPikmin;
-                NextPikminBox.color = new Color(0, 0, 0, 0);
+                NextPikminBox.color = Color.black;
                 NextPikminCount.text = "0";
             }
 

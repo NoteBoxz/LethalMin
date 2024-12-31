@@ -3,6 +3,7 @@ from tkinter import messagebox
 from tkinter.ttk import Combobox
 import re
 import os
+import json
 
 LethalMincsPath = os.getcwd() + r"\LethalMin\LethalMin.cs"
 
@@ -191,7 +192,40 @@ def add_config_item():
 
     tk.Button(config_window, text="Add Config", command=submit_config).grid(row=7, column=0, columnspan=2, pady=10)
 
- 
+
+def save_config_items():
+    filename = "config_items.txt"
+    with open(filename, "w") as f:
+        json_data = []
+        for item in ConfigItemsToAdd:
+            json_data.append({
+                "type": item.type,
+                "InternalName": item.InternalName,
+                "defultVal": item.defultVal,
+                "name": item.name,
+                "section": item.section,
+                "description": item.description,
+                "NeedsRestart": item.NeedsRestart
+            })
+        json.dump(json_data, f, indent=2)
+    messagebox.showinfo("Success", f"Config items saved to {filename}")
+
+def load_config_items():
+    filename = "config_items.txt"
+    try:
+        with open(filename, "r") as f:
+            json_data = json.load(f)
+        ConfigItemsToAdd.clear()
+        for item_data in json_data:
+            ConfigItemsToAdd.append(ConfigItem(**item_data))
+        update_config_list()
+        messagebox.showinfo("Success", f"Config items loaded from {filename}")
+    except FileNotFoundError:
+        messagebox.showerror("Error", f"File {filename} not found")
+    except json.JSONDecodeError:
+        messagebox.showerror("Error", f"Invalid JSON in {filename}")
+
+
 
 # Main Application Window
 root = tk.Tk()
@@ -206,6 +240,13 @@ add_button.grid(row=0, column=0, padx=5)
 
 generate_button = tk.Button(frame, text="Generate Config Code", command=lambda: InjectCodeToLethalMin())
 generate_button.grid(row=0, column=1, padx=5)
+
+# Add new buttons for save and load
+save_button = tk.Button(frame, text="Save Config Items", command=save_config_items)
+save_button.grid(row=0, column=2, padx=5)
+
+load_button = tk.Button(frame, text="Load Config Items", command=load_config_items)
+load_button.grid(row=0, column=3, padx=5)
 
 # Listbox for displaying configs
 config_list = tk.Listbox(root, width=50, height=10)

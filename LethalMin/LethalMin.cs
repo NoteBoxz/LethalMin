@@ -64,6 +64,7 @@ namespace LethalMin
     [BepInDependency("Entity378.sellbodies", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("Piggy.LCOffice", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("Piggy.PiggyVarietyMod", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("kite.ZelevatorCode", BepInDependency.DependencyFlags.SoftDependency)]
     public class LethalMin : BaseUnityPlugin
     {
         public static LethalMin Instance { get; private set; } = null!;
@@ -225,12 +226,16 @@ namespace LethalMin
         public static bool AllowConvertion;
         public static bool AllowProduction;
         public static float MaskedWhistleVolume, MaskedWhistleRange;
-        public static bool HideInputPrompts;
         public static bool HidePuffminPrompt;
         public static float ShipPhaseOnionX, ShipPhaseOnionY, ShipPhaseOnionZ;
         //Generated Useable Varibles GoES HERE
 
-public static bool AllowWildPToDie;
+        public static float SelectedDefultAlpha;
+        public static float CounterDefultAlpha;
+        public static ElementBehavior SquadHudBehavior;
+        public static ElementBehavior CounterBehavior;
+        public static ElementBehavior PromptBehavior;
+        public static bool AllowWildPToDie;
         public static bool AllowCarryNoLeader;
         public static bool AllowCarryAfterWork;
         public static bool AllowAttackNoLeader;
@@ -249,8 +254,7 @@ public static bool AllowWildPToDie;
         LethalManEaterConfig, CalmableManeaterConfig, Rasisium, NotFormidableOak, LethalTurrentsC, InvinciMin,
         StrudyMin, UselessblueMin, DebugM, FunniMode, PassiveToManEaterConfig, FFOM, FFM, TeleEle, TeleCarie,
         TargetCarConfig, GetToDaCar, AllowSpawnMultiplierCF, NoPowerSpawn, MWon, ScanablePikmin, CanShipEjectFromShip,
-        TurnToNormalOnDeath, PuffMaskConfig, ShowSafetyConfig, AllowConvertionConfig, AllowProductionConfig, HideInputPromptsConfig,
-        HidePuffminPromptConfig;
+        TurnToNormalOnDeath, PuffMaskConfig, ShowSafetyConfig, AllowConvertionConfig, AllowProductionConfig, HidePuffminPromptConfig;
 
         public static ConfigEntry<float> Pscale, Sscale, ChaseR, PCPX, PCPY, PCPZ, PCRX, PCRY, PCRZ, PCScale,
          PCPCountX, PCPCountY, PCPCountZ, PCRCCountX, PCRCCountY, PCRCCountZ, PCScaleCount, FallTimer, CounterOffset,
@@ -273,7 +277,12 @@ public static bool AllowWildPToDie;
 
         //Generated Config Varibles GoES HERE
 
-public static ConfigEntry<bool> AllowWildPToDieConfig;
+        public static ConfigEntry<float> SelectedDefultAlphaConfig;
+        public static ConfigEntry<float> CounterDefultAlphaConfig;
+        public static ConfigEntry<ElementBehavior> SquadHudBehaviorConfig;
+        public static ConfigEntry<ElementBehavior> CounterBehaviorConfig;
+        public static ConfigEntry<ElementBehavior> PromptBehaviorConfig;
+        public static ConfigEntry<bool> AllowWildPToDieConfig;
         public static ConfigEntry<bool> AllowCarryNoLeaderConfig;
         public static ConfigEntry<bool> AllowCarryAfterWorkConfig;
         public static ConfigEntry<bool> AllowAttackNoLeaderConfig;
@@ -334,7 +343,6 @@ public static ConfigEntry<bool> AllowWildPToDieConfig;
         {
             #region Setting Config
             SkipPluckAnimation = Config.Bind("Pikmin", "Skip Pluck Animation", false, "Skips the player's pluck animation");
-            HideInputPromptsConfig = Config.Bind("Pikmin", "Hide Input Prompts", false, "Hides the input prompts above the Pikmin Hud");
             FF = Config.Bind("Pikmin", "Friendly Fire", false, "Allows a leaders to attack their pikmin");
             Smartmin = Config.Bind("Pikmin", "Make pikmin follow behind leader", true, "(HOST ONLY) Makes pikmin move behind their leader when following.");
             Smartermin = Config.Bind("Pikmin", "Dynamic Positioning", false, "(HOST ONLY) Makes pikmin move in a more dynamic way simular to the Pikmin games, (Causes Lag)");
@@ -470,12 +478,17 @@ public static ConfigEntry<bool> AllowWildPToDieConfig;
 
             //Generated ConfigBindings goes here
 
-AllowWildPToDieConfig = Config.Bind("Pikmin", "Allow Wild Pikmin To Die", false,"Allows Wild Pikmin (Pikmin that has not been in a player's squad at least once since spawning in.) to die.");
+            SelectedDefultAlphaConfig = Config.Bind("HUD", "Pikmin In Group Alpha", 0f, "The Alpha or transparency of the Pikmin In Group Hud when idle (Normalized: 0 = transparent, 1 = opaque) (Will only work if the OnlyShowWhenChanged option is selected)");
+            CounterDefultAlphaConfig = Config.Bind("HUD", "Pikmin Counter Alpha", 0.25f, "The Alpha or transparency of the Pikmin Counter when idle (Normalized: 0 = transparent, 1 = opaque) (Will only work if the OnlyShowWhenChanged option is selected)");
+            SquadHudBehaviorConfig = Config.Bind("HUD", "Pikmin Selected Visibilty", ElementBehavior.AlwaysShow, "The visibilty settings for the Pikmin Selected Hud");
+            CounterBehaviorConfig = Config.Bind("HUD", "Pikmin Counter Visibilty", ElementBehavior.AlwaysShow, "The visibilty settings for the Pikmin Counter");
+            PromptBehaviorConfig = Config.Bind("HUD", "Input Prompt Visibilty", ElementBehavior.AlwaysShow, "The visibilty settings for the InputPrompt above the Pikmin in group counter");
+            AllowWildPToDieConfig = Config.Bind("Pikmin", "Allow Wild Pikmin To Die", false, "Allows Wild Pikmin (Pikmin that has not been in a player's squad at least once since spawning in.) to die.");
             AllowCarryNoLeaderConfig = Config.Bind("Pikmin", "Allow Wild Pikmin To Carry items", false, "Allow Wild Pikmin (Pikmin that has not been in a player's squad at least once since spawning in.) To carry items.");
             AllowCarryAfterWorkConfig = Config.Bind("Pikmin", "Carry Items After Work-State", false, "Allows Pikmin to carry items again after already carrying items.");
             AllowAttackNoLeaderConfig = Config.Bind("Pikmin", "Allow Wild Pikmin To Attack", true, "Allows Wild Pikmin (Pikmin that has not been in a player's squad at least once since spawning in.) to chase and attack enemies.");
             AllowAttackAfterWorkConfig = Config.Bind("Pikmin", "Attack After Work-State", true, "Allows Pikmin to chase and attack enemies after carrying items.");
-            GeneratePConfigConfig = Config.Bind("Pikmin", "Generate PikminType Configs", true, "Generates a config file for each Pikmin type. (Note: The game will need to be restarted in order for the type configureation changes to take effect.)");
+            GeneratePConfigConfig = Config.Bind("Pikmin", "Generate PikminType Configs", false, "Generates a config file for each Pikmin type. (Note: The game will need to be restarted in order for the type configureation changes to take effect.)");
             UsePConfigsConfig = Config.Bind("Pikmin", "Allow Config File Override", false, "Allows a Pikmin Type's config file's values to override the values in game.");
             RasistElevatorConfig = Config.Bind("LC-Office", "Make Only Pikmin Use Elevator", true, "Makes it so that only Pikmin can enter the elevator (On floors 2 and 3 only). Any other entity just gets instantly teleported out if they get in.");
             GenNavMehsOnElevateConfig = Config.Bind("LC-Office", "Genorate Navmesh On Elevator", true, "Genorates a NavMesh on the Elevator in the LC-Office Interor. This makes it so Pikmin can path to, and walk on the elevator.");
@@ -492,7 +505,6 @@ AllowWildPToDieConfig = Config.Bind("Pikmin", "Allow Wild Pikmin To Die", false,
             ShipPhaseOnionX = SPOx.Value;
             ShipPhaseOnionY = SPOy.Value;
             ShipPhaseOnionZ = SPOz.Value;
-            HideInputPrompts = HideInputPromptsConfig.Value;
             HidePuffminPrompt = HidePuffminPromptConfig.Value;
             AllowConvertion = AllowConvertionConfig.Value;
             AllowProduction = AllowProductionConfig.Value;
@@ -617,7 +629,12 @@ AllowWildPToDieConfig = Config.Bind("Pikmin", "Allow Wild Pikmin To Die", false,
 
             //Generated Settings Valuse Goes Here
 
-AllowWildPToDie = AllowWildPToDieConfig.Value;
+            SelectedDefultAlpha = SelectedDefultAlphaConfig.Value;
+            CounterDefultAlpha = CounterDefultAlphaConfig.Value;
+            SquadHudBehavior = SquadHudBehaviorConfig.Value;
+            CounterBehavior = CounterBehaviorConfig.Value;
+            PromptBehavior = PromptBehaviorConfig.Value;
+            AllowWildPToDie = AllowWildPToDieConfig.Value;
             AllowCarryNoLeader = AllowCarryNoLeaderConfig.Value;
             AllowCarryAfterWork = AllowCarryAfterWorkConfig.Value;
             AllowAttackNoLeader = AllowAttackNoLeaderConfig.Value;
@@ -640,7 +657,6 @@ AllowWildPToDie = AllowWildPToDieConfig.Value;
             SPOy.SettingChanged += (_, _) => ShipPhaseOnionY = SPOy.Value;
             SPOz.SettingChanged += (_, _) => ShipPhaseOnionZ = SPOz.Value;
             HidePuffminPromptConfig.SettingChanged += (_, _) => HidePuffminPrompt = HidePuffminPromptConfig.Value;
-            HideInputPromptsConfig.SettingChanged += (_, _) => HideInputPrompts = HideInputPromptsConfig.Value;
             AllowConvertionConfig.SettingChanged += (_, _) => AllowConvertion = AllowConvertionConfig.Value;
             AllowProductionConfig.SettingChanged += (_, _) => AllowProduction = AllowProductionConfig.Value;
             PuffMaskConfig.SettingChanged += (_, _) => PuffMask = PuffMaskConfig.Value;
@@ -773,7 +789,33 @@ AllowWildPToDie = AllowWildPToDieConfig.Value;
 
             //Generated Settings Events Goes here
 
-AllowWildPToDieConfig.SettingChanged += (_, _) => AllowWildPToDie = AllowWildPToDieConfig.Value;
+            SelectedDefultAlphaConfig.SettingChanged += (_, _) => SelectedDefultAlpha = SelectedDefultAlphaConfig.Value;
+            CounterDefultAlphaConfig.SettingChanged += (_, _) => CounterDefultAlpha = CounterDefultAlphaConfig.Value;
+            SquadHudBehaviorConfig.SettingChanged += (_, _) =>
+            {
+                SquadHudBehavior = SquadHudBehaviorConfig.Value;
+                if (PikminHUD.pikminHUDInstance != null)
+                {
+                    PikminHUD.pikminHUDInstance.UpdatePelements();
+                }
+            };
+            CounterBehaviorConfig.SettingChanged += (_, _) =>
+            {
+                CounterBehavior = CounterBehaviorConfig.Value;
+                if (PikminHUD.pikminHUDInstance != null)
+                {
+                    PikminHUD.pikminHUDInstance.UpdatePelements();
+                }
+            };
+            PromptBehaviorConfig.SettingChanged += (_, _) =>
+            {
+                PromptBehavior = PromptBehaviorConfig.Value;
+                if (PikminHUD.pikminHUDInstance != null)
+                {
+                    PikminHUD.pikminHUDInstance.UpdatePelements();
+                }
+            };
+            AllowWildPToDieConfig.SettingChanged += (_, _) => AllowWildPToDie = AllowWildPToDieConfig.Value;
             AllowCarryNoLeaderConfig.SettingChanged += (_, _) => AllowCarryNoLeader = AllowCarryNoLeaderConfig.Value;
             AllowCarryAfterWorkConfig.SettingChanged += (_, _) => AllowCarryAfterWork = AllowCarryAfterWorkConfig.Value;
             AllowAttackNoLeaderConfig.SettingChanged += (_, _) => AllowAttackNoLeader = AllowAttackNoLeaderConfig.Value;
@@ -791,7 +833,6 @@ AllowWildPToDieConfig.SettingChanged += (_, _) => AllowWildPToDie = AllowWildPTo
 
             // Pikmin
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(SkipPluckAnimation, false));
-            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(HideInputPromptsConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(FF, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(Smartmin, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(Smartermin, false));
@@ -936,7 +977,12 @@ AllowWildPToDieConfig.SettingChanged += (_, _) => AllowWildPToDie = AllowWildPTo
 
             //Generated LC bindings goes here
 
-LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowWildPToDieConfig,false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SelectedDefultAlphaConfig, false));
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(CounterDefultAlphaConfig, false));
+            LethalConfigManager.AddConfigItem(new EnumDropDownConfigItem<ElementBehavior>(SquadHudBehaviorConfig, false));
+            LethalConfigManager.AddConfigItem(new EnumDropDownConfigItem<ElementBehavior>(CounterBehaviorConfig, false));
+            LethalConfigManager.AddConfigItem(new EnumDropDownConfigItem<ElementBehavior>(PromptBehaviorConfig, false));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowWildPToDieConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowCarryNoLeaderConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowCarryAfterWorkConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowAttackNoLeaderConfig, false));
@@ -1916,18 +1962,18 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
                     }
                     if (!IsDependencyLoaded("LethalMon") && type == typeof(FilterEnemyTypesPatch))
                     {
-                        Logger.LogMessage($"Skipping FilterEnemyTypesPatch script. Because LethalMon is not installed");
+                        Logger.LogDebug($"Skipping FilterEnemyTypesPatch script. Because LethalMon is not installed");
                         continue;
                     }
                     if (!IsDependencyLoaded("Piggy.PiggyVarietyMod") &&
                     (type == typeof(PiggyTeslaGatePatch) || type == typeof(PiggyTouchTriggerPatch)))
                     {
-                        Logger.LogMessage("Skipping VarietyMod scripts. Because Piggy.PiggyVarietyMod is not installed");
+                        Logger.LogDebug("Skipping VarietyMod scripts. Because Piggy.PiggyVarietyMod is not installed");
                         continue;
                     }
                     if (!IsDependencyLoaded("Piggy.LCOffice") && type == typeof(PiggyElevatorSystemPatch))
                     {
-                        Logger.LogMessage("Skipping LC office scripts. Because Piggy.LCOffice is not installed");
+                        Logger.LogDebug("Skipping LC office scripts. Because Piggy.LCOffice is not installed");
                         continue;
                     }
                     try

@@ -311,7 +311,7 @@ namespace LethalMin
             {
                 CurTypeSelectionIndex = (CurTypeSelectionIndex + 1) % AvailableTypes.Count;
                 PikminHUD.pikminHUDInstance.UpdateHUD();
-                PikminHUD.pikminHUDInstance.PingPrompts();
+                PikminHUD.pikminHUDInstance.PromptElement.UpdateElement();
                 PikminHUD.pikminHUDInstance.HasSwaped1 = true;
             }
         }
@@ -324,7 +324,7 @@ namespace LethalMin
                 // Use the total count of available types to ensure proper wrapping
                 CurTypeSelectionIndex = (CurTypeSelectionIndex - 1 + AvailableTypes.Count) % AvailableTypes.Count;
                 PikminHUD.pikminHUDInstance.UpdateHUD();
-                PikminHUD.pikminHUDInstance.PingPrompts();
+                PikminHUD.pikminHUDInstance.PromptElement.UpdateElement();
                 PikminHUD.pikminHUDInstance.HasSwaped2 = true;
             }
         }
@@ -384,7 +384,7 @@ namespace LethalMin
             if (IsWaitingForThrowResponce)
             {
                 LethalMin.Logger.LogWarning("OnThrowStarted: Buffering Input");
-                StartCoroutine(ThrowStartedBuffer());
+                StartCoroutine(ThrowStartedBuffer(context));
                 return;
             }
             LethalMin.Logger.LogInfo($"Throw started.");
@@ -405,10 +405,10 @@ namespace LethalMin
             }
         }
 
-        IEnumerator ThrowStartedBuffer()
+        IEnumerator ThrowStartedBuffer(InputAction.CallbackContext storedContext)
         {
             yield return new WaitUntil(() => !IsWaitingForThrowResponce);
-            OnThrowStarted(new InputAction.CallbackContext());
+            OnThrowStarted(storedContext);
         }
 
         private void OnThrowCanceled(InputAction.CallbackContext context)
@@ -438,7 +438,7 @@ namespace LethalMin
                 selectedPikmin.ThrowPikminServerRpc(throwOrigin.transform.position, cameraForward, selectedPikmin.ThrowForce, NetworkObject);
                 SetPikminComponentsForAiming(selectedPikmin, false);
                 RemovePikminServerRpc(selectedPikmin.NetworkObject);
-                PikminHUD.pikminHUDInstance.PingPrompts();
+                PikminHUD.pikminHUDInstance.PromptElement.UpdateElement();
                 PikminHUD.pikminHUDInstance.HasThrown = true;
                 LethalMin.Logger.LogInfo($"Throw Initated.");
             }
