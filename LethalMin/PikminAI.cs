@@ -350,6 +350,16 @@ namespace LethalMin
 
             HasInitalized = false;
 
+            if (!LethalMin.AllowAttackNoLeader)
+            {
+                CanAttack = false;
+            }
+
+            if (LethalMin.AllowCarryNoLeader)
+            {
+                CanGrabItems = true;
+            }
+
             InternalAirbornTimer = LethalMin.FallTimerValue;
 
             base.Start();
@@ -2287,6 +2297,10 @@ namespace LethalMin
         {
             if (LethalMin.IsPikminResistantToHazard(PminType, HazardType.Water)) { LethalMin.Logger.LogWarning("Why tf is a pikmin that cannot drown, drowning?????"); return; }
             if (LethalMin.UselessblueMinValue) { return; }
+            
+            if (Invincible.Value) { return; }
+            if (!LethalMin.AllowWildPToDie && !HasInteractedWithPlayers) { return; }
+            if (LethalMin.InvinciMinValue) { return; }
 
             if (HasCustomScripts)
                 OnSetDrowningClientRpc.Invoke();
@@ -2359,7 +2373,7 @@ namespace LethalMin
 
 
         #region Item Detection and Interaction
-    
+
         public List<Vector3> GetNavmeshShipPositions()
         {
             List<Vector3> list = new List<Vector3>();
@@ -3273,7 +3287,7 @@ namespace LethalMin
             PossibleRoutes = PossibleRoutes.OrderBy(route => route.BypassDistanceCheck ? 0 : 1)
                                .ThenBy(route => route.BypassDistanceCheck ? -route.Priority : route.InitalDistance)
                                .ToList();
-            
+
 
             // Pathable Check
             for (int i = 0; i < PossibleRoutes.Count; i++)
@@ -3303,7 +3317,7 @@ namespace LethalMin
             .ToList();
 
             //Calculate the Outside Distances
-            
+
             // for (int i = 0; PossibleRoutes.Count > 0 && i < PossibleRoutes.Count; i++)
             // {
             //     if (LethalMin.AllowLethalEscape && !isOutside && CurRoutes[i].RouteName != "Onion")
@@ -3311,7 +3325,7 @@ namespace LethalMin
             //         if (GetVaildExit().Item2 != null)
             //         {
             //             (int, EntranceTeleport) ProbableExit = GetVaildExit();
-                       
+
             //         }
             //     }
             // }
@@ -3760,7 +3774,10 @@ namespace LethalMin
             agent.updatePosition = InitialUP;
             agent.updateRotation = InitalUR;
             IsOnItem = false;
-            CanGrabItems = false;
+            if (!LethalMin.AllowCarryAfterWork)
+                CanGrabItems = false;
+            if (!LethalMin.AllowAttackAfterWork)
+                CanAttack = false;
             HasPlayedLift = false;
             ReleaseItemClientRpc();
             agent.SetDestination(transform.position);
@@ -3776,7 +3793,10 @@ namespace LethalMin
             agent.speed = PlantSpeeds[GrowStage];
             IsOnItem = false;
             HasPlayedLift = false;
-            CanGrabItems = false;
+            if (!LethalMin.AllowCarryAfterWork)
+                CanGrabItems = false;
+            if (!LethalMin.AllowAttackAfterWork)
+                CanAttack = false;
         }
 
         #endregion
@@ -4541,6 +4561,10 @@ namespace LethalMin
             base.HitEnemy(force, playerWhoHit, playHitSFX, hitID);
             if (Invincible.Value) { return; }
             if (KncockedBack) { return; }
+            if (!LethalMin.AllowWildPToDie && !HasInteractedWithPlayers)
+            {
+                return;
+            }
             if (!LethalMin.FriendlyFire && playerWhoHit != null && playerWhoHit == currentLeader?.Controller
             || !LethalMin.FriendlyFire && playerWhoHit != null && playerWhoHit == previousLeader?.Controller && currentBehaviourStateIndex == (int)PState.Attacking)
             {
@@ -4562,6 +4586,10 @@ namespace LethalMin
         public override void HitFromExplosion(float distance)
         {
             base.HitFromExplosion(distance);
+            if (!LethalMin.AllowWildPToDie && !HasInteractedWithPlayers)
+            {
+                return;
+            }
             if (Invincible.Value || LethalMin.IsPikminResistantToHazard(PminType, HazardType.Exsplosive)) { return; }
             ApplyKnockbackServerRpc(new Vector3(-distance, -distance, -distance), true, false, 3);
         }
@@ -4798,6 +4826,10 @@ namespace LethalMin
         [ClientRpc]
         public void DoZapDeathClientRpc()
         {
+            if (Invincible.Value) { return; }
+            if (!LethalMin.AllowWildPToDie && !HasInteractedWithPlayers) { return; }
+            if (LethalMin.InvinciMinValue) { return; }
+
             GameObject go = AssetLoader.LoadAsset<GameObject>("Assets/LethalminAssets/Pikmin/Particles/elecpikiparticle/PikminZap.prefab");
             GameObject goinst = Instantiate(go, transform.position, go.transform.rotation);
             goinst.AddComponent<LookAtMainCamera>();
@@ -4816,6 +4848,10 @@ namespace LethalMin
             if (LethalMin.DebugMode)
                 LethalMin.Logger.LogInfo($"Killed called for {uniqueDebugId}");
             if (Invincible.Value) { return; }
+            if (!LethalMin.AllowWildPToDie && !HasInteractedWithPlayers)
+            {
+                return;
+            }
             if (LethalMin.InvinciMinValue) { return; }
 
             if (!IsDying && !DeathBuffer && !destroy)

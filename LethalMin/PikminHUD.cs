@@ -17,15 +17,21 @@ namespace LethalMin
         New,
         Simplified
     }
+    public enum ElementBehavior
+    {
+        AlwaysHide,
+        AlwaysShow,
+        OnlyShowWhenChanged,
+    }
     public class PikminHUD : MonoBehaviour
     {
+        public static PikminHUD pikminHUDInstance;
         public LeaderManager LeaderScript;
         public HUDElement element;
         private TMP_Text PikminInSquad, PikminInField, PikminInExsistance, NextPikminCount, PrevPikminCount, CurPikminCount;
         private Image CurPikminBox, NextPikminBox, PrevPikminBox, CurPort, NextPort, PrevPort;
         private RectTransform NextPortRect, CurPortRect, PrevPortRect, PikminSelectedRect;
         private RectTransform PikminCountRect, PikminInSquadRect, PikminInFieldRect, PikminInExsistanceRect;
-        public static PikminHUD pikminHUDInstance;
         private TMP_Text ThrowPrompt, LeftPrompt, RightPrompt;
         public GameObject WigglePrompt;
         public CanvasGroup PromptcanvasGroup, CountGroup;

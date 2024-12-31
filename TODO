@@ -1,8 +1,6 @@
 (0.2.x)
 
-Add Pikmin autonomy Configs (Not Started)
 Add Config options for Hud Visibilty (Not Started)
-Make Pikmin that spawn indoors invinicble until whistled (Not Started)
 Make Pikmin carry bodies out of the ship to the onion (Not Started)
 Fix buggy Dynamic Positioning (Not Started)
 Fix Players being rotated when in the pluck animaiton while being lifted by the tulip snakes (Not Started)
@@ -14,6 +12,8 @@ Redo Latch On system to fix positioning issues with modded entitys and spiders (
 Add telport trigger/system for Offence and Assurance's fire exits (Not Started)
 Add in late company support (Not Started)
 
+Add Pikmin autonomy Configs (Done)
+Make Pikmin that spawn indoors invinicble until whistled (Done)
 Fix bulbmin not being able to deal dammage when latched on to enemies (Done)
 Fix issue that causes maskeds to whistle when Pikmin that cannot be converted are nearby (Done)
 Auto Hide HUD if no Pikmin are in the squad (Done)

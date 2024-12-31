@@ -230,6 +230,11 @@ namespace LethalMin
         public static float ShipPhaseOnionX, ShipPhaseOnionY, ShipPhaseOnionZ;
         //Generated Useable Varibles GoES HERE
 
+public static bool AllowWildPToDie;
+        public static bool AllowCarryNoLeader;
+        public static bool AllowCarryAfterWork;
+        public static bool AllowAttackNoLeader;
+        public static bool AllowAttackAfterWork;
         public static bool GeneratePConfig;
         public static bool UsePConfigs;
         public static bool RasistElevator;
@@ -268,6 +273,11 @@ namespace LethalMin
 
         //Generated Config Varibles GoES HERE
 
+public static ConfigEntry<bool> AllowWildPToDieConfig;
+        public static ConfigEntry<bool> AllowCarryNoLeaderConfig;
+        public static ConfigEntry<bool> AllowCarryAfterWorkConfig;
+        public static ConfigEntry<bool> AllowAttackNoLeaderConfig;
+        public static ConfigEntry<bool> AllowAttackAfterWorkConfig;
         public static ConfigEntry<bool> GeneratePConfigConfig;
         public static ConfigEntry<bool> UsePConfigsConfig;
         public static ConfigEntry<bool> RasistElevatorConfig;
@@ -460,6 +470,11 @@ namespace LethalMin
 
             //Generated ConfigBindings goes here
 
+AllowWildPToDieConfig = Config.Bind("Pikmin", "Allow Wild Pikmin To Die", false,"Allows Wild Pikmin (Pikmin that has not been in a player's squad at least once since spawning in.) to die.");
+            AllowCarryNoLeaderConfig = Config.Bind("Pikmin", "Allow Wild Pikmin To Carry items", false, "Allow Wild Pikmin (Pikmin that has not been in a player's squad at least once since spawning in.) To carry items.");
+            AllowCarryAfterWorkConfig = Config.Bind("Pikmin", "Carry Items After Work-State", false, "Allows Pikmin to carry items again after already carrying items.");
+            AllowAttackNoLeaderConfig = Config.Bind("Pikmin", "Allow Wild Pikmin To Attack", true, "Allows Wild Pikmin (Pikmin that has not been in a player's squad at least once since spawning in.) to chase and attack enemies.");
+            AllowAttackAfterWorkConfig = Config.Bind("Pikmin", "Attack After Work-State", true, "Allows Pikmin to chase and attack enemies after carrying items.");
             GeneratePConfigConfig = Config.Bind("Pikmin", "Generate PikminType Configs", true, "Generates a config file for each Pikmin type. (Note: The game will need to be restarted in order for the type configureation changes to take effect.)");
             UsePConfigsConfig = Config.Bind("Pikmin", "Allow Config File Override", false, "Allows a Pikmin Type's config file's values to override the values in game.");
             RasistElevatorConfig = Config.Bind("LC-Office", "Make Only Pikmin Use Elevator", true, "Makes it so that only Pikmin can enter the elevator (On floors 2 and 3 only). Any other entity just gets instantly teleported out if they get in.");
@@ -602,6 +617,11 @@ namespace LethalMin
 
             //Generated Settings Valuse Goes Here
 
+AllowWildPToDie = AllowWildPToDieConfig.Value;
+            AllowCarryNoLeader = AllowCarryNoLeaderConfig.Value;
+            AllowCarryAfterWork = AllowCarryAfterWorkConfig.Value;
+            AllowAttackNoLeader = AllowAttackNoLeaderConfig.Value;
+            AllowAttackAfterWork = AllowAttackAfterWorkConfig.Value;
             GeneratePConfig = GeneratePConfigConfig.Value;
             UsePConfigs = UsePConfigsConfig.Value;
             RasistElevator = RasistElevatorConfig.Value;
@@ -753,6 +773,11 @@ namespace LethalMin
 
             //Generated Settings Events Goes here
 
+AllowWildPToDieConfig.SettingChanged += (_, _) => AllowWildPToDie = AllowWildPToDieConfig.Value;
+            AllowCarryNoLeaderConfig.SettingChanged += (_, _) => AllowCarryNoLeader = AllowCarryNoLeaderConfig.Value;
+            AllowCarryAfterWorkConfig.SettingChanged += (_, _) => AllowCarryAfterWork = AllowCarryAfterWorkConfig.Value;
+            AllowAttackNoLeaderConfig.SettingChanged += (_, _) => AllowAttackNoLeader = AllowAttackNoLeaderConfig.Value;
+            AllowAttackAfterWorkConfig.SettingChanged += (_, _) => AllowAttackAfterWork = AllowAttackAfterWorkConfig.Value;
             GeneratePConfigConfig.SettingChanged += (_, _) => GeneratePConfig = GeneratePConfigConfig.Value;
             UsePConfigsConfig.SettingChanged += (_, _) => UsePConfigs = UsePConfigsConfig.Value;
             RasistElevatorConfig.SettingChanged += (_, _) => RasistElevator = RasistElevatorConfig.Value;
@@ -911,6 +936,11 @@ namespace LethalMin
 
             //Generated LC bindings goes here
 
+LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowWildPToDieConfig,false));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowCarryNoLeaderConfig, false));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowCarryAfterWorkConfig, false));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowAttackNoLeaderConfig, false));
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(AllowAttackAfterWorkConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(GeneratePConfigConfig, true));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(UsePConfigsConfig, true));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(RasistElevatorConfig, false));
