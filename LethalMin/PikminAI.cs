@@ -3818,7 +3818,7 @@ namespace LethalMin
         }
 
         [ServerRpc]
-        public void ReleaseItemServerRpc(bool SwitchStates = true, bool BypassAllCheck = false)
+        public void ReleaseItemServerRpc(bool SwitchStates = true, bool BypassAllCheck = false, bool AllowRegrab = false)
         {
             if (targetItem != null)
             {
@@ -3838,10 +3838,22 @@ namespace LethalMin
             agent.updatePosition = InitialUP;
             agent.updateRotation = InitalUR;
             IsOnItem = false;
-            if (!LethalMin.AllowCarryAfterWork)
+            if (!LethalMin.AllowCarryAfterWork && !AllowRegrab)
+            {
                 CanGrabItems = false;
+            }
+            else
+            {
+                CanGrabItems = true;
+            }
             if (!LethalMin.AllowAttackAfterWork)
+            {
                 CanAttack = false;
+            }
+            else
+            {
+                CanAttack = true;
+            }
             HasPlayedLift = false;
             ReleaseItemClientRpc();
             agent.SetDestination(transform.position);

@@ -15,6 +15,8 @@ using LCOffice.Patches;
 using ElevatorMod.Patches;
 using LethalMin.Patches.OtherMods;
 using Unity.Mathematics;
+using JetBrains.Annotations;
+using UnityEngine.SceneManagement;
 
 
 namespace LethalMin
@@ -155,6 +157,18 @@ namespace LethalMin
                 RefreshOnionsList();
                 RefreshCarsList();
                 RefreshLocks();
+                if (RoundManager.Instance.currentLevel.sceneName == "Level7Offense")
+                {
+                    StartCoroutine(SpawnTPZones(new Vector3(-6.9494f, 18.3041f, -134.7692f), new Vector3(10f, 10f, 10f), new Vector3(7.9994f, 0.4394f, -136.0314f)));
+                }
+                if (RoundManager.Instance.currentLevel.sceneName == "Level2Assurance")
+                {
+                    StartCoroutine(SpawnTPZones(new Vector3(101.3612f, 15.7869f, -74.0713f), new Vector3(2.5527f, 4.6818f, 7.8745f), new Vector3(99.9956f, 2.2635f, -57.4636f)));
+                }
+                if(RoundManager.Instance.currentLevel.sceneName == "Level4March")
+                {
+                    StartCoroutine(SpawnTPZones(new Vector3(125.5447f, 8.4454f, -17.235f), new Vector3(1.0982f, 0.8345f, 5.8745f), new Vector3(129.4601f, 6.4522f, -16.061f)));
+                }
             }
             else if (LethalMin.CanWalkAtCompany())
             {
@@ -162,6 +176,41 @@ namespace LethalMin
                 StartCoroutine(CacheOnionSpawnPoints());
                 StartCoroutine(SpawnOnions());
             }
+        }
+
+        IEnumerator SpawnTPZones(Vector3 TPostion, Vector3 Scale, Vector3 DestPos)
+        {
+            yield return new WaitUntil(() => StartOfRound.Instance.fullyLoadedPlayers.Count >= GameNetworkManager.Instance.connectedPlayers);
+            yield return new WaitUntil(() => RoundManager.Instance.dungeonCompletedGenerating);
+
+            // Get the current active scene
+            Scene currentScene = SceneManager.GetSceneByName(RoundManager.Instance.currentLevel.sceneName);
+
+            bool dbMode = false;
+
+            GameObject TPZone = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            TPZone.transform.position = TPostion;
+            TPZone.transform.localScale = Scale;
+            TPZone.AddComponent<PikminTPZone>();
+            TPZone.GetComponent<Collider>().isTrigger = true;
+            SceneManager.MoveGameObjectToScene(TPZone, currentScene);
+
+            GameObject Dest = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            Dest.transform.position = DestPos;
+            TPZone.GetComponent<PikminTPZone>().Destination = Dest.transform;
+            SceneManager.MoveGameObjectToScene(Dest, currentScene);
+
+            if (dbMode)
+            {
+                TPZone.GetComponent<Renderer>().material = AssetLoader.LoadAsset<Material>("Assets/LethalminAssets/Pikmin/Materials/DebugMin.mat");
+                Dest.GetComponent<Renderer>().material = AssetLoader.LoadAsset<Material>("Assets/LethalminAssets/Pikmin/Materials/DebugMin.mat");
+            }
+            else
+            {
+                GameObject.Destroy(TPZone.GetComponent<Renderer>());
+                GameObject.Destroy(Dest.GetComponent<Renderer>());
+            }
+            GameObject.Destroy(Dest.GetComponent<Collider>());
         }
 
         public static List<FloorData> CurrentFloorData = new List<FloorData>();

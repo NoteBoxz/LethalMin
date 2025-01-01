@@ -864,7 +864,7 @@ namespace LethalMin
             // Remove all Pikmin from the item
             foreach (PikminAI pikmin in PikminOnItemList.ToArray())
             {
-                pikmin.ReleaseItemServerRpc(true,true);
+                pikmin.ReleaseItemServerRpc(true,true,true);
             }
             for (int i = 0; i < goToPositionsOccupied.Count; i++)
             {

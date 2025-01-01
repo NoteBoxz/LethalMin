@@ -52,7 +52,7 @@ namespace LethalMin.Patches.OtherMods
         public static Transform ElevatorPos;
         public static bool DontDoTriggerPatch = false;
         public static Collider PikminZone;
-        private static InputAction debugWarpAction;
+        //private static InputAction debugWarpAction;
 
         [HarmonyPatch("Start")]
         [HarmonyPostfix]
