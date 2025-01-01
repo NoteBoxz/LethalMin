@@ -3818,7 +3818,7 @@ namespace LethalMin
         }
 
         [ServerRpc]
-        public void ReleaseItemServerRpc(bool SwitchStates = true, bool BypassAllCheck = false, bool AllowRegrab = false)
+        public void ReleaseItemServerRpc(bool SwitchStates = true, bool BypassAllCheck = false)
         {
             if (targetItem != null)
             {
@@ -3838,7 +3838,7 @@ namespace LethalMin
             agent.updatePosition = InitialUP;
             agent.updateRotation = InitalUR;
             IsOnItem = false;
-            if (!LethalMin.AllowCarryAfterWork && !AllowRegrab)
+            if (!LethalMin.AllowCarryAfterWork)
             {
                 CanGrabItems = false;
             }
