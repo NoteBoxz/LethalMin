@@ -230,6 +230,7 @@ namespace LethalMin
         public static float ShipPhaseOnionX, ShipPhaseOnionY, ShipPhaseOnionZ;
         //Generated Useable Varibles GoES HERE
 
+        public static float GrabRange;
         public static float SelectedDefultAlpha;
         public static float CounterDefultAlpha;
         public static ElementBehavior SquadHudBehavior;
@@ -277,6 +278,7 @@ namespace LethalMin
 
         //Generated Config Varibles GoES HERE
 
+        public static ConfigEntry<float> GrabRangeConfig;
         public static ConfigEntry<float> SelectedDefultAlphaConfig;
         public static ConfigEntry<float> CounterDefultAlphaConfig;
         public static ConfigEntry<ElementBehavior> SquadHudBehaviorConfig;
@@ -478,6 +480,7 @@ namespace LethalMin
 
             //Generated ConfigBindings goes here
 
+            GrabRangeConfig = Config.Bind("Pikmin", "Pikmin Grab Range", 2.5f, "The range a Pikmin can Grab an Item");
             SelectedDefultAlphaConfig = Config.Bind("HUD", "Pikmin In Group Alpha", 0f, "The Alpha or transparency of the Pikmin In Group Hud when idle (Normalized: 0 = transparent, 1 = opaque) (Will only work if the OnlyShowWhenChanged option is selected)");
             CounterDefultAlphaConfig = Config.Bind("HUD", "Pikmin Counter Alpha", 0.25f, "The Alpha or transparency of the Pikmin Counter when idle (Normalized: 0 = transparent, 1 = opaque) (Will only work if the OnlyShowWhenChanged option is selected)");
             SquadHudBehaviorConfig = Config.Bind("HUD", "Pikmin Selected Visibilty", ElementBehavior.AlwaysShow, "The visibilty settings for the Pikmin Selected Hud");
@@ -629,6 +632,7 @@ namespace LethalMin
 
             //Generated Settings Valuse Goes Here
 
+            GrabRange = GrabRangeConfig.Value;
             SelectedDefultAlpha = SelectedDefultAlphaConfig.Value;
             CounterDefultAlpha = CounterDefultAlphaConfig.Value;
             SquadHudBehavior = SquadHudBehaviorConfig.Value;
@@ -789,6 +793,7 @@ namespace LethalMin
 
             //Generated Settings Events Goes here
 
+            GrabRangeConfig.SettingChanged += (_, _) => GrabRange = GrabRangeConfig.Value;
             SelectedDefultAlphaConfig.SettingChanged += (_, _) => SelectedDefultAlpha = SelectedDefultAlphaConfig.Value;
             CounterDefultAlphaConfig.SettingChanged += (_, _) => CounterDefultAlpha = CounterDefultAlphaConfig.Value;
             SquadHudBehaviorConfig.SettingChanged += (_, _) =>
@@ -977,6 +982,7 @@ namespace LethalMin
 
             //Generated LC bindings goes here
 
+            LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(GrabRangeConfig, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SelectedDefultAlphaConfig, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(CounterDefultAlphaConfig, false));
             LethalConfigManager.AddConfigItem(new EnumDropDownConfigItem<ElementBehavior>(SquadHudBehaviorConfig, false));

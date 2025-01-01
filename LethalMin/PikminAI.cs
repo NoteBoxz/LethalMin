@@ -2614,7 +2614,7 @@ namespace LethalMin
                     //LethalMin.Logger.LogInfo("Set Dest Called on line 1535");
                 }
 
-                if (HasArrivedAtDestonation(1f, targetItem.GetGoToPos(AssingedGoToNode)) && !IsOnItem)
+                if (HasArrivedAtDestonation(LethalMin.GrabRange, targetItem.GetGoToPos(AssingedGoToNode)) && !IsOnItem)
                 {
                     if (IsNearDestination(targetItem.transform.position))
                     {
