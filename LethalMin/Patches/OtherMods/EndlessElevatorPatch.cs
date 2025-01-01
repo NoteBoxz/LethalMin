@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace LethalMin.Patches.OtherMods
 {
@@ -32,14 +33,15 @@ namespace LethalMin.Patches.OtherMods
             }
             public void SpawnPikmin()
             {
-                LethalMin.Logger.LogInfo("Spawning Pikmin from elevator.");
+                LethalMin.Logger.LogInfo($"Spawning {Pname} from elevator.");
                 if (leader == null)
                 {
-                    PikminManager.Instance.SpawnInPikminServerRpc(position, rotation, new NetworkObjectReference(), GrowStage, type.PikminTypeID, false);
+                    LethalMin.Logger.LogWarning($"Leader is null, spawning {Pname} without leader.");
+                    PikminManager.Instance.SpawnInPikminServerRpc(position, rotation, new NetworkObjectReference(), GrowStage, type.PikminTypeID, false, Pname);
                 }
                 else
                 {
-                    PikminManager.Instance.SpawnInPikminServerRpc(position, rotation, leader.NetworkObject, GrowStage, type.PikminTypeID, false);
+                    PikminManager.Instance.SpawnInPikminServerRpc(position, rotation, leader.NetworkObject, GrowStage, type.PikminTypeID, false, Pname);
                 }
             }
         }
@@ -49,6 +51,7 @@ namespace LethalMin.Patches.OtherMods
         public static Transform ElevatorPos;
         public static bool DontDoTriggerPatch = false;
         public static Collider PikminZone;
+        private static InputAction debugWarpAction;
 
         [HarmonyPatch("Start")]
         [HarmonyPostfix]
@@ -85,6 +88,10 @@ namespace LethalMin.Patches.OtherMods
             //     cubeA.transform.SetParent(item.transform, true);
             //     GameObject.Destroy(cubeA.GetComponent<Collider>());
             // }
+
+            debugWarpAction = new InputAction("DebugWarpPikmin", InputActionType.Button, "<Keyboard>/f12");
+            debugWarpAction.performed += ctx => WarpPikminToLeader();
+            debugWarpAction.Enable();
         }
 
         [HarmonyPatch("OnTriggerEnter")]
@@ -178,8 +185,6 @@ namespace LethalMin.Patches.OtherMods
             DontDoTriggerPatch = false;
         }
 
-        // [HarmonyPatch("InitalizeNewFloors")]
-        // [HarmonyPostfix]
         public static void RespawnPikmin()
         {
             LethalMin.Logger.LogInfo($"Respawning: {PikminToSave.Count} Pikmin from elevator.");
@@ -188,38 +193,6 @@ namespace LethalMin.Patches.OtherMods
                 pikmin.SpawnPikmin();
             }
             PikminToSave.Clear();
-        }
-
-        [HarmonyPatch("TeleportToInterior")]
-        [HarmonyPostfix]
-        public static void WarpPikminWhenSetInElevator(ref PlayerPhysicsRegion ___playerPhysicsRegion_elevator, ref Transform ___interiorPos)
-        {
-            if (___playerPhysicsRegion_elevator == null)
-            {
-
-            }
-            else
-            {
-                if (!___playerPhysicsRegion_elevator.hasLocalPlayer)
-                {
-                    return;
-                }
-
-                LethalMin.Logger.LogInfo("Warping Pikmin to elevator.");
-
-                PlayerControllerB localPlayerController = StartOfRound.Instance.localPlayerController;
-                LeaderManager localLeaderManager = localPlayerController.GetComponentInChildren<LeaderManager>();
-
-                foreach (var pikmin in localLeaderManager.followingPikmin)
-                {
-                    if (pikmin == null) { continue; }
-                    float formerStop = pikmin.agent.stoppingDistance;
-                    pikmin.agent.stoppingDistance = 0;
-                    pikmin.agent.Warp(___interiorPos.position);
-                    pikmin.transform2.Teleport(___interiorPos.position, pikmin.transform.rotation, pikmin.transform.localScale);
-                    pikmin.agent.stoppingDistance = formerStop;
-                }
-            }
         }
 
         public static void WarpPikminOnElevatorStop()
@@ -240,6 +213,16 @@ namespace LethalMin.Patches.OtherMods
                         pikmin.transform2.Teleport(item.transform.position, pikmin.transform.rotation, pikmin.transform.localScale);
                         pikmin.agent.stoppingDistance = formerStop;
                     }
+                }
+            }
+        }
+        public static void WarpPikminToLeader()
+        {
+            foreach (PikminAI Pikmin in PikminManager.GetPikminEnemies())
+            {
+                if (Pikmin.currentLeader != null)
+                {
+                    Pikmin.agent.Warp(Pikmin.currentLeader.transform.position);
                 }
             }
         }

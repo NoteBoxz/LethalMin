@@ -950,7 +950,7 @@ namespace LethalMin
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void SpawnInPikminServerRpc(Vector3 position,Quaternion rotation,NetworkObjectReference leader, int GrowStage, int pikminTypeID,bool IsOutside)
+        public void SpawnInPikminServerRpc(Vector3 position, Quaternion rotation, NetworkObjectReference leader, int GrowStage, int pikminTypeID, bool IsOutside, string Name)
         {
             GameObject pikminPrefab = LethalMin.pikminPrefab;
 
@@ -967,11 +967,11 @@ namespace LethalMin
                 LethalMin.Logger.LogError("NetworkObject component not found on Pikmin prefab.");
             }
 
-            SpawnInPikminClientRPC(pikminAI.NetworkObject, leader, GrowStage, pikminTypeID);
+            SpawnInPikminClientRPC(pikminAI.NetworkObject, leader, GrowStage, pikminTypeID, IsOutside, Name);
         }
 
         [ClientRpc]
-        public void SpawnInPikminClientRPC(NetworkObjectReference network1, NetworkObjectReference network2, int growStage, int pikminTypeId)
+        public void SpawnInPikminClientRPC(NetworkObjectReference network1, NetworkObjectReference network2, int growStage, int pikminTypeId, bool isOutside, string Name)
         {
             network1.TryGet(out NetworkObject PikObj);
             PikminAI script = PikObj.GetComponent<PikminAI>();
@@ -980,13 +980,31 @@ namespace LethalMin
             script.GrowStage = growStage;
             script.PreDefinedType = true;
             script.PminType = LethalMin.GetPikminTypeById(pikminTypeId);
-            script.isOutside = false;
 
             network2.TryGet(out NetworkObject PlaObj);
             PlayerControllerB pl = PlaObj.GetComponent<PlayerControllerB>();
-            
-            if (pl != null)
-                script.AssignLeader(pl, false);
+
+            StartCoroutine(waitForPikmin(script, pl, isOutside, Name));
+        }
+        public IEnumerator waitForPikmin(PikminAI ai, PlayerControllerB player, bool isOutside, string Name)
+        {
+            while (!ai.HasInitalized)
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            ai.isOutside = isOutside;
+            ai.uniqueDebugId = Name;
+            ai.gameObject.name = Name;
+
+            if (player != null)
+            {
+                ai.AssignLeader(player, false);
+            }
+            else
+            {
+                LethalMin.Logger.LogError("attempted to assing a null leader.");
+            }
         }
 
         IEnumerator waitForInitalizePik(PikminAI pikminAI)
