@@ -2389,17 +2389,14 @@ namespace LethalMin
         }
         private bool IsNearDestination(Vector3 position, float thresholdA = 1f, float thresholdB = 5f)
         {
-            // Check if near any InsideShipPosition
-            if (RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && isOutside)
-            {
-                foreach (var shipPos in GetNavmeshShipPositions())
-                {
-                    if (Vector3.Distance(position, shipPos) <= thresholdA)
-                    {
-                        return true;
-                    }
-                }
-            }
+            // Check if inside an elevator
+            // if (FloorOn != null)
+            // {
+            //     if (FloorOn.ElevatorBounds.bounds.Contains(position))
+            //     {
+            //         return true;
+            //     }
+            // }
 
             // Check if near the main entrance
             if (RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !isOutside && !LethalMin.AllowLethalEscape)
@@ -2746,7 +2743,9 @@ namespace LethalMin
                     continue;
                 }
 
-                if (item.Root.isInShipRoom && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding")
+                if (item.Root.isInShipRoom && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !item.CanBeConvertedIntoSprouts
+                || item.Root.isInShipRoom && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" 
+                && item.CanBeConvertedIntoSprouts && !LethalMin.AllowConvertion)
                 {
                     //if(LethalMin.DebugMode)
                     //LethalMin.Logger.LogInfo($"({uniqueDebugId}) Item {item.name} is in ship room. Skipping.");
