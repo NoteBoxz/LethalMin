@@ -35,10 +35,11 @@ namespace LethalMin
         public float AlphaWhenInactive = 0.2f;
         public float FadeTime = 1f;
         public Vector3 Position, Rotaion, Scale;
+        public bool HasShown;
 
-        public Vector3 ParseStringToVector3()
+        public Vector3 ParseStringToVector3(string str = "(0,0,0)")
         {
-            string[] split = Position.ToString().Split(',');
+            string[] split = str.Split(',');
             float x = float.Parse(split[0].Replace("(", ""));
             float y = float.Parse(split[1]);
             float z = float.Parse(split[2].Replace(")", ""));
@@ -58,6 +59,9 @@ namespace LethalMin
                 case ElementBehavior.AlwaysShow:
                     Group.alpha = 1;
                     break;
+                case ElementBehavior.OnlyShowWhenChanged:
+                    Group.alpha = 0;
+                    break;
             }
         }
 
@@ -72,7 +76,7 @@ namespace LethalMin
                     Group.alpha = 1;
                     break;
                 case ElementBehavior.OnlyShowWhenChanged:
-                    Ping();
+                    Group.alpha = 0;
                     break;
             }
         }
@@ -81,12 +85,12 @@ namespace LethalMin
         {
             if (Routine != null)
             {
-                // If the  is already active, just reset the timer
+                
                 ActiveTime = 0f;
             }
             else
             {
-                // If the  is not active, start the coroutine
+                
                 ActiveTime = 0f;
                 Routine = PikminHUD.pikminHUDInstance.StartCoroutine(PingRoutine());
             }
@@ -137,7 +141,8 @@ namespace LethalMin
         public void Show()
         {
             if (behavior != ElementBehavior.OnlyShowWhenChanged) { return; }
-
+            if (HasShown) { return; }
+            HasShown = true;
             PikminHUD.pikminHUDInstance.StartCoroutine(ShowRoutine());
         }
         public IEnumerator ShowRoutine()
@@ -150,13 +155,14 @@ namespace LethalMin
                 Group.alpha = Mathf.Lerp(0, 1, time);
                 yield return null;
             }
-            Routine = null!;
+            Group.alpha = 1;
         }
 
         public void Hide()
         {
             if (behavior != ElementBehavior.OnlyShowWhenChanged) { return; }
-
+            if (!HasShown) { return; }
+            HasShown = false;
             PikminHUD.pikminHUDInstance.StartCoroutine(HideRoutine());
         }
         public IEnumerator HideRoutine()
@@ -169,7 +175,7 @@ namespace LethalMin
                 Group.alpha = Mathf.Lerp(1, 0, time);
                 yield return null;
             }
-            Routine = null!;
+            Group.alpha = 0;
         }
     }
     public class PikminHUD : MonoBehaviour
@@ -331,16 +337,20 @@ namespace LethalMin
 
         public void UpdatePelements()
         {
-            if(PromptElement == null || CounterElement == null || PortElement == null) { return; }
-            
+            if (PromptElement == null || CounterElement == null || PortElement == null) { return; }
+
             PromptElement.behavior = LethalMin.PromptBehavior;
-            
+
             CounterElement.behavior = LethalMin.CounterBehavior;
             CounterElement.AlphaWhenInactive = LethalMin.CounterDefultAlpha;
             CounterElement.AlphaWhenActive = 0.75f;
 
             PortElement.behavior = LethalMin.SquadHudBehavior;
             PortElement.AlphaWhenInactive = LethalMin.SelectedDefultAlpha;
+
+            PromptElement.UpdateElement();
+            CounterElement.UpdateElement();
+            PortElement.UpdateElement();
         }
 
         public InputAction throwAction;
@@ -453,7 +463,7 @@ namespace LethalMin
                 if (LeaderScript.followingPikmin.Count != LastSquadCount)
                 {
                     LastSquadCount = LeaderScript.followingPikmin.Count;
-                    CounterElement.UpdateElement();
+                    CounterElement.Ping();
                     if (!HasSeenMin)
                     {
                         HasSeenMin = true;
@@ -463,12 +473,12 @@ namespace LethalMin
                 if (PikminInExistenceI != LastExistCount)
                 {
                     LastExistCount = PikminInExistenceI;
-                    CounterElement.UpdateElement();
+                    CounterElement.Ping();
                 }
                 if (PikminInFieldI != LastFieldCount)
                 {
                     LastFieldCount = PikminInFieldI;
-                    CounterElement.UpdateElement();
+                    CounterElement.Ping();
                 }
             }
 
@@ -480,7 +490,7 @@ namespace LethalMin
 
             if (LeaderScript.AvailableTypes.Count > 0)
             {
-                CounterElement.Show();
+                PortElement.Show();
                 //CurPikminCount.color = LethalMin.GetColorFromPType(currentType);
                 CurPikminBox.color = currentType.PikminColor2;
                 CurPikminCount.text = LeaderScript.GetFollowingPikminByType(currentType).Count.ToString();
@@ -506,7 +516,7 @@ namespace LethalMin
             }
             else
             {
-                CounterElement.Hide();
+                PortElement.Hide();
                 CurPikminCount.color = Color.black;
                 CurPort.sprite = LethalMin.NoPikmin;
                 CurPikminBox.color = Color.black;

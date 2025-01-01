@@ -12,6 +12,9 @@ using System;
 using GameNetcodeStuff;
 using LethalMin.Patches.AI;
 using LCOffice.Patches;
+using ElevatorMod.Patches;
+using LethalMin.Patches.OtherMods;
+using Unity.Mathematics;
 
 
 namespace LethalMin
@@ -124,6 +127,8 @@ namespace LethalMin
             if (StartOfRound.Instance == null) { return; }
             if (StartOfRound.Instance.inShipPhase) { return; }
             DespawnShipPhaseOnionsClientRpc();
+            OverriddenIndoorTargets.Clear();
+            OverriddenOutdoorTargets.Clear();
 
             if (LethalMin.IsUsingModLib())
             {
@@ -161,8 +166,13 @@ namespace LethalMin
 
         public static List<FloorData> CurrentFloorData = new List<FloorData>();
         public static FloorData DefultFloorData = null;
+        public static List<Transform> OverriddenIndoorTargets = new List<Transform>();
+        public static List<Transform> OverriddenOutdoorTargets = new List<Transform>();
+        bool isgettingFloorData;
         public IEnumerator GetFloorData()
         {
+            if (isgettingFloorData) { yield break; }
+            isgettingFloorData = true;
             List<EntranceTeleport> FindFireExits()
             {
                 EntranceTeleport[] allEntrances = UnityEngine.Object.FindObjectsOfType<EntranceTeleport>(includeInactive: false);
@@ -215,14 +225,24 @@ namespace LethalMin
                 CurrentFloorData.Add(F2);
 
                 LethalMin.Logger.LogInfo("Registered Vanilla Minshaft Floors");
+                isgettingFloorData = false;
                 yield break;
             }
 
             if (LethalMin.IsDependencyLoaded("Piggy.LCOffice"))
             {
                 GetPiggyFloorData();
+                isgettingFloorData = false;
                 yield break;
             }
+
+            if (LethalMin.IsDependencyLoaded("kite.ZelevatorCode"))
+            {
+                GetZelevatorFloorData();
+                isgettingFloorData = false;
+                yield break;
+            }
+            isgettingFloorData = false;
         }
 
         public void GetPiggyFloorData()
@@ -331,6 +351,17 @@ namespace LethalMin
             }
 
             LethalMin.Logger.LogInfo("Registered LC-Office Floors");
+        }
+
+        public void GetZelevatorFloorData()
+        {
+            if (FindObjectOfType<EndlessElevator>() == null)
+            {
+                return;
+            }
+
+            LethalMin.Logger.LogInfo("Zelevator detected. Loading Zelevator data.");
+            OverriddenIndoorTargets.Add(EndlessElevatorPatch.ElevatorPos);
         }
 
         #region This is the most hackiest networking i've ever done
@@ -916,6 +947,46 @@ namespace LethalMin
             script.PminType = LethalMin.GetPikminTypeById(type);
             script.isOutside = IsOutside;
             StartCoroutine(waitForInitalizePik(PikObj.GetComponent<PikminAI>()));
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void SpawnInPikminServerRpc(Vector3 position,Quaternion rotation,NetworkObjectReference leader, int GrowStage, int pikminTypeID,bool IsOutside)
+        {
+            GameObject pikminPrefab = LethalMin.pikminPrefab;
+
+            GameObject pikminObj = GameObject.Instantiate(pikminPrefab, position, rotation);
+            NetworkObject networkObject = pikminObj.GetComponent<NetworkObject>();
+            PikminAI pikminAI = pikminObj.GetComponent<PikminAI>();
+            if (networkObject != null)
+            {
+                networkObject.Spawn();
+                SpawnPikminClientRpc(networkObject);
+            }
+            else
+            {
+                LethalMin.Logger.LogError("NetworkObject component not found on Pikmin prefab.");
+            }
+
+            SpawnInPikminClientRPC(pikminAI.NetworkObject, leader, GrowStage, pikminTypeID);
+        }
+
+        [ClientRpc]
+        public void SpawnInPikminClientRPC(NetworkObjectReference network1, NetworkObjectReference network2, int growStage, int pikminTypeId)
+        {
+            network1.TryGet(out NetworkObject PikObj);
+            PikminAI script = PikObj.GetComponent<PikminAI>();
+            if (script == null) { return; }
+            script.HideMeshOnStart = false;
+            script.GrowStage = growStage;
+            script.PreDefinedType = true;
+            script.PminType = LethalMin.GetPikminTypeById(pikminTypeId);
+            script.isOutside = false;
+
+            network2.TryGet(out NetworkObject PlaObj);
+            PlayerControllerB pl = PlaObj.GetComponent<PlayerControllerB>();
+            
+            if (pl != null)
+                script.AssignLeader(pl, false);
         }
 
         IEnumerator waitForInitalizePik(PikminAI pikminAI)

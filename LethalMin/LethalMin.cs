@@ -316,13 +316,13 @@ namespace LethalMin
 
             if (IsUsingInputUtils())
             {
-                Logger.LogInfo("InputUtils detected, binding input class");
+                Logger.LogMessage("InputUtils detected, binding input class");
                 BindInputClass();
             }
 
             if (IsUsingModLib())
             {
-                Logger.LogInfo("LethalModDataLib detected, using that for save data");
+                Logger.LogMessage("LethalModDataLib detected, using that for save data");
             }
 
             // load everything third
@@ -1976,6 +1976,11 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
                         Logger.LogDebug("Skipping LC office scripts. Because Piggy.LCOffice is not installed");
                         continue;
                     }
+                    if (!IsDependencyLoaded("kite.ZelevatorCode") && type == typeof(EndlessElevatorPatch))
+                    {
+                        Logger.LogDebug("Skipping Zelevator scripts. Because kite.ZelevatorCode is not installed");
+                        continue;
+                    }
                     try
                     {
                         Harmony.PatchAll(type);
@@ -1990,10 +1995,21 @@ I lost 47 of them to a single Jester yesterday. Still hurts to think about it...
                     }
                 }
 
-                // Only patch FilterEnemyTypesPatch if LethalMon is loaded
-                if (IsDependencyLoaded("LethalMon"))  // Replace with actual LethalMon GUID
+                if (IsDependencyLoaded("LethalMon"))
                 {
-                    Logger.LogInfo("LethalMon detected. Patching FilterEnemyTypesPatch.");
+                    Logger.LogMessage("LethalMon detected. Patching FilterEnemyTypesPatch.");
+                }
+                if (IsDependencyLoaded("Piggy.PiggyVarietyMod"))
+                {
+                    Logger.LogMessage("Variety Mod detected. Patching TeslaGates and TouchTriggers.");
+                }
+                if (IsDependencyLoaded("Piggy.LCOffice"))
+                {
+                    Logger.LogMessage("LC Office Detected. Patching Elevator.");
+                }
+                if (IsDependencyLoaded("kite.ZelevatorCode"))
+                {
+                    Logger.LogMessage("Zeranos Moon Detected. Patching Elevator.");
                 }
             }
             catch (Exception e)

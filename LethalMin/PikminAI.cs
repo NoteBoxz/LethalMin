@@ -229,7 +229,7 @@ namespace LethalMin
         public bool IsWhistled;
         float KnockBackBuffer, AttackTimer;
         bool ShouldDoKBcheck;
-        float SnapToBuffer, SnapToBuffer2;
+        float SnapToBuffer2;
         public Vector3 formationTarget;
         [IDebuggable.Debug] string CurState = ""; // for DB
         public float InternalAirbornTimer;
@@ -2961,6 +2961,13 @@ namespace LethalMin
 
         private void GetItemTarget()
         {
+            // Local vars
+            List<ItemRoute> PossibleRoutes = new List<ItemRoute>();
+
+            Transform targetPos2 = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
+
+
+            // Helper functions
             float CalculatePathLength(Vector3 start, Vector3 end)
             {
                 NavMeshPath path = new NavMeshPath();
@@ -2975,11 +2982,6 @@ namespace LethalMin
                 }
                 return Vector3.Distance(start, end);
             }
-
-            List<ItemRoute> PossibleRoutes = new List<ItemRoute>();
-
-            Transform targetPos2 = previousLeader != null ? previousLeader.transform : StartOfRound.Instance.localPlayerController.transform;
-
 
             (int, EntranceTeleport) GetVaildExit()
             {
@@ -3030,9 +3032,10 @@ namespace LethalMin
             }
 
             // Ship target (outside and not in Company Building)
-            if ((isOutside || LethalMin.AllowLethalEscape)
+            if ((isOutside && PikminManager.OverriddenOutdoorTargets.Count == 0
+            || LethalMin.AllowLethalEscape && PikminManager.OverriddenIndoorTargets.Count == 0)
              && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && (!targetItem.CanBeConvertedIntoSprouts
-             || targetItem.CanBeConvertedIntoSprouts && !LethalMin.AllowProduction))
+             || targetItem.CanBeConvertedIntoSprouts && !LethalMin.AllowProduction && PikminManager.OverriddenIndoorTargets.Count == 0))
             {
                 Vector3 shipPos = GetNavmeshShipPositions()[UnityEngine.Random.Range(0, GetNavmeshShipPositions().Count)];
                 ItemRoute ShipRoute = new ItemRoute("Ship");
@@ -3053,9 +3056,10 @@ namespace LethalMin
             }
 
             // Car target
-            if ((isOutside || LethalMin.AllowLethalEscape) && LethalMin.GoToCar
+            if ((isOutside && PikminManager.OverriddenOutdoorTargets.Count == 0
+            || LethalMin.AllowLethalEscape && PikminManager.OverriddenIndoorTargets.Count == 0) && LethalMin.GoToCar
             && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && (!targetItem.CanBeConvertedIntoSprouts
-             || targetItem.CanBeConvertedIntoSprouts && !LethalMin.AllowProduction))
+             || targetItem.CanBeConvertedIntoSprouts && !LethalMin.AllowProduction && PikminManager.OverriddenIndoorTargets.Count == 0))
             {
                 GetNearestCar();
                 if (TargetCar != null && TargetCarPos != null && TargetCar.backDoorOpen && !TargetCar.magnetedToShip)
@@ -3080,8 +3084,11 @@ namespace LethalMin
             }
 
             // Onion Target
-            if (LethalMin.AllowProduction && targetItem.CanBeConvertedIntoSprouts && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" &&
-                PikminManager._currentOnions.Where(o => o.type.CanCreateSprouts).ToList().Count > 0)
+            if (LethalMin.AllowProduction && targetItem.CanBeConvertedIntoSprouts
+             && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding"
+             && PikminManager._currentOnions.Where(o => o.type.CanCreateSprouts).ToList().Count > 0
+             && (isOutside && PikminManager.OverriddenOutdoorTargets.Count == 0
+              || !isOutside && PikminManager.OverriddenIndoorTargets.Count == 0))
             {
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Targeting onion");
                 // Determine which onion the pikmin should go to.
@@ -3199,7 +3206,8 @@ namespace LethalMin
             }
 
             // Main entrance and fire exit
-            if (PikminManager.CurrentFloorData.Count == 0 && !isOutside)
+            if (PikminManager.CurrentFloorData.Count == 0 && !isOutside
+             && PikminManager.OverriddenIndoorTargets.Count == 0)
             {
                 Vector3 mainEntrancePosition = RoundManager.FindMainEntrancePosition();
                 Vector3 adjustedMainEntrancePos = GetPositionInFrontOfMainEntrance(mainEntrancePosition);
@@ -3228,7 +3236,8 @@ namespace LethalMin
             }
 
             // Multi-Floor specific targets
-            if (PikminManager.CurrentFloorData.Count > 0 && !isOutside)
+            if (PikminManager.CurrentFloorData.Count > 0 && !isOutside
+            && PikminManager.OverriddenIndoorTargets.Count == 0)
             {
                 GetFloorOn();
 
@@ -3284,6 +3293,34 @@ namespace LethalMin
                         PossibleRoutes.Add(AltRoute);
                         i4++;
                     }
+                }
+            }
+
+            // Overridden targets Outdoor
+            if (PikminManager.OverriddenOutdoorTargets.Count > 0 && isOutside)
+            {
+                int i = 0;
+                foreach (var target in PikminManager.OverriddenOutdoorTargets)
+                {
+                    ItemRoute OverridenRoute = new ItemRoute($"OverrideTarget {i}");
+                    OverridenRoute.AddPoint(target.transform.position, true);
+                    OverridenRoute.InitalDistance = CalculatePathLength(transform.position, target.transform.position);
+                    PossibleRoutes.Add(OverridenRoute);
+                    i++;
+                }
+            }
+
+            // Overridden targets Indoor
+            if (PikminManager.OverriddenIndoorTargets.Count > 0 && !isOutside)
+            {
+                int i = 0;
+                foreach (var target in PikminManager.OverriddenIndoorTargets)
+                {
+                    ItemRoute OverridenRoute = new ItemRoute($"OverrideTarget {i}");
+                    OverridenRoute.AddPoint(target.transform.position, true);
+                    OverridenRoute.InitalDistance = CalculatePathLength(transform.position, target.transform.position);
+                    PossibleRoutes.Add(OverridenRoute);
+                    i++;
                 }
             }
 
@@ -3611,6 +3648,15 @@ namespace LethalMin
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Counter");
+                    DoDrop();
+                }
+            }
+            else if (CarryingItemTo.Contains("OverrideTarget"))
+            {
+                if (HasArrivedAtDestonation(0.5f, CurRoutes[0].GetRoutePoint().Item1))
+                {
+                    if (LethalMin.DebugMode)
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at OverrideTarget");
                     DoDrop();
                 }
             }
@@ -4282,10 +4328,12 @@ namespace LethalMin
         {
             if (PlantSpeeds.Length > Plants.Length)
             {
+                LethalMin.Logger.LogWarning($"({uniqueDebugId}) PlantSpeeds array is larger than the number of plant objects. Trimming the array.");
                 PlantSpeeds = PlantSpeeds.Take(Plants.Length).ToArray();
             }
             if (PlantSpeeds.Length < Plants.Length)
             {
+                LethalMin.Logger.LogWarning($"({uniqueDebugId}) PlantSpeeds array is smaller than the number of plant objects. Resizing the array.");
                 float[] Temp = new float[Plants.Length];
                 for (int i = 0; i < PlantSpeeds.Length; i++)
                 {
@@ -4637,6 +4685,10 @@ namespace LethalMin
         public void SnapPikminToPosition(Transform Positio, bool Escapeable, bool IsLethal, float DeathTimer, bool Randomize = false)
         {
             if (currentBehaviourStateIndex == (int)PState.Leaveing || KncockedBack || !IsServer) { return; }
+            if (!LethalMin.AllowWildPToDie && !HasInteractedWithPlayers)
+            {
+                return;
+            }
             if (LethalMin.DebugMode)
                 LethalMin.Logger.LogInfo($"({uniqueDebugId}) Snaping to position ({Positio?.gameObject.name})");
             if (Positio == null)
@@ -4714,6 +4766,10 @@ namespace LethalMin
         {
             if (currentBehaviourStateIndex == (int)PState.Leaveing) { return; }
             if (LethalMin.StrudyMinValue && !IsLethal)
+            {
+                return;
+            }
+            if (!LethalMin.AllowWildPToDie && !HasInteractedWithPlayers)
             {
                 return;
             }
