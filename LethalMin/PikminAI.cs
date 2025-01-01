@@ -2744,7 +2744,7 @@ namespace LethalMin
                 }
 
                 if (item.Root.isInShipRoom && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" && !item.CanBeConvertedIntoSprouts
-                || item.Root.isInShipRoom && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding" 
+                || item.Root.isInShipRoom && RoundManager.Instance.currentLevel.sceneName != "CompanyBuilding"
                 && item.CanBeConvertedIntoSprouts && !LethalMin.AllowConvertion)
                 {
                     //if(LethalMin.DebugMode)
@@ -3818,10 +3818,16 @@ namespace LethalMin
         }
 
         [ServerRpc]
-        public void ReleaseItemServerRpc(bool SwitchStates = true)
+        public void ReleaseItemServerRpc(bool SwitchStates = true, bool BypassAllCheck = false)
         {
             if (targetItem != null)
             {
+                if (targetItem.PikminOnItemList[0] == this && !BypassAllCheck)
+                {
+                    LethalMin.Logger.LogInfo("Removing all pikmin because first pikmin is releasing the item");
+                    targetItem.RemoveAllPikminAndUnparent();
+                    return;
+                }
                 if (HasFoundGrabTarget)
                 {
                     targetItem.ReleaseGoToPosition(AssingedGoToNode.Item1.Value, AssingedGoToNode.Item2);

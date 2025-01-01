@@ -18,7 +18,7 @@ namespace LethalMin.Patches.OtherMods
             public Vector3 position;
             public Quaternion rotation;
             public PikminType type;
-            public LeaderManager leader;
+            public PlayerControllerB leader;
             public int GrowStage;
             public string Pname;
 
@@ -27,7 +27,8 @@ namespace LethalMin.Patches.OtherMods
                 position = pikmin.transform.position;
                 rotation = pikmin.transform.rotation;
                 type = pikmin.PminType;
-                leader = pikmin.currentLeader;
+                if (pikmin.currentLeader != null)
+                    leader = pikmin.currentLeader.Controller;
                 GrowStage = pikmin.GrowStage;
                 Pname = pikmin.name;
             }
@@ -72,9 +73,9 @@ namespace LethalMin.Patches.OtherMods
             PikminZone.transform.SetParent(__instance.elevatorInteriorAnimator.transform);
             PikminZone.name = "Pikmin Elevator Trigger";
             PikminZone.GetComponent<Collider>().isTrigger = true;
-            //PikminZone.GetComponent<Renderer>().material = AssetLoader.LoadAsset<Material>("Assets/LethalminAssets/Pikmin/Materials/DebugMin.mat");
             GameObject.Destroy(PikminZone.GetComponent<Renderer>());
 
+            //PikminZone.GetComponent<Renderer>().material = AssetLoader.LoadAsset<Material>("Assets/LethalminAssets/Pikmin/Materials/DebugMin.mat");
             //Visualize the elevator's coliders.
             // foreach (var item in __instance.GetComponents<BoxCollider>())
             // {
@@ -89,9 +90,9 @@ namespace LethalMin.Patches.OtherMods
             //     GameObject.Destroy(cubeA.GetComponent<Collider>());
             // }
 
-            debugWarpAction = new InputAction("DebugWarpPikmin", InputActionType.Button, "<Keyboard>/f12");
-            debugWarpAction.performed += ctx => WarpPikminToLeader();
-            debugWarpAction.Enable();
+            // debugWarpAction = new InputAction("DebugWarpPikmin", InputActionType.Button, "<Keyboard>/f12");
+            // debugWarpAction.performed += ctx => WarpPikminToLeader();
+            // debugWarpAction.Enable();
         }
 
         [HarmonyPatch("OnTriggerEnter")]
