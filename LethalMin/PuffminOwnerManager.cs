@@ -22,6 +22,7 @@ namespace LethalMin
         void Awake()
         {
             whistleSound = gameObject.AddComponent<AudioSource>();
+            whistleSound.playOnAwake = false;
             whistleSound.clip = AssetLoader.LoadAsset<AudioClip>("Assets/LethalminAssets/Whisle/Audio/maskedwhistle.wav");
             whistleSound.spatialBlend = 1f;
             whistleSound.minDistance = 5f;

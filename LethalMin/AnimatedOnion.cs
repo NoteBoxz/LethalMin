@@ -228,7 +228,7 @@ namespace LethalMin
         {
             if (StartOfRound.Instance.shipIsLeaving && !HasDecidedToLeave)
             {
-                if (PikminInField.Values.Count > 0) { return; }
+                if (PikminTargetingThisOnion > 0) { return; }
                 HasDecidedToLeave = true;
                 onionAnimator.SetTrigger("Leave");
                 transform.Find("BeamZone/Cone").gameObject.GetComponent<Animator>().Play("HideCone");

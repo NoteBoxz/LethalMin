@@ -44,7 +44,6 @@ namespace LethalMin
         #region Initialization
         public void Init()
         {
-            CreateDebugCubes();
             InitializeController();
             InitializeTrajectoryPredictor();
             LogNetworkInfo();
@@ -311,7 +310,7 @@ namespace LethalMin
             {
                 CurTypeSelectionIndex = (CurTypeSelectionIndex + 1) % AvailableTypes.Count;
                 PikminHUD.pikminHUDInstance.UpdateHUD();
-                
+
                 PikminHUD.pikminHUDInstance.HasSwaped1 = true;
             }
         }
@@ -324,7 +323,7 @@ namespace LethalMin
                 // Use the total count of available types to ensure proper wrapping
                 CurTypeSelectionIndex = (CurTypeSelectionIndex - 1 + AvailableTypes.Count) % AvailableTypes.Count;
                 PikminHUD.pikminHUDInstance.UpdateHUD();
-                
+
                 PikminHUD.pikminHUDInstance.HasSwaped2 = true;
             }
         }
@@ -438,7 +437,7 @@ namespace LethalMin
                 selectedPikmin.ThrowPikminServerRpc(throwOrigin.transform.position, cameraForward, selectedPikmin.ThrowForce, NetworkObject);
                 SetPikminComponentsForAiming(selectedPikmin, false);
                 RemovePikminServerRpc(selectedPikmin.NetworkObject);
-                
+
                 PikminHUD.pikminHUDInstance.HasThrown = true;
                 LethalMin.Logger.LogInfo($"Throw Initated.");
             }
@@ -644,72 +643,6 @@ namespace LethalMin
         #endregion
 
         #region Pikmin Management
-        private List<GameObject> debugCubes = new List<GameObject>();
-        private bool showDebugCubes = false;
-        private void CreateDebugCubes()
-        {
-            if (!showDebugCubes) { return; }
-            // Remove existing debug cubes
-            DestroyDebugCubes();
-
-            // Create new debug cubes for each formation position
-            for (int row = 0; row < 20; row++) // Assuming a maximum of 20 rows
-            {
-                for (int col = 0; col < pikminPerRow; col++)
-                {
-                    GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    cube.name = $"FormationDebugCube_R{row}_C{col}";
-                    cube.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f); // Small cube size
-
-                    // Remove collider to avoid interference
-                    Destroy(cube.GetComponent<Collider>());
-
-                    // Set material and color
-                    Renderer renderer = cube.GetComponent<Renderer>();
-                    renderer.material = AssetLoader.LoadAsset<Material>("Assets/LethalminAssets/Pikmin/Materials/DebugMin.mat");
-                    renderer.material.color = Color.yellow;
-
-                    debugCubes.Add(cube);
-                }
-            }
-        }
-
-        private void UpdateDebugCubes()
-        {
-            if (!showDebugCubes) return;
-
-            Vector3 leaderPosition = Controller.transform.position;
-            Vector3 leaderForward = Controller.transform.forward;
-            Vector3 leaderRight = Controller.transform.right;
-
-            int cubeIndex = 0;
-            for (int row = 0; row < 20; row++) // Assuming a maximum of 20 rows
-            {
-                for (int col = 0; col < pikminPerRow; col++)
-                {
-                    if (cubeIndex >= debugCubes.Count) return; // Safety check
-
-                    Vector3 position = leaderPosition
-                        - leaderForward * (row + 1) * rowSpacing
-                        + leaderRight * (col - (pikminPerRow - 1) / 2f) * columnSpacing;
-
-                    debugCubes[cubeIndex].transform.position = position;
-                    cubeIndex++;
-                }
-            }
-        }
-
-        private void DestroyDebugCubes()
-        {
-            foreach (var cube in debugCubes)
-            {
-                if (cube != null)
-                {
-                    Destroy(cube);
-                }
-            }
-            debugCubes.Clear();
-        }
         private void OrganizePikminFormation()
         {
             Vector3 leaderPosition = Controller.transform.position;
@@ -720,8 +653,10 @@ namespace LethalMin
             int currentColumn = 0;
             PikminType currentType = GetCurrentSelectedType();
 
-            // Clear and repopulate pikminByType
-            pikminByType.Clear();
+            // Use a dictionary to group Pikmin by type
+            Dictionary<PikminType, List<PikminAI>> pikminByType = new Dictionary<PikminType, List<PikminAI>>();
+
+            // Group Pikmin by type
             foreach (PikminAI pikmin in followingPikmin)
             {
                 if (!pikminByType.ContainsKey(pikmin.PminType))
@@ -732,9 +667,9 @@ namespace LethalMin
             }
 
             // Organize Pikmin of the current type first
-            if (pikminByType.ContainsKey(currentType))
+            if (pikminByType.TryGetValue(currentType, out List<PikminAI> currentTypePikmin))
             {
-                foreach (PikminAI pikmin in pikminByType[currentType])
+                foreach (PikminAI pikmin in currentTypePikmin)
                 {
                     AssignFormationPosition(pikmin, leaderPosition, leaderForward, leaderRight, ref currentRow, ref currentColumn);
                 }
@@ -758,6 +693,14 @@ namespace LethalMin
             Vector3 targetPosition = leaderPosition
                 - leaderForward * (currentRow + 1) * rowSpacing
                 + leaderRight * (currentColumn - (pikminPerRow - 1) / 2f) * columnSpacing;
+
+            // Perform a line cast to check for obstacles
+            RaycastHit hit;
+            if (Physics.Linecast(leaderPosition, targetPosition, out hit, LethalMin.Instance.PikminColideable))
+            {
+                // If there's an obstacle, set the target position to the hit point
+                targetPosition = hit.point + hit.normal * 0.1f; // Add a small offset to prevent clipping
+            }
 
             pikmin.formationTarget = targetPosition;
 

@@ -746,18 +746,17 @@ namespace LethalMin
                 // Random chance to spawn a sprout (e.g., 35% chance)
                 if (UnityEngine.Random.value <= LethalMin.OutdoorSpawnChanceValue)
                 {
-                    PikminType Type = LethalMin.GetRandomOutdoorPikminType();
-                    if (Type.SpawnsAsSprout && Type.SpawnsOutdoors)
+                    PikminType pikminType = DeterminePikminTypeOutdoor(RoundManager.Instance.currentLevel);
+                    if (pikminType.SpawnsAsSprout)
                     {
                         Transform pos2 = spawnPoint.transform;
                         GameObject SproutInstance2 = Instantiate(LethalMin.sproutPrefab, pos2.position, pos2.rotation);
                         Sprout SproteScript2 = SproutInstance2.GetComponent<Sprout>();
                         SproteScript2.NetworkObject.Spawn();
-                        PikminType pikminType = DeterminePikminType(RoundManager.Instance.currentLevel);
                         SproteScript2.InitalizeTypeClientRpc(pikminType.PikminTypeID);
                         SproteScript2.AdjustPositionClientRpc();
                     }
-                    else if (Type.SpawnsOutdoors)
+                    else
                     {
                         Transform pos = spawnPoint.transform;
                         GameObject SproutInstance = Instantiate(LethalMin.pikminPrefab, pos.position, pos.rotation);
@@ -765,7 +764,7 @@ namespace LethalMin
                         SproteScript.isOutside = false;
                         SproteScript.NetworkObject.Spawn();
                         SpawnPikminClientRpc(new NetworkObjectReference(SproteScript.NetworkObject));
-                        CreatePikminClientRPC(new NetworkObjectReference(SproteScript.NetworkObject), Type.PikminTypeID, true);
+                        CreatePikminClientRPC(new NetworkObjectReference(SproteScript.NetworkObject), pikminType.PikminTypeID, true);
                     }
                 }
             }
@@ -789,18 +788,17 @@ namespace LethalMin
                 // Random chance to spawn a sprout (e.g., 5% chance)
                 if (UnityEngine.Random.value <= LethalMin.IndoorSpawnChanceValue)
                 {
-                    PikminType Type = LethalMin.GetRandomIndoorPikminType();
-                    if (Type.SpawnsAsSprout && Type.SpawnsIndoors)
+                    PikminType pikminType = DeterminePikminTypeIndoor();
+                    if (pikminType.SpawnsAsSprout)
                     {
                         Transform pos2 = spawnPoint.transform;
                         GameObject SproutInstance2 = Instantiate(LethalMin.sproutPrefab, pos2.position, pos2.rotation);
                         Sprout SproteScript2 = SproutInstance2.GetComponent<Sprout>();
                         SproteScript2.NetworkObject.Spawn();
-                        PikminType pikminType = DeterminePikminType(RoundManager.Instance.currentLevel);
                         SproteScript2.InitalizeTypeClientRpc(pikminType.PikminTypeID);
                         SproteScript2.AdjustPositionClientRpc();
                     }
-                    else if (Type.SpawnsIndoors)
+                    else
                     {
                         Transform pos = spawnPoint.transform;
                         GameObject SproutInstance = Instantiate(LethalMin.pikminPrefab, pos.position, pos.rotation);
@@ -808,7 +806,7 @@ namespace LethalMin
                         SproteScript.isOutside = false;
                         SproteScript.NetworkObject.Spawn();
                         SpawnPikminClientRpc(new NetworkObjectReference(SproteScript.NetworkObject));
-                        CreatePikminClientRPC(new NetworkObjectReference(SproteScript.NetworkObject), Type.PikminTypeID, false);
+                        CreatePikminClientRPC(new NetworkObjectReference(SproteScript.NetworkObject), pikminType.PikminTypeID, false);
                     }
                 }
             }
@@ -842,12 +840,12 @@ namespace LethalMin
             }
         }
 
-        private PikminType DeterminePikminType(SelectableLevel level)
+        private PikminType DeterminePikminTypeOutdoor(SelectableLevel level)
         {
             Dictionary<PikminType, float> typeWeights = new Dictionary<PikminType, float>();
 
             // Initialize weights for all outdoor types
-            foreach (var type in LethalMin.SproutTypes.Values)
+            foreach (var type in LethalMin.OutdoorTypes.Values)
             {
                 if (LethalMin.AllowSpawnMultiplier)
                 {
@@ -863,7 +861,7 @@ namespace LethalMin
             bool hasFireHazards = level.OutsideEnemies.Any(e => e.enemyType.enemyName.ToLower().Contains("old birds"));
             if (hasFireHazards)
             {
-                var fireResistantTypes = LethalMin.SproutTypes.Values.Where(t => LethalMin.IsPikminResistantToHazard(t, HazardType.Fire));
+                var fireResistantTypes = LethalMin.OutdoorTypes.Values.Where(t => LethalMin.IsPikminResistantToHazard(t, HazardType.Fire));
                 foreach (var type in fireResistantTypes)
                 {
                     typeWeights[type] *= 2f; // Increase chance for fire-resistant Pikmin
@@ -875,7 +873,7 @@ namespace LethalMin
                 level.currentWeather == LevelWeatherType.Rainy || level.currentWeather == LevelWeatherType.Flooded;
             if (hasWaterHazards)
             {
-                var waterResistantTypes = LethalMin.SproutTypes.Values.Where(t => LethalMin.IsPikminResistantToHazard(t, HazardType.Water));
+                var waterResistantTypes = LethalMin.OutdoorTypes.Values.Where(t => LethalMin.IsPikminResistantToHazard(t, HazardType.Water));
                 foreach (var type in waterResistantTypes)
                 {
                     typeWeights[type] *= 2f; // Increase chance for water-resistant Pikmin
@@ -886,7 +884,7 @@ namespace LethalMin
             bool hasElectricHazards = level.currentWeather == LevelWeatherType.Stormy;
             if (hasElectricHazards)
             {
-                var electricResistantTypes = LethalMin.SproutTypes.Values.Where(t => LethalMin.IsPikminResistantToHazard(t, HazardType.Electric));
+                var electricResistantTypes = LethalMin.OutdoorTypes.Values.Where(t => LethalMin.IsPikminResistantToHazard(t, HazardType.Electric));
                 foreach (var type in electricResistantTypes)
                 {
                     typeWeights[type] *= 2f; // Increase chance for electricity-resistant Pikmin
@@ -914,6 +912,44 @@ namespace LethalMin
             return LethalMin.OutdoorTypes[UnityEngine.Random.Range(0, LethalMin.OutdoorTypes.Count)];
         }
 
+        private PikminType DeterminePikminTypeIndoor()
+        {
+            Dictionary<PikminType, float> typeWeights = new Dictionary<PikminType, float>();
+
+            // Initialize weights for all outdoor types
+            foreach (var type in LethalMin.IndoorTypes.Values)
+            {
+                if (LethalMin.AllowSpawnMultiplier)
+                {
+                    typeWeights[type] = 1f * type.SpawnChanceMultiplier;
+                }
+                else
+                {
+                    typeWeights[type] = 1f;
+                }
+            }
+
+
+            // Calculate total weight
+            float totalWeight = typeWeights.Values.Sum();
+
+            // Generate a random value
+            float randomValue = UnityEngine.Random.Range(0f, totalWeight);
+
+            // Select the Pikmin type based on the weights
+            float cumulativeWeight = 0f;
+            foreach (var kvp in typeWeights)
+            {
+                cumulativeWeight += kvp.Value;
+                if (randomValue <= cumulativeWeight)
+                {
+                    return kvp.Key;
+                }
+            }
+
+            // Fallback (should never reach here, but just in case)
+            return LethalMin.OutdoorTypes[UnityEngine.Random.Range(0, LethalMin.OutdoorTypes.Count)];
+        }
         private void CleanupExcessPikmin()
         {
             if (!IsServer) return;
@@ -1809,6 +1845,48 @@ namespace LethalMin
                 }
             }
         }
+        [ClientRpc]
+        public void DespawnPikminClientRpc(NetworkObjectReference[] networkObjectRefz)
+        {
+            if (RoundManager.Instance == null) { return; }
+            int Batch = 0;
+            foreach (NetworkObjectReference networkObjectRef in networkObjectRefz)
+            {
+                Batch++;
+                if (networkObjectRef.TryGet(out NetworkObject networkObject))
+                {
+                    PikminAI pikminAI = networkObject.GetComponent<PikminAI>();
+                    if (pikminAI != null)
+                    {
+                        if (RoundManager.Instance.SpawnedEnemies.Contains(pikminAI))
+                        {
+                            RoundManager.Instance.SpawnedEnemies.Remove(pikminAI);
+                            if (LethalMin.DebugMode)
+                            {
+                                LethalMin.Logger.LogInfo($"Removed Pikmin {pikminAI.name} from RoundManager Batch #{Batch}");
+                            }
+                        }
+                        if (IsServer)
+                            networkObject.Despawn(true);
+                    }
+                    PuffminAI puffminAI = networkObject.GetComponent<PuffminAI>();
+                    if (puffminAI != null)
+                    {
+                        if (RoundManager.Instance.SpawnedEnemies.Contains(puffminAI))
+                        {
+                            RoundManager.Instance.SpawnedEnemies.Remove(puffminAI);
+                            if (LethalMin.DebugMode)
+                            {
+                                LethalMin.Logger.LogInfo($"Removed Puffmin {puffminAI.name} from RoundManager Batch #{Batch}");
+                            }
+                        }
+                        if (IsServer)
+                            networkObject.Despawn(true);
+                    }
+                }
+            }
+        }
+
 
         [ClientRpc]
         public void SpawnPikminClientRpc(NetworkObjectReference networkObjectRef)
@@ -1842,6 +1920,44 @@ namespace LethalMin
                 }
             }
         }
+        [ClientRpc]
+        public void SpawnPikminClientRpc(NetworkObjectReference[] networkObjectRefz)
+        {
+            if (RoundManager.Instance == null) { return; }
+            int Batch = 0;
+            foreach (NetworkObjectReference networkObjectRef in networkObjectRefz)
+            {
+                Batch++;
+                if (networkObjectRef.TryGet(out NetworkObject networkObject))
+                {
+                    PikminAI pikminAI = networkObject.GetComponent<PikminAI>();
+                    if (pikminAI != null)
+                    {
+                        if (!RoundManager.Instance.SpawnedEnemies.Contains(pikminAI))
+                        {
+                            RoundManager.Instance.SpawnedEnemies.Add(pikminAI);
+                            if (LethalMin.DebugMode)
+                            {
+                                LethalMin.Logger.LogInfo($"Added Pikmin {pikminAI.name} to RoundManager Batch #{Batch}");
+                            }
+                        }
+                    }
+                    PuffminAI puffminAI = networkObject.GetComponent<PuffminAI>();
+                    if (puffminAI != null)
+                    {
+                        if (!RoundManager.Instance.SpawnedEnemies.Contains(puffminAI))
+                        {
+                            RoundManager.Instance.SpawnedEnemies.Add(puffminAI);
+                            if (LethalMin.DebugMode)
+                            {
+                                LethalMin.Logger.LogInfo($"Added Puffmin {puffminAI.name} to RoundManager Batch #{Batch}");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
 
         public float ShipPickupRange = 20f;
         public float OnionPickupRange = 20f;

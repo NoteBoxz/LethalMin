@@ -1455,28 +1455,29 @@ namespace LethalMin
                     rb.rotation = SnapToPos.rotation;
                 }
 
-                //Buffer the position
-                if (SnapToBuffer2 >= 0f)
+                if (rotationOffset != null && PositionOffset != null && RandomizedSnapTo)
                 {
-                    SnapToBuffer2 -= Time.deltaTime;
+                    rb.position = new Vector3(
+                    SnapToPos.position.x + PositionOffset.Value.x,
+                    SnapToPos.position.y + PositionOffset.Value.y,
+                    SnapToPos.position.z + PositionOffset.Value.z
+                    );
                 }
                 else
                 {
-                    if (rotationOffset != null && PositionOffset != null && RandomizedSnapTo)
-                    {
-                        rb.position = new Vector3(
-                        SnapToPos.position.x + PositionOffset.Value.x,
-                        SnapToPos.position.y + PositionOffset.Value.y,
-                        SnapToPos.position.z + PositionOffset.Value.z
-                        );
-                    }
-                    else
-                    {
-                        rb.position = SnapToPos.position;
-                    }
-
-                    SnapToBuffer2 = 0.01f;
+                    rb.position = SnapToPos.position;
                 }
+
+                // //Buffer the position
+                // if (SnapToBuffer2 >= 0f)
+                // {
+                //     SnapToBuffer2 -= Time.deltaTime;
+                // }
+                // else
+                // {
+
+                //     SnapToBuffer2 = 0.01f;
+                // }
             }
 
             if (!IsServer) { return; }
@@ -1500,7 +1501,7 @@ namespace LethalMin
                 }
             }
 
-            PminColider.SetActive(!IsDying && !FinnaBeDed && !isEnemyDead && !isHeld);
+            PminColider.SetActive(!IsDying && !FinnaBeDed && !isEnemyDead && !isHeld && !SnapToPos);
 
             HandleGrowing();
 
@@ -3822,7 +3823,7 @@ namespace LethalMin
         {
             if (targetItem != null)
             {
-                if (targetItem.PikminOnItemList[0] == this && !BypassAllCheck)
+                if (targetItem.PikminOnItemList[0] == this && targetItem.PikminOnItemList.Count > 1 && !BypassAllCheck)
                 {
                     LethalMin.Logger.LogInfo("Removing all pikmin because first pikmin is releasing the item");
                     targetItem.RemoveAllPikminAndUnparent();
@@ -5224,7 +5225,14 @@ namespace LethalMin
                 GameObject goToPoint = new GameObject($"PikminLatchPoint_{uniqueDebugId}");
                 goToPoint.transform.position = latchPosition;
                 goToPoint.transform.rotation = enemy.transform.rotation;
-                goToPoint.transform.SetParent(enemy.transform, true);
+                if (enemyMesh == null)
+                {
+                    goToPoint.transform.SetParent(enemy.transform, true);
+                }
+                else
+                {
+                    goToPoint.transform.SetParent(enemyMesh.transform, true);
+                }
                 TempObjects.Add(goToPoint);
                 KnockBackResistance = enemyRandom.Next(PminType.MinKnockBackResistance, PminType.MaxKnockBackResistance);
                 SnapPikminToPosition(goToPoint.transform, true, false, 0f);

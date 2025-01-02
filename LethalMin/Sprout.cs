@@ -43,6 +43,7 @@ namespace LethalMin
         void Start()
         {
             interactTrigger = transform.Find("InteractTrigger").GetComponent<InteractTrigger>();
+            interactTrigger.twoHandedItemAllowed = false;
             interactTrigger.onInteract.AddListener((PlayerControllerB player) => Pluck(player));
             interactTrigger.onStopInteract.AddListener((PlayerControllerB player) => PluckStop(player));
             interactTrigger.onInteractEarly.AddListener((PlayerControllerB player) => PluckAnim(player));

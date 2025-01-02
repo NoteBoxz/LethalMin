@@ -22,7 +22,7 @@ namespace LethalMin
         public List<OnionPikmin> pikminInOnion = new List<OnionPikmin>();
         protected System.Random OnionRandom;
 
-        public Dictionary<PikminAI, PikminType> PikminInField;
+        public int PikminTargetingThisOnion;
         public bool HasDecidedToLeave;
         public Transform SucPoint;
         public Transform SpiPoint;
@@ -34,7 +34,6 @@ namespace LethalMin
             OnionRandom = new System.Random(StartOfRound.Instance.randomMapSeed + type.GetInstanceID());
             pikminPrefab = LethalMin.pikminPrefab;
             SetupInteractTrigger();
-            PikminInField = new Dictionary<PikminAI, PikminType>();
             StartCoroutine(UpdateFieldCount());
         }
 
@@ -101,12 +100,12 @@ namespace LethalMin
                 {
                     yield return new WaitForSeconds(2f);
                 }
-                PikminInField.Clear();
-                PikminAI[] PikminInExistance = GameObject.FindObjectsOfType<PikminAI>();
+                PikminAI[] PikminInExistance = PikminManager.GetPikminEnemies().ToArray();
 
                 for (int i = 0; i < PikminInExistance.Length; i++)
                 {
-                    PikminInField.Add(PikminInExistance[i], PikminInExistance[i].PminType);
+                    if (PikminInExistance[i].TargetOnion == this && !PikminInExistance[i].IsLeftBehind)
+                        PikminTargetingThisOnion++;
                 }
             }
         }
@@ -171,6 +170,9 @@ namespace LethalMin
                 pikminInOnion.Remove(pikmin);
             }
 
+            NetworkObjectReference[] NetworkPikminToSpawn = new NetworkObjectReference[count];
+            int[] GrowStages = new int[count];
+            
             for (int i = 0; i < count; i++)
             {
                 if (pikminPrefab != null)
@@ -178,16 +180,9 @@ namespace LethalMin
                     GameObject pikminObj = Instantiate(pikminPrefab, spawnPosition, Quaternion.identity);
                     NetworkObject networkObject = pikminObj.GetComponent<NetworkObject>();
                     PikminAI pikminAI = pikminObj.GetComponent<PikminAI>();
-                    if (networkObject != null)
-                    {
-                        networkObject.Spawn();
-                        PikminManager.Instance.SpawnPikminClientRpc(new NetworkObjectReference(networkObject));
-                    }
-                    else
-                    {
-                        LethalMin.Logger.LogError("NetworkObject component not found on Pikmin prefab.");
-                    }
-                    CreatePikminClientRPC(new NetworkObjectReference(pikminAI.NetworkObject), refz, i, pikminToSpawn[i].GrowStage, pikminTypeId);
+                    networkObject.Spawn();
+                    NetworkPikminToSpawn[i] = new NetworkObjectReference(networkObject);
+                    GrowStages[i] = pikminToSpawn[i].GrowStage;
                 }
                 else
                 {
@@ -195,25 +190,37 @@ namespace LethalMin
                 }
             }
 
+            LethalMin.Logger.LogInfo($"Spawning {count} pikmin of type {pikminTypeId} NetworkLength: {NetworkPikminToSpawn.Length} GrowStagesLength: {GrowStages.Length}");
+            
+            PikminManager.Instance.SpawnPikminClientRpc(NetworkPikminToSpawn);
+            CreatePikminClientRPC(NetworkPikminToSpawn, refz, GrowStages, pikminTypeId);
+
             UpdatePikminListClientRpc(pikminInOnion.ToArray());
         }
 
         // Update the CreatePikminClientRPC method to handle PikminTypeID
         [ClientRpc]
-        public virtual void CreatePikminClientRPC(NetworkObjectReference network1, NetworkObjectReference network2, float delay, int growStage, int pikminTypeId)
+        public virtual void CreatePikminClientRPC(NetworkObjectReference[] networks1, NetworkObjectReference network2, int[] growStage, int pikminTypeId)
         {
-            network1.TryGet(out NetworkObject PikObj);
-            PikminAI script = PikObj.GetComponent<PikminAI>();
-            if (script == null) { return; }
             network2.TryGet(out NetworkObject PlaObj);
-            if (PlaObj.GetComponent<PlayerControllerB>() == null) { return; }
-            script.HideMeshOnStart = true;
-            script.GrowStage = growStage;
-            script.PreDefinedType = true;
-            script.PminType = LethalMin.GetPikminTypeById(pikminTypeId);
-            script.inSpecialAnimation = true;
-            script.TargetOnion = this;
-            StartCoroutine(waitForInitalizePik(PikObj.GetComponent<PikminAI>(), PlaObj.GetComponent<PlayerControllerB>(), delay));
+            PlayerControllerB playerControllerB = PlaObj.GetComponent<PlayerControllerB>();
+            if (playerControllerB == null) { return; }
+            LethalMin.Logger.LogInfo($"Creating {networks1.Length} pikmin of type {pikminTypeId}");
+            int Index = 0;
+            foreach (var network1 in networks1)
+            {
+                network1.TryGet(out NetworkObject PikObj);
+                PikminAI script = PikObj.GetComponent<PikminAI>();
+                if (script == null) { return; }
+                script.HideMeshOnStart = true;
+                script.GrowStage = growStage[Index];
+                script.PreDefinedType = true;
+                script.PminType = LethalMin.GetPikminTypeById(pikminTypeId);
+                script.inSpecialAnimation = true;
+                script.TargetOnion = this;
+                StartCoroutine(waitForInitalizePik(PikObj.GetComponent<PikminAI>(), playerControllerB, (float)Index));
+                Index++;
+            }
         }
 
         // Update the ReturnPikminToOnionServerRpc method to handle multiple Pikmin types

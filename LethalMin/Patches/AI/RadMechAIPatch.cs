@@ -12,7 +12,6 @@ namespace LethalMin.Patches.AI
     [HarmonyPatch(typeof(RadMechAI))]
     internal class RadMechAIPatch
     {
-        static Dictionary<RadMechAI, List<PikminAI>> instanceData = new Dictionary<RadMechAI, List<PikminAI>>();
         [HarmonyPatch("AttemptGrabIfClose")]
         [HarmonyPrefix]
         public static void AttemptGrabIfClosePrefix(RadMechAI __instance)
@@ -241,6 +240,30 @@ namespace LethalMin.Patches.AI
                     pikmin.UnSnapPikmin(true,false);
                 }
             }
+            if (__instance.blowtorchActivated)
+            {
+                __instance.DisableBlowtorch();
+            }
+            if (__instance.torchPlayerCoroutine != null)
+            {
+                __instance.StopCoroutine(__instance.torchPlayerCoroutine);
+            }
+        }
+
+        public static IEnumerator CancelTorchPikminAnimationAuto(RadMechAI __instance)
+        {
+            yield return new WaitForSeconds(8f);
+            __instance.inTorchPlayerAnimation = false;
+            __instance.inSpecialAnimation = false;
+            __instance.disableWalking = false;
+            __instance.attemptGrabTimer = 5f;
+            if (__instance.IsServer)
+            {
+                __instance.enabled = true;
+            }
+            __instance.creatureAnimator.SetBool("GrabSuccessful", value: false);
+            __instance.creatureAnimator.SetBool("AttemptingGrab", value: false);
+            __instance.creatureAnimator.SetBool("GrabUnsuccessful", value: false);
             if (__instance.blowtorchActivated)
             {
                 __instance.DisableBlowtorch();

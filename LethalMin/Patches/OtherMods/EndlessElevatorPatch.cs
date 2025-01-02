@@ -186,6 +186,24 @@ namespace LethalMin.Patches.OtherMods
             DontDoTriggerPatch = false;
         }
 
+        [HarmonyPatch("TeleportToInterior_ServerRpc")]
+        [HarmonyPrefix]
+        public static void TeleportToInterior_ServerRpcPatch(EndlessElevator __instance)
+        {
+            foreach (var item in __instance.playersInElevator)
+            {
+                LeaderManager lm = item.GetComponentInChildren<LeaderManager>();
+                if (lm != null)
+                {
+                    foreach (var pikmin in lm.followingPikmin)
+                    {
+                        if (pikmin == null) { continue; }
+                        pikmin.SnapPikminToPosition(null, false, false, 0, false);
+                    }
+                }
+            }
+        }
+
         public static void RespawnPikmin()
         {
             LethalMin.Logger.LogInfo($"Respawning: {PikminToSave.Count} Pikmin from elevator.");
@@ -208,6 +226,7 @@ namespace LethalMin.Patches.OtherMods
                     foreach (var pikmin in lm.followingPikmin)
                     {
                         if (pikmin == null) { continue; }
+                        pikmin.UnSnapPikmin();
                         float formerStop = pikmin.agent.stoppingDistance;
                         pikmin.agent.stoppingDistance = 0;
                         pikmin.agent.Warp(item.transform.position);
