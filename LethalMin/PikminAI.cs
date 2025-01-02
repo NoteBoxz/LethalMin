@@ -2825,7 +2825,6 @@ namespace LethalMin
         }
 
         public List<ItemRoute> CurRoutes = new List<ItemRoute>();
-        private Vector3 lastPathablePoint;
         private bool isMovingInCircles = false;
 
         private void HandleItemCarrying()
@@ -2870,19 +2869,11 @@ namespace LethalMin
                         if (CurRoutes[0].IsPathable)
                         {
                             agent.SetDestination(targetPoint);
-                            lastPathablePoint = agent.pathEndPosition;
                             isMovingInCircles = false;
                         }
                         else
                         {
-                            agent.SetDestination(targetPoint);
-                            lastPathablePoint = agent.pathEndPosition;
-
-                            if (HasArrivedAtDestonation(1f, lastPathablePoint))
-                            {
-                                isMovingInCircles = true;
-                                InitalCirclePos = lastPathablePoint;
-                            }
+                            isMovingInCircles = true;
                         }
                     }
                     if (CurRoutes[0].RouteName != "???")
