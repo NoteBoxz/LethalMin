@@ -1,9 +1,8 @@
 (0.2.x)
 
-Fix random game crashes (Not Started)
+Fix Players being rotated when in the pluck animaiton while being lifted by the tulip snakes (Not Started)
 Redo Latch On system to fix positioning issues with modded entitys and spiders (Not Started)
 Fix buggy Dynamic Positioning (Not Started)
-Fix Players being rotated when in the pluck animaiton while being lifted by the tulip snakes (Not Started)
 Fix Spawn Multipler for indoor Pikmin (Not Started)
 Fix OldBird breaking Pikmin that are on an item (Not Started)
 Test EndlessElevatorPatch on client side (Not Started)

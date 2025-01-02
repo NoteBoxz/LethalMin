@@ -483,9 +483,9 @@ namespace LethalMin
             GrabRangeConfig = Config.Bind("Pikmin", "Pikmin Grab Range", 2.5f, "The range a Pikmin can Grab an Item");
             SelectedDefultAlphaConfig = Config.Bind("HUD", "Pikmin In Group Alpha", 0f, "The Alpha or transparency of the Pikmin In Group Hud when idle (Normalized: 0 = transparent, 1 = opaque) (Will only work if the OnlyShowWhenChanged option is selected)");
             CounterDefultAlphaConfig = Config.Bind("HUD", "Pikmin Counter Alpha", 0.25f, "The Alpha or transparency of the Pikmin Counter when idle (Normalized: 0 = transparent, 1 = opaque) (Will only work if the OnlyShowWhenChanged option is selected)");
-            SquadHudBehaviorConfig = Config.Bind("HUD", "Pikmin Selected Visibilty", ElementBehavior.AlwaysShow, "The visibilty settings for the Pikmin Selected Hud");
-            CounterBehaviorConfig = Config.Bind("HUD", "Pikmin Counter Visibilty", ElementBehavior.AlwaysShow, "The visibilty settings for the Pikmin Counter");
-            PromptBehaviorConfig = Config.Bind("HUD", "Input Prompt Visibilty", ElementBehavior.AlwaysShow, "The visibilty settings for the InputPrompt above the Pikmin in group counter");
+            SquadHudBehaviorConfig = Config.Bind("HUD", "Pikmin Selected Visibilty", ElementBehavior.OnlyShowWhenChanged, "The visibilty settings for the Pikmin Selected Hud");
+            CounterBehaviorConfig = Config.Bind("HUD", "Pikmin Counter Visibilty", ElementBehavior.OnlyShowWhenChanged, "The visibilty settings for the Pikmin Counter");
+            PromptBehaviorConfig = Config.Bind("HUD", "Input Prompt Visibilty", ElementBehavior.OnlyShowWhenChanged, "The visibilty settings for the InputPrompt above the Pikmin in group counter");
             AllowWildPToDieConfig = Config.Bind("Pikmin", "Allow Wild Pikmin To Die", false, "Allows Wild Pikmin (Pikmin that has not been in a player's squad at least once since spawning in.) to die.");
             AllowCarryNoLeaderConfig = Config.Bind("Pikmin", "Allow Wild Pikmin To Carry items", false, "Allow Wild Pikmin (Pikmin that has not been in a player's squad at least once since spawning in.) To carry items.");
             AllowCarryAfterWorkConfig = Config.Bind("Pikmin", "Carry Items After Work-State", false, "Allows Pikmin to carry items again after already carrying items.");

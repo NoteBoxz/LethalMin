@@ -165,7 +165,7 @@ namespace LethalMin
                 {
                     StartCoroutine(SpawnTPZones(new Vector3(101.3612f, 15.7869f, -74.0713f), new Vector3(2.5527f, 4.6818f, 7.8745f), new Vector3(99.9956f, 2.2635f, -57.4636f)));
                 }
-                if(RoundManager.Instance.currentLevel.sceneName == "Level4March")
+                if (RoundManager.Instance.currentLevel.sceneName == "Level4March")
                 {
                     StartCoroutine(SpawnTPZones(new Vector3(125.5447f, 8.4454f, -17.235f), new Vector3(1.0982f, 0.8345f, 5.8745f), new Vector3(129.4601f, 6.4522f, -16.061f)));
                 }
@@ -918,8 +918,8 @@ namespace LethalMin
         {
             if (!IsServer) return;
 
-            PikminAI[] allPikmin = UnityEngine.Object.FindObjectsOfType<PikminAI>();
-            int excessCount = allPikmin.Length - LethalMin.MaxMinValue;
+            List<PikminAI> allPikmin = GetPikminEnemies();
+            int excessCount = allPikmin.Count - LethalMin.MaxMinValue;
 
             if (excessCount > 0)
             {
@@ -935,55 +935,14 @@ namespace LethalMin
                         PikminAI pikmin = sortedPikmin[i];
                         if (pikmin.NetworkObject != null && pikmin.NetworkObject.IsSpawned)
                         {
-                            RoundManager.Instance.DespawnEnemyOnServer(new NetworkObjectReference(pikmin.NetworkObject));
+                            RoundManager.Instance.DespawnEnemyOnServer(pikmin.NetworkObject);
                         }
                         UnityEngine.Object.Destroy(pikmin.gameObject);
                     }
                 }
             }
-            StartCoroutine(CleanupExcessPikminCoroutine());
         }
 
-        private IEnumerator CleanupExcessPikminCoroutine()
-        {
-            while (true)
-            {
-                List<PikminAI> allPikmin = GetPikminEnemies();
-                int excessCount = allPikmin.Count - LethalMin.MaxMinValue;
-
-                if (excessCount > 0)
-                {
-                    LethalMin.Logger.LogInfo($"Cleaning up {excessCount} excess Pikmin");
-
-                    // Sort Pikmin by their growth stage (assuming lower number means less mature)
-                    var sortedPikmin = allPikmin.OrderBy(p => p.GrowStage).ToList();
-
-                    for (int i = 0; i < excessCount; i++)
-                    {
-                        if (i < sortedPikmin.Count)
-                        {
-                            PikminAI pikmin = sortedPikmin[i];
-                            if (pikmin.TargetOnion != null)
-                            {
-                                // Send pikmin to its onion
-                                SendPikminToOnion(pikmin);
-                            }
-                            else
-                            {
-                                // If no onion, destroy the pikmin
-                                if (pikmin.NetworkObject != null && pikmin.NetworkObject.IsSpawned)
-                                {
-                                    DespawnPikminClientRpc(new NetworkObjectReference(pikmin.NetworkObject));
-                                }
-                                UnityEngine.Object.Destroy(pikmin.gameObject);
-                            }
-                        }
-                    }
-                }
-
-                yield return new WaitForSeconds(3f); // Wait for 1 second before next check
-            }
-        }
 
         [ClientRpc]
         public void CreatePikminClientRPC(NetworkObjectReference network1, int type, bool IsOutside)
@@ -1125,6 +1084,7 @@ namespace LethalMin
                 if (Pikmin == null) continue;
                 _nextPikminEnemies.Add(Pikmin);
             }
+            PikminManager.Instance.CleanupExcessPikmin();
         }
         public static void RefreshOnionsList()
         {
