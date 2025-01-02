@@ -1,5 +1,6 @@
 (0.2.x)
 
+Fix random game crashes (Not Started)
 Redo Latch On system to fix positioning issues with modded entitys and spiders (Not Started)
 Fix buggy Dynamic Positioning (Not Started)
 Fix Players being rotated when in the pluck animaiton while being lifted by the tulip snakes (Not Started)

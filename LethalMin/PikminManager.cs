@@ -948,8 +948,8 @@ namespace LethalMin
         {
             while (true)
             {
-                PikminAI[] allPikmin = UnityEngine.Object.FindObjectsOfType<PikminAI>();
-                int excessCount = allPikmin.Length - LethalMin.MaxMinValue; ;
+                List<PikminAI> allPikmin = GetPikminEnemies();
+                int excessCount = allPikmin.Count - LethalMin.MaxMinValue;
 
                 if (excessCount > 0)
                 {
