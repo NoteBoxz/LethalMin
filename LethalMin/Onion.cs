@@ -101,12 +101,15 @@ namespace LethalMin
                     yield return new WaitForSeconds(2f);
                 }
                 PikminAI[] PikminInExistance = PikminManager.GetPikminEnemies().ToArray();
-
+                int PikminCount = 0;
                 for (int i = 0; i < PikminInExistance.Length; i++)
                 {
                     if (PikminInExistance[i].TargetOnion == this && !PikminInExistance[i].IsLeftBehind)
-                        PikminTargetingThisOnion++;
+                    {
+                        PikminCount++;
+                    }
                 }
+                PikminTargetingThisOnion = PikminCount;
             }
         }
 
