@@ -1,5 +1,6 @@
 (0.2.x)
 
+Reduce Lag when withdrawing Pikmin from onion (Not Started)
 Fix Players being rotated when in the pluck animaiton while being lifted by the tulip snakes (Not Started)
 Redo Latch On system to fix positioning issues with modded entitys and spiders (Not Started)
 Fix buggy Dynamic Positioning (Not Started)
@@ -7,8 +8,6 @@ Fix Spawn Multipler for indoor Pikmin (Not Started)
 Fix OldBird breaking Pikmin that are on an item (Not Started)
 Test EndlessElevatorPatch on client side (Not Started)
 Add in late company support (Not Started)
-Fix bug that causes whistle items to not be buyable (Unable to replicate)
-Fix bug that causes the whistle to break when Remnants is installed. (Unfixable)
 
 Add telport trigger/system for Offence and Assurance's fire exits (Done)
 Make Pikmin carry bodies out of the ship to the onion (done)
@@ -22,6 +21,9 @@ Make Onions visible from ship windows mod (Done)
 Fix item holding bug with pluck animation. (done)
 Add in Zap death Animation (done)
 Allow Pikmin to "LethalEscape" when carrying items. (Done)
+
+Fix bug that causes whistle items to not be buyable (Unable to replicate)
+Fix bug that causes the whistle to break when Remnants is installed. (Unfixable)
 
 (0.3.x)
 
