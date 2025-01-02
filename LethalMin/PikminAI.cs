@@ -2711,8 +2711,7 @@ namespace LethalMin
                 if (item == null)
                 {
                     if (LethalMin.DebugMode)
-                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) Removing null item at index {i}");
-                    PikminManager.GetPikminItemsInMap().RemoveAt(i--);
+                        LethalMin.Logger.LogInfo($"({uniqueDebugId}) null item at index {i}!");
                     continue;
                 }
 

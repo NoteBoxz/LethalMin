@@ -204,6 +204,14 @@ namespace LethalMin.Patches
                 }
             }
 
+            if (LethalMin.MCHideResults && LethalMin.IsDependencyLoaded("me.swipez.melonloader.morecompany"))
+            {
+                PminPlayerSlot1.SetActive(false);
+                PminPlayerSlot2.SetActive(false);
+                PminPlayerSlot3.SetActive(false);
+                PminPlayerSlot4.SetActive(false);
+            }
+
             // Store current counts for next round comparison
             LethalMin.PreviousRoundPikminCounts.Clear();
             foreach (Onion onion in onions)

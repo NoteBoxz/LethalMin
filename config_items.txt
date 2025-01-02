@@ -1,0 +1,11 @@
+[
+  {
+    "type": "bool",
+    "InternalName": "MCHideResults",
+    "defultVal": "true",
+    "name": "Hide Pikmin Stats when MC is installed",
+    "section": "HUD",
+    "description": "Hides the Pikmin Raised boxes if \"More Campany\" is installed to prevent the boxes from overlapping names.",
+    "NeedsRestart": false
+  }
+]
