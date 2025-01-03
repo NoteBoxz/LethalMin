@@ -2824,7 +2824,7 @@ namespace LethalMin
             }
         }
 
-        public List<ItemRoute> CurRoutes = new List<ItemRoute>();
+        [IDebuggable.Debug] public List<ItemRoute> CurRoutes = new List<ItemRoute>();
         private bool isMovingInCircles = false;
 
         private void HandleItemCarrying()
@@ -3407,18 +3407,9 @@ namespace LethalMin
                             ItemRoute ElevateRoute = new ItemRoute($"Elevator (No Outside Route)");
                             ElevateRoute.AddPoint(FloorOn.Elevators[0].transform.position, false);
                             ElevateRoute.InitalDistance = CalculatePathLength(transform.position, FloorOn.Elevators[0].transform.position);
-
-                            if (PossibleRoutes.Count > 1)
-                            {
-                                PossibleRoutes.Insert(0, ElevateRoute);
-                            }
-                            else
-                            {
-                                PossibleRoutes.Add(ElevateRoute);
-                            }
-
-                            CurRoutes = PossibleRoutes;
-                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Adding Elevator route to the {(PossibleRoutes.Count > 1 ? "start" : "end")} of the list");
+                            ElevateRoute.IsPathable = true;
+                            CurRoutes.Insert(0, ElevateRoute);
+                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Adding Elevator route to the {(CurRoutes.Count > 1 ? "start" : "end")} of the list");
                         }
                         else
                         {

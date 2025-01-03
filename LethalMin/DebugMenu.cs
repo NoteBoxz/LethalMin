@@ -208,18 +208,47 @@ namespace LethalMin
             if (enumerable == null) return;
 
             int index = 0;
-            foreach (var item in enumerable)
-            {
-                GUI.Label(new Rect(20, classYOffset, width - 100, 20), $"[{index}]: {item?.ToString() ?? "null"}");
-                classYOffset += 25;
-                index++;
+            bool isItemRouteList = enumerable.GetType().IsGenericType &&
+                                   enumerable.GetType().GetGenericTypeDefinition() == typeof(List<>) &&
+                                   enumerable.GetType().GetGenericArguments()[0] == typeof(ItemRoute);
 
-                // Limit the number of items displayed to prevent overwhelming the UI
-                if (index >= 10)
+            if (isItemRouteList)
+            {
+                GUI.Label(new Rect(20, classYOffset, width - 100, 20), "ItemRoutes:");
+                classYOffset += 25;
+
+                foreach (var item in enumerable)
                 {
-                    GUI.Label(new Rect(20, classYOffset, width - 100, 20), "...");
+                    if (item is ItemRoute itemRoute)
+                    {
+                        GUI.Label(new Rect(30, classYOffset, width - 110, 20), itemRoute.RouteName);
+                        classYOffset += 25;
+                    }
+
+                    index++;
+                    if (index >= 10)
+                    {
+                        GUI.Label(new Rect(30, classYOffset, width - 110, 20), "...");
+                        classYOffset += 25;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                // Existing code for other types of lists/arrays
+                foreach (var item in enumerable)
+                {
+                    GUI.Label(new Rect(20, classYOffset, width - 100, 20), $"[{index}]: {item?.ToString() ?? "null"}");
                     classYOffset += 25;
-                    break;
+                    index++;
+
+                    if (index >= 10)
+                    {
+                        GUI.Label(new Rect(20, classYOffset, width - 100, 20), "...");
+                        classYOffset += 25;
+                        break;
+                    }
                 }
             }
         }
