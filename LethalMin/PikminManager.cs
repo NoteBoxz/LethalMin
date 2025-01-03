@@ -374,20 +374,20 @@ namespace LethalMin
                     .FirstOrDefault();
             }
 
-            Dictionary<FloorData, EntranceTeleport> FireExitsWithFloorData = new Dictionary<FloorData, EntranceTeleport>();
+            Dictionary<EntranceTeleport, FloorData> FireExitsWithFloorData = new Dictionary<EntranceTeleport, FloorData>();
             foreach (EntranceTeleport exit in FindFireExits())
             {
                 FloorData floorData = DetermineFloor(exit.gameObject);
                 if (floorData != null)
                 {
-                    FireExitsWithFloorData.Add(floorData, exit);
+                    FireExitsWithFloorData.Add(exit, floorData);
                 }
             }
 
-            foreach (KeyValuePair<FloorData, EntranceTeleport> kvp in FireExitsWithFloorData)
+            foreach (KeyValuePair<EntranceTeleport, FloorData> kvp in FireExitsWithFloorData)
             {
-                FloorData floorData = kvp.Key;
-                EntranceTeleport exit = kvp.Value;
+                EntranceTeleport exit = kvp.Key;
+                FloorData floorData = kvp.Value;
 
                 foreach (var floor in CurrentFloorData)
                 {

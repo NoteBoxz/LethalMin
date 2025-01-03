@@ -310,6 +310,8 @@ namespace LethalMin
         {
             if (IsThrown && IsThrown)
             {
+                if (!IsServer)
+                    return;
                 LethalMin.Logger.LogInfo("{DebugID} landed");
                 SetTriggerClientRpc("Land");
                 agent.Warp(rb.position);
@@ -327,6 +329,8 @@ namespace LethalMin
             {
                 if (other.GetComponent<MaskedPlayerEnemy>() != null)
                     return;
+                if (!IsServer)
+                    return;
                 LethalMin.Logger.LogInfo($"{DebugID} landed on player {other.name}");
                 IsThrown = false;
                 IsHeld = false;
@@ -334,6 +338,10 @@ namespace LethalMin
                 agent.Warp(rb.position);
                 ToggleColisionMode(false);
                 SyncPlayerLatchedOnClientRpc(other.GetComponent<PlayerControllerB>().NetworkObject);
+                if (other.gameObject.GetComponent<NetworkObject>() != null)
+                {
+                    LatchPuffminToPositionClientRpc(other.gameObject.GetComponent<NetworkObject>(), other.transform.position, other.transform.rotation, true, true);
+                }
                 LatchPuffminToPosition(other.transform, true, true);
                 SwitchToBehaviourClientRpc((int)PuffState.attacking);
             }
@@ -404,21 +412,56 @@ namespace LethalMin
             GameObject LatchPoint = new GameObject("LatchPoint");
             LatchPoint.transform.position = transform.position;
             LatchPoint.transform.rotation = transform.rotation;
-            LatchPoint.transform.LookAt(PlayerLatchedOn.gameplayCamera.transform);
-            LatchPoint.transform.SetParent(BaseParent);
+            if (PlayerLatchedOn != null)
+                LatchPoint.transform.LookAt(PlayerLatchedOn.gameplayCamera.transform);
+            LatchPoint.transform.SetParent(BaseParent, true);
+
             //Set the puffmin's parent to the LatchPoint
             CurTempLatchPoint = LatchPoint.transform;
             SnapTopPos = LatchPoint.transform;
             WigglesNeeded = enemyRandom.Next(15, 60);
         }
+        [ClientRpc]
+        public void LatchPuffminToPositionClientRpc(NetworkObjectReference BaseParentRef, Vector3 Position, Quaternion Rotaion, bool IsLethal, bool IsEscapeable)
+        {
+            if (IsServer)
+            {
+                return;
+            }
+            LethalMin.Logger.LogInfo("Got Latch Position");
+            BaseParentRef.TryGet(out NetworkObject BaseParentNO);
+            Transform BaseParent = BaseParentNO.transform;
+            //Create a new LatchToPoint Gameobject
+            GameObject LatchPoint = new GameObject("LatchPoint");
+            LatchPoint.transform.position = Position;
+            LatchPoint.transform.rotation = Rotaion;
+            if (PlayerLatchedOn != null)
+                LatchPoint.transform.LookAt(PlayerLatchedOn.gameplayCamera.transform);
+            LatchPoint.transform.SetParent(BaseParent, true);
+
+            //Set the puffmin's parent to the LatchPoint
+            CurTempLatchPoint = LatchPoint.transform;
+            SnapTopPos = LatchPoint.transform;
+        }
         public void UnLatchPuffminToPosition()
         {
             if (CurTempLatchPoint != null && SnapTopPos == CurTempLatchPoint)
             {
+                if (SnapTopPos.parent != null && SnapTopPos.parent.GetComponent<NetworkObject>() != null)
+                {
+                    SyncUnLatchPuffminToPositionClientRpc();
+                }
                 SnapTopPos = null!;
                 Destroy(CurTempLatchPoint.gameObject);
                 SyncPlayerLatchedOnClientRpc();
             }
+        }
+        [ClientRpc]
+        public void SyncUnLatchPuffminToPositionClientRpc()
+        {
+            LethalMin.Logger.LogInfo("Unlatching Puffmin");
+            SnapTopPos = null!;
+            Destroy(CurTempLatchPoint.gameObject);
         }
         private IEnumerator SetOnCooldown()
         {
@@ -434,6 +477,16 @@ namespace LethalMin
             base.Update();
             if (!IsServer)
             {
+                if (SnapTopPos != null)
+                {
+                    transform2.enabled = false;
+                    transform.position = SnapTopPos.position;
+                    transform.rotation = SnapTopPos.rotation;
+                }
+                else
+                {
+                    transform2.enabled = true;
+                }
                 return;
             }
             if (SnapTopPos != null)
@@ -463,10 +516,21 @@ namespace LethalMin
                 return;
             }
             CheckIfOnNavMesh();
+            if (PlayerLatchedOn != null && PlayerLatchedOn.isPlayerDead
+            || PlayerLatchedOn != null && !PlayerLatchedOn.isPlayerControlled)
+            {
+                Vector3 KnockbackForce = (transform.position - PlayerLatchedOn.transform.position).normalized;
+                PrevOwnerAI = null;
+                UnLatchPuffminToPosition();
+                StartCoroutine(SetOnCooldown());
+                ApplyKnockbackServerRpc(KnockbackForce, false, false, 3);
+                LethalMin.Logger.LogInfo($"{DebugID}'s Player Latched On died or is not player controlled");
+                PlayerLatchedOn = null!;
+            }
             if (PlayerLatchedOn != null)
             {
                 DetectWiggle();
-                if (Vector3.Distance(PlayerLatchedOn.transform.position, transform.position) > 10)
+                if (Vector3.Distance(PlayerLatchedOn.transform.position, transform.position) > 10 || PlayerLatchedOn.isInsideFactory != !isOutside)
                 {
                     Vector3 KnockbackForce = (transform.position - PlayerLatchedOn.transform.position).normalized;
                     PrevOwnerAI = null;

@@ -1,7 +1,6 @@
 (0.2.x)
 
 Test Fixes On Client Side (Not Started)
-Add in late company support (Not Started)
 
 Fix buggy Dynamic Positioning (Done)
 Fix OldBird breaking Pikmin that are on an item (Done)
@@ -24,6 +23,7 @@ Allow Pikmin to "LethalEscape" when carrying items. (Done)
 Fix Players being rotated when in the pluck animaiton while being lifted by the tulip snakes (Unable to replicate)
 Fix bug that causes whistle items to not be buyable (Unable to replicate)
 Fix bug that causes the whistle to break when Remnants is installed. (Unfixable)
+Add in late company support (Unable to)
 
 (0.3.x)
 

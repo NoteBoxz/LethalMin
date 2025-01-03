@@ -229,7 +229,7 @@ namespace LethalMin
         public bool IsWhistled;
         float KnockBackBuffer, AttackTimer;
         bool ShouldDoKBcheck;
-        float SnapToBuffer2;
+        //float SnapToBuffer2;
         public Vector3 formationTarget;
         [IDebuggable.Debug] string CurState = ""; // for DB
         public float InternalAirbornTimer;
@@ -2988,15 +2988,6 @@ namespace LethalMin
                 if (result == (-1, null))
                 {
                     LethalMin.Logger.LogWarning($"({uniqueDebugId}) No pathable exits found");
-                    for (int i = 0; i < PossibleRoutes.Count; i++)
-                    {
-                        if (PossibleRoutes[i].entranceTeleport != null)
-                        {
-                            result = (i, PossibleRoutes[i].entranceTeleport);
-                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Found valid exit at {i} {PossibleRoutes[i].RouteName}");
-                            break;
-                        }
-                    }
                 }
                 return result;
             }
@@ -3417,6 +3408,11 @@ namespace LethalMin
                             ElevateRoute.InitalDistance = CalculatePathLength(transform.position, FloorOn.Elevators[0].transform.position);
                             PossibleRoutes.Add(ElevateRoute);
                             LethalMin.Logger.LogInfo($"({uniqueDebugId}) Defulting to Elevator route");
+                        }
+                        else
+                        {
+                            LethalMin.Logger.LogWarning($"({uniqueDebugId}) No exit point for this route, Skipping");
+                            continue;
                         }
                     }
                     else
