@@ -1,6 +1,7 @@
 using UnityEngine;
 using Unity.Netcode;
 using System;
+using System.Collections.Generic;
 namespace LethalMin
 {
     [CreateAssetMenu(menuName = "LethalMin/PikminType", order = 1)]
@@ -141,6 +142,15 @@ namespace LethalMin
 
         [Tooltip("Whether the pikmin uses a pikmin container")]
         public bool UsesPikminContainer;
+        [Tooltip("The pikmin's favord moons, the pikmin will have a higher chance of spawning on these moons.")]
+        public List<string> FavoredMoons = new List<string>();
+        [Tooltip("The Pikmin's favored moon tags, the pikmin will have a higher chance of spawning on moons with these Lethal level Loader tags.")]
+        public List<string> FavoredMoonTags = new List<string>();
+
+        [Tooltip("Moon Names that Pikmin will avoid spawning on.")]
+        public List<string> AvoidMoons = new List<string>();
+        [Tooltip("The Pikmin's favored moon tags, the pikmin will have a lower chance of spawning on moons with these Lethal level Loader tags.")]
+        public List<string> AvoidMoonTags = new List<string>();
 
         [Header("Other")]
         [Tooltip("Generates a configuration file for the pikmin type")]

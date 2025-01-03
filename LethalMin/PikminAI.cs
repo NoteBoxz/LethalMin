@@ -3417,6 +3417,7 @@ namespace LethalMin
                                 PossibleRoutes.Add(ElevateRoute);
                             }
 
+                            CurRoutes = PossibleRoutes;
                             LethalMin.Logger.LogInfo($"({uniqueDebugId}) Adding Elevator route to the {(PossibleRoutes.Count > 1 ? "start" : "end")} of the list");
                         }
                         else
