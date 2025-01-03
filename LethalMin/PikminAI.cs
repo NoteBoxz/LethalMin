@@ -176,6 +176,7 @@ namespace LethalMin
         public Animator LocalAnim;
         public AudioSource LocalSFX;
         public AudioSource LocalVoice;
+        public OccludeAudio LocalOccludeSFX, LocalOccludeVoice;
         [IDebuggable.Debug] public Onion TargetOnion;
         public bool HasInitalized;
         public float itemDetectionRange = 5f;
@@ -3406,8 +3407,17 @@ namespace LethalMin
                             ItemRoute ElevateRoute = new ItemRoute($"Elevator (No Outside Route)");
                             ElevateRoute.AddPoint(FloorOn.Elevators[0].transform.position, false);
                             ElevateRoute.InitalDistance = CalculatePathLength(transform.position, FloorOn.Elevators[0].transform.position);
-                            PossibleRoutes.Add(ElevateRoute);
-                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Defulting to Elevator route");
+
+                            if (PossibleRoutes.Count > 1)
+                            {
+                                PossibleRoutes.Insert(0, ElevateRoute);
+                            }
+                            else
+                            {
+                                PossibleRoutes.Add(ElevateRoute);
+                            }
+
+                            LethalMin.Logger.LogInfo($"({uniqueDebugId}) Adding Elevator route to the {(PossibleRoutes.Count > 1 ? "start" : "end")} of the list");
                         }
                         else
                         {
@@ -3888,7 +3898,9 @@ namespace LethalMin
             transform.rotation = throwRotation;
 
             if (IsServer)
+            {
                 transform2.Teleport(startPos, throwRotation, transform.localScale);
+            }
 
             //Disable the agent
             agent.updatePosition = false;
@@ -4226,6 +4238,47 @@ namespace LethalMin
             else
             {
                 PlaySFX(ref PminType.soundPack.CoughVoiceLine);
+            }
+        }
+
+        [ClientRpc]
+        public void AutoRecalculateOcclusionClientRpc()
+        {
+            ForceOcclusion(LocalOccludeSFX);
+            ForceOcclusion(LocalOccludeVoice);
+        }
+
+        void ForceOcclusion(OccludeAudio occ)
+        {
+            if (occ == null) { return; }
+            if (StartOfRound.Instance != null)
+            {
+                LethalMin.Logger.LogInfo($"Recalcuateing Occlusion: {occ.lowPassFilter.cutoffFrequency}");
+                // Reset check interval
+                occ.checkInterval = 0f;
+
+                // Immediately update occlusion state
+                if (Vector3.Distance(transform.position, StartOfRound.Instance.audioListener.transform.position) < Mathf.Min(occ.thisAudio.maxDistance, 110f))
+                {
+                    occ.occluded = Physics.Linecast(transform.position,
+                        StartOfRound.Instance.audioListener.transform.position,
+                        256, QueryTriggerInteraction.Ignore);
+
+                    // Immediately update filter values
+                    if (!occ.overridingLowPass)
+                    {
+                        if (occ.occluded)
+                        {
+                            float distance = Vector3.Distance(StartOfRound.Instance.audioListener.transform.position, transform.position);
+                            occ.lowPassFilter.cutoffFrequency = Mathf.Clamp(2500f / (distance / (occ.thisAudio.maxDistance / 2f)), 900f, 4000f);
+                        }
+                        else
+                        {
+                            occ.lowPassFilter.cutoffFrequency = 10000f;
+                        }
+                    }
+                }
+                LethalMin.Logger.LogInfo($"Recalculated Occlusion: {occ.lowPassFilter.cutoffFrequency}");
             }
         }
 
