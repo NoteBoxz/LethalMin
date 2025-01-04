@@ -101,7 +101,7 @@ namespace LethalMin
 
         public static bool IsUsingModLib()
         {
-            return IsDependencyLoaded("MaxWasUnavailable.LethalModDataLib");
+            return IsDependencyLoaded("MaxWasUnavailable.LethalModDataLib") && UseEZSave;
         }
 
         public static bool IsUsingInputUtils()
@@ -230,6 +230,7 @@ namespace LethalMin
         public static float ShipPhaseOnionX, ShipPhaseOnionY, ShipPhaseOnionZ;
         //Generated Useable Varibles GoES HERE
 
+        public static bool UseEZSave;
         public static bool MCHideResults;
         public static float GrabRange;
         public static float SelectedDefultAlpha;
@@ -279,6 +280,7 @@ namespace LethalMin
 
         //Generated Config Varibles GoES HERE
 
+        public static ConfigEntry<bool> UseEZSaveConfig;
         public static ConfigEntry<bool> MCHideResultsConfig;
         public static ConfigEntry<float> GrabRangeConfig;
         public static ConfigEntry<float> SelectedDefultAlphaConfig;
@@ -482,6 +484,7 @@ namespace LethalMin
 
             //Generated ConfigBindings goes here
 
+            UseEZSaveConfig = Config.Bind("Extra", "Use Save Lib", true, "Use the LethalModDataLib save data system if it is installed.");
             MCHideResultsConfig = Config.Bind("HUD", "Hide Pikmin Stats when MC is installed", true, "Hides the Pikmin Raised boxes if More Campany is installed to prevent the boxes from overlapping names.");
             GrabRangeConfig = Config.Bind("Pikmin", "Pikmin Grab Range", 2.5f, "The range a Pikmin can Grab an Item");
             SelectedDefultAlphaConfig = Config.Bind("HUD", "Pikmin In Group Alpha", 0f, "The Alpha or transparency of the Pikmin In Group Hud when idle (Normalized: 0 = transparent, 1 = opaque) (Will only work if the OnlyShowWhenChanged option is selected)");
@@ -635,6 +638,7 @@ namespace LethalMin
 
             //Generated Settings Valuse Goes Here
 
+            UseEZSave = UseEZSaveConfig.Value;
             MCHideResults = MCHideResultsConfig.Value;
             GrabRange = GrabRangeConfig.Value;
             SelectedDefultAlpha = SelectedDefultAlphaConfig.Value;
@@ -797,6 +801,7 @@ namespace LethalMin
 
             //Generated Settings Events Goes here
 
+            UseEZSaveConfig.SettingChanged += (_, _) => UseEZSave = UseEZSaveConfig.Value;
             MCHideResultsConfig.SettingChanged += (_, _) => MCHideResults = MCHideResultsConfig.Value;
             GrabRangeConfig.SettingChanged += (_, _) => GrabRange = GrabRangeConfig.Value;
             SelectedDefultAlphaConfig.SettingChanged += (_, _) => SelectedDefultAlpha = SelectedDefultAlphaConfig.Value;
@@ -987,6 +992,7 @@ namespace LethalMin
 
             //Generated LC bindings goes here
 
+            LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(UseEZSaveConfig, false));
             LethalConfigManager.AddConfigItem(new BoolCheckBoxConfigItem(MCHideResultsConfig, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(GrabRangeConfig, false));
             LethalConfigManager.AddConfigItem(new FloatInputFieldConfigItem(SelectedDefultAlphaConfig, false));

@@ -355,7 +355,7 @@ namespace LethalMin
                 GameObject actualSprout = Instantiate(LethalMin.sproutPrefab, sprout.transform.position, sprout.transform.rotation);
                 Sprout sproutScript = actualSprout.GetComponent<Sprout>();
 
-                //sproutScript.IsSaved = true;
+                sproutScript.IsSaved = true;
                 sproutScript.NetworkObject.Spawn();
                 sproutScript.InitalizeTypeClientRpc(pikminType.PikminTypeID);
             }

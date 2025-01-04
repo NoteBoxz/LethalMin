@@ -1633,31 +1633,31 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo($"Pikmin left: {newSaveData.PikminLeftLastRound} Onion: {onion.GetPikminCount()}");
             }
 
-            Sprout[] sprouts = FindObjectsOfType<Sprout>();
+            // Sprout[] sprouts = FindObjectsOfType<Sprout>();
             
-            // Add existing sprouts to newSaveData
-            foreach (SproutData Sdata in existingSaveData.Sprouts)
-            {
-                if (Sdata.SceneName != RoundManager.Instance.currentLevel.sceneName)
-                {
-                    newSaveData.Sprouts.Add(Sdata);
-                }
-            }
+            // // Add existing sprouts to newSaveData
+            // foreach (SproutData Sdata in existingSaveData.Sprouts)
+            // {
+            //     if (Sdata.SceneName != RoundManager.Instance.currentLevel.sceneName)
+            //     {
+            //         newSaveData.Sprouts.Add(Sdata);
+            //     }
+            // }
 
-            // Save Sprout data
-            foreach (Sprout sprout in sprouts)
-            {
-                if (sprout.IsSaved)
-                {
-                    SproutData sproutData = new SproutData();
-                    sproutData.GrowStage = 0;
-                    sproutData.SceneName = RoundManager.Instance.currentLevel.sceneName;
-                    sproutData.Position = sprout.transform.position;
-                    sproutData.Rotation = sprout.transform.rotation;
-                    sproutData.PikminTypeID = sprout.PminType.PikminTypeID;
-                    newSaveData.Sprouts.Add(sproutData);
-                }
-            }
+            // // Save Sprout data
+            // foreach (Sprout sprout in sprouts)
+            // {
+            //     if (sprout.IsSaved)
+            //     {
+            //         SproutData sproutData = new SproutData();
+            //         sproutData.GrowStage = 0;
+            //         sproutData.SceneName = RoundManager.Instance.currentLevel.sceneName;
+            //         sproutData.Position = new SerializableVector3(sprout.transform.position);
+            //         sproutData.Rotation = new SerializableQuaternion(sprout.transform.rotation);
+            //         sproutData.PikminTypeID = sprout.PminType.PikminTypeID;
+            //         newSaveData.Sprouts.Add(sproutData);
+            //     }
+            // }
 
             string json = JsonConvert.SerializeObject(newSaveData);
             File.WriteAllText(SaveFilePath, json);
@@ -1731,31 +1731,31 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo($"Pikmin left: {newSaveData.PikminLeftLastRound} Onion: {onion.GetPikminCount()}");
             }
 
-            Sprout[] sprouts = FindObjectsOfType<Sprout>();
+            // Sprout[] sprouts = FindObjectsOfType<Sprout>();
 
-            // Add existing sprouts to newSaveData
-            foreach (SproutData Sdata in existingSaveData.Sprouts)
-            {
-                if (Sdata.SceneName != RoundManager.Instance.currentLevel.sceneName)
-                {
-                    newSaveData.Sprouts.Add(Sdata);
-                }
-            }
+            // // Add existing sprouts to newSaveData
+            // foreach (SproutData Sdata in existingSaveData.Sprouts)
+            // {
+            //     if (Sdata.SceneName != RoundManager.Instance.currentLevel.sceneName)
+            //     {
+            //         newSaveData.Sprouts.Add(Sdata);
+            //     }
+            // }
 
-            // Save Sprout data
-            foreach (Sprout sprout in sprouts)
-            {
-                if (sprout.IsSaved)
-                {
-                    SproutData sproutData = new SproutData();
-                    sproutData.GrowStage = 0;
-                    sproutData.SceneName = RoundManager.Instance.currentLevel.sceneName;
-                    sproutData.Position = sprout.transform.position;
-                    sproutData.Rotation = sprout.transform.rotation;
-                    sproutData.PikminTypeID = sprout.PminType.PikminTypeID;
-                    newSaveData.Sprouts.Add(sproutData);
-                }
-            }
+            // // Save Sprout data
+            // foreach (Sprout sprout in sprouts)
+            // {
+            //     if (sprout.IsSaved)
+            //     {
+            //         SproutData sproutData = new SproutData();
+            //         sproutData.GrowStage = 0;
+            //         sproutData.SceneName = RoundManager.Instance.currentLevel.sceneName;
+            //         sproutData.Position = new SerializableVector3(sprout.transform.position);
+            //         sproutData.Rotation = new SerializableQuaternion(sprout.transform.rotation);
+            //         sproutData.PikminTypeID = sprout.PminType.PikminTypeID;
+            //         newSaveData.Sprouts.Add(sproutData);
+            //     }
+            // }
 
             LethalMin.Logger.LogInfo($"IsStoredNull = {newSaveData.PikminStored == null}");
             

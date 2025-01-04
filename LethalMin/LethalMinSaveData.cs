@@ -237,19 +237,55 @@ namespace LethalMin
     {
         public int GrowStage; // 0 for sprout, 1 for bud, 2 for flower
         public int PikminTypeID; // Add this field
-        public Vector3 Position;
-        public Quaternion Rotation;
+        public SerializableVector3 Position;
+        public SerializableQuaternion Rotation;
         public string SceneName;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref GrowStage);
             serializer.SerializeValue(ref PikminTypeID); // Serialize the PikminTypeID
-            serializer.SerializeValue(ref Position);
-            serializer.SerializeValue(ref Rotation);
             serializer.SerializeValue(ref SceneName);
         }
     }
 
+    public class SerializableVector3
+    {
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Z { get; set; }
 
+        public SerializableVector3(Vector3 vector)
+        {
+            X = vector.x;
+            Y = vector.y;
+            Z = vector.z;
+        }
+
+        public Vector3 ToVector3()
+        {
+            return new Vector3(X, Y, Z);
+        }
+    }
+
+    public class SerializableQuaternion
+    {
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Z { get; set; }
+        public float W { get; set; }
+
+        public SerializableQuaternion(Quaternion quaternion)
+        {
+            X = quaternion.x;
+            Y = quaternion.y;
+            Z = quaternion.z;
+            W = quaternion.w;
+        }
+
+        public Quaternion ToQuaternion()
+        {
+            return new Quaternion(X, Y, Z, W);
+        }
+    }
 }
