@@ -79,7 +79,6 @@ namespace LethalMin.Patches
             if (NetworkManager.Singleton.IsServer)
                 PikminManager.Instance.SyncEndgameDataServerRpc();
 
-            PikminManager.Instance.DespawnSprouts();
             PikminManager.Instance.RemoveAllRadiuses();
             PikminManager.CurrentFloorData.Clear();
             PikminManager.DefultFloorData = null;
@@ -103,6 +102,7 @@ namespace LethalMin.Patches
             {
                 PikminManager.Instance.SaveOnionData();
             }
+            PikminManager.Instance.StartCoroutine(PikminManager.Instance.DespawnSprouts());
             PikminManager.Instance.StartCoroutine(PikminManager.Instance.DespawnOnions());
             GameObject.FindAnyObjectByType<PikminHUD>().UpdateHUD();
             if (!NetworkManager.Singleton.IsServer) { return; }

@@ -16,6 +16,7 @@ namespace LethalMin
         private InteractTrigger interactTrigger;
         [SerializeField] private GameObject pikminPrefab;
         public bool IsBeingPlucked;
+        public bool IsSaved;
         AudioSource aud;
 
         [ClientRpc]

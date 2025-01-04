@@ -6,6 +6,8 @@ using LethalModDataLib.Attributes;
 using LethalModDataLib.Enums;
 using LethalModDataLib.Base;
 using System.Reflection;
+using UnityEngine;
+
 namespace LethalMin
 {
     [Serializable]
@@ -17,6 +19,8 @@ namespace LethalMin
         public Dictionary<int, int[]> OnionsFused = new Dictionary<int, int[]>();
 
         public List<OnionPikminStorage> PikminStored = new List<OnionPikminStorage>();
+
+        public List<SproutData> Sprouts = new List<SproutData>();
 
         public int PikminLeftLastRound;
     }
@@ -31,6 +35,7 @@ namespace LethalMin
         private List<int> _onionsCollected = new List<int>();
         private Dictionary<int, int[]> _onionsFused = new Dictionary<int, int[]>();
         private List<OnionPikminStorage> _pikminStored = new List<OnionPikminStorage>();
+        private List<SproutData> _sprouts = new List<SproutData>();
 
         public OnionEzSaveData()
         {
@@ -44,6 +49,7 @@ namespace LethalMin
                     SetData("OnionsCollected", new List<int>());
                     SetData("OnionsFused", new Dictionary<int, int[]>());
                     SetData("PikminStored", new List<OnionPikminStorage>());
+                    SetData("Sprouts", new List<SproutData>());
                     SetData("PikminLeftLastRound", 0);
                 }
                 else
@@ -73,6 +79,12 @@ namespace LethalMin
         {
             get => GetData<List<OnionPikminStorage>>("PikminStored");
             set => SetData("PikminStored", value);
+        }
+
+        public List<SproutData> Sprouts
+        {
+            get => GetData<List<SproutData>>("Sprouts");
+            set => SetData("Sprouts", value);
         }
 
         public int PikminLeftLastRound
@@ -127,6 +139,11 @@ namespace LethalMin
             {
                 LethalMin.Logger.LogInfo("Creating new instance of List<OnionPikminStorage>");
                 return (T)(object)new List<OnionPikminStorage>();
+            }
+            if (typeof(T) == typeof(List<SproutData>))
+            {
+                LethalMin.Logger.LogInfo("Creating new instance of List<SproutData>");
+                return (T)(object)new List<SproutData>();
             }
             if (typeof(T) == typeof(int))
             {
@@ -220,17 +237,19 @@ namespace LethalMin
     {
         public int GrowStage; // 0 for sprout, 1 for bud, 2 for flower
         public int PikminTypeID; // Add this field
-        public float X, Y, Z; // Add this field
+        public Vector3 Position;
+        public Quaternion Rotation;
         public string SceneName;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref GrowStage);
             serializer.SerializeValue(ref PikminTypeID); // Serialize the PikminTypeID
-            serializer.SerializeValue(ref X);
-            serializer.SerializeValue(ref Y);
-            serializer.SerializeValue(ref Z);
+            serializer.SerializeValue(ref Position);
+            serializer.SerializeValue(ref Rotation);
             serializer.SerializeValue(ref SceneName);
         }
     }
+
+
 }

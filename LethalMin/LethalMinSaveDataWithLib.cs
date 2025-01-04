@@ -14,6 +14,8 @@ public class LethalMinSaveDataWithLib : ModDataContainer
     public Dictionary<int, int[]> OnionsFused { get; set; }
 
     public List<LethalMin.OnionPikminStorage> PikminStored { get; set; }
+    
+    public List<LethalMin.SproutData> Sprouts { get; set; }
 
     public int PikminLeftLastRound { get; set; }
 
@@ -36,6 +38,11 @@ public class LethalMinSaveDataWithLib : ModDataContainer
             LethalMin.LethalMin.Logger.LogInfo("PikminStored is null, creating new list");
             PikminStored = new List<LethalMin.OnionPikminStorage>();
         }
+        if (Sprouts == null)
+        {
+            LethalMin.LethalMin.Logger.LogInfo("Sprouts is null, creating new list");
+            Sprouts = new List<LethalMin.SproutData>();
+        }
     }
 
     protected override void PostSave()
@@ -44,5 +51,6 @@ public class LethalMinSaveDataWithLib : ModDataContainer
         LethalMin.LethalMin.Logger.LogInfo($"collected onions: {OnionsCollected.Count}");
         LethalMin.LethalMin.Logger.LogInfo($"fused onions: {OnionsFused.Count}");
         LethalMin.LethalMin.Logger.LogInfo($"stored onions: {PikminStored.Count}");
+        LethalMin.LethalMin.Logger.LogInfo($"sprouts: {Sprouts.Count}");
     }
 }

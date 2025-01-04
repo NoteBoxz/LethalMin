@@ -1028,6 +1028,7 @@ namespace LethalMin
             }
             if (Root.GetComponent<EnemyAI>() != null)
                 Root.GetComponent<EnemyAI>().enabled = false;
+            Root.deactivated = true;
             Root.enabled = false; // Disable the root object
             TargetAnimatedOnion = TargetOnion.GetComponent<AnimatedOnion>();
 

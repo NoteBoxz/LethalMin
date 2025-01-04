@@ -1566,7 +1566,6 @@ namespace LethalMin
             }
         }
 
-
         public void SaveOnionData()
         {
             if (!IsServer) { return; }
@@ -1632,6 +1631,32 @@ namespace LethalMin
             {
                 newSaveData.PikminLeftLastRound += onion.GetPikminCount();
                 LethalMin.Logger.LogInfo($"Pikmin left: {newSaveData.PikminLeftLastRound} Onion: {onion.GetPikminCount()}");
+            }
+
+            Sprout[] sprouts = FindObjectsOfType<Sprout>();
+            
+            // Add existing sprouts to newSaveData
+            foreach (SproutData Sdata in existingSaveData.Sprouts)
+            {
+                if (Sdata.SceneName != RoundManager.Instance.currentLevel.sceneName)
+                {
+                    newSaveData.Sprouts.Add(Sdata);
+                }
+            }
+
+            // Save Sprout data
+            foreach (Sprout sprout in sprouts)
+            {
+                if (sprout.IsSaved)
+                {
+                    SproutData sproutData = new SproutData();
+                    sproutData.GrowStage = 0;
+                    sproutData.SceneName = RoundManager.Instance.currentLevel.sceneName;
+                    sproutData.Position = sprout.transform.position;
+                    sproutData.Rotation = sprout.transform.rotation;
+                    sproutData.PikminTypeID = sprout.PminType.PikminTypeID;
+                    newSaveData.Sprouts.Add(sproutData);
+                }
             }
 
             string json = JsonConvert.SerializeObject(newSaveData);
@@ -1706,8 +1731,34 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo($"Pikmin left: {newSaveData.PikminLeftLastRound} Onion: {onion.GetPikminCount()}");
             }
 
-            LethalMin.Logger.LogInfo($"IsStoredNull = {newSaveData.PikminStored == null}");
+            Sprout[] sprouts = FindObjectsOfType<Sprout>();
 
+            // Add existing sprouts to newSaveData
+            foreach (SproutData Sdata in existingSaveData.Sprouts)
+            {
+                if (Sdata.SceneName != RoundManager.Instance.currentLevel.sceneName)
+                {
+                    newSaveData.Sprouts.Add(Sdata);
+                }
+            }
+
+            // Save Sprout data
+            foreach (Sprout sprout in sprouts)
+            {
+                if (sprout.IsSaved)
+                {
+                    SproutData sproutData = new SproutData();
+                    sproutData.GrowStage = 0;
+                    sproutData.SceneName = RoundManager.Instance.currentLevel.sceneName;
+                    sproutData.Position = sprout.transform.position;
+                    sproutData.Rotation = sprout.transform.rotation;
+                    sproutData.PikminTypeID = sprout.PminType.PikminTypeID;
+                    newSaveData.Sprouts.Add(sproutData);
+                }
+            }
+
+            LethalMin.Logger.LogInfo($"IsStoredNull = {newSaveData.PikminStored == null}");
+            
             newSaveData.Save();
 
             IsSaving = false;
@@ -2130,18 +2181,13 @@ namespace LethalMin
             LethalMin.Logger.LogMessage("All onions have been despawned and destroyed.");
         }
 
-        public void DespawnSprouts()
+        public IEnumerator DespawnSprouts()
         {
-            Onion[] onions = UnityEngine.Object.FindObjectsOfType<Onion>();
-            foreach (Onion onion in onions)
+            if (!IsServer) { yield return null; }
+            while (IsSaving)
             {
-                if (onion.GetComponent<DualOnion>() != null) { continue; }
-                // foreach (var item in onion.gameObject.GetComponentsInChildren<Renderer>())
-                // {
-                //     item.enabled = false;
-                // }
+                yield return new WaitForSeconds(1f);
             }
-            if (!IsServer) { return; }
             Sprout[] sprouts = UnityEngine.Object.FindObjectsOfType<Sprout>();
             int sproutCount = sprouts.Length;
             foreach (Sprout sprout in sprouts)
