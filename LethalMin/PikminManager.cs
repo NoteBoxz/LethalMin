@@ -280,25 +280,29 @@ namespace LethalMin
 
             if (LethalMin.IsDependencyLoaded("Piggy.LCOffice"))
             {
-                GetPiggyFloorData();
-                isgettingFloorData = false;
-                yield break;
+                if (GetPiggyFloorData())
+                {
+                    isgettingFloorData = false;
+                    yield break;
+                }
             }
 
             if (LethalMin.IsDependencyLoaded("kite.ZelevatorCode"))
             {
-                GetZelevatorFloorData();
-                isgettingFloorData = false;
-                yield break;
+                if (GetZelevatorFloorData())
+                {
+                    isgettingFloorData = false;
+                    yield break;
+                }
             }
             isgettingFloorData = false;
         }
 
-        public void GetPiggyFloorData()
+        public bool GetPiggyFloorData()
         {
             if (FindAnyObjectByType<ElevatorSystem>() == null)
             {
-                return;
+                return false;
             }
 
 
@@ -400,17 +404,19 @@ namespace LethalMin
             }
 
             LethalMin.Logger.LogInfo("Registered LC-Office Floors");
+            return true;
         }
 
-        public void GetZelevatorFloorData()
+        public bool GetZelevatorFloorData()
         {
             if (FindObjectOfType<EndlessElevator>() == null)
             {
-                return;
+                return false;
             }
 
             LethalMin.Logger.LogInfo("Zelevator detected. Loading Zelevator data.");
             OverriddenIndoorTargets.Add(EndlessElevatorPatch.ElevatorPos);
+            return true;
         }
 
         #region This is the most hackiest networking i've ever done
@@ -1634,7 +1640,7 @@ namespace LethalMin
             }
 
             // Sprout[] sprouts = FindObjectsOfType<Sprout>();
-            
+
             // // Add existing sprouts to newSaveData
             // foreach (SproutData Sdata in existingSaveData.Sprouts)
             // {
@@ -1758,7 +1764,7 @@ namespace LethalMin
             // }
 
             LethalMin.Logger.LogInfo($"IsStoredNull = {newSaveData.PikminStored == null}");
-            
+
             newSaveData.Save();
 
             IsSaving = false;
