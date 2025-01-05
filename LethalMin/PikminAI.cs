@@ -94,27 +94,35 @@ namespace LethalMin
         }
         public (Vector3, bool) GetRoutePoint()
         {
-            if (IsTransform)
+            try
             {
-                if (Transforms.Count > CurPathIndex)
+                if (IsTransform)
                 {
-                    return (Transforms[CurPathIndex].position, IsOutside[CurPathIndex]);
+                    if (Transforms.Count > CurPathIndex)
+                    {
+                        return (Transforms[CurPathIndex].position, IsOutside[CurPathIndex]);
+                    }
+                    else
+                    {
+                        return (Transforms[Transforms.Count - 1].position, IsOutside[Transforms.Count - 1]);
+                    }
                 }
                 else
                 {
-                    return (Transforms[Transforms.Count - 1].position, IsOutside[Transforms.Count - 1]);
+                    if (Points.Count > CurPathIndex)
+                    {
+                        return (Points[CurPathIndex], IsOutside[CurPathIndex]);
+                    }
+                    else
+                    {
+                        return (Points[Points.Count - 1], IsOutside[Points.Count - 1]);
+                    }
                 }
             }
-            else
+            catch (Exception e)
             {
-                if (Points.Count > CurPathIndex)
-                {
-                    return (Points[CurPathIndex], IsOutside[CurPathIndex]);
-                }
-                else
-                {
-                    return (Points[Points.Count - 1], IsOutside[Points.Count - 1]);
-                }
+                LethalMin.Logger.LogWarning($"{RouteName}: Failed to get route point: {e}");
+                return (Vector3.zero, false);
             }
         }
         public void AddPoint(Vector3 point, bool IsOutside)
