@@ -979,7 +979,6 @@ namespace LethalMin
                         {
                             RoundManager.Instance.DespawnEnemyOnServer(pikmin.NetworkObject);
                         }
-                        UnityEngine.Object.Destroy(pikmin.gameObject);
                     }
                 }
             }
