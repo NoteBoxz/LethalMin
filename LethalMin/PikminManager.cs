@@ -975,9 +975,16 @@ namespace LethalMin
                     if (i < sortedPikmin.Count)
                     {
                         PikminAI pikmin = sortedPikmin[i];
-                        if (pikmin.NetworkObject != null && pikmin.NetworkObject.IsSpawned)
+                        
+                        if (pikmin == null) { continue; }
+                        
+                        if (pikmin.TargetOnion != null)
                         {
-                            RoundManager.Instance.DespawnEnemyOnServer(pikmin.NetworkObject);
+                            SendPikminToOnion(pikmin);
+                        }
+                        else if (pikmin.NetworkObject != null && pikmin.NetworkObject.IsSpawned)
+                        {
+                            DespawnPikminClientRpc(pikmin.NetworkObject);
                         }
                     }
                 }
