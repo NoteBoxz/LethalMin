@@ -609,6 +609,14 @@ namespace LethalMin
 
             itemDetectionRange = PminType.ItemDetectionRange;
 
+            if (PminType.OverrideAudioSource != null)
+            {
+                PminType.OverrideAudioSource.transform.parent = LocalVoice.transform.parent;
+                LocalVoice.gameObject.SetActive(false);
+                LocalVoice = PminType.OverrideAudioSource;
+            }
+
+            //I attempted to optimize this but I ended up breaking the entire soundPack so I'm leaving it like this.
             if (PminType.soundPack != null && PminType.soundPack.FillEmptyWithDefault)
             {
                 if (PminType.soundPack.AttackVoiceLine.Length == 0)
@@ -3584,6 +3592,7 @@ namespace LethalMin
                         if (CurRoutes[0].GetExitPoint() != null)
                         {
                             DoLethalEscape(CurRoutes[0].GetExitPoint().Value, true);
+                            PlayDoorAudioClientRpc(CurRoutes[0].entranceTeleport.NetworkObject);
                         }
                         else
                         {
@@ -3870,6 +3879,16 @@ namespace LethalMin
                 CanGrabItems = false;
             if (!LethalMin.AllowAttackAfterWork)
                 CanAttack = false;
+        }
+
+        [ClientRpc]
+        public void PlayDoorAudioClientRpc(NetworkObjectReference Door)
+        {
+            NetworkObject ngo;
+            if (Door.TryGet(out ngo))
+            {
+                ngo.gameObject.GetComponent<EntranceTeleport>()?.PlayAudioAtTeleportPositions();
+            }
         }
 
         #endregion

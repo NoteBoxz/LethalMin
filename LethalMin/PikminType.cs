@@ -55,6 +55,9 @@ namespace LethalMin
         [Tooltip("The pikmin's the sprout path, should be the object right before the plant objects (will be filled automatically if empty)")]
         public string PikminGlowPath;
 
+        [Tooltip("The Audio Source that will override the Pikmin's regular Voice Audio Source (Optional)")]
+        public AudioSource OverrideAudioSource;
+
         [HideInInspector]
         public PikminMeshRefernces MeshRefernces = null!;
 
