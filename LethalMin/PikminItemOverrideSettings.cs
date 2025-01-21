@@ -6,6 +6,6 @@ namespace LethalMin
     public class PikminItemOverrideSettings : MonoBehaviour
     {
         public int PikminNeededOnItem = 1;
-        
+        public bool CanCreateSprouts = false;
     }
 }

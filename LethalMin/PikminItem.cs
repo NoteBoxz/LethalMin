@@ -304,6 +304,7 @@ namespace LethalMin
             else
             {
                 PikminNeedOnItem = Root.GetComponentInChildren<PikminItemOverrideSettings>().PikminNeededOnItem;
+                CanBeConvertedIntoSprouts = Root.GetComponentInChildren<PikminItemOverrideSettings>().CanCreateSprouts;
             }
 
             isInitialized = true;

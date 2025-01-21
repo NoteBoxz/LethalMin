@@ -3638,8 +3638,8 @@ namespace LethalMin
                 {
                     InShipBuffer += Time.deltaTime;
                 }
-                if (HasArrivedAtDestonation(0.5f, CurRoutes[0].GetRoutePoint().Item1)
-                || (IsInShip && InShipBuffer >= PminType.DropItemInShipBuffer))
+                if (CarryingItemTo != "Onion" && HasArrivedAtDestonation(0.5f, CurRoutes[0].GetRoutePoint().Item1)
+                || CarryingItemTo != "Onion" &&  IsInShip && InShipBuffer >= PminType.DropItemInShipBuffer)
                 {
                     if (LethalMin.DebugMode)
                         LethalMin.Logger.LogInfo($"({uniqueDebugId}) Arrived at Ship");

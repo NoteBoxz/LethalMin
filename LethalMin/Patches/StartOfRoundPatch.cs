@@ -9,6 +9,7 @@ using UnityEngine;
 using System.IO;
 using UnityEngine.InputSystem.Utilities;
 using LethalMin.Patches.OtherMods;
+using Unity.AI.Navigation;
 
 namespace LethalMin.Patches
 {
@@ -63,6 +64,41 @@ namespace LethalMin.Patches
         private static void Imp2()
         {
             CreatePikminManager();
+            
+            // if (LethalMin.IsDependencyLoaded("MelanieMelicious.furniturePack0"))
+            // {
+            //     GameObject PocketDimention = GameObject.Find("PocketRoom0(Clone)").transform.Find("Room0").gameObject;
+            //     if (PocketDimention != null)
+            //     {
+            //         GameObject cubeA = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            //         Renderer renderer = cubeA.GetComponent<Renderer>();
+            //         renderer.material = AssetLoader.LoadAsset<Material>("Assets/LethalminAssets/Pikmin/Materials/DebugMin.mat");
+            //         renderer.material.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+            //         renderer.material.SetInt("_CullMode", (int)UnityEngine.Rendering.CullMode.Off);
+            //         cubeA.transform.SetParent(PocketDimention.transform, true);
+            //         cubeA.transform.localScale = new Vector3(17f, 1.1f, 7f);
+            //         cubeA.transform.localPosition = new Vector3(1.3f, 0.4f, -1.5f);
+
+
+            //         // Add NavMeshSurface component
+            //         NavMeshSurface surface = cubeA.AddComponent<NavMeshSurface>();
+
+            //         // Configure NavMeshSurface settings
+            //         surface.collectObjects = CollectObjects.Children;
+            //         surface.useGeometry = UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders;
+            //         //surface.layerMask = LayerMask.GetMask("Default"); // Adjust this to match your layer setup
+            //         surface.overrideVoxelSize = true;
+            //         surface.voxelSize = 0.1f;
+            //         surface.overrideTileSize = true;
+            //         surface.tileSize = 16;
+
+            //         // Bake the NavMeshSurface
+            //         surface.BuildNavMesh();
+
+            //         GameObject.Destroy(cubeA.GetComponent<Collider>());
+            //         GameObject.Destroy(cubeA.GetComponent<Renderer>());
+            //     }
+            // }
         }
 
         [HarmonyPatch("ShipLeave")]
