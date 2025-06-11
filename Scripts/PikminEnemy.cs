@@ -224,7 +224,7 @@ namespace LethalMin
                 FreezeCounter += Damage * 2f;
 
                 int HP = EnemyAIPatch.EnemyHPs.ContainsKey(enemyScript.enemyType) ? EnemyAIPatch.EnemyHPs[enemyScript.enemyType] : enemyScript.enemyHP;
-                if (FreezeCounter >= HP && !IsFrozen)
+                if (IsOwner && FreezeCounter >= HP && !IsFrozen)
                 {
                     FreezeEnemyServerRpc(); // Freeze the enemy if the freeze counter exceeds the HP
                     LethalMin.Logger.LogInfo($"{enemyScript.gameObject.name} frozen by Ice Pikmin due to freeze counter: {FreezeCounter}");
@@ -391,7 +391,7 @@ namespace LethalMin
 
 
 
-        [ServerRpc(RequireOwnership = false)]
+        [ServerRpc]
         public void FreezeEnemyServerRpc()
         {
             FreezeEnemyClientRpc();
