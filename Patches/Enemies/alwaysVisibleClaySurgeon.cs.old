@@ -1,0 +1,20 @@
+using System.Collections.Generic;
+using GameNetcodeStuff;
+using HarmonyLib;
+using Unity.Netcode;
+using UnityEngine;
+
+namespace LethalMin.Patches.AI
+{
+    [HarmonyPatch(typeof(ClaySurgeonAI))]
+    public class ClaySurgeonAIPatch
+    {
+        [HarmonyPatch(nameof(ClaySurgeonAI.Update))]
+        [HarmonyPrefix]
+        public static void alwaysVisible(ClaySurgeonAI __instance)
+        {
+            __instance.minDistance = 1000f;
+            __instance.maxDistance = 1001f;
+        }
+    }
+}

@@ -1,0 +1,210 @@
+--Done--
+Re-add PikminUI
+Add Pikmin Onion Climbing Animation
+Re-add Sprouts
+Add in Onion Generations
+Re-add Onions
+Re-add onion fuseing
+Add in standing attack
+Fix bug that occurs when the pikmin that is being held is killed
+Re-add Spore Lizard interaction
+Re-add baboon hawk interaction
+Re-add NavMeshInCompany compatabilty
+Re-add InputUtils compatabilty
+Implument OnionItem Spawn Condistions
+Add In Pikmin 3 Onion
+Re-add Cruiser Interaction
+Fix Pikmin container being useable in shipPhase
+Add in Pluck-A-Phone
+Re-add Panic state particles (Poision, burning, ect...)
+Re-add zap death particles
+Re-add Piggy's Variety mod Compatabilty
+Add exception EnemyDamager for entites that don't have EnemyColiders.
+Fix slight pikmin position offset on non owner clients when pikmin drop item
+Fix bug where a pikmin that is helping hold an item and the item reassignment doesn not happen on the non-owner side dies  
+Fix bug that causes pikmin to be unable to grab objects that a purple pikmin is already holding? (happens with player body).
+Refine Sprout Spawning system to use the Power Level.
+Refine Item Pathfinding System
+Add in global call back ship upgrade
+Fix lag when using Pik Caller
+Re-add End Of Game Stats
+Fix bug with Pikmin teleporting after spawning in
+Add in fired stats
+Re-add pikmin type Custom Scripts
+Fix appuratus sequnce not playing when pikmin take it
+Fix pikmin getting stuck on the fire exits of assurance and offense and march
+Fix Hey Pikmin Animations
+Fix bulbmin animations for 3, 4, and Hey!
+Re-add SellableBodiesFixed Compatabilty
+Re-add Puffmin
+Re-add Masked interaction
+Add in system to convert enemies into items to be carried to the onion
+Re-add Pikmin 2 Types
+Fix Terminal Keywords
+Re-add Onion Sounds
+Add in Onion Animations
+Add Legacy Custom Pikmin Type Converter
+Fix Pikmin 3/Hey Onion shaders
+Refine Game Generation System
+Re-add onion growing sprouts function
+Add In Purple and White Onions (from the looks of it they deafult to the pikmin container raather than the onions)
+Add in Burning
+Add on auto latchon attack (Only rocks use it)
+Add in more Idle Animations (Forgor to do that when working on the aniamtions initally)
+Clean up Pikmin Animator
+Add in Rock Pikmin (Fix non-latched attacking)
+Add in Ice Pikmin (Make Enemies Freeze)
+Add better Dismissing and Charging
+Fix bug with pikmin plucked showing up as idle on non owner sides
+Balance charging to only charge pikmin within cerain range
+Fix bug with Onion Item being taken into space/shipphase if pikmin carry it to the ship and it is not actiavted when the ship leaves
+Fix bug with Ice pikmin dying in water and causing it freeze and unfreeze
+Fix bug with rocks spawning ON day 3 and ice spawning ON day 6 and not after
+Fix Onion Saving Bug
+Re-add Barber interaction
+Add Pikmin Croud Control (Add in other legacy following functions, Not adding swarming)
+Re-add Thumper interaction
+Re-add BunkerSpider interaction
+Re-add hoarding bug interation
+Re-add Eyeless Dog interaction
+Re-add turrent interaction
+Re-add Circut Bees Interaction
+Fix Indoor types randomly spawning on surface (On the client side)
+Redo Luminull spawn pos system
+Fix Pikmin 3 Generation Models
+Add new Hygrodere interaction
+Re-add ManEater interaction
+Re-add OldBird interaction
+Re-add Forest Giant interaction
+add Butler interaction
+Re-add Jester interation
+Make Ice Pikmin Freeze slime
+Add Attack Interval for Baboon Hawks
+Add Method for enemies to shake off pikmin
+Tweek Balanceing issues
+Fix Indoor Pikmin showing on surface on clinet side AGAIN
+Add underside to lumiknull's mesh
+Tweek lumiknull spawn system
+Fix sprout being visable to gameplay camera
+Fix sprout duplicating pikmin by having pluckaphone and player pluck it at the same time
+Make Pikmin fall off broken bridges
+Fix belt bag menu getting slightly stuck open after closing onion menu
+Fix onion animation not playing on clienet side
+Fix Pikmin carrying item and being in squad at the same time if it enters the notice zone at the same time it grabs an item on clienet side
+Fix item lift sound being spammed on clinet side
+Fix multiple leaders sharing one Pikmin (Hack Fix)
+Add scan node to lumiknull
+Fix Lumiknull audio being 2D
+Fix Adult Maneater being grabable by pikmin
+Re-add LethalMon Compatabilty
+Re-add More Company Compatbilty (Nothing afaik needs to be added for compat)
+Re-add LCOffice Compatabilty
+Add LobbyCompatibility Compatabilty
+Re-add Zernaons Compatabilty
+Add In Onion Revive Function
+Add option to make pikmin launch off enemies.
+Add randomize game models on lobby launch, or even takeoff option
+Add in Water Wraith Compataiblty
+Fix pluckaphone plucked pikmin counting as wild pikmin (On Client side)
+Make Pikmin path directly to leader when in elevator
+Fix Pikmin taking onion items to the counter at the company
+Fix bug when converting enemy to item, with the physics prop not being on being attached to the enemy gameobject
+(Hack Fix, still an issue due to the enemy network object not parenting to the wrapper)
+Make Wild Pikmin inviceable (When they are hit they get knockedback and get up after a short while)
+Fix Rock Pikmin Pikmin 3 rig
+Fix Purple Pikmin yay animation
+Re-add Rock Pikmin Models
+Re-add Glow Pikmin Model
+Re-add Ice Pikmin Model
+Make Pikmin Enemy Damage Synced
+Re-add custom onion spawn locations
+Re-add Idle Animations
+Add ShipMode Onions
+Add item info
+Re-add UI layouts
+Re-add Bestairy enties
+Make Config to force clients configs to sync with host
+Fix Onion Landing at the wrong spot on the company
+Add in Winged Pikmin
+Add Funi Onion
+Add option to make pikmin ghosts have collision
+Add Giant Whistle to ship
+Fix items getting put into onion when item route does not end at onion (Speseficly happens at mineshaft elevator)
+Add in SoundPack generations (Unable to dump 3 SFX)
+Re-add Configs 
+Add in LCVR Compatabilty
+
+
+--WIP--
+Do Final Playtest
+Remove Early access text from Pikmin Signal Version
+Create Launch Trailer
+
+--NotStarted--
+
+-Bugs-
+!!DONE!!
+
+-Features-
+!!DONE!!
+
+-Interactions-
+!!DONE!!
+
+-Compats-
+!!DONE!!
+
+-Funi-
+!!DONE!!
+
+
+
+-things to refactor later-
+Add Mod Definition to allow dependencies
+
+Implument proper task system instead of just carrying and attacking
+
+Add system for a single snap point instead of just multiple spesfic ones for the car, idle, ect.
+
+Add Pikmin 3 SFX
+
+Refactor Winged Flying to take shortcuts
+
+Make Pikmin scatter after leader gets masked
+
+-unproitized bugs-
+
+Fix Onion HUD slot Going Into the negetives
+
+Fix buggy Winged Pesudo Flying
+
+Fix Pikmin flip flopping between exits (Unable to reporduce consistantly, happens mostly on march)
+
+Fix RadMech not playing moving animation on other clients after burning pikmin (Unable to reporduce consistantly)
+
+Fix Purples and White being multiplied when moved from container to onion (hack fix)
+
+Fix bug with item being picked up by pikmin not being properly synced (might have fixed)
+
+Fix glowmin getting stuck to items on clinet side when carrying inside before 5 (Unable to reporduce)
+
+Fix bug that occours when a pikmin gets trapped in a slime at the exact same time it grabs an item (Unable to reporduce consistantly)
+
+Fix already collected onion spawning that when collected, the data for all other onions will be erased (Unable to reporduce, Hack Fix)
+
+Fix multiplayer stats not show properly at end of round with 3 or more players
+(Already fixed or unable to replicate)
+
+Add teleport trigger to ship for pikmin moons that don't have links onto the ship
+(Not entirely sure how to implument this)
+
+Fix weird body desync bug that speseficly occurs when player 1 and player 3 dies, then player 2 attempts to throw pikmin that were taken from the onion onto player 1's body-
+-which then causes 2 instances of player 1's body to be picked up with both bodies being visble to players 1 and 3 but onlt 1 body being visible player 2.
+(UNABLE TO REPLICATE!!!!)
+
+Fix lag when setting pikmin to onions at the end of the day (Potinally not a bug)
+
+Fix Pikmin not being whistleable after bringing back courps to onion (Potinally not a bug)
+
+Fix non owner-side pikmin 'stuttering' for pikmin that are moving slowly
+(To do this I think I need to sync each pikmin's agent speed and I think that too much effort-for such a minor bug)

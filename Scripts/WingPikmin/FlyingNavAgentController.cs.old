@@ -1,0 +1,449 @@
+using System.Collections;
+using System.Collections.Generic;
+using LethalMin.Utils;
+using UnityEngine;
+using UnityEngine.AI;
+
+namespace LethalMin
+{
+    public class FlyingNavAgentController : MonoBehaviour
+    {
+        [Header("Components")]
+        public NavMeshAgent GroundAgent = null!; // Reference for NavMesh queries
+
+        [Header("Flight Settings")]
+        public float FlightHeight = 2.5f;
+        public float MoveSpeed = 5.0f;
+        public float RotationSpeed = 3.0f;
+        public float Acceleration = 15.0f; // How fast to accelerate to target speed 
+        public LayerMask CeilingLayerMask = -1; // Default to all layers
+        public float StationaryThreshold = 0.01f; // Threshold to consider agent stationary
+        public float GroundCheckDistance = 50f; // How far to raycast down
+        public LayerMask GroundLayerMask = -1; // Layers to check for ground
+
+        [Header("Path Following")]
+        public float WaypointReachedDistance = 0.5f;
+        public float PathRecalculationDistance = 1.0f; // Distance to move before recalculating path
+        public bool DebugDrawPath = true;
+
+        [Header("Collision Avoidance")]
+        public float AvoidanceRadius = 2.0f; // Radius to check for other agents
+        public float AvoidanceForce = 3.0f; // Strength of avoidance force
+        public LayerMask AgentLayerMask = -1; // Layer mask for other flying agents
+        public float SeparationRadius = 1.5f; // Minimum distance to maintain from other agents
+
+        // Path variables
+        private List<Vector3> offsetPath = new List<Vector3>();
+        private int currentPathIndex = 0;
+        private bool isMoving = false;
+        private NavMeshPath? currentPath;
+        private Vector3 currentDestination;
+        private Vector3 lastDestination;
+        private Vector3 currentVelocity = Vector3.zero;
+
+        void Start()
+        {
+            if (GroundAgent == null)
+            {
+                // Try to find NavMeshAgent if not assigned
+                GroundAgent = GetComponentInChildren<NavMeshAgent>();
+
+                if (GroundAgent == null)
+                {
+                    Debug.LogError("No NavMeshAgent found! Please add a NavMeshAgent component.");
+                    return;
+                }
+            }
+
+            // Configure NavMeshAgent to not move itself - we'll use it only for NavMesh sampling
+            GroundAgent.updatePosition = false;
+            GroundAgent.updateRotation = false;
+        }
+
+        void Update()
+        {
+            if (GroundAgent == null) return;
+
+            currentDestination = GroundAgent.destination;
+
+            // Check if we need to recalculate the path
+            if (ShouldRecalculatePath())
+            {
+                CalculateNewPath();
+            }
+
+            // Follow current path if we have one
+            if (offsetPath.Count > 0)
+            {
+                FollowPath();
+            }
+            else if (!isMoving)
+            {
+                // Reset pitch and roll when stationary
+                StabilizeRotation();
+            }
+        }
+
+        private bool ShouldRecalculatePath()
+        {
+            // Recalculate if destination changed
+            if (Vector3.Distance(currentDestination, lastDestination) > PathRecalculationDistance)
+            {
+                lastDestination = currentDestination;
+                return true;
+            }
+
+            // Distance to destination
+            float distToDestination = Vector3.Distance(transform.position, currentDestination);
+
+            // Check if we need a path (no current path but not at destination)
+            if (offsetPath.Count == 0 && distToDestination > WaypointReachedDistance)
+            {
+                return true;
+            }
+
+            // If we're at the end of the path but not at destination, recalculate
+            if (currentPathIndex >= offsetPath.Count - 1 && distToDestination > WaypointReachedDistance)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private Vector3 GetGroundPosition()
+        {
+            // Raycast down to find ground
+            if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, GroundCheckDistance, GroundLayerMask))
+            {
+                NavMeshHit navHit;
+                if (NavMesh.SamplePosition(transform.position, out navHit, GroundCheckDistance, NavMesh.AllAreas))
+                {
+                    return navHit.position;
+                }
+                else
+                {
+                    return hit.point;
+                }
+            }
+
+
+            // Fallback to current XZ position at y=0
+            return new Vector3(transform.position.x, 0, transform.position.z);
+        }
+
+        public void Warp(Vector3 newPosition)
+        {
+            // Warp to new position
+            transform.position = newPosition;
+
+            // Recalculate path after warping
+            if (CalculateNewPath())
+            {
+                isMoving = true;
+            }
+        }
+
+        private bool CalculateNewPath()
+        {
+            // Get current ground position
+            Vector3 groundPosition = GetGroundPosition();
+
+            // Create a path
+            currentPath = new NavMeshPath();
+
+            // Calculate path on NavMesh
+            bool pathFound = NavMesh.CalculatePath(groundPosition, currentDestination, GroundAgent.areaMask, currentPath);
+
+            if (pathFound && currentPath.corners.Length > 0)
+            {
+                // Calculate offset path
+                CalculateOffsetPath(currentPath.corners);
+                return true;
+            }
+
+            // If path not found, keep existing path if we have one
+            if (!pathFound && offsetPath.Count > 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private void CalculateOffsetPath(Vector3[] pathCorners)
+        {
+            List<Vector3> initialOffsetPath = new List<Vector3>();
+
+            // First pass: Calculate initial offset path with individual height checks
+            for (int i = 0; i < pathCorners.Length; i++)
+            {
+                Vector3 corner = pathCorners[i];
+
+                // Default offset corner
+                Vector3 offsetCorner = corner + Vector3.up * FlightHeight;
+
+                float offsetedDistance = Vector3.Distance(corner, offsetCorner);
+
+                // Check for ceiling
+                if (Physics.Raycast(corner, Vector3.up, out RaycastHit hit, offsetedDistance + FlightHeight, CeilingLayerMask))
+                {
+                    // Adjust height to avoid ceiling
+                    float safeHeight = Mathf.Max(hit.distance - 0.5f, 0.5f); // Keep some clearance
+                    offsetCorner = corner + Vector3.up * Mathf.Min(FlightHeight, safeHeight);
+                }
+
+                offsetCorner = new Vector3(offsetCorner.x, offsetCorner.y + GroundAgent.baseOffset, offsetCorner.z);
+
+                initialOffsetPath.Add(offsetCorner);
+            }
+
+            // Find appropriate Y value that doesn't hit ceiling
+            float targetY = initialOffsetPath[0].y;
+            foreach (Vector3 point in initialOffsetPath)
+            {
+                if (point.y > targetY)
+                {
+                    targetY = point.y;
+                }
+            }
+
+            // Clear the final path
+            offsetPath.Clear();
+
+            // Special handling for first point - start from current position
+            Vector3 firstPoint = new Vector3(
+                transform.position.x,
+                Mathf.Lerp(transform.position.y, targetY, 0.5f),
+                transform.position.z);
+            offsetPath.Add(firstPoint);
+
+            // Add remaining points with uniform height where possible
+            for (int i = 1; i < pathCorners.Length; i++)
+            {
+                Vector3 corner = pathCorners[i];
+                float verticalDistance = Vector3.Distance(
+                    new Vector3(0, corner.y, 0),
+                    new Vector3(0, targetY, 0));
+
+                // Check for ceiling above this point
+                if (Physics.Raycast(corner, Vector3.up, out RaycastHit hit, verticalDistance + FlightHeight, CeilingLayerMask))
+                {
+                    float ceilingY = corner.y + hit.distance - 0.5f; // Safe distance from ceiling
+
+                    // Use the lower of the two heights
+                    if (ceilingY < targetY)
+                    {
+                        targetY = ceilingY;
+                    }
+                }
+
+                // Apply final Y value
+                Vector3 finalPoint = new Vector3(corner.x, targetY, corner.z);
+                offsetPath.Add(finalPoint);
+            }
+
+            currentPathIndex = 0;
+        }
+
+        private void FollowPath()
+        {
+            if (currentPathIndex >= offsetPath.Count)
+            {
+                isMoving = false;
+                currentVelocity = Vector3.zero;
+                return;
+            }
+
+            // Get current target waypoint
+            Vector3 targetPoint = offsetPath[currentPathIndex];
+            Vector3 direction = targetPoint - transform.position;
+            float distance = direction.magnitude;
+
+            // Move to next waypoint if reached current one
+            if (distance < WaypointReachedDistance)
+            {
+                currentPathIndex++;
+                if (currentPathIndex >= offsetPath.Count)
+                {
+                    isMoving = false;
+                    currentVelocity = Vector3.zero;
+                    StabilizeRotation();
+                    return;
+                }
+
+                targetPoint = offsetPath[currentPathIndex];
+                direction = targetPoint - transform.position;
+                distance = direction.magnitude;
+            }
+
+            // Move and rotate toward target
+            if (distance > StationaryThreshold)
+            {
+                isMoving = true;
+
+                // Normalize direction
+                direction.Normalize();
+
+                // Apply collision avoidance
+                Vector3 avoidanceVector = CalculateAvoidanceForce();
+                Vector3 finalDirection = (direction + avoidanceVector).normalized;
+
+                // Calculate target velocity
+                Vector3 targetVelocity = finalDirection * MoveSpeed;
+
+                // Smoothly accelerate towards target velocity
+                currentVelocity = Vector3.Lerp(currentVelocity, targetVelocity, Acceleration * Time.deltaTime);
+
+                // Move using the current velocity
+                transform.position += currentVelocity * Time.deltaTime;
+
+                // Rotate toward movement direction
+                if (currentVelocity.magnitude > 0.1f)
+                {
+                    Quaternion targetRotation = Quaternion.LookRotation(currentVelocity.normalized);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
+                }
+            }
+            else
+            {
+                isMoving = false;
+                currentVelocity = Vector3.zero;
+                StabilizeRotation();
+            }
+        }
+
+        private Vector3 CalculateAvoidanceForce()
+        {
+            Vector3 avoidanceForceVector = Vector3.zero;
+
+            foreach (PikminAI pikmin in PikminManager.instance.PikminAIs)
+            {
+                WingedPikminAI? agent = pikmin as WingedPikminAI;
+                if(agent == null || agent == this || agent.FlyingNavAgentController.enabled == false)
+                {
+                    continue; // Skip if not a flying agent or self
+                }
+
+                Vector3 directionFromAgent = transform.position - agent.transform.position;
+                float distance = directionFromAgent.magnitude;
+
+                // Only apply avoidance if within separation radius
+                if (distance < SeparationRadius && distance > 0.01f)
+                {
+                    // Normalize direction and apply inverse force based on distance
+                    directionFromAgent.Normalize();
+                    float forceMultiplier = (SeparationRadius - distance) / SeparationRadius;
+                    avoidanceForceVector += directionFromAgent * AvoidanceForce * forceMultiplier;
+                }
+            }
+
+            // Limit the avoidance force magnitude
+            if (avoidanceForceVector.magnitude > AvoidanceForce)
+            {
+                avoidanceForceVector = avoidanceForceVector.normalized * AvoidanceForce;
+            }
+
+            return avoidanceForceVector;
+        }
+
+        // Add this method to handle physical collisions as backup
+        private void OnTriggerStay(Collider other)
+        {
+            // Check if the other object is another flying agent
+            FlyingNavAgentController otherAgent = other.GetComponent<FlyingNavAgentController>();
+            if (otherAgent != null && otherAgent != this)
+            {
+                // Calculate repulsion force
+                Vector3 repulsionDirection = (transform.position - other.transform.position).normalized;
+                float repulsionForce = 2.0f; // Adjust as needed
+
+                // Apply immediate separation
+                transform.position += repulsionDirection * repulsionForce * Time.deltaTime;
+            }
+        }
+
+        private void StabilizeRotation()
+        {
+            // Maintain current Y rotation but reset X and Z rotations
+            float currentYRotation = transform.eulerAngles.y;
+            transform.rotation = Quaternion.Euler(0, currentYRotation, 0);
+        }
+
+        // Visualize the path in the editor
+        private void OnDrawGizmos()
+        {
+            DrawCylinderGizmo(new Vector3(transform.position.x, transform.position.y - GroundAgent.baseOffset, transform.position.z), 0.5f, FlightHeight, Color.blue);
+
+            // Draw avoidance radius
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, AvoidanceRadius);
+
+            // Draw separation radius
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawWireSphere(transform.position, SeparationRadius);
+
+            if (DebugDrawPath && offsetPath.Count > 0)
+            {
+                // Draw path
+                Gizmos.color = Color.cyan;
+                for (int i = 0; i < offsetPath.Count - 1; i++)
+                {
+                    Gizmos.DrawLine(offsetPath[i], offsetPath[i + 1]);
+                }
+
+                // Draw ground position
+                if (Application.isPlaying)
+                {
+                    Gizmos.color = Color.yellow;
+                    Gizmos.DrawSphere(GetGroundPosition(), 0.3f);
+                }
+
+                // Draw current target waypoint
+                if (currentPathIndex < offsetPath.Count)
+                {
+                    Gizmos.color = Color.green;
+                    Gizmos.DrawSphere(offsetPath[currentPathIndex], 0.2f);
+                }
+            }
+        }
+
+        private void DrawCylinderGizmo(Vector3 position, float radius, float height, Color color)
+        {
+            Gizmos.color = color;
+            int segments = 20;
+            Vector3 prevPointTop = Vector3.zero;
+            Vector3 prevPointBottom = Vector3.zero;
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = i * Mathf.PI * 2f / segments;
+                float x = Mathf.Cos(angle) * radius;
+                float z = Mathf.Sin(angle) * radius;
+                Vector3 pointTop = position + new Vector3(x, height, z);
+                Vector3 pointBottom = position + new Vector3(x, 0, z);
+
+                if (i > 0)
+                {
+                    Gizmos.DrawLine(prevPointTop, pointTop);
+                    Gizmos.DrawLine(prevPointBottom, pointBottom);
+                    Gizmos.DrawLine(prevPointTop, prevPointBottom);
+                }
+
+                prevPointTop = pointTop;
+                prevPointBottom = pointBottom;
+            }
+            // Draw top and bottom circles
+            for (int i = 0; i < segments; i++)
+            {
+                float angle1 = i * Mathf.PI * 2f / segments;
+                float angle2 = (i + 1) * Mathf.PI * 2f / segments;
+                Vector3 top1 = position + new Vector3(Mathf.Cos(angle1) * radius, height, Mathf.Sin(angle1) * radius);
+                Vector3 top2 = position + new Vector3(Mathf.Cos(angle2) * radius, height, Mathf.Sin(angle2) * radius);
+                Vector3 bottom1 = position + new Vector3(Mathf.Cos(angle1) * radius, 0, Mathf.Sin(angle1) * radius);
+                Vector3 bottom2 = position + new Vector3(Mathf.Cos(angle2) * radius, 0, Mathf.Sin(angle2) * radius);
+                Gizmos.DrawLine(top1, top2);
+                Gizmos.DrawLine(bottom1, bottom2);
+            }
+        }
+    }
+}

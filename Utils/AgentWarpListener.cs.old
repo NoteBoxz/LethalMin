@@ -1,0 +1,13 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.Events;
+
+namespace LethalMin
+{
+    public class AgentWarpListener : MonoBehaviour
+    {
+        public UnityEvent<Vector3> OnWarped = new UnityEvent<Vector3>();
+    }
+}

@@ -1,0 +1,34 @@
+using System.Collections.Generic;
+using System.Numerics;
+using GameNetcodeStuff;
+using HarmonyLib;
+using Unity.Netcode;
+using UnityEngine.AI;
+
+namespace LethalMin.Patches
+{
+    [HarmonyPatch(typeof(NavMeshAgent))]
+    public class NavMeshAgentPatch
+    {
+        [HarmonyPatch(nameof(NavMeshAgent.SetDestination))]
+        [HarmonyPrefix]
+        private static void Wp(NavMeshAgent __instance)
+        {
+            try
+            {
+                if (!__instance.enabled)
+                {
+                    LethalMin.Logger.LogInfo($"NavMeshAgent.SetDestination called on {__instance.gameObject.name} but agent is disabled.");
+                }
+                if (!__instance.isOnNavMesh)
+                {
+                    LethalMin.Logger.LogInfo($"NavMeshAgent.SetDestination called on {__instance.gameObject.name} but agent is not on a NavMesh.");
+                }
+            }
+            catch (System.Exception e)
+            {
+                LethalMin.Logger.LogError($"Failed to patch NavMeshAgent.setdest for {__instance.gameObject.name} due to: {e}");
+            }
+        }
+    }
+}

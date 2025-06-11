@@ -1,0 +1,162 @@
+using System;
+using GameNetcodeStuff;
+using HarmonyLib;
+using LethalMin.Utils;
+using Unity.Netcode;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+namespace LethalMin.Patches
+{
+    [HarmonyPatch(typeof(StartOfRound))]
+    public class StartOfRoundPatch
+    {
+        [HarmonyPatch(nameof(StartOfRound.Start))]
+        [HarmonyPostfix]
+        private static void CreatePikminManager(StartOfRound __instance)
+        {
+            if (!__instance.IsServer)
+            {
+                return;
+            }
+            LethalMin.Logger.LogInfo("Creating PikminManager");
+            if (PikminManager.instance == null)
+            {
+                GameObject obj = LethalMin.assetBundle.LoadAsset<GameObject>("Assets/LethalMin/PikminManager.prefab");
+                NetworkObject netObj = GameObject.Instantiate(obj).GetComponent<NetworkObject>();
+                netObj.Spawn();
+            }
+            else
+            {
+                LethalMin.Logger.LogWarning("PikminManager already exists");
+            }
+        }
+
+
+        [HarmonyPatch(nameof(StartOfRound.SceneManager_OnLoadComplete1))]
+        [HarmonyPostfix]
+        private static void StartPikminManagerA(StartOfRound __instance, ulong clientId, string sceneName, LoadSceneMode loadSceneMode)
+        {
+            if (sceneName == __instance.currentLevel.sceneName)
+            {
+                PikminManager.instance.OnGameStarted();
+            }
+        }
+
+        [HarmonyPatch(nameof(StartOfRound.ShipLeave))]
+        [HarmonyPrefix]
+        private static void EndGame()
+        {
+            PikminManager.instance.OnGameEnd();
+        }
+
+        [HarmonyPatch(nameof(StartOfRound.SetShipReadyToLand))]
+        [HarmonyPostfix]
+        public static void SetShipReadyToLandPostfix(StartOfRound __instance)
+        {
+            //We then wait until the pikminmanager has finished saving. 
+            //Becasue this is a post fix SaveGame should have been called before this.
+            PikminManager.instance.StartCoroutine(PikminManager.instance.WaitToDespawnObjects());
+        }
+
+        [HarmonyPatch(nameof(StartOfRound.EndOfGameClientRpc))]
+        [HarmonyPrefix]
+        public static void EndOfGameClientRpcPrefix(StartOfRound __instance)
+        {
+            if ((object)__instance.NetworkManager == null || !__instance.NetworkManager.IsListening)
+            {
+                return;
+            }
+            if (__instance.__rpc_exec_stage != NetworkBehaviour.__RpcExecStage.Client || (!__instance.NetworkManager.IsClient && !__instance.NetworkManager.IsHost))
+            {
+                return;
+            }
+            // Hide every object that will be saved (We don't want to despawn the objects before they can be saved)
+            foreach (Sprout spr in GameObject.FindObjectsOfType<Sprout>())
+            {
+                foreach (Renderer render in spr.GetComponentsInChildren<Renderer>())
+                {
+                    render.enabled = false;
+                }
+            }
+
+            foreach (Onion oni in GameObject.FindObjectsOfType<Onion>())
+            {
+                if (oni.DontDespawnOnGameEnd)
+                {
+                    continue;
+                }
+                foreach (Renderer render in oni.GetComponentsInChildren<Renderer>())
+                {
+                    render.enabled = false;
+                }
+                foreach (AudioSource audio in oni.GetComponentsInChildren<AudioSource>())
+                {
+                    audio.enabled = false; // Disable audio to prevent sound from playing when despawning
+                }
+            }
+        }
+
+        [HarmonyPatch(nameof(StartOfRound.EndPlayersFiredSequenceClientRpc))]
+        [HarmonyPrefix]
+        public static void PurgeSave(StartOfRound __instance)
+        {
+            if ((object)__instance.NetworkManager == null || !__instance.NetworkManager.IsListening)
+            {
+                return;
+            }
+            if (__instance.__rpc_exec_stage != NetworkBehaviour.__RpcExecStage.Client || (!__instance.NetworkManager.IsClient && !__instance.NetworkManager.IsHost))
+            {
+                return;
+            }
+            if (__instance.IsServer && !LethalMin.DontPurgeAfterFire)
+            {
+                PikminManager.instance.ClearSavedData();
+            }
+        }
+
+
+        [HarmonyPatch(nameof(StartOfRound.FirePlayersAfterDeadlineClientRpc))]
+        [HarmonyPostfix]
+        public static void FirePlayersAfterDeadlineClientRpcPostfix(StartOfRound __instance)
+        {
+            if (HUDManager.Instance.EndOfRunStatsText.text.Contains("Pikmin Raised: "))
+            {
+                LethalMin.Logger.LogWarning("Pikmin Raised already exists");
+                return;
+            }
+            HUDManager.Instance.EndOfRunStatsText.text += $"\nPikmin Raised: {PikminManager.instance.FiredStats.TotalPikminRaised}\n" + $"Pikmin Lost: {PikminManager.instance.FiredStats.TotalPikminLost}\n";
+        }
+
+
+        [HarmonyPatch(nameof(StartOfRound.SetPlayerSafeInShip))]
+        [HarmonyPostfix]
+        public static void SetPlayerSafeInShipPostFix(StartOfRound __instance)
+        {
+            try
+            {
+                if (GameNetworkManager.Instance == null || GameNetworkManager.Instance.localPlayerController == null)
+                {
+                    return;
+                }
+                PlayerControllerB playerControllerB = GameNetworkManager.Instance.localPlayerController;
+                if (playerControllerB.isPlayerDead && playerControllerB.spectatedPlayerScript != null)
+                {
+                    playerControllerB = playerControllerB.spectatedPlayerScript;
+                }
+
+                if (__instance.hangarDoorsClosed && GameNetworkManager.Instance.localPlayerController.isInHangarShipRoom)
+                {
+                    foreach (var pikminAI in PikminManager.instance.PikminAIs)
+                    {
+                        pikminAI.EnableEnemyMesh(true);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                LethalMin.Logger.LogError($"Failed to show pikmin within ship! {e}");
+            }
+        }
+    }
+}
