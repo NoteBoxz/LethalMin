@@ -57,6 +57,10 @@ namespace LethalMin
             {
                 pikminItem.InitalizeClientRpc(NetworkObject, "CaveDwellerPikminEnemy");
             }
+            if (LethalMin.UseConfigsForEnemies)
+            {
+                BiteCooldown = LethalMin.CaveDweller_BiteCooldown.InternalValue;
+            }
         }
 
         void LateUpdate()

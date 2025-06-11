@@ -22,6 +22,10 @@ namespace LethalMin
             {
                 enabled = false;
             }
+            if (LethalMin.UseConfigsForEnemies)
+            {
+                SnippingCooldown = LethalMin.ClaySurgeon_SnipCooldown.InternalValue;
+            }
         }
 
         void LateUpdate()

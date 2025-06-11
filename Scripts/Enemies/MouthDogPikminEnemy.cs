@@ -23,6 +23,10 @@ namespace LethalMin
             {
                 enabled = false;
             }
+            if (LethalMin.UseConfigsForEnemies)
+            {
+                BiteCooldown = LethalMin.MouthDog_BiteCooldown.InternalValue;
+            }
         }
 
         void LateUpdate()

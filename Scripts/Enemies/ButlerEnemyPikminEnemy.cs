@@ -24,6 +24,10 @@ namespace LethalMin
             {
                 enabled = false;
             }
+            if (LethalMin.UseConfigsForEnemies)
+            {
+                StabCooldown = LethalMin.ButlerEnemy_StabCooldown.InternalValue;
+            }
         }
 
         void LateUpdate()

@@ -23,6 +23,10 @@ namespace LethalMin
             {
                 enabled = false;
             }
+            if (LethalMin.UseConfigsForEnemies)
+            {
+                BiteCooldown = LethalMin.SandSpider_BiteCooldown.InternalValue;
+            }
         }
 
         void LateUpdate()

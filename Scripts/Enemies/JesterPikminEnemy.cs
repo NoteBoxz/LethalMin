@@ -23,6 +23,10 @@ namespace LethalMin
             {
                 enabled = false;
             }
+            if (LethalMin.UseConfigsForEnemies)
+            {
+                BiteCooldown = LethalMin.Jester_BiteCooldown.InternalValue;
+            }
         }
 
         void LateUpdate()

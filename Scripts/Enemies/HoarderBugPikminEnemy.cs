@@ -23,6 +23,10 @@ namespace LethalMin
             {
                 enabled = false;
             }
+            if (LethalMin.UseConfigsForEnemies)
+            {
+                BiteCooldown = LethalMin.HoarderBug_BiteCooldown.InternalValue;
+            }
         }
 
         void LateUpdate()

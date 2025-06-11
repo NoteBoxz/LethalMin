@@ -20,6 +20,10 @@ namespace LethalMin
             {
                 enabled = false;
             }
+            if(LethalMin.UseConfigsForEnemies)
+            {
+                BiteCooldown = LethalMin.BaboonBird_BiteCooldown.InternalValue;
+            }
         }
 
         void LateUpdate()
