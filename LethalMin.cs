@@ -373,6 +373,7 @@ namespace LethalMin
         {
             EnemyType PikminType = assetBundle.LoadAsset<EnemyType>("Assets/LethalMin/PikminEnemyType.asset");
             TerminalNode node = assetBundle.LoadAsset<TerminalNode>("Assets/LethalMin/Pikmin TN.asset");
+            PikminType.spawningDisabled = UseLCSpawnSystem ? false : true;
             Enemies.RegisterEnemy(PikminType, null, null, node);
             PikminEnemyType = PikminType;
             PikminAI ai = PikminEnemyType.enemyPrefab.GetComponent<PikminAI>();
@@ -631,6 +632,7 @@ namespace LethalMin
 
         #region Spawning
         public static ConfigItem<bool> UsePowerLVForSprouts = null!;
+        public static ConfigItem<bool> UseLCSpawnSystem = null!;
         public static ConfigItem<float> IndoorSpawnChance = null!;
         public static ConfigItem<float> OutdoorSpawnChance = null!;
         public static ConfigItem<float> OnionSpawnChance = null!;
@@ -1174,6 +1176,14 @@ namespace LethalMin
                 false,
                 ConfigItemAuthority.Host,
                 "slider(0,1)");
+
+            UseLCSpawnSystem = new ConfigItem<bool>(
+                "Spawning",
+                "Use LC Spawn System",
+                true,
+                "Have Pikmin be spawnable using LC's spawning system, the will result on rare occasition for pikmin to randomly spawn on the map",
+                false,
+                ConfigItemAuthority.Host);
 
             UsePowerLVForSprouts = new ConfigItem<bool>(
                 "Spawning",
