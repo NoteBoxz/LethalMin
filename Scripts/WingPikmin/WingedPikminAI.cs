@@ -77,6 +77,8 @@ namespace LethalMin
 
         private bool ShouldFly()
         {
+            if (Laying)
+                return false; // Don't fly while laying
             if (currentBehaviourStateIndex == 4)
                 return false; // Don't fly while attacking
             if (TargetItem != null && TargetItem.PrimaryPikminOnItem == this && !IsWingedPikminOnItem(TargetItem))
