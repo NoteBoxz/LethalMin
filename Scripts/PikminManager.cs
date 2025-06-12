@@ -672,6 +672,19 @@ namespace LethalMin
                         break;
                     }
                 }
+                if (randomType == null)
+                {
+                    LethalMin.Logger.LogWarning($"No random type found for {i}, using alterntive random");
+                    try
+                    {
+                        randomType = odds.Keys.ToList()[RNG.Next(0, odds.Keys.ToList().Count)];
+                    }
+                    catch (System.Exception e)
+                    {
+                        LethalMin.Logger.LogError($"Failed to get random type for {i}: {e}");
+                        continue;
+                    }
+                }
 
                 if (randomType.SpawnsIndoors)
                 {
@@ -702,7 +715,7 @@ namespace LethalMin
                     continue;
                 }
 
-                LethalMin.Logger.LogDebug($"Spawning sprout {i} at: [{spawnPos}, {RandomYRotation}]" +
+                LethalMin.Logger.LogDebug($"Spawning sprout {i} at: [{spawnPos}, {RandomYRotation.eulerAngles}]" +
                 $" With type: {SproutScript.pikminType.PikminName} odds:({odds[SproutScript.pikminType]}) rng: ({randomValue} / {totalOdds})");
 
                 SproutScript.NetworkObject.Spawn();
@@ -731,7 +744,7 @@ namespace LethalMin
 
 
             int SPAWN_AMOUNT = GameObject.FindGameObjectsWithTag("AINode").Length - FindObjectsOfType<Sprout>().Length;
-            LethalMin.Logger.LogInfo($"Map Spawn Ammount: {SPAWN_AMOUNT}");
+            LethalMin.Logger.LogInfo($"Map Possible Spawn Ammount: {SPAWN_AMOUNT}");
 
             System.Random RNG = new System.Random(StartOfRound.Instance.randomMapSeed);
 
@@ -765,6 +778,19 @@ namespace LethalMin
                     {
                         randomType = kvp.Key;
                         break;
+                    }
+                }
+                if (randomType == null)
+                {
+                    LethalMin.Logger.LogWarning($"No random type found for {i}, using alterntive random");
+                    try
+                    {
+                        randomType = odds.Keys.ToList()[RNG.Next(0, odds.Keys.ToList().Count)];
+                    }
+                    catch (System.Exception e)
+                    {
+                        LethalMin.Logger.LogError($"Failed to get random type for {i}: {e}");
+                        continue;
                     }
                 }
 

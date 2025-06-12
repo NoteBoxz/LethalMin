@@ -88,7 +88,7 @@ namespace LethalMin
             GetGrowthObjects();
             SetGrowth(0);
 
-            LethalMin.Logger.LogDebug($"{LethalMin.GetPikminTypeByID(TypeID).PikminName} sprout initalized at ({Position},{Rotaion})");
+            LethalMin.Logger.LogDebug($"{LethalMin.GetPikminTypeByID(TypeID).PikminName} sprout initalized at ({Position},{Rotaion.eulerAngles})");
         }
 
 
