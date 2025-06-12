@@ -48,9 +48,12 @@ namespace LethalMin.Pikmin
         public Texture2D[]? AnimatedPikminGhostTexture;
         [Tooltip("The number of frames the animated pikmin ghost will hold on each frame")]
         public int AnimatedPikminGhostFrameHold = 2;
+        [Tooltip("The tiling for the pikmin ghost's texture")]
         public Vector2 OverrideGhostTextureTileing = new Vector2(1, 1);
+        [Tooltip("The offset for the pikmin ghost's texture")]
         public Vector2 OverrideGhostTextureOffset = new Vector2(0, 0);
-
+        [Tooltip("Whether to set the pikmin ghost's color to the pikmin's primary color")]
+        public bool SetGhostColor = true;
         [Tooltip("The gameobject that overrides the pikmin ghost's model")]
         public GameObject? PikminGhostOverrideModel;
 

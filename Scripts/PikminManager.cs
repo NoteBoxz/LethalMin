@@ -554,6 +554,7 @@ namespace LethalMin
                 pdm.DontKillInShip = killLocalPlayer.disallowKillingInShip;
             }
         }
+
         public void AddWaterTriggers()
         {
             FreezeableWaters.Clear();
@@ -1116,7 +1117,7 @@ namespace LethalMin
             {
                 return;
             }
-            
+
             if (LethalMin.OnCompany)
             {
                 LethalMin.Logger.LogInfo($"Cannot Lumiknull on company moon!");

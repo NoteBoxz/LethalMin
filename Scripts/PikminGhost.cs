@@ -71,7 +71,10 @@ namespace LethalMin
             // Texture2D texture = PerlinNoiseGenerator.GeneratePerlinNoise(250, 250, 4, 4, randomOffset);
             // renderer.material.SetTexture("_Displacement", texture);
 
-            renderer.material.color = overrideColor == null ? LostType.PikminPrimaryColor : overrideColor.Value;
+            if (LostType.SetGhostColor)
+            {
+                renderer.material.color = overrideColor == null ? LostType.PikminPrimaryColor : overrideColor.Value;
+            }
             StartingColor = renderer.material.color;
 
             StartingPosition = transform.position;
