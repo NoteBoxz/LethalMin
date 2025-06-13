@@ -864,6 +864,7 @@ namespace LethalMin
             {
                 return;
             }
+            pikminHolding?.creatureVoice.Stop();
             StopThrow();
         }
         public void StopThrow(bool SetCollisionMode = true)
