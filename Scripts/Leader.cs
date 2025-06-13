@@ -257,9 +257,9 @@ namespace LethalMin
 
                 string ThrowCancelActionPath = LethalMin.InVRMode ? LethalMin.ThrowCancelVRAction.InternalValue : LethalMin.ThrowCancelAction.InternalValue;
                 throwCancelAction = new InputAction("Throw Cancel");
-                throwCancelAction.AddBinding(ThrowActionPath);
-                throwCancelAction.canceled -= OnThrowCancelCanceled;
-                throwAction.canceled += OnThrowCancelCanceled;
+                throwCancelAction.AddBinding(ThrowCancelActionPath);
+                throwCancelAction.performed -= OnThrowCancelCanceled;
+                throwCancelAction.performed += OnThrowCancelCanceled;
                 throwCancelAction.Enable();
 
                 string SecondaryThrowActionPath = LethalMin.InVRMode ? LethalMin.SecondaryThrowVRAction.InternalValue : "";
