@@ -1274,9 +1274,10 @@ namespace LethalMin
 
             PathToPosition(pos);
 
-            if (!IsDoingOnionAnimation && PikUtils.HorizontalDistance(transform.position, pos) < 1f + agent.stoppingDistance ||
-            !IsDoingOnionAnimation && pikminType.InstaEnterOnion ||
-            !IsDoingOnionAnimation && timeIdel >= 5)
+            if (!IsDoingOnionAnimation && (PikUtils.HorizontalDistance(transform.position, pos) < 1f + agent.stoppingDistance ||
+            pikminType.InstaEnterOnion ||
+            TargetOnion is ShipOnion ||
+            timeIdel >= 5))
             {
                 EnterOnionServerRpc(targetOnionLinkIndex);
                 IsDoingOnionAnimation = true;
