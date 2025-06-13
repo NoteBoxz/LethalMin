@@ -641,6 +641,7 @@ namespace LethalMin
         #region Pikmin Behavior
         public static ConfigItem<List<string>> AttackBlacklistConfig = null!;
         public static ConfigItem<List<string>> ItemBlacklistConfig = null!;
+        public static ConfigItem<List<string>> EnemyBodyConvertBlacklistConfig = null!;
         public static ConfigItem<bool> CanPathOutsideWhenInside = null!;
         public static ConfigItem<bool> CarryNonScrapItemsOnCompany = null!;
         public static ConfigItem<PfollowMode> PikminFollowMode = null!;
@@ -1212,6 +1213,14 @@ namespace LethalMin
                 "The list of item names that pikmin can't pick up",
                 true,
                 ConfigItemAuthority.Client);
+
+            EnemyBodyConvertBlacklistConfig = new ConfigItem<List<string>>(
+                "Pikmin Behavior",
+                "Enemy Body Convert Blacklist",
+                new List<string> { { "Flowerman" }, { "GiantKiwi" } },
+                "The list of enemy names that the mod won't be converted into items",
+                true,
+                ConfigItemAuthority.Host);
 
             CarryNonScrapItemsOnCompany = new ConfigItem<bool>(
                 "Pikmin Behavior",

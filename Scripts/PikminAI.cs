@@ -2678,7 +2678,8 @@ namespace LethalMin
                     continue;
 
                 // Handle special case for converting dead enemies
-                if (LethalMin.ConvertEnemyBodiesToItems && !LethalMin.IsDependencyLoaded("Entity378.sellbodies") &&
+                if (LethalMin.ConvertEnemyBodiesToItems && !LethalMin.EnemyBodyConvertBlacklistConfig.InternalValue.Contains(enemy.name)
+                 && !LethalMin.IsDependencyLoaded("Entity378.sellbodies") &&
                     enemy.isEnemyDead && !enemy.enemyType.destroyOnDeath && !PikminManager.instance.ConvertedAIs.Contains(enemy))
                 {
                     LethalMin.Logger.LogMessage($"{DebugID}: Converting {enemy.gameObject.name} to grabbable object");

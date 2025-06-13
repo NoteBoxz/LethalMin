@@ -177,13 +177,11 @@ Make onion revive maskeds
 
 -unproitized bugs-
 
-Fix Desynced Dead Pikmin
+Fix Desynced Dead Pikmin (Caused by gaurd clause bools being desynced)
 
-Fix Enemys that vanish upon death (Bracken, Giant Kiwi) being carryable to the onion.
+Fix Onion HUD slot Going Into the negetives (No idea)
 
-Fix Onion HUD slot Going Into the negetives
-
-Fix buggy Winged Pesudo Flying
+Fix buggy Winged Pesudo Flying (Flying into cealings, and sometimes under the ship)
 
 Fix Pikmin flip flopping between exits (Unable to reporduce consistantly, happens mostly on march)
 
