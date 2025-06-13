@@ -15,6 +15,7 @@ namespace LethalMin.Patches
         [HarmonyPostfix]
         private static void CreatePikminManager(StartOfRound __instance)
         {
+            SaveManager.settings.path = GameNetworkManager.Instance.currentSaveFileName + "_LethalMinSave";
             if (!__instance.IsServer)
             {
                 return;

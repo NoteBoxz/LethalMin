@@ -1867,7 +1867,7 @@ namespace LethalMin
         {
             if (!IsServer) return;
             LethalMin.Logger.LogDebug($"---Loading LethalMin Data---");
-
+            LethalMin.Logger.LogDebug($"SavePath: {SaveManager.settings.path}");
             if (SaveManager.KeyExists("pikminLeft"))
             {
                 EndOfGameStats.PikminLeft = SaveManager.Load("pikminLeft", EndOfGameStats.PikminLeft);
@@ -1902,6 +1902,8 @@ namespace LethalMin
             if (!IsServer) return;
             LethalMin.Logger.LogMessage($"---Saving LethalMin Data---");
 
+            LethalMin.Logger.LogDebug($"SavePath: {SaveManager.settings.path}");
+            
             IsSaving = true;
 
             SaveManager.Save("pikminLeft", EndOfGameStats.PikminLeft);

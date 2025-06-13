@@ -3316,7 +3316,7 @@ namespace LethalMin
             else
             {
                 growthObjects = modelReferences.GetGrowthObjects();
-                LethalMin.Logger.LogInfo($"{DebugID}: Using Cached growth objects");
+                LethalMin.Logger.LogDebug($"{DebugID}: Using Cached growth objects");
                 return;
             }
             Dictionary<int, List<GameObject>> growthObjectsf = new Dictionary<int, List<GameObject>>();
@@ -3343,7 +3343,7 @@ namespace LethalMin
                     if (index > MaxGrowthStage)
                         MaxGrowthStage = index;
 
-                    LethalMin.Logger.LogInfo($"{DebugID}: Found plant {go.name} at index {index}");
+                    LethalMin.Logger.LogDebug($"{DebugID}: Found plant {go.name} at index {index}");
                 }
             }
 
@@ -3386,7 +3386,7 @@ namespace LethalMin
                 //Cache growth objects for next instances' use
                 if (pikminType.CachePlantObjectRefernces)
                 {
-                    LethalMin.Logger.LogInfo($"{DebugID}: Caching growth objects");
+                    LethalMin.Logger.LogDebug($"{DebugID}: Caching growth objects");
                     PikminModelRefernces modelRefs = pikminType.ModelPrefab.GetComponentInChildren<PikminModelRefernces>();
                     // Process base plants
                     ProcessPlants2(modelRefs.Plants);
@@ -3398,10 +3398,10 @@ namespace LethalMin
                     }
 
                     modelRefs.SetGrowthObjects(growthObjectsf);
-                    LethalMin.Logger.LogInfo($"{DebugID}: Caching growth objects done");
+                    LethalMin.Logger.LogDebug($"{DebugID}: Caching growth objects done");
                 }
 
-                LethalMin.Logger.LogInfo($"{DebugID}: Found {growthObjects.Count} plants across {MaxGrowthStage + 1} stages");
+                LethalMin.Logger.LogDebug($"{DebugID}: Found {growthObjects.Count} plants across {MaxGrowthStage + 1} stages");
             }
         }
 
