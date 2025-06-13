@@ -2678,7 +2678,7 @@ namespace LethalMin
                     continue;
 
                 // Handle special case for converting dead enemies
-                if (LethalMin.ConvertEnemyBodiesToItems && !LethalMin.EnemyBodyConvertBlacklistConfig.InternalValue.Contains(enemy.name)
+                if (LethalMin.ConvertEnemyBodiesToItems && !LethalMin.EnemyBodyConvertBlacklistConfig.InternalValue.Contains(enemy.enemyType.enemyName)
                  && !LethalMin.IsDependencyLoaded("Entity378.sellbodies") &&
                     enemy.isEnemyDead && !enemy.enemyType.destroyOnDeath && !PikminManager.instance.ConvertedAIs.Contains(enemy))
                 {
