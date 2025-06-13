@@ -83,7 +83,7 @@ namespace LethalMin
         {
             yield return new WaitForSeconds(Random.Range(0.1f, 1.0f));
 
-            if (Random.value <= LethalMin.GlowOddsToTurnIntoSeed)
+            if (Random.value <= LethalMin.GlowOddsToTurnIntoSeed || LethalMin.OnCompany)
             {
                 ShouldTurnintoSeed = true;
             }
@@ -570,7 +570,12 @@ namespace LethalMin
             SwitchToBehaviourStateOnLocalClient(5);
             ChangeIntent(Pintent.RunTowards);
 
-            if (IsInShip && ShouldTurnintoSeed)
+            if (LethalMin.OnCompany && ShouldTurnintoSeed)
+            {
+                agent.Warp(StartOfRound.Instance.shipInnerRoomBounds.transform.position);
+                transform2.TeleportOnLocalClient(StartOfRound.Instance.shipInnerRoomBounds.transform.position);
+            }
+            if ((IsInShip || LethalMin.OnCompany) && ShouldTurnintoSeed)
             {
                 SetCollisionMode(0);
                 if (IsOwner)
@@ -626,7 +631,7 @@ namespace LethalMin
                 PrimaryLeader = StartOfRound.Instance.allPlayerScripts[0].GetComponent<Leader>();
             }
 
-            if (IsInShip)
+            if (IsInShip || LethalMin.OnCompany)
             {
                 PrimaryLeader.Controller.SetItemInElevator(IsInShip, IsInShip, seed);
                 seed.EnablePhysics(enable: true);

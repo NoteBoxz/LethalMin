@@ -747,6 +747,7 @@ namespace LethalMin
         public static ConfigItem<float> LumiknullSpawnChance = null!;
         public static ConfigItem<int> SpawnLumiknullAfterDays = null!;
         public static ConfigItem<float> GlowOddsToTurnIntoSeed = null!;
+        public static ConfigItem<bool> GlowsUseableAtCompany = null!;
         #endregion
 
         #region LethalMon
@@ -1826,6 +1827,14 @@ namespace LethalMin
                 false,
                 ConfigItemAuthority.Host,
                 "slider(0,1)");
+
+            GlowsUseableAtCompany = new ConfigItem<bool>(
+                "Glow Pikmin",
+                "Useable At Company",
+                true,
+                "Whether or not glow pikmin are useable at the company",
+                false,
+                ConfigItemAuthority.Host);
             #endregion
 
             #region LethalMon Binding
@@ -2720,7 +2729,9 @@ namespace LethalMin
 
         public static bool UseInputUtils => IsDependencyLoaded("com.rune580.LethalCompanyInputUtils") && (!InVRMode || !(DontUseInputUtilsForVR && InVRMode));
         public static bool UseModDataLib => IsDependencyLoaded("MaxWasUnavailable.LethalModDataLib") && UseModDataLibConfig.InternalValue;
-        public static bool OnCompany => RoundManager.Instance != null && RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding";
+        public static bool OnCompany => RoundManager.Instance != null &&
+        (RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding" || RoundManager.Instance.currentLevel.sceneName == "MusemaScene");
+
         /// <summary>
         /// This is only set to true when LethalMin VR is loaded so let's hope we don't need to use it during startup.
         /// </summary>

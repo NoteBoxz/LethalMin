@@ -15,11 +15,15 @@ namespace LethalMin
         Color StartingColor;
         float RemoveTimer;
         Vector3 lookatLocalPos = new Vector3(0, 0, 0);
+        AudioSource audioSource = null!;
 
         void Start()
         {
             renderer = GetComponentInChildren<Renderer>();
             StartingColor = renderer.material.color;
+
+            audioSource = GetComponent<AudioSource>();
+            audioSource.rolloffMode = LethalMin.GlobalGhostSFX ? AudioRolloffMode.Logarithmic : AudioRolloffMode.Linear;
 
             StartingPosition = transform.position;
             if (LookAt.transform.parent == transform)
@@ -31,6 +35,7 @@ namespace LethalMin
 
         public void Update()
         {
+            audioSource.rolloffMode = LethalMin.GlobalGhostSFX ? AudioRolloffMode.Logarithmic : AudioRolloffMode.Linear;
             LookAt.position = new Vector3(
                 transform.position.x + lookatLocalPos.x,
                 transform.position.y + lookatLocalPos.y,

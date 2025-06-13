@@ -196,6 +196,7 @@ namespace LethalMin
         }
         public static int PikminSoundID = 0;
         bool wasInvisCheatOn;
+        bool friednlyFire => leader == null ? LethalMin.FriendlyFire : leader.FriendlyFire.Value;
 
 
 
@@ -269,11 +270,27 @@ namespace LethalMin
 
                 Leader? leader = LethalMin.GetLeaderViaID(SpawnProps.PlayerID);
 
+                if (!string.IsNullOrEmpty(SpawnProps.OverrideDebugID))
+                {
+                    DebugID = SpawnProps.OverrideDebugID;
+                }
+                if (!string.IsNullOrEmpty(SpawnProps.OverrideBirthDate))
+                {
+                    BirthDate = SpawnProps.OverrideBirthDate;
+                }
+
                 if (leader != null)
                 {
-                    if (SpawnProps.AddToSpawnCount)
-                        PikminManager.instance.EndOfGameStats.PikminRaised[leader] += 1;
-                    AssignLeader(leader, true, false);
+                    if (leader.Controller.isPlayerControlled)
+                    {
+                        if (SpawnProps.AddToSpawnCount)
+                            PikminManager.instance.EndOfGameStats.PikminRaised[leader] += 1;
+                        AssignLeader(leader, true, false);
+                    }
+                    else
+                    {
+                        LethalMin.Logger.LogDebug($"{DebugID}: Leader ({leader.Controller.playerUsername}) is not controlled, not assigning");
+                    }
                 }
 
                 if (SpawnProps.AddToSpawnCount)
@@ -302,15 +319,6 @@ namespace LethalMin
                 {
                     if (CurrentSoundPack.LookUpDict.ContainsKey(SpawnProps.SpawnSound))
                         PlayAudioOnLocalClient(SpawnProps.SpawnSound, false, SpawnProps.OverrideVolume);
-                }
-
-                if (!string.IsNullOrEmpty(SpawnProps.OverrideDebugID))
-                {
-                    DebugID = SpawnProps.OverrideDebugID;
-                }
-                if (!string.IsNullOrEmpty(SpawnProps.OverrideBirthDate))
-                {
-                    BirthDate = SpawnProps.OverrideBirthDate;
                 }
 
                 SetGrowth(SpawnProps.GrowthStage);
@@ -2904,14 +2912,14 @@ namespace LethalMin
                 return;
             }
 
-            if (previousLeader != null && playerWhoHit == previousLeader.Controller && currentBehaviourStateIndex == 3 && !LethalMin.FriendlyFire)
-            {
-                LethalMin.Logger.LogInfo($"{DebugID}: Hit by previous leader in attack state, ignoring hit");
-                DeathSnapToPos = null!;
-                return;
-            }
+            // if (previousLeader != null && playerWhoHit == previousLeader.Controller && currentBehaviourStateIndex == 3 && !friednlyFire)
+            // {
+            //     LethalMin.Logger.LogInfo($"{DebugID}: Hit by previous leader in attack state, ignoring hit");
+            //     DeathSnapToPos = null!;
+            //     return;
+            // }
 
-            if (leader != null && playerWhoHit != null && playerWhoHit == leader.Controller && !LethalMin.FriendlyFire)
+            if (leader != null && playerWhoHit != null && playerWhoHit == leader.Controller && !friednlyFire)
             {
                 LethalMin.Logger.LogInfo($"{DebugID}: FriendlyFire mode");
                 DeathSnapToPos = null!;

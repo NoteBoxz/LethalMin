@@ -23,7 +23,7 @@ namespace LethalMin
         public bool ShouldActivate = true;
         public bool IsActive = false;
         public static bool TimeForGlowPikminToExist => TimeOfDay.Instance.globalTime >= LethalMin.LumiknullActivateTime.InternalValue ||
-        StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Eclipsed && !LethalMin.OnCompany;
+        StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Eclipsed || LethalMin.OnCompany && LethalMin.GlowsUseableAtCompany;
 
         void LateUpdate()
         {

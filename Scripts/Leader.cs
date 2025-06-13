@@ -37,6 +37,7 @@ namespace LethalMin
         public LeaderFormationManager formManager = null!;
         public Glowmob? glowmob;
         public GameObject? LeaflingGhostInstance = null;
+        public NetworkVariable<bool> FriendlyFire = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
         bool HasAttemptedToBindActions;
         public int CurrentWhistleIndex = 0;
         bool LastIsInsideValue = false;
@@ -372,6 +373,11 @@ namespace LethalMin
             {
                 float d = LethalMin.PlayerNoticeZoneSizeCheat;
                 NoticeZone.transform.localScale = new Vector3(d, d, d);
+            }
+
+            if (IsOwner)
+            {
+                FriendlyFire.Value = LethalMin.FriendlyFire.InternalValue;
             }
 
             //throw
@@ -845,6 +851,21 @@ namespace LethalMin
             pikminHolding = null;
             predictor.SetTrajectoryVisible(false);
         }
+
+        [ServerRpc]
+        public void StopThrowServerRpc()
+        {
+            StopThrowClientRpc();
+        }
+        [ClientRpc]
+        public void StopThrowClientRpc()
+        {
+            if (IsOwner)
+            {
+                return;
+            }
+            StopThrow();
+        }
         public void StopThrow(bool SetCollisionMode = true)
         {
             if (SetCollisionMode)
@@ -868,8 +889,9 @@ namespace LethalMin
             {
                 if (Controller.quickMenuManager.isMenuOpen) { return; }
                 if (Controller.isTypingChat) { return; }
-                
+
                 pikminHolding.creatureVoice.Stop();
+                StopThrowServerRpc();
                 StopThrow();
             }
         }

@@ -51,13 +51,14 @@ namespace LethalMin
                 FreezeDuration = 10f;
                 blobAI.timeSinceHittingLocalPlayer = 0f;
             }
-            if( StickCoolDown > 0)
+            if (StickCoolDown > 0)
             {
                 StickCoolDown -= Time.deltaTime;
             }
-            if (FreezeCounter >= 1 && !IsFrozen)
+            if (IsOwner && FreezeCounter >= 1 && !IsFrozen)
             {
-                FreezeEnemy();
+                FreezeEnemyServerRpc(transform.position, transform.rotation.eulerAngles);
+                FreezeEnemy(transform.position, transform.rotation.eulerAngles);
                 LethalMin.Logger.LogInfo($"{enemyScript.gameObject.name} frozen by Ice Pikmin due to freeze counter: {FreezeCounter}");
                 return;
             }

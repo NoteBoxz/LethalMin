@@ -74,6 +74,11 @@ namespace LethalMin
                 IsDead = true;
                 enabled = false;
             }
+            if (IsFrozen)
+            {
+                enemyScript.inSpecialAnimation = true;
+                enemyScript.SetClientCalculatingAI(false);
+            }
 
             ShakeCooldown -= Time.deltaTime;
             if (MaxShakeOffVelocity > 1)
@@ -221,12 +226,13 @@ namespace LethalMin
 
             if (pikminWhoHit != null && pikminWhoHit is IcePikminAI)
             {
-                FreezeCounter += Damage * 2f;
-
                 int HP = EnemyAIPatch.EnemyHPs.ContainsKey(enemyScript.enemyType) ? EnemyAIPatch.EnemyHPs[enemyScript.enemyType] : enemyScript.enemyHP;
+                FreezeCounter += 0.05f;
+
                 if (IsOwner && FreezeCounter >= HP && !IsFrozen)
                 {
-                    FreezeEnemyServerRpc(); // Freeze the enemy if the freeze counter exceeds the HP
+                    FreezeEnemyServerRpc(transform.position, transform.rotation.eulerAngles); // Freeze the enemy if the freeze counter exceeds the HP
+                    FreezeEnemy(transform.position, transform.rotation.eulerAngles);
                     LethalMin.Logger.LogInfo($"{enemyScript.gameObject.name} frozen by Ice Pikmin due to freeze counter: {FreezeCounter}");
                     return;
                 }
@@ -392,16 +398,16 @@ namespace LethalMin
 
 
         [ServerRpc]
-        public void FreezeEnemyServerRpc()
+        public void FreezeEnemyServerRpc(Vector3 freezePosition, Vector3 freezeRotation)
         {
-            FreezeEnemyClientRpc();
+            FreezeEnemyClientRpc(freezePosition, freezeRotation);
         }
         [ClientRpc]
-        public void FreezeEnemyClientRpc()
+        public void FreezeEnemyClientRpc(Vector3 freezePosition, Vector3 freezeRotation)
         {
-            FreezeEnemy();
+            FreezeEnemy(freezePosition, freezeRotation);
         }
-        public virtual void FreezeEnemy()
+        public virtual void FreezeEnemy(Vector3 freezePosition, Vector3 freezeRotation)
         {
             if (IsFrozen || enemyScript.isEnemyDead)
                 return;
@@ -409,7 +415,12 @@ namespace LethalMin
             FreezeDuration = 12.0f;
             IsFrozen = true;
             FreezeCounter = 0;
-            enemyScript.inSpecialAnimation = true;
+            enemyScript.serverPosition = freezePosition;
+            enemyScript.serverRotation = freezeRotation;
+            if (IsOwner)
+            {
+                enemyScript.agent.Warp(freezePosition);
+            }
 
             enemyScript.creatureSFX.PlayOneShot(LethalMin.assetBundle.LoadAsset<AudioClip>("Assets/LethalMin/wav_bnk_AkB_Ambience_CaveAquarium/Amb_CaveAquarium_WaterBox_FreezePikminAdd.wav"));
 
@@ -456,6 +467,7 @@ namespace LethalMin
             IsFrozen = false;
             FreezeCounter = 0;
             enemyScript.inSpecialAnimation = false;
+            enemyScript.SetClientCalculatingAI(true);
 
             enemyScript.creatureSFX.PlayOneShot(LethalMin.assetBundle.LoadAsset<AudioClip>("Assets/LethalMin/wav_bnk_AkB_Ambience_CaveAquarium/Amb_CaveAquariumSwamp_WaterBox(14).wav"));
 

@@ -110,22 +110,33 @@ namespace LethalMin
                     LethalMin.Logger.LogWarning($"Glow pikmin can't spawn before {LethalMin.LumiknullActivateTime} outside");
                     return;
                 }
-                SpawnGlowPikminServerRpc();
+                SpawnGlowPikminServerRpc(OwnerClientId);
             }
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void SpawnGlowPikminServerRpc()
+        public void SpawnGlowPikminServerRpc(ulong ThrowerID)
         {
-            SpawnGlowPikminClientRpc();
+            SpawnGlowPikminClientRpc(ThrowerID);
         }
 
         [ClientRpc]
-        public void SpawnGlowPikminClientRpc()
+        public void SpawnGlowPikminClientRpc(ulong ThrowerID)
         {
             if (playerHeldBy != null)
             {
                 playerHeldBy.DiscardHeldObject();
+            }
+
+            Leader? leader = LethalMin.GetLeaderViaID(ThrowerID);
+            if (leader != null)
+            {
+                playerThrownBy = leader.Controller;
+            }
+            else
+            {
+                LethalMin.Logger.LogWarning($"Glow pikmin can't spawn, thrower not found {ThrowerID}");
+                return;
             }
 
             grabbable = false;

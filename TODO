@@ -136,17 +136,13 @@ Add in LCVR Compatabilty
 
 
 --WIP--
-Buff Ice Freezing
-Fix Bulbmin Souls
-Fix Onion Saves Persisting
-Do Final Playtests
 Create Launch Trailer
 Remove Early access text from Pikmin Signal Version
 
 --NotStarted--
 
 -Bugs-
-!!DONE!!
+Fix Onion Saves Persisting
 
 -Features-
 !!DONE!!
@@ -175,7 +171,15 @@ Refactor Winged Flying to take shortcuts
 
 Make Pikmin scatter after leader gets masked
 
+Add Funi Ragdolls
+
+Make onion revive maskeds
+
 -unproitized bugs-
+
+Fix Desynced Dead Pikmin
+
+Fix Enemys that vanish upon death (Bracken, Giant Kiwi) being carryable to the onion.
 
 Fix Onion HUD slot Going Into the negetives
 
