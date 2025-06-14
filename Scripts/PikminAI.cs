@@ -3599,7 +3599,8 @@ namespace LethalMin
                 SetCollisionMode(0);
             AgentLookTarget = null;
             ChangeIntent(Pintent.Carry);
-            PlayAudioOnLocalClient(PikminSoundPackSounds.ItemLift);
+            float vol = TargetItem.PikminOnItem.Count == 0 ? 1.0f : 1.0f / TargetItem.PikminOnItem.Count;
+            PlayAudioOnLocalClient("ItemLift", true, vol);
         }
         public void UnsetAsCarryingItem()
         {
