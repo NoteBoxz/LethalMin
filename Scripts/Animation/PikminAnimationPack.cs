@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using LethalMin.Utils;
 
 namespace LethalMin.Pikmin
 {
@@ -31,5 +32,19 @@ namespace LethalMin.Pikmin
         public AnimationClip? EditorPosionFlopAnim = null; // Poisned animation
         public AnimationClip? EditorDrowingAnim = null; // Drowing animation
         public AnimationClip? EditorBurnAnim = null; // Burning animation
+
+        static List<AnimationClip> prossedoneshotIdleAnims = new();
+        public void AddEventsToOneshotIdleAnims()
+        {
+            foreach (AnimationClip OSclip in EditorOneShotIdleAnim)
+            {
+                if (prossedoneshotIdleAnims.Contains(OSclip))
+                {
+                    continue;
+                }
+                PikUtils.AddEventToFrame(OSclip.stopTime - 0.01f, "resetRandomIdle", OSclip);
+                prossedoneshotIdleAnims.Add(OSclip);
+            }
+        }
     }
 }

@@ -3389,7 +3389,7 @@ namespace LethalMin
                 if (pikminType.CachePlantObjectRefernces)
                 {
                     LethalMin.Logger.LogDebug($"{DebugID}: Caching growth objects");
-                    PikminModelRefernces modelRefs = pikminType.ModelPrefab.GetComponentInChildren<PikminModelRefernces>();
+                    PikminModelRefernces modelRefs = pikminType.modelRefernces;
                     // Process base plants
                     ProcessPlants2(modelRefs.Plants);
 

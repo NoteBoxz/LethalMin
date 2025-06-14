@@ -145,11 +145,6 @@ namespace LethalMin
                 }
                 AnimationStates.Add(state);
             }
-
-            foreach (AnimationClip OSclip in AnimPack.EditorOneShotIdleAnim)
-            {
-                PikUtils.AddEventToFrame(OSclip.stopTime - 0.01f, "resetRandomIdle", OSclip);
-            }
         }
 
         protected virtual void SetupDefaultAnimationConditions()
@@ -286,7 +281,16 @@ namespace LethalMin
 
         public void resetRandomIdle()
         {
+            //LethalMin.Logger.LogInfo($"{GetComponentInParent<PikminAI>().DebugID}: Resetting random idle animation.");
             RandomIdle = 0;
+            if (AnimPack.UseStateMachineForIdleAnims)
+            {
+                animator.CrossFade(AnimPack.IdleAnimStateMachineEntryName, 0.2f);
+            }
+            else if(AnimPack.EditorIdleAnim.Count != 0)
+            {
+                PlayAnimation(AnimPack.EditorIdleAnim[0].name);
+            }
         }
 
         public virtual void PlayLandAnim()

@@ -418,6 +418,16 @@ namespace LethalMin
                 return;
             }
 
+            if (Ptype.ModelPrefab == null)
+            {
+                Logger.LogError($"Pikmin Type: {Ptype.PikminName} has no model prefab!");
+                return;
+            }
+            if (Ptype.modelRefernces == null)
+            {
+                Logger.LogError($"Pikmin Type: {Ptype.PikminName} has no model references!");
+                return;
+            }
             if (Ptype.ModelPrefab.GetComponentInChildren<PikminAnimatorController>() == null)
             {
                 Logger.LogWarning($"Pikmin Type: {Ptype.PikminName} has no animator controller!");
@@ -536,6 +546,22 @@ namespace LethalMin
             {
                 AddCustomScriptToPikminAI(Ptype.CustomTypeScript);
             }
+
+            PikminAnimationPack? pack = Ptype.modelRefernces.AnimatorController?.AnimPack;
+            if (pack != null)
+            {
+                pack.AddEventsToOneshotIdleAnims();
+            }
+
+            foreach (PikminModelGeneration gen in Ptype.modelRefernces.Generations)
+            {
+                PikminAnimationPack? Gpack = gen.AnimatorController?.AnimPack;
+                if (Gpack != null)
+                {
+                    Gpack.AddEventsToOneshotIdleAnims();
+                }
+            }
+
             Ptype.PikminTypeID = id;
             RegisteredPikminTypes[id] = Ptype;
             if (Ptype.SpawnsNaturally)
