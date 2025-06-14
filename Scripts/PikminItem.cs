@@ -1044,7 +1044,7 @@ namespace LethalMin
             foreach (PikminAI pikmin in PikminOnItem)
             {
                 // Get the base type speed modifier from the Pikmin's actual speed
-                float typeModifier = pikmin.pikminType.GetSpeed(pikmin.CurrentGrowthStage, pikmin.CurrentIntention == Pintent.RunTowards);
+                float typeModifier = pikmin.pikminType.GetSpeed(pikmin.CurrentGrowthStage, pikmin.ShouldRun);
 
                 // Get maturity modifier based on growth stage
                 float maturityModifier = 0f;

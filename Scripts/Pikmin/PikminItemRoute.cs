@@ -307,7 +307,7 @@ namespace LethalMin.Pikmin
 
             RouteNode CurNode = Nodes[CurrentPathIndex];
 
-            Pikmin.agent.speed = Pikmin.pikminType.GetSpeed(Pikmin.CurrentGrowthStage, Pikmin.CurrentIntention == Pintent.RunTowards);
+            Pikmin.agent.speed = Pikmin.pikminType.GetSpeed(Pikmin.CurrentGrowthStage, Pikmin.ShouldRun);
             UpdatePikminPath();
 
             if (CurNode.IsPikminAtNode(Pikmin))

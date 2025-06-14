@@ -161,6 +161,7 @@ namespace LethalMin
         public OverridePikminPosition? OverrideFollowPosition = null;
         public Vector3? SpecialIdlePosition = null;
         public Quaternion? SpecialIdleRotation = null;
+        public bool ShouldRun => CurrentIntention == Pintent.Attack || CurrentIntention == Pintent.Panicing || CurrentIntention == Pintent.RunTowards;
         PikminScanNodeProperties scanNodeProperties = null!;
         GameObject LatchRefPoint = null!;
         Vector3 LeavingPos = Vector3.zero;
@@ -817,7 +818,7 @@ namespace LethalMin
         {
             if (UseOverride && OverrideIdlePosition != null)
             {
-                agent.speed = pikminType.GetSpeed(CurrentGrowthStage, CurrentIntention == Pintent.RunTowards) * 2.5f;
+                agent.speed = pikminType.GetSpeed(CurrentGrowthStage, ShouldRun) * 2.5f;
                 PathToPosition(OverrideIdlePosition.Value.position);
                 return;
             }
@@ -841,7 +842,7 @@ namespace LethalMin
             const int LEAVING = 5;
 
             if (currentBehaviourStateIndex != WORK)
-                agent.speed = pikminType.GetSpeed(CurrentGrowthStage, CurrentIntention == Pintent.RunTowards);
+                agent.speed = pikminType.GetSpeed(CurrentGrowthStage, ShouldRun);
 
             // if (!PikChecks.IsPlayerConnected(OwnerClientId))
             // {
@@ -1360,7 +1361,7 @@ namespace LethalMin
             float CheckInterval = 0;
             while (ChargeTimer < time)
             {
-                agent.speed = pikminType.GetSpeed(CurrentGrowthStage, CurrentIntention == Pintent.RunTowards) * 3.5f;
+                agent.speed = pikminType.GetSpeed(CurrentGrowthStage, ShouldRun) * 3.5f;
                 ChargeTimer += Time.deltaTime;
                 CheckInterval += Time.deltaTime;
                 if (Vector3.Distance(transform.position, ChargePos) < 0.5f)
@@ -1414,7 +1415,7 @@ namespace LethalMin
                 yield return new WaitForEndOfFrame();
             }
 
-            agent.speed = pikminType.GetSpeed(CurrentGrowthStage, CurrentIntention == Pintent.RunTowards);
+            agent.speed = pikminType.GetSpeed(CurrentGrowthStage, ShouldRun);
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.LowQualityObstacleAvoidance;
             LethalMin.Logger.LogInfo($"{DebugID}: Charge finished after {ChargeTimer} seconds. Stopping charge.");
         }
@@ -1467,7 +1468,7 @@ namespace LethalMin
 
         private float CalculateDynamicSpeed(Vector3 targetPosition)
         {
-            float baseSpeed = pikminType.GetSpeed(CurrentGrowthStage, CurrentIntention == Pintent.RunTowards);
+            float baseSpeed = pikminType.GetSpeed(CurrentGrowthStage, ShouldRun);
             float distance = Vector3.Distance(transform.position, targetPosition);
             float maxSpeedMultiplier = 50f; // Adjust this value to change the maximum speed increase
             float speedMultiplier = Mathf.Clamp(distance / 10f, 1f, maxSpeedMultiplier); // Adjust 10f to change how quickly speed increases with distance
@@ -1586,7 +1587,7 @@ namespace LethalMin
             timeIdel = 0;
             CallResetMethods();
             SwitchToBehaviourStateOnLocalClient(5);
-            ChangeIntent(Pintent.RunTowards);
+            ChangeIntent(Pintent.Leave);
             if (onion != null)
             {
                 IsGoingToOnion = true;

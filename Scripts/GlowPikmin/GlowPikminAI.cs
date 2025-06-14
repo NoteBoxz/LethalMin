@@ -568,7 +568,7 @@ namespace LethalMin
         {
             CallResetMethods();
             SwitchToBehaviourStateOnLocalClient(5);
-            ChangeIntent(Pintent.RunTowards);
+            ChangeIntent(Pintent.Leave);
 
             if (LethalMin.OnCompany && ShouldTurnintoSeed)
             {

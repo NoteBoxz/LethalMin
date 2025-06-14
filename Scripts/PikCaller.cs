@@ -89,7 +89,7 @@ namespace LethalMin
                 }
                 ai.CallResetMethods();
                 ai.CreateShipRoute();
-                ai.ChangeIntent(Pintent.RunTowards);
+                ai.ChangeIntent(Pintent.Idle);
                 ai.SwitchToBehaviourStateOnLocalClient(2);
                 ai.ReturnToShipRoute.UpdateRoutePikmin();
                 yield return new WaitForSeconds(0.1f);
