@@ -31,7 +31,7 @@ namespace LethalMin
         void Start()
         {
             formerInteractTip = button.hoverTip;
-            VersionText.text = $"(V{MyPluginInfo.PLUGIN_VERSION.Replace("1.0.", "")}_EA)";
+            VersionText.text = $"(V{MyPluginInfo.PLUGIN_VERSION})";
         }
 
         public void OnInteract(PlayerControllerB controller)
