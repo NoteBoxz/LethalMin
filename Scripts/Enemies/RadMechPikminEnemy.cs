@@ -278,7 +278,7 @@ namespace LethalMin
                     pikmin.KillEnemy(true);
                 }
                 DeadCount++;
-                LethalMin.Logger.LogInfo($"RadMechPE: TorchPikminAnimation: Pikmin {pikmin.gameObject.name} killed by torch. {DeadCount}-{pikminToTorch.Count} remaining.");
+                LethalMin.Logger.LogDebug($"RadMechPE: TorchPikminAnimation: Pikmin {pikmin.gameObject.name} killed by torch. {DeadCount}-{pikminToTorch.Count} remaining.");
             }
             LethalMin.Logger.LogInfo($"RadMechPE: TorchPikminAnimation: Torch animation finished. {DeadCount} Pikmin killed.");
             yield return new WaitForSeconds(1.5f);
