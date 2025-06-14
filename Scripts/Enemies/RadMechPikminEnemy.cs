@@ -266,24 +266,21 @@ namespace LethalMin
             List<PikminAI> pikminToTorch = new List<PikminAI>(PikminGrabbed);
             int DeadCount = 0;
             float TourchDelay = 0.25f / (float)pikminToTorch.Count;
-            while (radMechAI.blowtorchActivated && Time.realtimeSinceStartup - startTime < 6f || DeadCount < pikminToTorch.Count)
+            foreach (PikminAI pikmin in pikminToTorch)
             {
-                foreach (PikminAI pikmin in pikminToTorch)
+                yield return new WaitForSeconds(TourchDelay);
+                if (pikmin == null || pikmin.IsDeadOrDying)
                 {
-                    yield return new WaitForSeconds(TourchDelay);
-                    if (pikmin == null || pikmin.IsDeadOrDying)
-                    {
-                        continue;
-                    }
-                    if (!PikChecks.IsPikminResistantToHazard(pikmin, PikminHazard.Fire))
-                    {
-                        pikmin.KillEnemy(true);
-                    }
-                    DeadCount++;
-                    LethalMin.Logger.LogInfo($"RadMechPE: TorchPikminAnimation: Pikmin {pikmin.gameObject.name} killed by torch. {DeadCount}-{pikminToTorch.Count} remaining.");
+                    continue;
                 }
-                LethalMin.Logger.LogInfo($"RadMechPE: TorchPikminAnimation: Torch animation finished. {DeadCount} Pikmin killed.");
+                if (!PikChecks.IsPikminResistantToHazard(pikmin, PikminHazard.Fire))
+                {
+                    pikmin.KillEnemy(true);
+                }
+                DeadCount++;
+                LethalMin.Logger.LogInfo($"RadMechPE: TorchPikminAnimation: Pikmin {pikmin.gameObject.name} killed by torch. {DeadCount}-{pikminToTorch.Count} remaining.");
             }
+            LethalMin.Logger.LogInfo($"RadMechPE: TorchPikminAnimation: Torch animation finished. {DeadCount} Pikmin killed.");
             yield return new WaitForSeconds(1.5f);
             CancelTorchPikminAnimation();
             if (base.IsServer)

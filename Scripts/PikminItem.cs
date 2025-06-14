@@ -1196,6 +1196,7 @@ namespace LethalMin
             {
                 pikmin.UseEntranceOnLocalClient(entrance, Inside, false);
             }
+            ItemScript.isInFactory = Inside;
             entrance.PlayAudioAtTeleportPositions();
         }
         #endregion
