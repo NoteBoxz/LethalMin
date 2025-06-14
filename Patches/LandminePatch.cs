@@ -22,7 +22,7 @@ namespace LethalMin.Patches
 
             if (other.CompareTag("Enemy"))
             {
-                if (other.TryGetComponent(out PikminCollisionDetect detect) && detect.mainPikmin.IsOwner)
+                if (LethalMin.TriggerLandmines && other.TryGetComponent(out PikminCollisionDetect detect) && detect.mainPikmin.IsOwner)
                 {
                     __instance.pressMineDebounceTimer = 0.5f;
                     __instance.PressMineServerRpc();
@@ -40,7 +40,7 @@ namespace LethalMin.Patches
             }
             if (other.CompareTag("Enemy"))
             {
-                if (other.TryGetComponent(out PikminCollisionDetect detect) && detect.mainPikmin.IsOwner)
+                if (LethalMin.TriggerLandmines && other.TryGetComponent(out PikminCollisionDetect detect) && detect.mainPikmin.IsOwner)
                 {
                     __instance.TriggerMineOnLocalClientByExiting();
                 }

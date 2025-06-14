@@ -621,6 +621,7 @@ namespace LethalMin
         public static ConfigItem<bool> DontUpdateSpaceOnionPosition = null!;
         public static ConfigItem<bool> MakeItemsScanable = null!;
         public static ConfigItem<bool> MakePikminScanable = null!;
+        public static ConfigItem<bool> TriggerLandmines = null!;
         public static ConfigItem<bool> GlobalGhostSFX = null!;
         public static ConfigItem<bool> DieInPlayerDeathZone = null!;
         #endregion
@@ -962,6 +963,14 @@ namespace LethalMin
                 "Make Pikmin Scanable",
                 true,
                 "Make pikmin scanable",
+                false,
+                ConfigItemAuthority.Local);
+
+            TriggerLandmines = new ConfigItem<bool>(
+                "General",
+                "Trigger Landmines",
+                true,
+                "Make pikmin trigger landmines",
                 false,
                 ConfigItemAuthority.Local);
 
