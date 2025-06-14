@@ -3587,19 +3587,19 @@ namespace LethalMin
 
             if (itm.IsBeingCarried)
             {
-                SetAsCarryingItem();
+                SetAsCarryingItem(false);
             }
 
             LethalMin.Logger.LogInfo($"{DebugID}: Grabbed item {itm.gameObject.name} Speed is now: {itm.GetSpeed(true)}");
         }
 
-        public void SetAsCarryingItem()
+        public void SetAsCarryingItem(bool cullAudio = true)
         {
             if (TargetItem.PrimaryPikminOnItem != this)
                 SetCollisionMode(0);
             AgentLookTarget = null;
             ChangeIntent(Pintent.Carry);
-            float vol = TargetItem.PikminOnItem.Count == 0 ? 1.0f : 1.0f / TargetItem.PikminOnItem.Count;
+            float vol = TargetItem.PikminOnItem.Count == 0 || !cullAudio ? 1.0f : 1.0f / TargetItem.PikminOnItem.Count;
             PlayAudioOnLocalClient("ItemLift", true, vol);
         }
         public void UnsetAsCarryingItem()
