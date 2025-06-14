@@ -50,6 +50,7 @@ namespace LethalMin
             yield return new WaitForSeconds(0.01f * 10);
             yield return new WaitForSeconds(0.2f);
             yield return new WaitForSeconds(4.4f);
+            LethalMin.Logger.LogInfo($"EatPikminAnimation: {PikminGrabbed.Count} Pikmin grabbed");
             foreach (PikminAI pik in PikminGrabbed)
             {
                 yield return new WaitForSeconds(0.1f);
@@ -123,6 +124,12 @@ namespace LethalMin
                 PikminGrabbed.Add(pikmin);
                 handTrigger.LatchPikmin(pikmin, forestGiantAI.holdPlayerPoint.position);
             }
+            if (eatPikminCoroutine != null)
+            {
+                StopCoroutine(eatPikminCoroutine);
+                eatPikminCoroutine = null;
+            }
+            eatPikminCoroutine = StartCoroutine(EatPikminAnimation());
         }
 
     }

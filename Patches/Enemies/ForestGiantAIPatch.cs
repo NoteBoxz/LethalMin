@@ -43,7 +43,6 @@ namespace LethalMin.Patches.AI
             if (pikminRefs.Count > 0)
             {
                 forestGiantPikminEnemy.GrabPikminServerRpc(pikminRefs.ToArray());
-                forestGiantPikminEnemy.eatPikminCoroutine = forestGiantPikminEnemy.StartCoroutine(forestGiantPikminEnemy.EatPikminAnimation());
             }
         }
 
