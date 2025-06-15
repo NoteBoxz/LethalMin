@@ -137,6 +137,7 @@ Create Launch Trailer
 
 -- bugs --
 - ReXuvination causes the pikmin collision detect to break
+- LethalMin.PikminItem.GetNearestGrabPosition throws a null refernce exception
 
 
 -things to refactor-
