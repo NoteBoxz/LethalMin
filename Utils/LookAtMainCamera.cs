@@ -5,7 +5,7 @@ namespace Lethalm.Utils
     public class LookAtMainCamera : MonoBehaviour
     {
         private Camera mainCamera = null!;
-
+        
         void Start()
         {
             mainCamera = Camera.current;
@@ -13,18 +13,16 @@ namespace Lethalm.Utils
 
         void LateUpdate()
         {
-            if (!StartOfRound.Instance.localPlayerController.isPlayerDead)
-            {
-                mainCamera = StartOfRound.Instance.localPlayerController.gameplayCamera;
-            }
-            else
-            {
-                mainCamera = StartOfRound.Instance.spectateCamera;
-            }
+            mainCamera = getMainCamera();
             if (mainCamera != null && 2 * transform.position - mainCamera.transform.position != Vector3.zero)
             {
                 transform.LookAt(2 * transform.position - mainCamera.transform.position);
             }
+        }
+
+        Camera getMainCamera()
+        {
+            return StartOfRound.Instance == null ? Camera.current : StartOfRound.Instance.activeCamera;
         }
     }
 }
