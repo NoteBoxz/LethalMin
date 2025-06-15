@@ -135,30 +135,11 @@ Re-add Configs
 Add in LCVR Compatabilty
 Create Launch Trailer
 
-
---WIP--
-!!DONE!!
-
---NotStarted--
-
--Bugs-
-!!DONE!!
-
--Features-
-!!DONE!!
-
--Interactions-
-!!DONE!!
-
--Compats-
-!!DONE!!
-
--Funi-
-!!DONE!!
+-- bugs --
+- ReXuvination causes the pikmin collision detect to break
 
 
-
--things to refactor later-
+-things to refactor-
 Add Mod Definition to allow dependencies
 
 Implument proper task system instead of just carrying and attacking
