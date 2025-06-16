@@ -138,6 +138,8 @@ Create Launch Trailer
 -- bugs --
 - ReXuvination causes the pikmin collision detect to break
 - LethalMin.PikminItem.GetNearestGrabPosition throws a null refernce exception
+- The onion landing sounds are too loud
+- Player 4 is unable to throw pikmin
 
 
 -things to refactor-
