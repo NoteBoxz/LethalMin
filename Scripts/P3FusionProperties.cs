@@ -14,9 +14,14 @@ namespace LethalMin
     public class P3FusionProperties : BaseOnionFusionProperties
     {
         public SkinnedMeshRenderer[] SMRs = new SkinnedMeshRenderer[0];
+        public Texture[] FusionTextures = new Texture[0];
+        public SkinnedMeshRenderer SymbolRenderer = null!;
         public override void ApplyFusionProperties(OnionType onionType = null!, List<OnionType> fusedTypes = null!)
         {
             base.ApplyFusionProperties(onionType, fusedTypes);
+
+            int index = Mathf.Clamp(fusedTypes.Count - 1, 0, FusionTextures.Length - 1);
+            SymbolRenderer.material.mainTexture = FusionTextures[index];
 
             Texture2D text = null!;
             if (fusedTypes.Count > 0)

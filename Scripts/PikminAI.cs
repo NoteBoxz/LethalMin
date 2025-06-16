@@ -3816,9 +3816,9 @@ namespace LethalMin
         }
         public void PlayAudioOnLocalClient(string Name, bool PlayOnVoice = true, float overrideVolume = -1)
         {
-            if (!CurrentSoundPack.IsKeyValid(Name))
+            if (!CurrentSoundPack.IsKeyValid(Name, false))
             {
-                LethalMin.Logger.LogWarning($"{DebugID}: attempted to play an invalid sound ({Name})");
+                LethalMin.Logger.LogWarning($"{DebugID}: attempted to play an invalid sound ({Name}), most likely due to having no sounds for it.");
                 CurrentPlayingKey = "";
                 return;
             }

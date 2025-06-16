@@ -32,11 +32,11 @@ namespace LethalMin
 
             if (fusedTypes.Count != 0)
             {
-                MainOnionRenderer.material.mainTexture = GradientTextureGenerator.Generate90DegreeGradient(fusedTypes.Select(ot => ot.OnionColor).ToList(), 0.1f);
+                MainOnionRenderer.material.SetTexture("_GraidentOverlay", GradientTextureGenerator.Generate90DegreeGradient(fusedTypes.Select(ot => ot.OnionColor).ToList(), 0.1f));
             }
             else
             {
-                MainOnionRenderer.material.color = onionType.OnionColor;
+                MainOnionRenderer.material.SetColor("_MainColor", onionType.OnionColor);
             }
         }
     }

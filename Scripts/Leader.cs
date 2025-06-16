@@ -657,7 +657,7 @@ namespace LethalMin
                 if (Controller.isTypingChat) { return; }
                 if (Controller.inTerminalMenu) { return; }
                 if (OnionHUDManager.instance.IsMenuOpen) { return; }
-                if (secondaryThrowAction != null)
+                if (LethalMin.InVRMode && secondaryThrowAction != null)
                 {
                     if (context.action == throwAction && !secondaryThrowAction.IsPressed() ||
                        context.action == secondaryThrowAction && !throwAction.IsPressed())

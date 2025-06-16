@@ -169,7 +169,7 @@ namespace LethalMin.Pikmin
         public AudioClip[] CrushSound = new AudioClip[0];
 
 
-        public bool IsKeyValid(string key)
+        public bool IsKeyValid(string key, bool logWarnings = true)
         {
             if (LookUpDict.ContainsKey(key) && LookUpDict[key].Length > 0)
             {
@@ -177,12 +177,14 @@ namespace LethalMin.Pikmin
             }
             if (!LookUpDict.ContainsKey(key))
             {
-                LethalMin.Logger.LogWarning($"Invalid key: {key}. Please ensure the key exists in the PikminSoundPack asset.");
+                if (logWarnings)
+                    LethalMin.Logger.LogWarning($"Invalid key: {key}. Please ensure the key exists in the PikminSoundPack asset.");
                 return false;
             }
             if (LookUpDict[key].Length == 0)
             {
-                LethalMin.Logger.LogWarning($"No sounds found for key: {key}. Please ensure the key has at least one sound in the PikminSoundPack asset.");
+                if (logWarnings)
+                    LethalMin.Logger.LogWarning($"No sounds found for key: {key}. Please ensure the key has at least one sound in the PikminSoundPack asset.");
                 return false;
             }
             return false;

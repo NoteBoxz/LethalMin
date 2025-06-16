@@ -66,6 +66,7 @@ namespace LethalMin
         public AnimationCondition LayingCondition = null!;
         private List<AnimationCondition> _animationConditions = new List<AnimationCondition>();
         bool PlayAnimCalled = false;
+        AnimationClip? lastIdleAnim = null;
 
 
 
@@ -239,6 +240,15 @@ namespace LethalMin
             // Check if the animator is null or not initialized
             if (animator == null || !animator.isInitialized) return;
 
+            if (!AnimPack.UseStateMachineForIdleAnims && _currentState.Item2 != null && AnimPack.EditorIdleAnim.Contains(_currentState.Item2))
+            {
+                if (IdleAnim != null && lastIdleAnim != IdleAnim)
+                {
+                    lastIdleAnim = IdleAnim;
+                    PlayAnimation(IdleAnim.name);
+                }
+            }
+
             if (PlayAnimCalled) return;
 
             // Check for animation conditions in priority order
@@ -287,7 +297,7 @@ namespace LethalMin
             {
                 animator.CrossFade(AnimPack.IdleAnimStateMachineEntryName, 0.2f);
             }
-            else if(AnimPack.EditorIdleAnim.Count != 0)
+            else if (AnimPack.EditorIdleAnim.Count != 0)
             {
                 PlayAnimation(AnimPack.EditorIdleAnim[0].name);
             }
