@@ -67,6 +67,8 @@ namespace LethalMin.Pikmin
         [Tooltip("If null, the sprout will use the mesh prefab")]
         public GameObject? SproutOverrideModel;
         public bool SetColorOnSprout = true;
+        public bool UseOverrideSproutGlowColor = false;
+        public Color OverrideSproutGlowColor = Color.white;
 
         [Tooltip("Prevents the pikmin from being registered, only set this to true if the type is unused or not ment to be registered")]
         public bool DisableRegistration = false;
