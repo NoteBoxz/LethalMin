@@ -57,6 +57,10 @@ namespace LethalMin.Pikmin
         [Tooltip("The gameobject that overrides the pikmin ghost's model")]
         public GameObject? PikminGhostOverrideModel;
 
+        [Tooltip("Prevents the pikmin from being registered, only set this to true if the type is unused or not ment to be registered")]
+        public bool DisableRegistration = false;
+
+        [Header("Sprout")]
         [Tooltip("The color the sprout plant uses")]
         public Sprout.SproutPlantColor SproutPlantColor = Sprout.SproutPlantColor.Default;
 
@@ -66,12 +70,15 @@ namespace LethalMin.Pikmin
 
         [Tooltip("If null, the sprout will use the mesh prefab")]
         public GameObject? SproutOverrideModel;
-        public bool SetColorOnSprout = true;
-        public bool UseOverrideSproutGlowColor = false;
-        public Color OverrideSproutGlowColor = Color.white;
 
-        [Tooltip("Prevents the pikmin from being registered, only set this to true if the type is unused or not ment to be registered")]
-        public bool DisableRegistration = false;
+        [Tooltip("If the override material is null, the pikmin's sprout will just color it with the PikminPrimaryColor")]
+        public bool SetColorOnSprout = true;
+
+        [Tooltip("If you want the Pikmin's idle glow to be a differnt color than the PikminPrimaryColor")]
+        public bool UseOverrideSproutGlowColor = false;
+
+        [Tooltip("If you want the Pikmin's idle glow to be a differnt color than the PikminPrimaryColor (Make sure UseOverrideSproutGlowColor is true when using this)")]
+        public Color OverrideSproutGlowColor = Color.white;
 
         [Header("Pikmin Stats")]
 
