@@ -106,8 +106,16 @@ namespace LethalMin
             LethalMin.RegisterCustomOnionTypes(customOtypes);
             LethalMin.RegisterCustomFuseRules(customFuseRules);
 
-            TypeConverter.ClearCache();
+            if (LethalMin.IsDependencyLoaded("NoteBoxz.LethalMinLibrary"))
+            {
+                ClearCache();
+            }
             LethalMin.Logger.LogMessage($"All bundles processed: {BundlesProcessed}/{BundlesToProcess}");
+        }
+
+        void ClearCache()
+        {
+            TypeConverter.ClearCache();
         }
 
         private void ProcessLoadedBundle(AssetBundle bundle)
