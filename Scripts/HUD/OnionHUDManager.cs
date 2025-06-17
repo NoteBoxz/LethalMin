@@ -102,6 +102,7 @@ namespace LethalMin.HUD
             }
             if (IsMenuOpen && (StartOfRound.Instance.localPlayerController.quickMenuManager.isMenuOpen || HUDManager.Instance.hudHidden || HUDManager.Instance.currentSpecialMenu != SpecialHUDMenu.None))
             {
+                LethalMin.Logger.LogInfo($"autoCloseReason: {StartOfRound.Instance.localPlayerController.quickMenuManager.isMenuOpen} {HUDManager.Instance.hudHidden} {HUDManager.Instance.currentSpecialMenu}");
                 CloseMenu();
             }
         }

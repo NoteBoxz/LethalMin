@@ -230,7 +230,7 @@ namespace LethalMin
         public HashSet<PikminItem> PikminItems { get; private set; } = new HashSet<PikminItem>();
         public HashSet<PikminEnemy> PikminEnemies { get; private set; } = new HashSet<PikminEnemy>();
         public HashSet<Onion> Onions { get; private set; } = new HashSet<Onion>();
-        public HashSet<BaseOnion> OnionsSpawnable => new HashSet<BaseOnion>(Onions.Select(x => x.GetComponent<BaseOnion>()).Where(x => x != null));
+        public HashSet<BaseOnion> OnionsSpawnable => new HashSet<BaseOnion>(Onions.Where(o => o != null).Select(o => o as BaseOnion).Where(o => o != null)!);
         public HashSet<PikminVehicleController> Vehicles { get; private set; } = new HashSet<PikminVehicleController>();
         public Dictionary<EnemyType, Item> EnemyItems { get; private set; } = new Dictionary<EnemyType, Item>();
         public HashSet<PuffminLeader> PuffminLeaders { get; private set; } = new HashSet<PuffminLeader>();
@@ -2282,6 +2282,7 @@ namespace LethalMin
                     oni.NetworkObject.Despawn(true);
                 }
             }
+            Onions.RemoveWhere(oni => oni == null || oni.NetworkObject == null || !oni.NetworkObject.IsSpawned);
         }
 
         public void DespawnLumiknulls()

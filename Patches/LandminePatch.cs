@@ -5,6 +5,7 @@ using Unity.Netcode;
 using System.Collections.Generic;
 using LethalMin;
 using System.Collections;
+using LethalMin.Utils;
 
 namespace LethalMin.Patches
 {
@@ -47,7 +48,7 @@ namespace LethalMin.Patches
             }
         }
 
-
+        static List<PikminAI> pikminList = new List<PikminAI>();
         [HarmonyPatch(nameof(Landmine.SpawnExplosion))]
         [HarmonyPrefix]
         public static void SpawnExplosionPrePatch(Landmine __instance, Vector3 explosionPosition, bool spawnExplosionEffect = false, float killRange = 1f, float damageRange = 1f, int nonLethalDamage = 50, float physicsForce = 0f, GameObject overridePrefab = null!, bool goThroughCar = false)
@@ -68,7 +69,13 @@ namespace LethalMin.Patches
                         PikminCollisionDetect componentInChildren2 = array[i].gameObject.GetComponentInChildren<PikminCollisionDetect>();
                         if (componentInChildren2 != null && componentInChildren2.mainPikmin.IsOwner && (num2 <= damageRange || num2 <= killRange))
                         {
-                            componentInChildren2.mainPikmin.HitFromExplosionAndSync(explosionPosition, killRange, damageRange, nonLethalDamage);
+                            if (PikChecks.IsPikminResistantToHazard(componentInChildren2.mainPikmin, PikminHazard.Explosive, false))
+                            {
+                                pikminList.Add(componentInChildren2.mainPikmin);
+                                componentInChildren2.mainPikmin.SetInvincibiltyServerRpc(true);
+                                componentInChildren2.mainPikmin.Invincible = true;
+                            }
+                            componentInChildren2.mainPikmin.HitFromExplosionAndSync(explosionPosition, killRange, damageRange, nonLethalDamage, physicsForce);
                         }
                     }
                 }
@@ -77,6 +84,21 @@ namespace LethalMin.Patches
             {
                 LethalMin.Logger.LogError($"LethalMin: Error in LandmineExsplotionPatch: {e}");
             }
+        }
+
+        [HarmonyPatch(nameof(Landmine.SpawnExplosion))]
+        [HarmonyPostfix]
+        public static void SpawnExplosionPostPatch()
+        {
+            foreach (PikminAI pikmin in pikminList)
+            {
+                if (pikmin != null && pikmin.IsOwner)
+                {
+                    pikmin.SetInvincibiltyServerRpc(false);
+                    pikmin.Invincible = false;
+                }
+            }
+            pikminList.Clear();
         }
     }
 }

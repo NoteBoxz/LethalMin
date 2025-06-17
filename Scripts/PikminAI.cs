@@ -3000,28 +3000,28 @@ namespace LethalMin
         /// <param name="killRange">The range where the pikmin will die no matter what</param>
         /// <param name="damageRange">The range where the pikmin will lose HP</param>
         /// <param name="nonLethalDamage">The ammount of HP the pikmin looses (normalized 10 = 1, 100 = 10)</param>
-        public void HitFromExplosionAndSync(Vector3 explosionPosition, float killRange = 1f, float damageRange = 1f, int nonLethalDamage = 50)
+        public void HitFromExplosionAndSync(Vector3 explosionPosition, float killRange = 1f, float damageRange = 1f, int nonLethalDamage = 50, float physicsForce = 0)
         {
             if (IsServer)
             {
-                HitFromExplosionClientRpc(explosionPosition, killRange, damageRange, nonLethalDamage);
+                HitFromExplosionClientRpc(explosionPosition, killRange, damageRange, nonLethalDamage, physicsForce);
             }
             else
             {
-                HitFromExplosionServerRpc(explosionPosition, killRange, damageRange, nonLethalDamage);
+                HitFromExplosionServerRpc(explosionPosition, killRange, damageRange, nonLethalDamage, physicsForce);
             }
         }
         [ServerRpc]
-        public void HitFromExplosionServerRpc(Vector3 explosionPosition, float killRange = 1f, float damageRange = 1f, int nonLethalDamage = 50)
+        public void HitFromExplosionServerRpc(Vector3 explosionPosition, float killRange = 1f, float damageRange = 1f, int nonLethalDamage = 50, float physicsForce = 0)
         {
-            HitFromExplosionClientRpc(explosionPosition, killRange, damageRange, nonLethalDamage);
+            HitFromExplosionClientRpc(explosionPosition, killRange, damageRange, nonLethalDamage, physicsForce);
         }
         [ClientRpc]
-        public void HitFromExplosionClientRpc(Vector3 explosionPosition, float killRange = 1f, float damageRange = 1f, int nonLethalDamage = 50)
+        public void HitFromExplosionClientRpc(Vector3 explosionPosition, float killRange = 1f, float damageRange = 1f, int nonLethalDamage = 50, float physicsForce = 0)
         {
-            HitFromExplosion(explosionPosition, killRange, damageRange, nonLethalDamage);
+            HitFromExplosion(explosionPosition, killRange, damageRange, nonLethalDamage, physicsForce);
         }
-        public void HitFromExplosion(Vector3 explosionPosition, float killRange = 1f, float damageRange = 1f, int nonLethalDamage = 50)
+        public void HitFromExplosion(Vector3 explosionPosition, float killRange = 1f, float damageRange = 1f, int nonLethalDamage = 50, float physicsForce = 0)
         {
             if (Invincible)
             {
@@ -3031,6 +3031,13 @@ namespace LethalMin
 
             if (IsDeadOrDying)
             {
+                return;
+            }
+
+            if (PikChecks.IsPikminResistantToHazard(pikminType, PikminHazard.Explosive))
+            {
+                LethalMin.Logger.LogInfo($"{DebugID}: Pikmin is resistant to explosive hazard, avoiding damage");
+                OnAvoidHazard(PikminHazard.Explosive);
                 return;
             }
 
@@ -3049,7 +3056,7 @@ namespace LethalMin
             {
                 LethalMin.Logger.LogInfo($"{DebugID}: Killed instantly by explosion - within kill range ({distance}/{killRange})");
                 enemyHP = 0;
-                ApplyKnockBack(knockbackDir, 10);
+                ApplyKnockBack(knockbackDir, physicsForce + 4);
                 hitBeforeKillWasCalled = true;
                 KillEnemy(false);
                 return;
@@ -3072,10 +3079,10 @@ namespace LethalMin
                 enemyHP -= damage;
 
                 LethalMin.Logger.LogInfo($"{DebugID}: Hit from explosion (HP: {enemyHP}, Damage: {damage}, " +
-                                       $"Distance: {distance}, NDist: {normalizedDistance})");
+                                       $"Distance: {distance}, NDist: {normalizedDistance} pForce: {physicsForce})");
 
                 // Apply knockback force proportional to damage/distance
-                float knockbackMultiplier = 4 + (5 * (1 - normalizedDistance));
+                float knockbackMultiplier = physicsForce + (5 * (1 - normalizedDistance));
 
                 if (enemyHP > 0)
                 {

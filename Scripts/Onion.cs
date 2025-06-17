@@ -26,6 +26,7 @@ namespace LethalMin
         public Dictionary<PikminType, int> TypesToSpawn = new Dictionary<PikminType, int>();
         public float SproutSpawnTimer = 1f;
         public Coroutine? SpawnSproutsRoutine = null;
+        public Dictionary<ulong, Coroutine?> SpawnedPikminRoutines = new Dictionary<ulong, Coroutine?>();
         bool CreatedFusedInstance = false;
         float sTimer;
 
@@ -151,8 +152,15 @@ namespace LethalMin
             LethalMin.Logger.LogInfo($"{leaderWithdrawing.Controller.playerUsername}: withdrawing" +
             $" ({PikUtils.ParseListToString(QuantityValues)})," +
             $" of ({PikUtils.ParseListToString(typesWithdrawing.Select(p => p.PikminName).ToList())})");
-
-            StartCoroutine(SpawnedInterval(typesWithdrawing, QuantityValues, leaderWithdrawing));
+            if(SpawnedPikminRoutines.ContainsKey(playerID))
+            {
+                if (SpawnedPikminRoutines[playerID] != null)
+                {
+                    StopCoroutine(SpawnedPikminRoutines[playerID]);
+                    SpawnedPikminRoutines[playerID] = null;
+                }
+            }
+            SpawnedPikminRoutines[playerID] = StartCoroutine(SpawnedInterval(typesWithdrawing, QuantityValues, leaderWithdrawing));
         }
 
         public virtual IEnumerator SpawnedInterval(List<PikminType> typesWithdrawing, int[] QuantityValues, Leader Leader)
@@ -236,6 +244,7 @@ namespace LethalMin
                     }
                 }
             }
+            SpawnedPikminRoutines[Leader.Controller.OwnerClientId] = null;
         }
 
 

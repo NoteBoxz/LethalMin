@@ -137,9 +137,9 @@ Create Launch Trailer
 
 -- bugs --
 - ReXuvination causes the pikmin collision detect to break
-- LethalMin.PikminItem.GetNearestGrabPosition throws a null refernce exception
-- Pikmin that are resistant to booms are not
-- Some modded items (mainly ones unieq to moons) breaks pikmin items
+- LethalMin.PikminItem.GetNearestGrabPosition throws a null refernce exception (Due to null settings most likely)
+- end of day stats cover more company extra slots
+- grabbing an onion item at the same time it leaves causes the infamous LC interaction bug
 
 
 -things to refactor-
