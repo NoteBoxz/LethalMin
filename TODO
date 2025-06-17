@@ -138,6 +138,8 @@ Create Launch Trailer
 -- bugs --
 - ReXuvination causes the pikmin collision detect to break
 - LethalMin.PikminItem.GetNearestGrabPosition throws a null refernce exception
+- Pikmin that are resistant to booms are not
+- Some modded items (mainly ones unieq to moons) breaks pikmin items
 
 
 -things to refactor-
