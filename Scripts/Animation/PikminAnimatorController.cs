@@ -324,6 +324,11 @@ namespace LethalMin
                 PlayAnimCalled = false;
                 return;
             }
+            
+            if (animationName == "Plucked")
+            {
+                animationName = AnimPack.EditorPluckedAnim?.name ?? "Plucked";
+            }
 
             PikAnimationState state = GetAnimationStateFromNameViaHash(animationName);
             if (state.clip == null)
