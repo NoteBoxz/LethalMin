@@ -933,7 +933,7 @@ namespace LethalMin
             {
                 return;
             }
-            if (!CurrentLatchTrigger && !IsWildPikmin)
+            if (!CurrentLatchTrigger && !IsWildPikmin && pikminType.CanCarryObjects)
             {
                 PikminItem? itm = GetClosestPikminItem();
                 if (itm != null)
@@ -1065,6 +1065,7 @@ namespace LethalMin
                 agent.stoppingDistance = 0;
             }
 
+
             if (ReturnToShipRoute != null && TargetItem == null)
             {
                 // If the Pikmin is on a route to the ship, follow that route
@@ -1077,6 +1078,12 @@ namespace LethalMin
                 DestoryShipRoute();
             }
 
+            if(!pikminType.CanCarryObjects)
+            {
+                LethalMin.Logger.LogWarning($"{DebugID}: Pikmin type {pikminType.PikminName} cannot carry objects, switching to idle state");
+                SetToIdleServerRpc();
+                return;
+            }
             if (TargetItem == null)
             {
                 // Guard clause: If there's no target item to work on, log a warning and switch to idle state
