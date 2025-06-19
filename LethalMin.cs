@@ -679,6 +679,9 @@ namespace LethalMin
         public static ConfigItem<bool> DisperseWhenDismissed = null!;
         public static ConfigItem<bool> AllowOnBBtobeGrabed = null!;
         public static ConfigItem<float> DismissWindownTime = null!;
+        public static ConfigItem<bool> WildPikminCarry = null!;
+        public static ConfigItem<bool> WildPikminAttack = null!;
+        public static ConfigItem<bool> WildPikminNoDeath = null!;
         #endregion
 
         #region Enemy Behavior
@@ -1337,6 +1340,30 @@ namespace LethalMin
                 "The ammount of seconds to wait before pikmin can be assigned a leader again after being dismissed",
                 false,
                 ConfigItemAuthority.Client);
+
+            WildPikminCarry = new ConfigItem<bool>(
+                "Pikmin Behavior",
+                "Wild Pikmin Can Carry Items",
+                false,
+                "Whether or not wild pikmin can carry items",
+                false,
+                ConfigItemAuthority.Host);
+            
+            WildPikminAttack = new ConfigItem<bool>(
+                "Pikmin Behavior",
+                "Wild Pikmin Can Attack Enemies",
+                true,
+                "Whether or not wild pikmin can attack enemies",
+                false,
+                ConfigItemAuthority.Host);
+            
+            WildPikminNoDeath = new ConfigItem<bool>(
+                "Pikmin Behavior",
+                "Wild Pikmin Dont Die",
+                true,
+                "Whether or not wild pikmin can die",
+                false,
+                ConfigItemAuthority.Host);
             #endregion
 
             #region Enemy Behavior Binding

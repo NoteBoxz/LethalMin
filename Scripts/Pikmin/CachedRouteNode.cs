@@ -61,7 +61,11 @@ namespace LethalMin.Pikmin
             }
             if (Entrance != null && Entrance.exitPoint != null)
             {
-                Pos = Entrance.exitPoint.position;
+                if (Entrance.exitPoint == null)
+                {
+                    Entrance.FindExitPoint();
+                }
+                Pos = Entrance.exitPoint?.position;
             }
             if (!OverrideSkipInsideCheck && SkipWhenCanPathOutsideWhenInside && LethalMin.CanPathOutsideWhenInside)
             {
@@ -88,7 +92,11 @@ namespace LethalMin.Pikmin
         {
             if (Entrance != null && Entrance.exitPoint != null)
             {
-                Pos = Entrance.exitPoint.position;
+                if (Entrance.exitPoint == null)
+                {
+                    Entrance.FindExitPoint();
+                }
+                Pos = Entrance.exitPoint?.position;
             }
             if (CheckDistance > 0 && Pos != null)
             {

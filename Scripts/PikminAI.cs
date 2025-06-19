@@ -933,7 +933,7 @@ namespace LethalMin
             {
                 return;
             }
-            if (!CurrentLatchTrigger && !IsWildPikmin && pikminType.CanCarryObjects)
+            if (!CurrentLatchTrigger && (!IsWildPikmin || IsWildPikmin && LethalMin.WildPikminCarry) && pikminType.CanCarryObjects)
             {
                 PikminItem? itm = GetClosestPikminItem();
                 if (itm != null)
@@ -958,7 +958,7 @@ namespace LethalMin
                     }
                 }
             }
-            if (!CurrentLatchTrigger)
+            if (!CurrentLatchTrigger && (!IsWildPikmin || IsWildPikmin && LethalMin.WildPikminAttack))
             {
                 EnemyAI? enm = GetClosestEnemy();
                 if (enm != null)
@@ -1078,7 +1078,7 @@ namespace LethalMin
                 DestoryShipRoute();
             }
 
-            if(!pikminType.CanCarryObjects)
+            if (!pikminType.CanCarryObjects)
             {
                 LethalMin.Logger.LogWarning($"{DebugID}: Pikmin type {pikminType.PikminName} cannot carry objects, switching to idle state");
                 SetToIdleServerRpc();
@@ -1377,7 +1377,7 @@ namespace LethalMin
                 }
                 if (CheckInterval >= 0.2f + Random.Range(0.01f, 0.05f))
                 {
-                    if (!CurrentLatchTrigger && !IsWildPikmin)
+                    if (!CurrentLatchTrigger)
                     {
                         PikminItem? itm = GetClosestPikminItem();
                         if (itm != null)
@@ -2938,7 +2938,7 @@ namespace LethalMin
 
             base.HitEnemy(force, playerWhoHit, playHitSFX, hitID);
 
-            if (IsWildPikmin)
+            if (IsWildPikmin && LethalMin.WildPikminNoDeath)
             {
                 Vector3 KnockbackDirB = new Vector3(-transform.forward.x * 2, 3, -transform.forward.z * 2);
                 if (playerWhoHit != null)
@@ -3129,7 +3129,7 @@ namespace LethalMin
                 return;
             }
 
-            if (IsWildPikmin)
+            if (IsWildPikmin && LethalMin.WildPikminNoDeath)
             {
                 Vector3 KnockbackDirB = new Vector3(-transform.forward.x * 2, 3, -transform.forward.z * 2);
                 DeathSnapToPos = null!;
@@ -3171,7 +3171,7 @@ namespace LethalMin
                 return;
             }
 
-            if (IsWildPikmin)
+            if (IsWildPikmin && LethalMin.WildPikminNoDeath)
             {
                 Vector3 KnockbackDirB = new Vector3(-transform.forward.x * 2, 3, -transform.forward.z * 2);
                 DeathSnapToPos = null!;
@@ -3206,7 +3206,7 @@ namespace LethalMin
                 return;
             }
 
-            if (IsWildPikmin)
+            if (IsWildPikmin && LethalMin.WildPikminNoDeath)
             {
                 Vector3 KnockbackDirB = new Vector3(-transform.forward.x * 2, 3, -transform.forward.z * 2);
                 DeathSnapToPos = null!;
@@ -3730,6 +3730,15 @@ namespace LethalMin
             }
 
             LethalMin.Logger.LogInfo($"{DebugID}: Using entrance {entrance.name}");
+            if (entrance.exitPoint == null)
+            {
+                entrance.FindExitPoint();
+            }
+            if (entrance.exitPoint == null)
+            {
+                LethalMin.Logger.LogError($"{DebugID}: Entrance exit point is null, cannot use entrance (blocked???)");
+                return;
+            }
             Vector3 InsidePosition = entrance.exitPoint.position;
             Vector3 OutsidePosition = entrance.entrancePoint.position;
 

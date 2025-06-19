@@ -1156,6 +1156,10 @@ namespace LethalMin.Pikmin
                     LethalMin.Logger.LogWarning($"({exit.NodeName}) Entrance is null, skipping exit registration.");
                     continue;
                 }
+                if (exit.Entrance.exitPoint == null)
+                {
+                    exit.Entrance.FindExitPoint();
+                }
                 GameObject? Point = exit.Entrance.exitPoint?.gameObject;
                 if (!exit.Entrance.gotExitPoint)
                 {

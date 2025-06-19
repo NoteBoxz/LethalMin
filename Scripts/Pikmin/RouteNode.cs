@@ -251,7 +251,11 @@ namespace LethalMin.Pikmin
             }
             else if (Entrance != null)
             {
-                Pos = Entrance.exitPoint.position;
+                if (Entrance.exitPoint == null)
+                {
+                    Entrance.FindExitPoint();
+                }
+                Pos = Entrance.exitPoint?.position;
             }
             if (Pos == null)
             {
