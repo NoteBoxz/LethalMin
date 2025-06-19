@@ -681,6 +681,7 @@ namespace LethalMin
         public static ConfigItem<float> DismissWindownTime = null!;
         public static ConfigItem<bool> WildPikminCarry = null!;
         public static ConfigItem<bool> WildPikminAttack = null!;
+        public static ConfigItem<bool> WildPikminAttackDamage = null!;
         public static ConfigItem<bool> WildPikminNoDeath = null!;
         #endregion
 
@@ -1357,6 +1358,14 @@ namespace LethalMin
                 false,
                 ConfigItemAuthority.Host);
             
+            WildPikminAttackDamage = new ConfigItem<bool>(
+                "Pikmin Behavior",
+                "Wild Pikmin Attack Does Damage",
+                false,
+                "Whether or not wild pikmin's attacks do damage",
+                false,
+                ConfigItemAuthority.Host);
+
             WildPikminNoDeath = new ConfigItem<bool>(
                 "Pikmin Behavior",
                 "Wild Pikmin Dont Die",

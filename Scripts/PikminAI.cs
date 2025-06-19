@@ -2760,7 +2760,7 @@ namespace LethalMin
 
             if (Penemy != null)
             {
-                if (IsOwner)
+                if (IsOwner && (!IsWildPikmin || IsWildPikmin && LethalMin.WildPikminAttackDamage))
                     Penemy.HitEnemyServerRpc(pikminType.GetAttackStrength(CurrentGrowthStage), NetworkObject);
 
                 PlayAudioOnLocalClient(PikminSoundPackSounds.HitSFX, false);
