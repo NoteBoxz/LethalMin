@@ -1665,7 +1665,7 @@ namespace LethalMin
         {
             Vector3 spawnCenter = FindOpenSpaceForOnions(ShipPosition);
             List<Vector3> specificSpawnPoints = FindSpecificOnionSpawnPoints();
-            int length = GetComponents<BaseOnion>().Length;
+            int length = FindObjectsOfType<BaseOnion>().Length;
             bool usingPreset = false;
 
             // Calculate position in circle formation around the center point
