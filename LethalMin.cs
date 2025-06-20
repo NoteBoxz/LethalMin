@@ -1034,9 +1034,9 @@ namespace LethalMin
 
             PikminScanNodeColorType = new ConfigItem<PikminScanNodeProperties.ScanNodeType>(
                 "Appearances",
-                "Pikmin Scan Mode Color Type",
+                "Pikmin Scan Node Color Type",
                 PikminScanNodeProperties.ScanNodeType.Enemy,
-                "The type of color to use for the scan node",
+                "The type of color to use for the scan node (Point of Intrest: Blue, Enemy: Red, Item: Green)",
                 false,
                 ConfigItemAuthority.Local);
             #endregion
@@ -2347,7 +2347,7 @@ namespace LethalMin
                 false,
                 "",
                 false,
-                ConfigItemAuthority.Client);
+                ConfigItemAuthority.Local);
 
             GiantWhistleMode = new ConfigItem<bool>(
                 "Funi",
@@ -2355,7 +2355,7 @@ namespace LethalMin
                 false,
                 "",
                 false,
-                ConfigItemAuthority.Client);
+                ConfigItemAuthority.Local);
             #endregion
 
             //if (!DisableConfigAuthority.Value)

@@ -181,6 +181,7 @@ namespace LethalMin
             Vector3 center = ItemScript.transform.position;
             radius = Mathf.Max(itemCollider.bounds.extents.x, itemCollider.bounds.extents.z) + 0.5f;
 
+            GrabToPositions.Clear();
             for (int i = 0; i < numberOfPositions; i++)
             {
                 float angle = i * (360f / numberOfPositions);
@@ -983,7 +984,17 @@ namespace LethalMin
 
             if (PikminCounter == null)
             {
+                if (AlreadyPartalInitalized)
+                    LethalMin.Logger.LogWarning($"{gameObject.name} has no GrabPositionContainer, creating one");
                 CreateCounter();
+                return;
+            }
+
+            if (GrabPositionContainer == null)
+            {
+                if (AlreadyPartalInitalized)
+                    LethalMin.Logger.LogWarning($"{gameObject.name} has no GrabPositionContainer, creating one");
+                CreateGrabPositions();
                 return;
             }
 
