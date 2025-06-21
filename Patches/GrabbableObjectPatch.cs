@@ -131,6 +131,9 @@ namespace LethalMin.Patches
                         settings.SproutsToSpawn = settings.CarryStrength;
                     }
                 }
+                // ;)
+                if (__instance.name == "Magic7Ball")
+                    settings.CarryStrength = 7;
                 pikminItemNode.CarryStrengthNeeded = settings.CarryStrength;
                 pikminItemNode.settings = settings;
                 pikminItemNode.CreateGrabPositions();
