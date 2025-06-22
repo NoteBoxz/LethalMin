@@ -192,6 +192,7 @@ namespace LethalMin
                 }
                 else if (pikminType.SetColorOnSprout)
                 {
+                    gen.MainRenderer.material.SetTexture("_BaseColorMap", null);
                     gen.MainRenderer.material.color = pikminType.PikminPrimaryColor;
                 }
             }
