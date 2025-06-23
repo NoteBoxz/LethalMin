@@ -31,9 +31,58 @@
 
 - Have Undefined Pikmin replace every other type on some days as like a hard mode
 
-- Fix Welcome To Orbibitroinsis or whatever moon navigation
+- when you tame a hygrodere with a boombox its unable to trap pikmin.
 
-- Have Possessed Masks turn pikmin into puffmin
+- Fix Welcome To Ooblterra bugging out Pikmin's Pathfinding
+
+(⌄⌄⌄ Concepts From BucketBoi ⌄⌄⌄)
+
+- Add Possessed Masks Compat: Have Possessed Masks turn pikmin into puffmin
+
+- Add Skinwalkers Compat: Pikmin will mimic player voices like any other monster, but its sped up 100% so it sounds like a pikmin lol
+
+- Add Lethal Progression Compat: can use points to upgrade your pikmin, such as higher field limit, buffing glow seed chances, more generous onions and lumiknolls, and other pikmin related buffs i cant think of at the moment 
+
+- Add Haunted Harpists Compat: scare the shit out of any pikmin it comes near when its mad.
+
+- Add Biodiversity Compat: gives Pikmin more... variants. idfk maybe flowers like in pikmin bloom.
+
+- Add Company Creatures Compat: (the mod that adds mushrooms that make you go deaf): can infect pikmin, this doesnt turn them into puffmin but they will ignore your whistle.
+
+- Add Infected Company Compat: all pikmin that belonged to the infected will panic and scream when the infected employee transforms into the killer monster thing.
+
+- Add Surfaced Compat: Winged Pikmin activate the sea mines
+
+- Add CleaningCompany Compat: will have some Pikmin themed messes, such as severed stems, Pikmin Blood, an empty husk of a Bulbmin, and even some dead Pikmin bodies.
+
+- Add Mask the dead Compat: if a Pikmin dies while being near a mask (the item), The pikmin will turn into a wandering Puffmin.
+
+- Add YesFox Compat: the Kidnapper fox will attack and try to kill any pikmin it sees near its nest.
+
+- Add Lethal Elements Compat: The heatwave weather it adds will cause all non-red Pikmin to slowly die from heatstroke if outside for too long. and the solar flare will mess up the Pikmin-signal.
+
+- Add CursedScraps Compat: if the scrap is picked up by pikmin, the pikmin will be given a curse instead, such as making them ignore your whistle, making them louder to dogs,  makes them lose any elemental abilities while they are carrying the cursed scrap, making them take longer paths or unnecessary turns, making them teleport to a random location apon picking it up, and if you're really unlucky, Puffminifying them.
+
+- Add Scp_049_The_Plague_Doctor Compat: apon zombifying a player (they dont become masked, they become a whole diffrent type of zombie) he will also zombify any Pikmin that player had (the lazy route would to puffminify them, but i think actualy making them look like failed pikmin disections would be so much cooler)
+
+- Add Ship Turrets Compat: make it not target Pikmin as its a friendly turret
+
+- Add ArtificeBlizzard Compat: Buffs ice pikmin spawns on artifice.
+
+- Add LegendWeathers Compat: (we alreay talked about this but if typing it again in case you forgot) when a pikmin is whisled by a majora masked, the usual mushroom on the puffmins stem will be replaced with a mushroom from the legend of zelda, and that puffmin will be faster, stronger, and will be able to chase and latch on without being thrown.
+
+- Add LethalDiscord Compat: When exploring, displays how many pikmin are on the field, how many you have, and how many died that day.  When orbiting, displays the total Pikmin Count. and when getting fired, displays how many Pikmin died and how many were raised throughout the entire game.
+
+- Add Coroner Compat: adds some pikmin related messages, for both alive and dead players. such as 
+ Should probably be checked for carpal tunnel (raised the most pikmin)
+Had a Dandori issue (lost the most Pikmin)
+Overdosed on Psilocybin (killed by Puffmin)
+Saw Fiddlebert (was revived by the onion)
+Carried, Fought, Multiplied, and was eaten.  (Died as a Leafling)
+
+- Add Emergency Dice Compat: add some special effects for lethalmin, perhaps add a custom die for Pikmin spesficly.
+
+(˄˄˄ Concepts From BucketBoi ˄˄˄)
 
 -- unproitized bugs --
 
