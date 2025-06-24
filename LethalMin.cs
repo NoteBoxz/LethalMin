@@ -2722,7 +2722,7 @@ namespace LethalMin
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Failed to create config entry for field {field.Name}: {ex.Message}");
+                Logger.LogError($"Failed to create config entry for field {field.Name}: {ex}");
             }
         }
 
@@ -2735,7 +2735,7 @@ namespace LethalMin
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Failed to update field {field.Name}: {ex.Message}");
+                Logger.LogError($"Failed to update field {field.Name}: {ex}");
             }
         }
 
@@ -2838,17 +2838,17 @@ namespace LethalMin
                         catch (FileNotFoundException e)
                         {
                             // Log warning about missing dependency and continue
-                            Logger.LogWarning($"Skipping method {method.Name} due to missing dependency: {e.Message}");
+                            Logger.LogWarning($"Skipping method {method.Name} due to missing dependency: {e}");
                         }
                         catch (Exception e)
                         {
-                            Logger.LogWarning($"Error processing method {method.Name}: {e.Message}");
+                            Logger.LogWarning($"Error processing method {method.Name}: {e}");
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    Logger.LogWarning($"Error processing type {type.FullName}: {e.Message}");
+                    Logger.LogWarning($"Error processing type {type.FullName}: {e}");
                 }
             }
         }
@@ -2895,7 +2895,7 @@ namespace LethalMin
                     }
                     catch (Exception e)
                     {
-                        Logger.LogError($"Error patching type {type.FullName}: {e.Message}");
+                        Logger.LogError($"Error patching type {type.FullName}: {e}");
                         if (e.InnerException != null)
                         {
                             Logger.LogError($"Inner exception: {e.InnerException.Message}");
@@ -2905,7 +2905,7 @@ namespace LethalMin
             }
             catch (Exception e)
             {
-                Logger.LogError($"Error during patching process: {e.Message}");
+                Logger.LogError($"Error during patching process: {e}");
                 if (e.InnerException != null)
                 {
                     Logger.LogError($"Inner exception: {e.InnerException.Message}");
@@ -2926,7 +2926,7 @@ namespace LethalMin
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError($"Error patching type {type.FullName}: {e.Message}");
+                    Logger.LogError($"Error patching type {type.FullName}: {e}");
                     if (e.InnerException != null)
                     {
                         Logger.LogError($"Inner exception: {e.InnerException.Message}");
@@ -2955,7 +2955,7 @@ namespace LethalMin
             }
             catch (Exception e)
             {
-                Logger.LogError($"Unexpected error while getting types: {e.Message}");
+                Logger.LogError($"Unexpected error while getting types: {e}");
                 return new Type[0];
             }
         }

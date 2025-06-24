@@ -148,7 +148,8 @@ namespace LethalMin.Patches
         }
         public static void TryReplacaeLibSettings(GrabbableObject __instance)
         {
-            if (__instance.TryGetComponent(out LethalMinLibrary.PikminItemSettings settings))
+            if (__instance.TryGetComponent(out LethalMinLibrary.PikminItemSettings settings)
+            && !__instance.TryGetComponent(out PikminItemSettings _))
             {
                 settings.Initialize();
             }

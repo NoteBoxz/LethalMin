@@ -985,7 +985,7 @@ namespace LethalMin
             if (PikminCounter == null)
             {
                 if (AlreadyPartalInitalized)
-                    LethalMin.Logger.LogWarning($"{gameObject.name} has no GrabPositionContainer, creating one");
+                    LethalMin.Logger.LogWarning($"{gameObject.name} has no Pikmin Counter, creating one");
                 CreateCounter();
                 return;
             }

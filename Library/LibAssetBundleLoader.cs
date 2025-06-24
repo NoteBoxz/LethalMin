@@ -12,6 +12,11 @@ namespace LethalMin.Library
     public class LibAssetBundleLoader : MonoBehaviour
     {
         public static List<Object> LibTypesToRemove = new List<Object>();
+        public static Dictionary<LibPikminType, PikminType> ConvertedTypesList = new Dictionary<LibPikminType, PikminType>();
+        public static Dictionary<LibOnionType, OnionType> ConvertedOTypesList = new Dictionary<LibOnionType, OnionType>();
+        public static Dictionary<LibOnionFuseRules, OnionFuseRules> ConvertedFuseRulesList = new Dictionary<LibOnionFuseRules, OnionFuseRules>();
+        public static Dictionary<LibPiklopediaEntry, PiklopediaEntry> ConvertedPiklopediaEntries = new Dictionary<LibPiklopediaEntry, PiklopediaEntry>();
+
         public void ProcessLoadedLibBundle(AssetBundle bundle)
         {
             bool IsValidLethalMinBundle = false;
@@ -59,11 +64,17 @@ namespace LethalMin.Library
                 {
                     try
                     {
+                        if (LibType.ModInfo != null && LibType.ModInfo.DontLoad)
+                        {
+                            LethalMin.Logger.LogDebug($"Skipping loading of PikminType '{LibType.name}' from bundle '{bundle.name}' due to DontLoad flag.");
+                            continue;
+                        }
                         PikminType ConvertedType = TypeConverter.ConvertFromLibPikminType(LibType);
                         if (ConvertedType != null)
                         {
                             IsValidLethalMinBundle = true;
                             ConvertedTypesList.Add(LibType, ConvertedType);
+                            LibAssetBundleLoader.ConvertedTypesList.Add(LibType, ConvertedType);
                             LibTypesToRemove.Add(LibType);
                             if (LibType.TargetOnion != null)
                             {
@@ -90,11 +101,17 @@ namespace LethalMin.Library
                 {
                     try
                     {
+                        if (LibOnionType.ModInfo != null && LibOnionType.ModInfo.DontLoad)
+                        {
+                            LethalMin.Logger.LogDebug($"Skipping loading of OnionType '{LibOnionType.name}' from bundle '{bundle.name}' due to DontLoad flag.");
+                            continue;
+                        }
                         OnionType ConvertedOnionType = TypeConverter.ConvertFromLibOnionType(LibOnionType);
                         if (ConvertedOnionType != null)
                         {
                             IsValidLethalMinBundle = true;
                             ConvertedOTypesList.Add(LibOnionType, ConvertedOnionType);
+                            LibAssetBundleLoader.ConvertedOTypesList.Add(LibOnionType, ConvertedOnionType);
                             LibTypesToRemove.Add(LibOnionType);
                             foreach (KeyValuePair<PikminType, LibOnionType> pair in ConvertedTypeTargetOnions)
                             {
@@ -105,11 +122,11 @@ namespace LethalMin.Library
                             }
                             foreach (LibPikminType libPikminType in LibOnionType.TypesCanHold)
                             {
-                                if (!ConvertedTypesList.ContainsKey(libPikminType))
+                                if (!LibAssetBundleLoader.ConvertedTypesList.ContainsKey(libPikminType))
                                     continue;
 
                                 List<PikminType> typesCanHold = new List<PikminType>();
-                                typesCanHold.Add(ConvertedTypesList[libPikminType]);
+                                typesCanHold.Add(LibAssetBundleLoader.ConvertedTypesList[libPikminType]);
                                 ConvertedOnionType.TypesCanHold = typesCanHold.ToArray();
                             }
                         }
@@ -133,6 +150,11 @@ namespace LethalMin.Library
                 {
                     try
                     {
+                        if (LibFuseRule.ModInfo != null && LibFuseRule.ModInfo.DontLoad)
+                        {
+                            LethalMin.Logger.LogDebug($"Skipping loading of OnionFuseRules '{LibFuseRule.name}' from bundle '{bundle.name}' due to DontLoad flag.");
+                            continue;
+                        }
                         OnionFuseRules fuseRules = ScriptableObject.CreateInstance<OnionFuseRules>();
                         fuseRules.name = LibFuseRule.name;
 
@@ -146,6 +168,7 @@ namespace LethalMin.Library
                         }
                         fuseRules.OnionsToFuse = typesCanFuse.ToArray();
                         ConvertedFuseRulesList.Add(LibFuseRule, fuseRules);
+                        LibAssetBundleLoader.ConvertedFuseRulesList.Add(LibFuseRule, fuseRules);
 
                         LibTypesToRemove.Add(LibFuseRule);
                     }
@@ -164,11 +187,17 @@ namespace LethalMin.Library
                 {
                     try
                     {
+                        if (LibPiklopediaEntry.ModInfo != null && LibPiklopediaEntry.ModInfo.DontLoad)
+                        {
+                            LethalMin.Logger.LogDebug($"Skipping loading of PiklopediaEntry '{LibPiklopediaEntry.name}' from bundle '{bundle.name}' due to DontLoad flag.");
+                            continue;
+                        }
                         PiklopediaEntry ConvertedEntry = TypeConverter.ConvertFromLibPiklopediaEntry(LibPiklopediaEntry);
                         if (ConvertedEntry != null)
                         {
                             IsValidLethalMinBundle = true;
                             ConvertedPiklopediaEntries.Add(LibPiklopediaEntry, ConvertedEntry);
+                            LibAssetBundleLoader.ConvertedPiklopediaEntries.Add(LibPiklopediaEntry, ConvertedEntry);
                             LibTypesToRemove.Add(LibPiklopediaEntry);
                         }
                         else

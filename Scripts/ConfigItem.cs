@@ -124,7 +124,7 @@ namespace LethalMin
             }
             catch (Exception e)
             {
-                LethalMin.Logger.LogError($"Error binding LC config item {Name}: {e.Message}");
+                LethalMin.Logger.LogError($"Error binding LC config item {Name}: {e}");
             }
 
             if (_isPesudoStringType)

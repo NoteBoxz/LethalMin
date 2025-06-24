@@ -17,6 +17,10 @@ namespace LethalMin
             }
             if (other.TryGetComponent(out PikminCollisionDetect detect))
             {
+                if (PikChecks.IsPikminResistantToHazard(detect.mainPikmin, PikminHazard.Sticky))
+                {
+                    return;
+                }
                 if (LethalMin.UseConfigsForEnemies && LethalMin.Blob_KillPikmin.InternalValue)
                 {
                     detect.mainPikmin.DeathSnapToPos = transform;
@@ -45,7 +49,7 @@ namespace LethalMin
 
         public override bool TryLatch(PikminAI pikmin, Vector3 Point, bool IsDirectHit = true, bool DoCheckOnly = false)
         {
-            if(blobPikminEnemy.StickCoolDown > 0)
+            if (blobPikminEnemy.StickCoolDown > 0)
             {
                 return false; // can't latch if cooldown is active
             }

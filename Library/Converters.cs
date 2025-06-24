@@ -289,6 +289,80 @@ namespace LethalMin.Library
             return result;
         }
 
+        public static void ConvertDepPikminType<TSource, TDest>(
+        TSource source,
+        TDest destination,
+        string typeName)
+            where TSource : Component
+            where TDest : Component
+        {
+            try
+            {
+                var sourceType = source.GetType();
+                var destType = destination.GetType();
+
+                // Get all fields from source type
+                var sourceFields = sourceType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                foreach (var sourceField in sourceFields)
+                {
+                    // Check if this is a LibPikminType field
+                    if (sourceField.FieldType.Name == "LibPikminType")
+                    {
+                        // Find corresponding field in destination
+                        var destField = destType.GetField(sourceField.Name,
+                            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                        if (destField != null && destField.FieldType.Name == "PikminType")
+                        {
+                            // Get the LibPikminType value from source
+                            var sourceValue = sourceField.GetValue(source);
+
+                            if (sourceValue != null)
+                            {
+                                // Convert LibPikminType to normal Pikmin Type
+                                var convertedValue = DepsManager.MatchPossibleTypeWithDep((LibPikminType)sourceValue);
+
+                                // Set the converted value to destination
+                                destField.SetValue(destination, convertedValue);
+
+                                LethalMin.Logger.LogDebug($"(LETHALMIN_CONVERTER) Converted LibPikminType field {sourceField.Name} for {typeName}");
+                            }
+                        }
+                    }
+                }
+
+                // Do the same for properties
+                var sourceProperties = sourceType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                foreach (var sourceProp in sourceProperties)
+                {
+                    if (sourceProp.PropertyType.Name == "LibPikminType")
+                    {
+                        var destProp = destType.GetProperty(sourceProp.Name,
+                            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                        if (destProp != null && destProp.PropertyType.Name == "PikminType" && destProp.CanWrite)
+                        {
+                            var sourceValue = sourceProp.GetValue(source);
+
+                            if (sourceValue != null)
+                            {
+                                var convertedValue = DepsManager.MatchPossibleTypeWithDep((LibPikminType)sourceValue);
+                                destProp.SetValue(destination, convertedValue);
+
+                                LethalMin.Logger.LogDebug($"(LETHALMIN_CONVERTER) Converted LibPikminType property {sourceProp.Name} for {typeName}");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LethalMin.Logger.LogError($"(LETHALMIN_CONVERTER) Error processing Pikmin type fields: {ex}");
+            }
+        }
+
 
         public static Dictionary<LethalMinLibrary.PikminModelRefernces, PikminModelRefernces> ConvertedModelRefs = new Dictionary<LethalMinLibrary.PikminModelRefernces, PikminModelRefernces>();
         public static Dictionary<LethalMinLibrary.PikminModelGeneration, PikminModelGeneration> ConvertedModelGenerations = new Dictionary<LethalMinLibrary.PikminModelGeneration, PikminModelGeneration>();
@@ -770,9 +844,31 @@ namespace LethalMin.Library
                 nameof(PiklopediaEntry));
         }
 
-        public static void ClearCache()
+        public static void ClearCache(bool ClearLibSO = false)
         {
-            LogCacheSize();
+            if (ClearLibSO)
+            {
+                foreach (var key in ConvertedSoundPacks.Keys.ToList())
+                {
+                    UnityEngine.Object.Destroy(key);
+                }
+                foreach (var key in ConvertedAnimationPacks.Keys.ToList())
+                {
+                    UnityEngine.Object.Destroy(key);
+                }
+                foreach (var key in ConvertedPiklopediaEntries.Keys.ToList())
+                {
+                    UnityEngine.Object.Destroy(key);
+                }
+                foreach (var obj in LibAssetBundleLoader.LibTypesToRemove)
+                {
+                    UnityEngine.Object.Destroy(obj);
+                }
+                ConvertedSoundPacks.Clear();
+                ConvertedAnimationPacks.Clear();
+                ConvertedPiklopediaEntries.Clear();
+                LibAssetBundleLoader.LibTypesToRemove.Clear();
+            }
 
             foreach (var key in ConvertedModelRefs.Keys.ToList())
             {
@@ -783,14 +879,6 @@ namespace LethalMin.Library
                 UnityEngine.Object.Destroy(key);
             }
             foreach (var key in ConvertedAnimatorControllers.Keys.ToList())
-            {
-                UnityEngine.Object.Destroy(key);
-            }
-            foreach (var key in ConvertedSoundPacks.Keys.ToList())
-            {
-                UnityEngine.Object.Destroy(key);
-            }
-            foreach (var key in ConvertedAnimationPacks.Keys.ToList())
             {
                 UnityEngine.Object.Destroy(key);
             }
@@ -830,19 +918,9 @@ namespace LethalMin.Library
             {
                 UnityEngine.Object.Destroy(key);
             }
-            foreach (var key in ConvertedPiklopediaEntries.Keys.ToList())
-            {
-                UnityEngine.Object.Destroy(key);
-            }
-            foreach (var obj in LibAssetBundleLoader.LibTypesToRemove)
-            {
-                UnityEngine.Object.Destroy(obj);
-            }
             ConvertedModelRefs.Clear();
             ConvertedModelGenerations.Clear();
             ConvertedAnimatorControllers.Clear();
-            ConvertedSoundPacks.Clear();
-            ConvertedAnimationPacks.Clear();
             ConvertedOnionModelRefs.Clear();
             ConvertedOnionModelGenerations.Clear();
             ConvertedPikminLinks.Clear();
@@ -852,128 +930,7 @@ namespace LethalMin.Library
             ConvertedSproutGenerations.Clear();
             ConvertedOnionItemModelGenerations.Clear();
             ConvertedOnionItemModelRefs.Clear();
-            ConvertedPiklopediaEntries.Clear();
-            LibAssetBundleLoader.LibTypesToRemove.Clear();
         }
-
-        private static void LogCacheSize()
-        {
-            long totalBytes = 0;
-
-            // Calculate size for each dictionary
-            totalBytes += CalculateDictionarySize(ConvertedModelRefs, "ConvertedModelRefs");
-            totalBytes += CalculateDictionarySize(ConvertedModelGenerations, "ConvertedModelGenerations");
-            totalBytes += CalculateDictionarySize(ConvertedAnimatorControllers, "ConvertedAnimatorControllers");
-            totalBytes += CalculateDictionarySize(ConvertedSoundPacks, "ConvertedSoundPacks");
-            totalBytes += CalculateDictionarySize(ConvertedAnimationPacks, "ConvertedAnimationPacks");
-            totalBytes += CalculateDictionarySize(ConvertedOnionModelRefs, "ConvertedOnionModelRefs");
-            totalBytes += CalculateDictionarySize(ConvertedOnionModelGenerations, "ConvertedOnionModelGenerations");
-            totalBytes += CalculateDictionarySize(ConvertedPikminLinks, "ConvertedPikminLinks");
-            totalBytes += CalculateDictionarySize(ConvertedOnionSoundPacks, "ConvertedOnionSoundPacks");
-            totalBytes += CalculateDictionarySize(ConvertedOnionFusionProperties, "ConvertedOnionFusionProperties");
-            totalBytes += CalculateDictionarySize(ConvertedSproutRefs, "ConvertedSproutRefs");
-            totalBytes += CalculateDictionarySize(ConvertedSproutGenerations, "ConvertedSproutGenerations");
-            totalBytes += CalculateDictionarySize(ConvertedOnionItemModelGenerations, "ConvertedOnionItemModelGenerations");
-            totalBytes += CalculateDictionarySize(ConvertedOnionItemModelRefs, "ConvertedOnionItemModelRefs");
-            totalBytes += CalculateDictionarySize(ConvertedPiklopediaEntries, "ConvertedPiklopediaEntries");
-
-            // Add LibTypesToRemove list size
-            long libTypesSize = EstimateCollectionSize(LibAssetBundleLoader.LibTypesToRemove);
-            totalBytes += libTypesSize;
-
-            LethalMin.Logger.LogInfo($"(LETHALMIN_CONVERTER) Total cache size before clearing: {FormatBytes(totalBytes)} ({totalBytes:N0} bytes)");
-        }
-
-        private static long CalculateDictionarySize<TKey, TValue>(Dictionary<TKey, TValue> dictionary, string name)
-        {
-            if (dictionary == null || dictionary.Count == 0)
-                return 0;
-
-            long dictionarySize = 0;
-
-            // Base dictionary overhead (rough estimate)
-            dictionarySize += 32; // Dictionary base overhead
-            dictionarySize += dictionary.Count * 24; // Entry overhead per key-value pair
-
-            // Calculate size of keys and values
-            foreach (var kvp in dictionary)
-            {
-                dictionarySize += EstimateObjectSize(kvp.Key);
-                dictionarySize += EstimateObjectSize(kvp.Value);
-            }
-
-            LethalMin.Logger.LogDebug($"(LETHALMIN_CONVERTER) {name}: {FormatBytes(dictionarySize)} ({dictionary.Count} items)");
-            return dictionarySize;
-        }
-
-        private static long EstimateCollectionSize<T>(ICollection<T> collection)
-        {
-            if (collection == null || collection.Count == 0)
-                return 0;
-
-            long size = 16; // Collection base overhead
-            foreach (var item in collection)
-            {
-                size += EstimateObjectSize(item);
-            }
-            return size;
-        }
-
-        private static long EstimateObjectSize(object? obj)
-        {
-            if (obj == null)
-                return 8; // null reference size
-
-            // For Unity objects, we can't get exact memory usage easily
-            // So we'll use rough estimates based on object type
-            switch (obj)
-            {
-                case UnityEngine.Object unityObj:
-                    // Unity objects vary greatly in size, rough estimates:
-                    if (unityObj is ScriptableObject)
-                        return 1024; // ScriptableObjects are typically small
-                    else if (unityObj is Component)
-                        return 512; // Components are usually medium-sized
-                    else if (unityObj is GameObject)
-                        return 256; // GameObjects themselves are relatively small
-                    else
-                        return 128; // Other Unity objects
-
-                case string str:
-                    return 20 + (str.Length * 2); // String overhead + UTF-16 characters
-
-                case int:
-                case float:
-                    return 4;
-
-                case long:
-                case double:
-                    return 8;
-
-                case bool:
-                    return 1;
-
-                default:
-                    // For other reference types, estimate based on pointer size + some overhead
-                    return IntPtr.Size + 16;
-            }
-        }
-
-        private static string FormatBytes(long bytes)
-        {
-            string[] suffixes = { "B", "KB", "MB", "GB" };
-            int suffixIndex = 0;
-            double size = bytes;
-
-            while (size >= 1024 && suffixIndex < suffixes.Length - 1)
-            {
-                size /= 1024;
-                suffixIndex++;
-            }
-
-            return $"{size:F2} {suffixes[suffixIndex]}";
-        }
-
 
         #region Legacy Conversion
 #pragma warning disable CS0612 // Type or member is obsolete

@@ -209,7 +209,7 @@ namespace LethalMin
                            }
                            catch (Exception e)
                            {
-                              LethalMin.Logger.LogError($"Failed to convert value {data.Value} to type {data.Type}: {e.Message}");
+                              LethalMin.Logger.LogError($"Failed to convert value {data.Value} to type {data.Type}: {e}");
                            }
                         }
                      }
@@ -376,7 +376,7 @@ namespace LethalMin
             }
             catch (Exception e)
             {
-               LethalMin.Logger.LogError($"Failed to convert config item for network: {e.Message}");
+               LethalMin.Logger.LogError($"Failed to convert config item for network: {e}");
             }
          }
 
@@ -435,7 +435,7 @@ namespace LethalMin
             }
             catch (Exception e)
             {
-               LethalMin.Logger.LogError($"Failed to process received config: {e.Message}");
+               LethalMin.Logger.LogError($"Failed to process received config: {e}");
             }
          }
 
@@ -548,7 +548,7 @@ namespace LethalMin
                }
                catch (Exception e)
                {
-                  LethalMin.Logger.LogError($"Failed to send specific config item {section}.{name}: {e.Message}");
+                  LethalMin.Logger.LogError($"Failed to send specific config item {section}.{name}: {e}");
                   return;
                }
             }
@@ -628,7 +628,7 @@ namespace LethalMin
          }
          catch (Exception e)
          {
-            LethalMin.Logger.LogError($"Failed to process received specific config: {e.Message}");
+            LethalMin.Logger.LogError($"Failed to process received specific config: {e}");
          }
       }
 
@@ -700,7 +700,7 @@ namespace LethalMin
                }
                catch (Exception e)
                {
-                  LethalMin.Logger.LogError($"Failed to apply config value {value} to {section}.{name}: {e.Message}");
+                  LethalMin.Logger.LogError($"Failed to apply config value {value} to {section}.{name}: {e}");
                }
 
                return; // Exit after finding and processing the matching config item

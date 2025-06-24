@@ -77,11 +77,11 @@ namespace LethalMin.Library
         }
 
         public static TDest ConvertComponent<TSource, TDest>(
-        TSource source,
-        GameObject targetGameObject,
-        string typeName)
-        where TDest : Component
-        where TSource : Component
+          TSource source,
+          GameObject targetGameObject,
+          string typeName)
+          where TDest : Component
+          where TSource : Component
         {
             if (source == null)
             {
@@ -95,6 +95,7 @@ namespace LethalMin.Library
             // Copy fields and properties
             TypeConverter.CopyFields(source, result, typeName);
             TypeConverter.CopyProperties(source, result, typeName);
+            TypeConverter.ConvertDepPikminType(source, result, typeName);
 
             LethalMin.Logger.LogDebug($"(LETHALMIN_CONVERTER) Converted {typeName} for {source.name}");
 
