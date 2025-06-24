@@ -185,7 +185,7 @@ namespace LethalMin.Utils
             && (enemy.enemyType.canDie || pikEnemy != null && pikEnemy.OverrideCanDie)
             && CanBeAttacked
             && !IsEnemyBlackListed(enemy)
-            && (LethalMin.IsDependencyLoaded("LethalMon") && LETHALMON_ISENEMYTAMED(enemy) || !LethalMin.IsDependencyLoaded("LethalMon"));
+            && (LethalMin.IsDependencyLoaded("LethalMon") && !LETHALMON_ISENEMYTAMED(enemy) || !LethalMin.IsDependencyLoaded("LethalMon"));
         }
 
         public static bool LETHALMON_ISENEMYTAMED(EnemyAI enemy)
