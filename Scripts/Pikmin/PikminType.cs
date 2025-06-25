@@ -136,7 +136,7 @@ namespace LethalMin.Pikmin
         public float AttackRate = 0.5f;
 
         [Tooltip("The range at which pikmin tpe can hit an enemy when not latched on")]
-        public float AttackRange = 2;
+        public float AttackDistance = 0.5f;
 
         [Tooltip("The range at which the pikmin type will attempt to jump onto the enemy")]
         public float JumpLatchOnRange = 5;

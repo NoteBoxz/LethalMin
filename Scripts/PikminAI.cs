@@ -1302,7 +1302,7 @@ namespace LethalMin
                 LethalMin.Logger.LogWarning($"{DebugID}: Was reset to idle because of null enemy");
                 return;
             }
-            if (Vector3.Distance(transform.position, TargetEnemy.transform.position) < 0.5f + TargetEnemy.agent.radius + agent.radius)
+            if (Vector3.Distance(transform.position, TargetEnemy.transform.position) < pikminType.AttackDistance + TargetEnemy.agent.radius + agent.radius)
             {
                 PlayAudioOnLocalClient(PikminSoundPackSounds.Attack);
                 StartCoroutine(TryHitEnemy(TargetEnemy));

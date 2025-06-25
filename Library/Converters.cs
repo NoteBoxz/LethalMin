@@ -1030,7 +1030,7 @@ namespace LethalMin.Library
             type.AttackStrength = legacyType.DamageAmmount;
             type.DamageDeltUponDeath = legacyType.DamageDeltUponDeath;
             type.DeathDamageRange = legacyType.DeathDamageRange;
-            type.AttackRange = legacyType.AttackRange;
+            type.AttackDistance = legacyType.AttackRange;
             legacyType.AttackRate = -1f;
 
             type.CarryStrength = legacyType.CarryStrength;
