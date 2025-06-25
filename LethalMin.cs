@@ -381,7 +381,8 @@ namespace LethalMin
             PikminEnemyType.enemyPrefab.GetComponent<PikminTypeResolver>().PikminAIs.Add(ai);
 
             EnemyType PuffminType = assetBundle.LoadAsset<EnemyType>("Assets/LethalMin/Puffmin/PuffminEnemyType.asset");
-            Enemies.RegisterEnemy(PuffminType);
+            TerminalNode puffminNode = assetBundle.LoadAsset<TerminalNode>("Assets/LethalMin/Puffmin/PuffminTN.asset");
+            Enemies.RegisterEnemy(PuffminType, null, null, puffminNode);
             PuffminEnemyType = PuffminType;
         }
 
@@ -1349,7 +1350,7 @@ namespace LethalMin
                 "Whether or not wild pikmin can carry items",
                 false,
                 ConfigItemAuthority.Host);
-            
+
             WildPikminAttack = new ConfigItem<bool>(
                 "Pikmin Behavior",
                 "Wild Pikmin Can Attack Enemies",
@@ -1357,7 +1358,7 @@ namespace LethalMin
                 "Whether or not wild pikmin can attack enemies",
                 false,
                 ConfigItemAuthority.Host);
-            
+
             WildPikminAttackDamage = new ConfigItem<bool>(
                 "Pikmin Behavior",
                 "Wild Pikmin Attack Does Damage",
