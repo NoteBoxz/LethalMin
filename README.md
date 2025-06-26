@@ -2,3 +2,10 @@
 This mod adds fully functional Pikmin to Lethal Company.
 
 Read the mod page on thunderstore for more info
+
+# Bug Reporting
+When reporting bugs, please note that most of the time the bugs cannot be replicated based solely on the report. 
+
+Providing a mod pack profile code from your mod manager or a .log file from when the bug last occurred would allow the bug to be fixed much faster. 
+
+While not essential, a video of the bug occurring in-game would also be greatly appreciated.
