@@ -29,4 +29,7 @@ public class InputClassWithUtils : LcInputActions
 
     [InputAction(KeyboardControl.Num4, Name = "Glowmob")]
     public InputAction Glowmob { get; set; } = null!;
+
+    [InputAction(KeyboardControl.Shift, Name = "OnionHudSpeed")]
+    public InputAction OnionHudSpeed { get; set; } = null!; 
 }

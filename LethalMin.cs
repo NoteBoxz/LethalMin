@@ -656,6 +656,7 @@ namespace LethalMin
         public static ConfigItem<string> SwitchWhistleSoundAction = null!;
         public static ConfigItem<string> ChargeAction = null!;
         public static ConfigItem<string> GlowmobAction = null!;
+        public static ConfigItem<string> OnionHudSpeedAction = null!;
         #endregion
 
         #region Spawning
@@ -1185,6 +1186,14 @@ namespace LethalMin
                 "Controls",
                 "Glowmob Button (hold)",
                 "<Keyboard>/4",
+                "",
+                true,
+                ConfigItemAuthority.Local);
+
+            OnionHudSpeedAction = new ConfigItem<string>(
+                "Controls",
+                "Onion Menu 10-withdraw Button",
+                "<Keyboard>/shift",
                 "",
                 true,
                 ConfigItemAuthority.Local);

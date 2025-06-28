@@ -31,6 +31,7 @@ namespace LethalMin
         public InputAction SwitchRight => GetInputAction("SwitchRight");
         public InputAction Charge => GetInputAction("Charge");
         public InputAction Glowmob => GetInputAction("Glowmob");
+        public InputAction OnionHudSpeed => GetInputAction("OnionHudSpeed");
 
         private InputAction GetInputAction(string name)
         {

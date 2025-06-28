@@ -7,6 +7,7 @@ using LethalMin.Utils;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace LethalMin.HUD
@@ -37,10 +38,23 @@ namespace LethalMin.HUD
         public AudioSource audio = null!;
         public AudioClip OpenAC = null!, CloseAC = null!, DenyUpAC = null!, DenyDownAC = null!;
         public AudioClip UpAC = null!, DownAC = null!, ConfirmAC = null!;
+        public InputAction TenWithdrawAction = null!;
 
         public void Start()
         {
             ActualUI.SetActive(false);
+
+            if (LethalMin.UseInputUtils)
+            {
+                TenWithdrawAction = LethalMin.InputClassInstace.OnionHudSpeed;
+                TenWithdrawAction.Enable();
+            }
+            else
+            {
+                TenWithdrawAction = new InputAction(LethalMin.OnionHudSpeedAction);
+                TenWithdrawAction.AddBinding(LethalMin.OnionHudSpeedAction);
+                TenWithdrawAction.Enable();
+            }
         }
 
         public void OpenMenu()

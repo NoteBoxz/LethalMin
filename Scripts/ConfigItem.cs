@@ -600,5 +600,19 @@ namespace LethalMin
             LethalMin.Logger.LogFatal($"Unable to properly implictly convert config {item?.Name} to int. Type: {typeof(T)}");
             return 0;
         }
+
+        public static implicit operator string(ConfigItem<T> item)
+        {
+            if (typeof(T) != typeof(string))
+            {
+                LethalMin.Logger.LogFatal($"Config {item?.Name} is not a string, cannot implictly convert.");
+            }
+            if (typeof(T) == typeof(string) && item != null && item.InternalValue != null)
+            {
+                return (string)(object)item.InternalValue!;
+            }
+            LethalMin.Logger.LogFatal($"Unable to properly implictly convert config {item?.Name} to string. Type: {typeof(T)}");
+            return string.Empty;
+        }
     }
 }
