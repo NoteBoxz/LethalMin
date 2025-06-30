@@ -382,7 +382,7 @@ namespace LethalMin
 
             EnemyType PuffminType = assetBundle.LoadAsset<EnemyType>("Assets/LethalMin/Puffmin/PuffminEnemyType.asset");
             TerminalNode puffminNode = assetBundle.LoadAsset<TerminalNode>("Assets/LethalMin/Puffmin/PuffminTN.asset");
-            Enemies.RegisterEnemy(PuffminType);//, null, null, puffminNode);
+            Enemies.RegisterEnemy(PuffminType, null, null, puffminNode);
             PuffminEnemyType = PuffminType;
         }
 
