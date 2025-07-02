@@ -17,7 +17,7 @@ namespace LethalMin
         public List<PikminData> PikminInOnion = new List<PikminData>();
         public bool DontChooseRandomType = false;
         public bool DontDespawnOnGameEnd = false;
-        public Dictionary<PikminType, int> TypesToWithdraw = new Dictionary<PikminType, int>();
+        public Dictionary<PikminType, int> TypesToExchange = new Dictionary<PikminType, int>();
         public Transform PikminSpawnPos = null!;
         public Transform SproutSpawnPos = null!;
         public Transform ItemDropPos = null!;
@@ -54,8 +54,10 @@ namespace LethalMin
 
             foreach (PikminType type in onionType.TypesCanHold)
             {
-                TypesToWithdraw.Add(type, 0);
+                TypesToExchange.Add(type, 0);
             }
+
+            TypesToExchange = TypesToExchange.OrderBy(x => x.Key.PikminName).ToDictionary(x => x.Key, x => x.Value);
 
             PikminManager.instance.AddOnion(this);
         }
@@ -135,118 +137,172 @@ namespace LethalMin
             if (leaderWithdrawing == null)
             {
                 LethalMin.Logger.LogError($"Unable to get player from ID: {playerID}");
+                ReturnErrorWhenWithdrawingClientRpc("Unable to get player from ID.");
                 return;
             }
             if (!onionRef.TryGet(out NetworkObject OnionNG) && !OnionNG.TryGetComponent(out Onion onion))
             {
                 LethalMin.Logger.LogError($"Unable to get onion!");
+                ReturnErrorWhenWithdrawingClientRpc("Unable to get onion.");
                 return;
             }
-
-            List<PikminType> typesWithdrawing = new List<PikminType>();
-            foreach (int ID in PikIDkeys)
+            try
             {
-                typesWithdrawing.Add(LethalMin.GetPikminTypeByID(ID));
-            }
-
-            LethalMin.Logger.LogInfo($"{leaderWithdrawing.Controller.playerUsername}: withdrawing" +
-            $" ({PikUtils.ParseListToString(QuantityValues)})," +
-            $" of ({PikUtils.ParseListToString(typesWithdrawing.Select(p => p.PikminName).ToList())})");
-            if(SpawnedPikminRoutines.ContainsKey(playerID))
-            {
-                if (SpawnedPikminRoutines[playerID] != null)
+                List<PikminType> typesWithdrawing = new List<PikminType>();
+                foreach (int ID in PikIDkeys)
                 {
-                    StopCoroutine(SpawnedPikminRoutines[playerID]);
-                    SpawnedPikminRoutines[playerID] = null;
+                    typesWithdrawing.Add(LethalMin.GetPikminTypeByID(ID));
                 }
+
+                LethalMin.Logger.LogInfo($"{leaderWithdrawing.Controller.playerUsername}: withdrawing" +
+                $" ({PikUtils.ParseListToString(QuantityValues)})," +
+                $" of ({PikUtils.ParseListToString(typesWithdrawing.Select(p => p.PikminName).ToList())})");
+                if (SpawnedPikminRoutines.ContainsKey(playerID))
+                {
+                    if (SpawnedPikminRoutines[playerID] != null)
+                    {
+                        StopCoroutine(SpawnedPikminRoutines[playerID]);
+                        SpawnedPikminRoutines[playerID] = null;
+                    }
+                }
+                SpawnedPikminRoutines[playerID] = StartCoroutine(SpawnedInterval(typesWithdrawing, QuantityValues, leaderWithdrawing));
             }
-            SpawnedPikminRoutines[playerID] = StartCoroutine(SpawnedInterval(typesWithdrawing, QuantityValues, leaderWithdrawing));
+            catch (System.Exception ex)
+            {
+                LethalMin.Logger.LogError($"Error withdrawing types: {ex.Message}");
+                ReturnErrorWhenWithdrawingClientRpc(ex.Message);
+            }
+        }
+
+        [ClientRpc]
+        public void ReturnErrorWhenWithdrawingClientRpc(string issue)
+        {
+            if (IsServer)
+            {
+                return;
+            }
+            LethalMin.Logger.LogError($"Error from server withdrawing types: {issue}");
         }
 
         public virtual IEnumerator SpawnedInterval(List<PikminType> typesWithdrawing, int[] QuantityValues, Leader Leader)
         {
-            for (int i = 0; i < typesWithdrawing.Count; i++)
+            try
             {
-                PikminType type = typesWithdrawing[i];
+                // First handle sending Pikmin to the onion (negative values)
+                yield return SendPikminToOnion(typesWithdrawing, QuantityValues, Leader);
 
-                // Get all Pikmin of the current type with their indices
+                // Then handle withdrawing Pikmin from the onion (positive values)
+                yield return WithdrawPikminFromOnion(typesWithdrawing, QuantityValues, Leader);
+            }
+            finally
+            {
+                // Ensure we always clean up the coroutine reference
+                SpawnedPikminRoutines[Leader.Controller.OwnerClientId] = null;
+            }
+        }
+
+        private IEnumerator SendPikminToOnion(List<PikminType> types, int[] quantities, Leader leader)
+        {
+            for (int i = 0; i < types.Count; i++)
+            {
+                if (quantities[i] >= 0) continue;
+
+                PikminType type = types[i];
+                int count = -quantities[i];
+
+                for (int l = 0; l < count; l++)
+                {
+                    PikminAI? ai = leader.GetClosestPikminInSquadOfType(type);
+                    if (ai != null)
+                    {
+                        LethalMin.Logger.LogInfo($"Setting {ai.DebugID} to the onion");
+                        ai.SetPikminToLeavingClientRpc(NetworkObject);
+                    }
+                    else
+                    {
+                        LethalMin.Logger.LogWarning($"Failed to find {type.PikminName} in {leader.Controller.playerUsername}'s squad");
+                        break; // Stop trying if we can't find any more of this type
+                    }
+                    yield return new WaitForSeconds(0.01f);
+                }
+            }
+        }
+
+        private IEnumerator WithdrawPikminFromOnion(List<PikminType> types, int[] quantities, Leader leader)
+        {
+            const int BATCH_SIZE = 3;
+            // so due to an oversight (both numbers in the devision equasion were ints), there was no delay between batches.
+            const float BATCH_DELAY = 0.05f;
+            const float PIKMIN_DELAY = 0.01f;
+
+            for (int i = 0; i < types.Count; i++)
+            {
+                if (quantities[i] <= 0) continue;
+
+                PikminType type = types[i];
+                int requestedCount = quantities[i];
+
+                // Find available Pikmin of this type, sorted by growth stage
                 var pikminOfType = PikminInOnion
                     .Select((pikmin, index) => new { Pikmin = pikmin, Index = index })
                     .Where(p => LethalMin.GetPikminTypeByID(p.Pikmin.TypeID) == type)
                     .OrderByDescending(p => p.Pikmin.GrowthStage)
                     .ToList();
 
-                if (QuantityValues[i] < 0)
+                // Check if we have enough Pikmin
+                if (pikminOfType.Count < requestedCount)
                 {
-                    for (int l = 0; l < -QuantityValues[i]; l++)
-                    {
-                        PikminAI? ai = Leader.GetClosestPikminInSquadOfType(type);
-                        if (ai != null)
-                        {
-                            LethalMin.Logger.LogInfo($"Setting {ai.DebugID} to the onion");
-                            ai.SetPikminToLeavingClientRpc(NetworkObject);
-                        }
-                        else
-                        {
-                            LethalMin.Logger.LogWarning($"Failed to find {type.PikminName} in {Leader.Controller.playerUsername}'s squad");
-                        }
-                        yield return new WaitForSeconds(0.01f);
-                    }
+                    LethalMin.Logger.LogWarning($"Not enough {type.PikminName} in onion. Requested: {requestedCount}, Available: {pikminOfType.Count}");
+                    continue;
                 }
-                if (QuantityValues[i] > 0)
+
+                // Process in batches
+                for (int batchStart = 0; batchStart < requestedCount; batchStart += BATCH_SIZE)
                 {
-                    // Check if we have enough Pikmin of this type
-                    if (pikminOfType.Count < QuantityValues[i])
+                    int batchCount = Mathf.Min(BATCH_SIZE, requestedCount - batchStart);
+                    yield return new WaitForSeconds(BATCH_DELAY);
+
+                    // Check field capacity before spawning batch
+                    if (IsFieldAtMaxCapacity())
                     {
-                        LethalMin.Logger.LogWarning($"Not enough {type.PikminName} in onion. Requested: {QuantityValues[i]}, Available: {pikminOfType.Count}");
-                        continue;
+                        yield return WaitForFieldCapacity(requestedCount - batchStart);
                     }
 
-                    for (int l = 0; l < QuantityValues[i]; l += 3)
+                    // Spawn the batch
+                    for (int j = 0; j < batchCount; j++)
                     {
-                        int spawnCount = System.Math.Min(3, QuantityValues[i] - l);
-                        yield return new WaitForSeconds(l / 100);
-
-                        for (int j = 0; j < spawnCount; j++)
-                        {
-                            if (l + j < pikminOfType.Count)
-                            {
-                                // Check if spawning would exceed the max Pikmin count
-                                if (PikminManager.instance.PikminAICounter.Count >= LethalMin.MaxPikmin.InternalValue)
-                                {
-                                    LethalMin.Logger.LogInfo($"Field at max capacity ({PikminManager.instance.PikminAICounter.Count}/{LethalMin.MaxPikmin.InternalValue}). Waiting for space...");
-
-                                    // Wait up to 10 seconds for space to become available
-                                    float waitStartTime = Time.time;
-                                    bool spaceAvailable = false;
-
-                                    while (Time.time - waitStartTime < 10f)
-                                    {
-                                        if (PikminManager.instance.PikminAICounter.Count < LethalMin.MaxPikmin.InternalValue)
-                                        {
-                                            spaceAvailable = true;
-                                            break;
-                                        }
-                                        yield return new WaitForSeconds(0.5f);
-                                    }
-
-                                    if (!spaceAvailable)
-                                    {
-                                        LethalMin.Logger.LogInfo("Waited 10 seconds, spawning Pikmin anyway");
-                                    }
-                                }
-
-                                // Now spawn the Pikmin
-                                SpawnPikmin(pikminOfType[l + j].Pikmin, Leader.Controller.OwnerClientId);
-                                yield return new WaitForSeconds(j / 10);
-                            }
-                        }
+                        int index = batchStart + j;
+                        SpawnPikmin(pikminOfType[index].Pikmin, leader.Controller.OwnerClientId);
+                        yield return new WaitForSeconds(PIKMIN_DELAY);
                     }
                 }
             }
-            SpawnedPikminRoutines[Leader.Controller.OwnerClientId] = null;
         }
 
+        private bool IsFieldAtMaxCapacity()
+        {
+            return PikminManager.instance.PikminAICounter.Count >= LethalMin.MaxPikmin.InternalValue;
+        }
+
+        private IEnumerator WaitForFieldCapacity(int neededSpace)
+        {
+            LethalMin.Logger.LogInfo($"Field at max capacity ({PikminManager.instance.PikminAICounter.Count}+{neededSpace}/{LethalMin.MaxPikmin.InternalValue}). Waiting for space...");
+
+            float waitStartTime = Time.time;
+            const float MAX_WAIT_TIME = 10f;
+
+            while (Time.time - waitStartTime < MAX_WAIT_TIME)
+            {
+                if (PikminManager.instance.PikminAICounter.Count + neededSpace <= LethalMin.MaxPikmin.InternalValue)
+                {
+                    LethalMin.Logger.LogInfo("Space available, continuing with spawn");
+                    yield break; // Exit early if space becomes available
+                }
+                yield return new WaitForSeconds(0.5f);
+            }
+
+            LethalMin.Logger.LogInfo("Waited 10 seconds, spawning Pikmin anyway");
+        }
 
         /// <summary>
         /// Should only be called on the server (ofc)
@@ -274,10 +330,10 @@ namespace LethalMin
         #region Withdrawing
         public void ResetWithDrawAmmount()
         {
-            var keys = TypesToWithdraw.Keys.ToList();
+            var keys = TypesToExchange.Keys.ToList();
             foreach (PikminType type in keys)
             {
-                TypesToWithdraw[type] = 0;
+                TypesToExchange[type] = 0;
             }
         }
         #endregion

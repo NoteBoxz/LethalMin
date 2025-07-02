@@ -2214,7 +2214,7 @@ namespace LethalMin
                 int WorkingRemoved = 0;
                 int FollowingRemoved = 0;
 
-                LethalMin.Logger.LogInfo($"Cleaning up {excessCount} excess pikmin");
+                LethalMin.Logger.LogInfo($"Cleaning up {excessCount} excess pikmin ({PikminAIs.Count} total) on map...");
 
                 List<PikminAI> PrioritizedPikmin = PikminAIs
                     .OrderBy(p => !p.IsWildPikmin)          // Wild pikmin first (true comes before false)

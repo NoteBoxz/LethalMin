@@ -1643,7 +1643,6 @@ namespace LethalMin
         {
             if (!DontAddToOnion)
                 TargetOnion.AddPikmin(this);
-            Pmanager.PikminAICounter.Remove(this);
             IsGoingToOnion = false;
             PlayAudioOnLocalClient(PikminSoundPackSounds.EnterOnion.ToString(), true, 1);
             SetPikminOnToAnimLink(TargetOnion.ClimbLinks[linkIndex], true);

@@ -99,14 +99,20 @@ namespace LethalMin.HUD
 
         public void Confirm()
         {
-            if (currentOnion != null && currentOnion.TypesToWithdraw.Values.Count > 0)
+            LethalMin.Logger.LogDebug($"Confirmed Button Pressed, sending withdraw request for {currentOnion?.TypesToExchange.Count} types to server.");
+            if (currentOnion != null && currentOnion.TypesToExchange.Values.Count > 0)
             {
                 currentOnion.WithdrawTypesServerRpc(currentOnion.NetworkObject, StartOfRound.Instance.localPlayerController.OwnerClientId,
-                currentOnion.TypesToWithdraw.Keys.Select(p => p.PikminTypeID).ToArray(), currentOnion.TypesToWithdraw.Values.ToArray());
+                currentOnion.TypesToExchange.Keys.Select(p => p.PikminTypeID).ToArray(), currentOnion.TypesToExchange.Values.ToArray());
             }
             CloseMenu();
         }
 
+        public void Close()
+        {
+            LethalMin.Logger.LogDebug("Close Button Pressed, closing Onion HUD.");
+            CloseMenu();
+        }
 
         void Update()
         {

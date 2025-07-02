@@ -581,6 +581,20 @@ namespace LethalMin
                 Logger.LogWarning($"Onion Type with ID {id} has already been registered.");
                 return;
             }
+            int UnregistedType = 0;
+            foreach(PikminType type in Otype.TypesCanHold)
+            {
+                if (!RegisteredPikminTypes.ContainsKey(type.PikminTypeID))
+                {
+                    Logger.LogDebug($"Onion Type: {Otype.TypeName} has a type {type.PikminName} that is not registered! Skipping registration.");
+                    UnregistedType++;
+                }
+            }
+            if(UnregistedType == Otype.TypesCanHold.Length)
+            {
+                Logger.LogWarning($"Onion Type: {Otype.TypeName} has no registered types! Skipping registration.");
+                return;
+            }
             Otype.OnionTypeID = id;
             RegisteredOnionTypes[id] = Otype;
             Logger.LogMessage($"Registered Onion Type: {Otype.TypeName} with ID: {id}");
@@ -764,6 +778,7 @@ namespace LethalMin
         public static ConfigItem<bool> EnableInFieldCounter = null!;
         public static ConfigItem<bool> HideSelectedWhenScanNotifcation = null!;
         public static ConfigItem<bool> DontUpdateHudConfigs = null!;
+        public static ConfigItem<bool> GrayoutButtonsInOnionHUD = null!;
 
         #endregion
 
@@ -1828,6 +1843,14 @@ namespace LethalMin
                 "Dont Update Hud Configs",
                 false,
                 "For Debugging purposes, dont update the hud configs",
+                false,
+                ConfigItemAuthority.Local);
+
+            GrayoutButtonsInOnionHUD = new ConfigItem<bool>(
+                "HUD",
+                "Grayout Buttons In Onion HUD",
+                true,
+                "Whether to gray out the buttons in the Onion HUD when there are no pikmin of that type available",
                 false,
                 ConfigItemAuthority.Local);
             #endregion

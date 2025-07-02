@@ -15,9 +15,98 @@ namespace LethalMin.HUD
         public Image BG = null!, BG2 = null!, Icon = null!;
         public TMP_Text InOnionCounter = null!, InSquadCounter = null!, PikminNameTitle = null!, InTotalCounter = null!;
         public BetterButton UpButton = null!, DownButton = null!;
-        public int InOnionCount = -1;
-        public int InFieldCount = -1;
-        //public int WithdrawingAmmount;
+
+        public int InSquadCount
+        {
+            get
+            {
+                return PikminManager.instance.LocalLeader.GetPikminTypesInSquadWithCount().TryGetValue(type, out int count) ? count : 0;
+            }
+        }
+        /// <summary>
+        /// Count of Pikmin of this type in the onion, not counting the ones being exchanged.
+        /// </summary>
+        public int InOnionCount
+        {
+            get
+            {
+                Onion onion = OnionHUDManager.instance.currentOnion;
+                int val = 0;
+                foreach (var pdat in onion.PikminInOnion)
+                {
+                    if (pdat.TypeID == type.PikminTypeID)
+                    {
+                        val++;
+                    }
+                }
+                return val;
+            }
+        }
+        /// <summary>
+        /// Count of Pikmin of this type in the field, not counting the ones being exchanged.
+        /// </summary>
+        public int InFieldCount
+        {
+            get
+            {
+                int val = 0;
+                foreach (var p in PikminManager.instance.PikminAICounter)
+                {
+                    if (p.pikminType == type)
+                    {
+                        val++;
+                    }
+                }
+                return val;
+            }
+        }
+        /// <summary>
+        /// Posotive for removing from onion, negative for adding to onion.
+        /// </summary>
+        public int ExchangingCount
+        {
+            get
+            {
+                Onion onion = OnionHUDManager.instance.currentOnion;
+                if (onion.TypesToExchange.ContainsKey(type))
+                {
+                    return onion.TypesToExchange[type];
+                }
+                else
+                {
+                    LethalMin.Logger.LogWarning($"(get) OnionHUDSlot: SlotExchanging: {type.PikminName} not found in TypesToExchange dictionary.");
+                }
+                return 0;
+            }
+            set
+            {
+                Onion onion = OnionHUDManager.instance.currentOnion;
+                if (onion.TypesToExchange.ContainsKey(type))
+                {
+                    onion.TypesToExchange[type] = value;
+                }
+                else
+                {
+                    LethalMin.Logger.LogWarning($"(set) OnionHUDSlot: SlotExchanging: {type.PikminName} not found in TypesToExchange dictionary.");
+                }
+            }
+        }
+        /// <summary>
+        /// Total count of Pikmin of this type being exchanged across all slots.
+        /// </summary>
+        public int TotalExchangeCount
+        {
+            get
+            {
+                Onion onion = OnionHUDManager.instance.currentOnion;
+                int val = 0;
+                foreach (int value in onion.TypesToExchange.Values)
+                {
+                    val += value;
+                }
+                return val;
+            }
+        }
         private float AddTimer, SubtractTimer;
 
         void LateUpdate()
@@ -31,43 +120,23 @@ namespace LethalMin.HUD
             BG2.color = color;
             Icon.sprite = type.PikminIcon;
             PikminNameTitle.text = type.PikminName;
+            int inOnionCount = InOnionCount;
+            int inFieldCount = InFieldCount;
+            int inSquadCount = InSquadCount;
+            int PredictedInOnionCount = inOnionCount - ExchangingCount;
+            int PredictedInTotalCount = inOnionCount + inFieldCount;
+            int PredictedInSquadCount = inSquadCount + ExchangingCount;
+            int PredictedInFieldCount = PikminManager.instance.PikminAICounter.Count + TotalExchangeCount;
 
-            Onion onion = OnionHUDManager.instance.currentOnion;
-            int WithdrawingAmmount = onion.TypesToWithdraw[type];
 
-            InOnionCount = 0;
-            foreach (var pdat in onion.PikminInOnion)
+            InOnionCounter.text = PredictedInOnionCount.ToString();
+            InTotalCounter.text = PredictedInTotalCount.ToString();
+            InSquadCounter.text = PredictedInSquadCount.ToString();
+
+            if (LethalMin.GrayoutButtonsInOnionHUD)
             {
-                if (pdat.TypeID == type.PikminTypeID)
-                {
-                    InOnionCount++;
-                }
-            }
-
-            InFieldCount = 0;
-            foreach (var p in PikminManager.instance.PikminAICounter)
-            {
-                if (p.pikminType == type)
-                {
-                    InFieldCount++;
-                }
-            }
-
-            if (onion.TypesToWithdraw[type] > InOnionCount)
-            {
-                onion.TypesToWithdraw[type]--;
-            }
-
-            InOnionCounter.text = (InOnionCount - WithdrawingAmmount).ToString();
-            InTotalCounter.text = (InOnionCount + InFieldCount).ToString();
-
-            if (PikminManager.instance.LocalLeader.PikminInSquad.Count != 0 && PikminHUDManager.instance.TypesWithCounts.ContainsKey(type))
-            {
-                InSquadCounter.text = (PikminHUDManager.instance.TypesWithCounts[type] + WithdrawingAmmount).ToString();
-            }
-            else
-            {
-                InSquadCounter.text = WithdrawingAmmount.ToString();
+                DownButton.SetVisuallyDisabled(PredictedInOnionCount == 0 || PredictedInFieldCount >= LethalMin.MaxPikmin);
+                UpButton.SetVisuallyDisabled(PredictedInSquadCount == 0);
             }
         }
         void Update()
@@ -92,50 +161,79 @@ namespace LethalMin.HUD
                 }
             }
         }
-        public void UpPressed()
+        public void UpPressed(int count = 1)
         {
-            Onion onion = OnionHUDManager.instance.currentOnion;
-            int inSquadCount = PikminHUDManager.instance.TypesWithCounts.ContainsKey(type)
-                ? PikminHUDManager.instance.TypesWithCounts[type]
-                : 0;
-
-            // Don't allow returning more Pikmin than what's in the leader's squad
-            // Also prevent going below 0 when there are no Pikmin in squad
-            if (onion.TypesToWithdraw[type] > 0 || (-onion.TypesToWithdraw[type]) < inSquadCount)
+            if (OnionHUDManager.instance.TenWithdrawAction.IsPressed())
             {
-                OnionHUDManager.instance.audio.Stop();
-                OnionHUDManager.instance.audio.PlayOneShot(OnionHUDManager.instance.DownAC);
-                onion.TypesToWithdraw[type] -= 1;
+                count = 10;
             }
-            else if (!OnionHUDManager.instance.audio.isPlaying)
+            
+            Dictionary<PikminType, int> Dict = PikminManager.instance.LocalLeader.GetPikminTypesInSquadWithCount();
+            int inSquadCount = Dict.ContainsKey(type) ? Dict[type] : 0;
+            int PredictedInSquadCount = inSquadCount - (-ExchangingCount + count);
+            LethalMin.Logger.LogDebug($"OnionHUDSlot: UpPressed: (x{count}) {type.PikminName} (IS:{inSquadCount}) (EC:{ExchangingCount}) (PIC:{PredictedInSquadCount})");
+
+            if (PredictedInSquadCount < 0 && count > 1)
             {
+                count = Mathf.Max(1, count + PredictedInSquadCount);
+                PredictedInSquadCount = inSquadCount - (-ExchangingCount + count);
+                LethalMin.Logger.LogDebug($"OnionHUDSlot: UpPressed: Adjusted count to {count} for {type.PikminName} due to negative squad count.");
+            }   
+              
+            if (PredictedInSquadCount < 0)
+            {
+                LethalMin.Logger.LogDebug($"__OnionHUDSlot: UpPressed: {type.PikminName} cannot withdraw more than you have in your squad.");
+                OnionHUDManager.instance.audio.Stop();
                 OnionHUDManager.instance.audio.PlayOneShot(OnionHUDManager.instance.DenyDownAC);
+                return;
             }
 
-            // if (onion.TypesToWithdraw[type] < 0)
-            // {
-            //     onion.TypesToWithdraw[type] = 0; // Prevent negative withdraw amounts
-            //     LethalMin.Logger.LogWarning($"OnionHUDSlot: {type.PikminName} withdraw amount is negative! Resetting to 0.");
-            // }
+            OnionHUDManager.instance.audio.Stop();
+            OnionHUDManager.instance.audio.PlayOneShot(OnionHUDManager.instance.DownAC);
+            ExchangingCount -= count;
         }
-        public void DownPressed()
+        public void DownPressed(int count = 1)
         {
+            if (OnionHUDManager.instance.TenWithdrawAction.IsPressed())
+            {
+                count = 10;
+            }
+
             Onion onion = OnionHUDManager.instance.currentOnion;
+            int inOnionCount = onion.PikminInOnion.Count(pdat => pdat.TypeID == type.PikminTypeID);
+            int PredictedInOnionCount = inOnionCount - (ExchangingCount + count);
+            int PredictedInFieldCount = PikminManager.instance.PikminAICounter.Count + TotalExchangeCount + count;
+            LethalMin.Logger.LogDebug($"OnionHUDSlot: DownPressed: (x{count}) {type.PikminName} (IO:{inOnionCount}) (EC:{ExchangingCount}) (PIC:{PredictedInOnionCount}) (PIF:{PredictedInFieldCount})");
 
-            int totalTypesToWithdraw = onion.TypesToWithdraw.Values.Sum();
-
-            // Don't allow withdrawing more than what's available in the onion and ensure total does not exceed MaxPikmin
-            if ((InOnionCount - onion.TypesToWithdraw[type]) > 0 &&
-            totalTypesToWithdraw + PikminManager.instance.PikminAICounter.Count < LethalMin.MaxPikmin)
+            if (PredictedInOnionCount < 0 && count > 1)
             {
+                count = Mathf.Max(1, count + PredictedInOnionCount);
+                PredictedInOnionCount = inOnionCount - (ExchangingCount + count);
+                LethalMin.Logger.LogDebug($"_OnionHUDSlot: DownPressed: Adjusted count to {count} for {type.PikminName} due to negative onion count.");
+            }
+
+            if(PredictedInFieldCount > LethalMin.MaxPikmin && count > 1)
+            {
+                count = Mathf.Max(1, count - (PredictedInFieldCount - LethalMin.MaxPikmin));
+                PredictedInFieldCount = PikminManager.instance.PikminAICounter.Count + TotalExchangeCount + count;
+                LethalMin.Logger.LogDebug($"_OnionHUDSlot: DownPressed: Adjusted count to {count} for {type.PikminName} due to exceeding max pikmin in field.");
+            }
+
+            if (PredictedInFieldCount > LethalMin.MaxPikmin || PredictedInOnionCount < 0)
+            {
+                string reason = PredictedInFieldCount > LethalMin.MaxPikmin
+                    ? "cannot exchange more than you have in the field"
+                    : "cannot exchange more than you have in your onion";
+
+                LethalMin.Logger.LogDebug($"__OnionHUDSlot: DownPressed: {type.PikminName} {reason}.");
                 OnionHUDManager.instance.audio.Stop();
-                OnionHUDManager.instance.audio.PlayOneShot(OnionHUDManager.instance.UpAC);
-                onion.TypesToWithdraw[type] += 1;
-            }
-            else if (!OnionHUDManager.instance.audio.isPlaying)
-            {
                 OnionHUDManager.instance.audio.PlayOneShot(OnionHUDManager.instance.DenyUpAC);
+                return;
             }
+
+            OnionHUDManager.instance.audio.Stop();
+            OnionHUDManager.instance.audio.PlayOneShot(OnionHUDManager.instance.UpAC);
+            ExchangingCount += count;
         }
     }
 }

@@ -262,7 +262,7 @@ namespace LethalMin.Pikmin
                         return pack;
                     }
                 }
-                LethalMin.Logger.LogWarning($"{PikminName}: No sound pack found for generation {gen}");
+                LethalMin.Logger.LogDebug($"{PikminName}: No sound pack found for generation {gen}, using default sound pack.");
                 return SoundPack;
             }
         }
