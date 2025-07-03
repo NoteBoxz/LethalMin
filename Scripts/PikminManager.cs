@@ -1381,18 +1381,23 @@ namespace LethalMin
                 {
                     continue;
                 }
-                float oddsValue = 0.5f;
+                float oddsValue = 0.5f; 
+                string cleanedPlanetName = System.Text.RegularExpressions.Regex.Replace(
+                    curLevel.PlanetName, 
+                    "^\\d+", 
+                    "").Trim().ToLower();
+                
                 foreach (string MoonName in type.FavoredMoons)
-                {
-                    if (MoonName.Contains(curLevel.PlanetName))
+                {      
+                    if (MoonName.ToLower().Contains(cleanedPlanetName))
                     {
                         oddsValue *= type.SpawnChanceMultiplier;
                     }
                 }
-
+                
                 foreach (string MoonName in type.AvoidMoons)
                 {
-                    if (MoonName.Contains(curLevel.PlanetName))
+                    if (MoonName.ToLower().Contains(cleanedPlanetName))
                     {
                         oddsValue *= type.SpawnChanceDemultiplier;
                     }
@@ -1435,7 +1440,7 @@ namespace LethalMin
         {
             foreach (ContentTag Ctag in LevelManager.CurrentExtendedLevel.ContentTags)
             {
-                if (Ctag.contentTagName.Contains(tag))
+                if (Ctag.contentTagName.ToLower().Contains(tag.ToLower()))
                 {
                     return true;
                 }
