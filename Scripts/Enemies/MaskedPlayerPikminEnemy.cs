@@ -136,7 +136,7 @@ namespace LethalMin
             {
                 if (Vector3.Distance(Pos, ai.transform.position) > range) continue; // Skip if not within range
 
-                if (ai != null && ai.currentBehaviourStateIndex == 0 && !ai.IsDeadOrDying
+                if (ai != null && ai.currentBehaviourStateIndex == PikminAI.IDLE && !ai.IsDeadOrDying
                 && !PikChecks.IsPikminResistantToHazard(ai, PikminHazard.Spore, false))
                 {
                     return true; // Found a valid pikmin nearby

@@ -62,7 +62,7 @@ namespace LethalMin
 
         public override void OnCollisionEnter(Collision collision)
         {
-            if (!IsOwner || CurrentIntention != Pintent.Thrown || currentBehaviourStateIndex == 4)
+            if (!IsOwner || CurrentIntention != Pintent.Thrown || currentBehaviourStateIndex == PANIC)
             {
                 return;
             }
@@ -220,7 +220,7 @@ namespace LethalMin
                 animController.PlayLandAnim();
 
                 SetCollisionMode(1);
-                if (currentBehaviourStateIndex == 3)
+                if (currentBehaviourStateIndex == ATTACK)
                 {
                     ChangeIntent(Pintent.Attack);
                     LethalMin.Logger.LogDebug($"{gameObject.name} is now ready to attack after landing.");

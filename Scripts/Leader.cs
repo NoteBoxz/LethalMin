@@ -729,7 +729,7 @@ namespace LethalMin
             PikminInSquad.RemoveAll(p => p == null);
             foreach (PikminAI pik in PikminInSquad)
             {
-                if (pik.currentBehaviourStateIndex != 1)
+                if (pik.currentBehaviourStateIndex != PikminAI.FOLLOW)
                 {
                     continue;
                 }
@@ -759,7 +759,7 @@ namespace LethalMin
                 {
                     continue;
                 }
-                if (pik.currentBehaviourStateIndex != 1)
+                if (pik.currentBehaviourStateIndex != PikminAI.FOLLOW)
                 {
                     continue;
                 }

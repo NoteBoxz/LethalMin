@@ -18,6 +18,7 @@ namespace LethalMin.Pikmin
         {
             base.OnTaskCreated();
             ReturnToShipRoute = new PikminRoute(Owner);
+            ReturnToShipRoute.OnRouteEnd.AddListener(() => TaskEnd(true));
         }
 
         public override void IntervaledUpdate()

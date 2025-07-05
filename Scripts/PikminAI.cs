@@ -198,6 +198,12 @@ namespace LethalMin
         public static int PikminSoundID = 0;
         bool wasInvisCheatOn;
         bool friednlyFire => leader == null ? LethalMin.FriendlyFire : leader.FriendlyFire.Value;
+        public const int IDLE = 0;
+        public const int FOLLOW = 1;
+        public const int WORK = 2;
+        public const int ATTACK = 3;
+        public const int PANIC = 4;
+        public const int LEAVING = 5;
 
 
 
@@ -619,7 +625,7 @@ namespace LethalMin
             ProjectileProps.direction = transform.forward;
 
             //Car check
-            if (CurrentIntention == Pintent.Idle && Pmanager.Vehicles.Count > 0 && currentBehaviourStateIndex == 1 && leader != null)
+            if (CurrentIntention == Pintent.Idle && Pmanager.Vehicles.Count > 0 && currentBehaviourStateIndex == FOLLOW && leader != null)
             {
                 if (timeSinceLastVehicleCheck >= 0)
                 {
@@ -638,7 +644,7 @@ namespace LethalMin
             }
 
             //Attack
-            if (currentBehaviourStateIndex == 3 && CurrentIntention == Pintent.Attack && CurrentLatchTrigger == null && wasSetToAttack)
+            if (currentBehaviourStateIndex == ATTACK && CurrentIntention == Pintent.Attack && CurrentLatchTrigger == null && wasSetToAttack)
             {
                 if (timeSinceAttacking >= 0)
                 {
@@ -652,7 +658,7 @@ namespace LethalMin
             animController.IsAttacking = attackRoutine != null;
 
             //Panic
-            if (currentBehaviourStateIndex == 4 && IsOwner)
+            if (currentBehaviourStateIndex == PANIC && IsOwner)
             {
                 HandlePanicStateOnOwnerClientConstant();
             }
@@ -839,12 +845,6 @@ namespace LethalMin
         /// </summary>
         public override void DoAIInterval()
         {
-            const int IDLE = 0;
-            const int FOLLOW = 1;
-            const int WORK = 2;
-            const int ATTACK = 3;
-            const int PANIC = 4;
-            const int LEAVING = 5;
 
             if (currentBehaviourStateIndex != WORK)
                 agent.speed = pikminType.GetSpeed(CurrentGrowthStage, ShouldRun);
@@ -1680,7 +1680,7 @@ namespace LethalMin
                 return;
             }
 
-            if (currentBehaviourStateIndex == 4)
+            if (currentBehaviourStateIndex == PANIC)
             {
                 return;
             }
@@ -2536,11 +2536,11 @@ namespace LethalMin
         }
         public virtual void PanicOnLocalClient(PikminEffectMode mode, PikminEffectType type, string PanicAnim)
         {
-            if (CanBeWhistledOutOfPanic && currentBehaviourStateIndex == 4 && type == PikminEffectType.Paralized)
+            if (CanBeWhistledOutOfPanic && currentBehaviourStateIndex == PANIC && type == PikminEffectType.Paralized)
             {
                 LethalMin.Logger.LogWarning($"{DebugID}: Overriding current panic state!!!!");
             }
-            else if (currentBehaviourStateIndex == 4)
+            else if (currentBehaviourStateIndex == PANIC)
             {
                 LethalMin.Logger.LogWarning($"{DebugID}: Panicking while already in panic state");
                 return;
@@ -3884,7 +3884,7 @@ namespace LethalMin
                 LethalMin.Logger.LogWarning($"{DebugID}: RandomIdle is out of range: {animController.RandomIdle} / {animController.AnimPack.EditorIdleAnim.Count}");
             }
 
-            if (currentBehaviourStateIndex != 0 || CurrentIntention != Pintent.Idle)
+            if (currentBehaviourStateIndex != IDLE || CurrentIntention != Pintent.Idle)
             {
                 if (animController.AnimPack.EditorIdleAnim.Count != 0)
                     animController.IdleAnim = animController.AnimPack.EditorIdleAnim[0];

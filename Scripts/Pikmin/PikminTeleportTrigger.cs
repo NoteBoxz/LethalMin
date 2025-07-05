@@ -16,7 +16,7 @@ namespace LethalMin
             if (pikmin == null) { return; }
             if (!pikmin.IsOwner) { return; }
 
-            if (pikmin.currentBehaviourStateIndex == 2)
+            if (pikmin.currentBehaviourStateIndex == PikminAI.WORK)
             {
                 pikmin.agent.Warp(Destination.position);
                 pikmin.transform.position = Destination.position;
