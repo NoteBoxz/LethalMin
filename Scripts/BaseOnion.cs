@@ -245,6 +245,16 @@ namespace LethalMin
                     SetPlayerToBeRevived(ragdoll, targetType.PikminTypeID);
 
                 yield break;
+
+            }
+
+            if (LethalMin.AllowOnionToReviveMaskeds &&
+            item.hackEnemyGrabbableObject != null && item.hackEnemyGrabbableObject.ai is MaskedPlayerEnemy)
+            {
+                if (IsServer)
+                    SetEnemyToBeRevived(item.hackEnemyGrabbableObject);
+
+                yield break;
             }
 
             int sproutsToSpawn = item.settings.SproutsToSpawn;

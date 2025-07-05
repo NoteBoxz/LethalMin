@@ -462,10 +462,11 @@ namespace LethalMin
 
                     return;
                 }
-                if(LethalMin.AllowOnionToReviveMaskeds &&
+        
+                if (LethalMin.AllowOnionToReviveMaskeds &&
                 item.hackEnemyGrabbableObject != null && item.hackEnemyGrabbableObject.ai is MaskedPlayerEnemy)
                 {
-                    if(IsServer)
+                    if (IsServer)
                         SetEnemyToBeRevived(item.hackEnemyGrabbableObject);
 
                     return;
