@@ -67,9 +67,9 @@ namespace LethalMin.Compats
                 {
                     zone = __instance.playerPhysicsRegion_elevator.gameObject.AddComponent<DirectlyPathZone>();
                 }
-                if (!PikminItemRoute.MoonSettingss.Contains(ZelevatorPath))
+                if (!PikminRoute.MoonSettingss.Contains(ZelevatorPath))
                 {
-                    PikminItemRoute.MoonSettingss.Add(ZelevatorPath);
+                    PikminRoute.MoonSettingss.Add(ZelevatorPath);
                 }
 
                 Scene currentScene = SceneManager.GetSceneByName(RoundManager.Instance.currentLevel.sceneName);

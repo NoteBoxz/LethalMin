@@ -130,7 +130,7 @@ namespace LethalMin.Pikmin
 
         public void OnCreate()
         {
-            foreach (CachedRouteNode cachedRouteNode in PikminItemRoute.NodeCache)
+            foreach (CachedRouteNode cachedRouteNode in PikminRoute.NodeCache)
             {
                 if (cachedRouteNode.NodeName == "(Cached)" + NodeName)
                 {
@@ -139,7 +139,7 @@ namespace LethalMin.Pikmin
             }
             cachedNode = new CachedRouteNode(this);
             cachedNode.SkipWhenCanPathOutsideWhenInside = SkipCacheWhenCanPathOutsideWhenInside;
-            PikminItemRoute.NodeCache.Add(cachedNode);
+            PikminRoute.NodeCache.Add(cachedNode);
         }
 
         public bool IsPikminNearNode(PikminAI ai, float Range)
@@ -199,7 +199,7 @@ namespace LethalMin.Pikmin
             }
         }
 
-        public void OnNodeReached(PikminItemRoute route)
+        public void OnNodeReached(PikminRoute route)
         {
             if (Type == RouteNodeType.Door && Entrance != null)
             {

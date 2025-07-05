@@ -431,10 +431,10 @@ namespace LethalMin
         {
             LethalMin.Logger.LogInfo($"__ LethalMin On Game Loaded __");
             //PikUtils.AddTextToChangeOnLocalClient($"Game Loaded, initializing PikminManager");
-            PikminItemRoute.NodeCache.Clear();
-            PikminItemRoute.GetFloorData();
-            PikminItemRoute.FireNodes = PikminItemRoute.FindFireExitRouteNodes();
-            PikminItemRoute.MoonSettingss = Resources.FindObjectsOfTypeAll<MoonSettings>().ToList();
+            PikminRoute.NodeCache.Clear();
+            PikminRoute.GetFloorData();
+            PikminRoute.FireNodes = PikminRoute.FindFireExitRouteNodes();
+            PikminRoute.MoonSettingss = Resources.FindObjectsOfTypeAll<MoonSettings>().ToList();
             CanPathOnMoonGlobal = PikChecks.IsNavMeshOnMap();
             EndOfGameStats.Refresh();
             SpawnTeleportTriggers();

@@ -92,6 +92,7 @@ namespace LethalMin
         public PikminManager Pmanager = null!;
         public Pintent CurrentIntention;
         public Pintent PreviousIntention;
+        public PikminTask? CurrentTask = null;
         public ProjectileProperties ProjectileProps;
         public Leader? leader;
         public Leader? previousLeader;
@@ -131,7 +132,7 @@ namespace LethalMin
         public PikminLinkAnimation CurrentLinkAnim = null!;
         public PikminVehicleController? CurrentVehicle = null!;
         public Transform? CurrentVehiclePoint = null!;
-        public PikminItemRoute ReturnToShipRoute = null!;
+        public PikminRoute ReturnToShipRoute = null!;
         public ITrajectoryModifier? trajectoryModifier = null!;
         public bool Invincible = false;
         public float DeathTimer = 1;
@@ -564,6 +565,11 @@ namespace LethalMin
             UpdateLocalSnapping();
 
             UpdateIdleAnimation();
+
+            if(CurrentTask != null)
+            {
+                CurrentTask.Update();
+            }
 
             if (LethalMin.InviciblePikminCheat)
             {
@@ -1053,87 +1059,20 @@ namespace LethalMin
         }
         public virtual void HandleWorkStateOnOwnerClient()
         {
-            bool IsOnItem = TargetItem != null && TargetItem.PikminOnItem.Contains(this);
+            if (CurrentTask != null)
+                CurrentTask.IntervaledUpdate();
 
-            agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
-            if (TargetItem != null && IsOnItem && TargetItem.settings.RouteToPlayer)
-            {
-                agent.stoppingDistance = TargetItem.settings.RouteToPlayerStoppingDistance;
-            }
-            else
-            {
-                agent.stoppingDistance = 0;
-            }
-
-
-            if (ReturnToShipRoute != null && TargetItem == null)
-            {
-                // If the Pikmin is on a route to the ship, follow that route
-                ReturnToShipRoute.UpdateRoutePikmin();
-                return;
-            }
-            else if (ReturnToShipRoute != null)
-            {
-                // If the Pikmin is on a route to the ship, but has a target item, stop following the route
-                DestoryShipRoute();
-            }
-
-            if (!pikminType.CanCarryObjects)
-            {
-                LethalMin.Logger.LogWarning($"{DebugID}: Pikmin type {pikminType.PikminName} cannot carry objects, switching to idle state");
-                SetToIdleServerRpc();
-                return;
-            }
-            if (TargetItem == null)
-            {
-                // Guard clause: If there's no target item to work on, log a warning and switch to idle state
-                LethalMin.Logger.LogWarning($"{DebugID}: TargetItem is null when working");
-                SetToIdleServerRpc();
-                return;
-            }
-            if (TargetItemPoint == null)
-            {
-                // Guard clause: If there's no grab position on the target item, log a warning and switch to idle state
-                LethalMin.Logger.LogWarning($"{DebugID}: TargetItemPoint is null when working");
-                SetToIdleServerRpc();
-                return;
-            }
-            if (TargetItem.settings.GrabableToPikmin == false)
-            {
-                // Guard clause: If the item is not grabable by Pikmin, log a warning and switch to idle state
-                LethalMin.Logger.LogWarning($"{DebugID}: TargetItem is stopped being grabable to Pikmin when working");
-                SetToIdleServerRpc();
-                return;
-            }
-            if (Vector3.Distance(transform.position, TargetItemPoint.transform.position) > pikminType.ItemDetectionRange * 2
-            && !IsOnItem)
-            {
-                // If Pikmin is too far away from item and isn't already carrying it, give up and return to idle
-                LethalMin.Logger.LogInfo($"{DebugID}: Is too far away");
-                SetToIdleServerRpc();
-                return;
-            }
-
-            if (!IsOnItem || !TargetItem.IsBeingCarried)
-            {
-                // If Pikmin isn't yet on the item or the item isn't being carried, move toward the grab position
-                PathToPosition(TargetItemPoint.transform.position);
-            }
-            if (Vector3.Distance(transform.position, TargetItemPoint.transform.position) < 2f
-            && !IsOnItem)
-            {
-                // If Pikmin is close enough to grab the item and isn't already carrying it
-                if (TargetItem.HasArrived)
-                {
-                    // If the item has already reached its destination, no need to grab it
-                    SetToIdleServerRpc();
-                    LethalMin.Logger.LogWarning($"{DebugID}: Is not grabbing item beacuse it has arrived");
-                    return;
-                }
-                // If the item needs to be carried, grab it
-                GrabItemServerRpc();
-                GrabItemOnLocalClient(TargetItem);
-            }
+            // if (ReturnToShipRoute != null && TargetItem == null)
+            // {
+            //     // If the Pikmin is on a route to the ship, follow that route
+            //     ReturnToShipRoute.UpdateRoutePikmin();
+            //     return;
+            // }
+            // else if (ReturnToShipRoute != null)
+            // {
+            //     // If the Pikmin is on a route to the ship, but has a target item, stop following the route
+            //     DestoryShipRoute();
+            // }
         }
         public virtual void HandleAttackStateOnOwnerClient()
         {
@@ -1306,6 +1245,17 @@ namespace LethalMin
             {
                 PlayAudioOnLocalClient(PikminSoundPackSounds.Attack);
                 StartCoroutine(TryHitEnemy(TargetEnemy));
+            }
+        }
+
+        public virtual void SetCurrentTask(int TaskID)
+        {
+            LethalMin.Logger.LogInfo($"{DebugID}: Setting current task to {TaskID}");
+            switch (TaskID)
+            {
+                case 0:
+                    CurrentTask = new PikminCarryItemTask(this, TargetItem);
+                    break;
             }
         }
 
@@ -3569,6 +3519,7 @@ namespace LethalMin
             TargetItem = itm;
             AgentLookTarget = itm.transform;
             TargetItemPoint = boolVal;
+            SetCurrentTask(0);
             SwitchToBehaviourStateOnLocalClient(2);
             ChangeIntent(Pintent.RunTowards);
         }
@@ -3688,7 +3639,7 @@ namespace LethalMin
         public virtual void CreateShipRoute()
         {
             DestoryShipRoute();
-            ReturnToShipRoute = new PikminItemRoute(this);
+            ReturnToShipRoute = new PikminRoute(this);
             LethalMin.Logger.LogDebug($"{DebugID}: Creating ship route");
         }
 

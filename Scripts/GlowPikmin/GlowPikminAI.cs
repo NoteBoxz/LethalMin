@@ -181,7 +181,7 @@ namespace LethalMin
                 return itm;
             }
 
-            if (itm != null && !PikminItemRoute.NodeCache.Any(node => node.IsInRange(itm.ItemScript.transform.position, true)))
+            if (itm != null && !PikminRoute.NodeCache.Any(node => node.IsInRange(itm.ItemScript.transform.position, true)))
             {
                 return itm;
             }

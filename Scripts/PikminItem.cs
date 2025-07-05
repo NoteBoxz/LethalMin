@@ -40,7 +40,7 @@ namespace LethalMin
 
         protected PikminAI? previousPrimaryPikmin;
         protected PikminAI lastPrimaryPikminOnItem = null!;
-        public PikminItemRoute CurrentRoute = null!;
+        public PikminRoute CurrentRoute = null!;
         protected Coroutine soundRoutine = null!;
         public UnityEvent<PikminItem> OnItemGrabbed = new UnityEvent<PikminItem>();
         public UnityEvent<PikminItem> OnItemDropped = new UnityEvent<PikminItem>();
@@ -346,8 +346,14 @@ namespace LethalMin
             ItemScript.GrabItemFromEnemy(PrimaryPikminOnItem);
             ItemScript.EnablePhysics(enable: false);
             PrimaryPikminOnItem.SetCollisionMode(1);
+            bool ShouldTakeItemToOnion = true;
 
-            if (settings.CanProduceSprouts)
+            if (LethalMin.OnCompany && !LethalMin.TakeItemsToOnionOnCompany.InternalValue)
+            {
+                ShouldTakeItemToOnion = false;
+            }
+
+            if (settings.CanProduceSprouts && ShouldTakeItemToOnion)
             {
                 (PikminType, Onion)? tuple = GetPriotizedPikminType();
                 if (tuple != null)
@@ -969,6 +975,12 @@ namespace LethalMin
                     }
                 }
             }
+            if (TargetOnion != null && CurrentRoute != null && CurrentRoute.Nodes[CurrentRoute.Nodes.Count - 1].InstanceIdentifiyer != TargetOnion.ItemDropPos)
+            {
+                LethalMin.Logger.LogWarning($"Last node is not the target onion drop pos, setting target onion to null.");
+                TargetOnion = null!;
+                PikminCounter.SetCounterColor(DefultColor);
+            }
 
             if (GrabPositionContainer != null)
             {
@@ -1096,7 +1108,9 @@ namespace LethalMin
             ClearCurrentRoute();
             if (PrimaryPikminOnItem != null)
             {
-                CurrentRoute = new PikminItemRoute(this);
+                CurrentRoute = new PikminRoute(this);
+                CurrentRoute.OnPointReached.AddListener(IncrumentRouteIndexOwnerSide);
+                CurrentRoute.OnRouteEnd.AddListener(OnRouteEndOwnerSide);
                 LethalMin.Logger.LogInfo($"{gameObject.name} has created a route");
             }
             else
@@ -1113,6 +1127,19 @@ namespace LethalMin
                 LethalMin.Logger.LogInfo($"{gameObject.name} has cleared its route");
             }
         }
+
+        public void OnRouteEndOwnerSide()
+        {
+            if (!IsOwner)
+                return;
+
+            OnRouteEnd();
+            if (NetworkObject.IsSpawned)
+            {
+                OnRouteEndServerRpc();
+            }
+        }
+
         [ServerRpc]
         public void OnRouteEndServerRpc()
         {
@@ -1155,6 +1182,13 @@ namespace LethalMin
             }
         }
 
+        void IncrumentRouteIndexOwnerSide()
+        {
+            if (!IsOwner)
+                return;
+
+            IncrumentRouteIndexServerRpc();
+        }
 
         [ServerRpc]
         public void IncrumentRouteIndexServerRpc()

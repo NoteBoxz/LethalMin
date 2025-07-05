@@ -163,7 +163,7 @@ namespace LethalMin.Utils
             && itm.PikminOnItem.Count < itm.GrabToPositions.Count
             && !itm.HasArrived
             && itm.settings.GrabableToPikmin
-            && !PikminItemRoute.NodeCache.Any(node => node.IsInRange(itm.ItemScript.transform.position));
+            && !PikminRoute.NodeCache.Any(node => node.IsInRange(itm.ItemScript.transform.position));
         }
         public static bool IsEnemyVaildToAttack(EnemyAI enemy)
         {
@@ -272,7 +272,7 @@ namespace LethalMin.Utils
         //     bool hasAvailableGrabPositions = itm.PikminOnItem.Count < itm.GrabToPositions.Count;
         //     LethalMin.Logger.LogMessage($"IsPikminItemValid: Available grab positions: {hasAvailableGrabPositions} (PikminOnItem: {itm.PikminOnItem.Count}, GrabToPositions: {itm.GrabToPositions.Count})");
 
-        //     var nodeInRange = PikminItemRoute.NodeCache.FirstOrDefault(node => node.IsInRange(itm.ItemScript.transform.position));
+        //     var nodeInRange = PikminRoute.NodeCache.FirstOrDefault(node => node.IsInRange(itm.ItemScript.transform.position));
         //     bool isNotInNodeRange = nodeInRange == null;
 
         //     if (isNotInNodeRange)
