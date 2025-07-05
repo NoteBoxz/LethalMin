@@ -1111,6 +1111,7 @@ namespace LethalMin
                 CurrentRoute = new PikminRoute(this);
                 CurrentRoute.OnPointReached.AddListener(IncrumentRouteIndexOwnerSide);
                 CurrentRoute.OnRouteEnd.AddListener(OnRouteEndOwnerSide);
+                CurrentRoute.OnReachDoor.AddListener(UseEntranceOwnerSide);
                 LethalMin.Logger.LogInfo($"{gameObject.name} has created a route");
             }
             else
@@ -1208,6 +1209,14 @@ namespace LethalMin
             {
                 CurrentRoute.CurrentPathIndex++;
             }
+        }
+
+        void UseEntranceOwnerSide(EntranceTeleport entrance)
+        {
+            if (!IsOwner)
+                return;
+
+            UseEntranceServerRpc(entrance.NetworkObject, false);
         }
 
         [ServerRpc]

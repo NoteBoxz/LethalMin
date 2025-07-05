@@ -18,6 +18,7 @@ namespace LethalMin.Pikmin
         public (Leader, float)? TargetPlayer;
         public Onion? TargetOnion;
         public RouteNode? OverrideDestNode;
+        public bool UseDoors;
     }
     public class PikminRoute
     {
@@ -59,6 +60,7 @@ namespace LethalMin.Pikmin
                 RouteData.TargetPlayer = (Item.PrimaryLeader, Item.settings.RouteToPlayerStoppingDistance);
             }
             RouteData.TargetOnion = Item.TargetOnion;
+            RouteData.UseDoors = false;
             Pikmin = Item.PrimaryPikminOnItem;
             IsPathOutside = Pikmin.isOutside;
             ShipNode.CheckBuffer = 1;
@@ -71,6 +73,7 @@ namespace LethalMin.Pikmin
         {
             this.Pikmin = Pikmin;
             IsPathOutside = Pikmin.isOutside;
+            RouteData.UseDoors = true;
             GetNodes(true);
         }
 
@@ -92,6 +95,7 @@ namespace LethalMin.Pikmin
         private bool isFirstRoute = true;
         public UnityEvent OnPointReached = new UnityEvent();
         public UnityEvent OnRouteEnd = new UnityEvent();
+        public UnityEvent<EntranceTeleport> OnReachDoor = new UnityEvent<EntranceTeleport>();
 
 
         #region Node Processing

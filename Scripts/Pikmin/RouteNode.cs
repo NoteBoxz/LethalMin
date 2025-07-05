@@ -208,14 +208,11 @@ namespace LethalMin.Pikmin
                 {
                     route.ExitUsedOutside = route.Nodes[route.CurrentPathIndex + 1];
                 }
-                if (route.Item != null)
-                {
-                    route.Item.UseEntranceServerRpc(Entrance.NetworkObject, false);
-                }
-                else if (route.Pikmin != null)
+                if (route.RouteData.UseDoors && route.Pikmin != null)
                 {
                     route.Pikmin.UseEntranceServerRpc(Entrance.NetworkObject, false);
                 }
+                route.OnReachDoor.Invoke(Entrance);
             }
 
             if (Type == RouteNodeType.TwoWayWarp)
