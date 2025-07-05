@@ -1442,7 +1442,7 @@ namespace LethalMin
         public virtual void SetToIdle()
         {
             LethalMin.Logger.LogDebug($"{DebugID}: Setting to idle on local client");
-            SwitchToBehaviourStateOnLocalClient(0);
+            SwitchToBehaviourStateOnLocalClient(IDLE);
             ChangeIntent(Pintent.Idle);
             CallResetMethods(
                 RemoveLeader: true,
@@ -1504,7 +1504,7 @@ namespace LethalMin
         {
             timeIdel = 0;
             CallResetMethods();
-            SwitchToBehaviourStateOnLocalClient(5);
+            SwitchToBehaviourStateOnLocalClient(LEAVING);
             ChangeIntent(Pintent.Leave);
             if (onion != null)
             {
@@ -1669,7 +1669,7 @@ namespace LethalMin
 
             if (SwitchState)
             {
-                SwitchToBehaviourStateOnLocalClient(1);
+                SwitchToBehaviourStateOnLocalClient(FOLLOW);
                 ChangeIntent(Pintent.Idle);
             }
 
@@ -1987,7 +1987,7 @@ namespace LethalMin
 
             LethalMin.Logger.LogDebug($"{DebugID}: Thrown with force: {throwForce}");
             ChangeIntent(Pintent.Thrown);
-            SwitchToBehaviourStateOnLocalClient(0);
+            SwitchToBehaviourStateOnLocalClient(IDLE);
             SetCollisionMode(2);
             rb.position = leader.ThrowOrigin.position;
             transform.position = leader.ThrowOrigin.position;
@@ -2183,7 +2183,7 @@ namespace LethalMin
         {
             LethalMin.Logger.LogDebug($"{DebugID}: Knockback with force: {force} and direction: {direction}");
             StopThrow(false);
-            SwitchToBehaviourStateOnLocalClient(0);
+            SwitchToBehaviourStateOnLocalClient(IDLE);
             ChangeIntent(Pintent.Knockedback);
             CallResetMethods(
                 RemoveLeader: true,
@@ -2503,7 +2503,7 @@ namespace LethalMin
             //SetCollisionMode(1);
             CanBeWhistledOutOfPanic = mode == PikminEffectMode.Limited;
             ChangeIntent(type == PikminEffectType.Paralized ? Pintent.MoveableStuck : Pintent.Panicing);
-            SwitchToBehaviourStateOnLocalClient(4);
+            SwitchToBehaviourStateOnLocalClient(PANIC);
             EditAffecters($"PANICSTA_{type.ToString()}", enemyRandom.Next(5, 15));
             CurPanicAnim = PanicAnim;
 
@@ -2655,7 +2655,7 @@ namespace LethalMin
             AgentLookTarget = enemy.transform;
             ChangeIntent(Pintent.Attack);
             SetCurrentTask("AttackEnemy");
-            SwitchToBehaviourStateOnLocalClient(2);
+            SwitchToBehaviourStateOnLocalClient(WORK);
         }
 
         public virtual void AttackEnemyWhenNear()
@@ -3500,7 +3500,7 @@ namespace LethalMin
             AgentLookTarget = itm.transform;
             TargetItemPoint = boolVal;
             SetCurrentTask("CarryItem");
-            SwitchToBehaviourStateOnLocalClient(2);
+            SwitchToBehaviourStateOnLocalClient(WORK);
             ChangeIntent(Pintent.RunTowards);
         }
 

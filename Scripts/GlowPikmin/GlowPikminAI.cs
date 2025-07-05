@@ -567,7 +567,7 @@ namespace LethalMin
         public override void SetPikminToLeaving(Onion? onion = null)
         {
             CallResetMethods();
-            SwitchToBehaviourStateOnLocalClient(5);
+            SwitchToBehaviourStateOnLocalClient(LEAVING);
             ChangeIntent(Pintent.Leave);
 
             if (LethalMin.OnCompany && ShouldTurnintoSeed)

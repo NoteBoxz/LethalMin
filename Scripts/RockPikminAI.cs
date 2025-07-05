@@ -281,7 +281,7 @@ namespace LethalMin
 
             modelContainer.transform.localPosition = new Vector3(0, -1.25f, 0); // Adjust the position to embed into the ground
             CallResetMethods();
-            SwitchToBehaviourStateOnLocalClient(0);
+            SwitchToBehaviourStateOnLocalClient(IDLE);
             ChangeIntent(Pintent.Stuck);
 
             StartCoroutine(WaitToUnembed()); // Start the coroutine to unembed after a delay
