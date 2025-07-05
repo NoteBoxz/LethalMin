@@ -88,10 +88,9 @@ namespace LethalMin
                     continue;
                 }
                 ai.CallResetMethods();
-                ai.CreateShipRoute();
                 ai.ChangeIntent(Pintent.Idle);
+                ai.SetCurrentTask("ReturnToShip");
                 ai.SwitchToBehaviourStateOnLocalClient(2);
-                ai.ReturnToShipRoute.UpdateRoutePikmin();
                 yield return new WaitForSeconds(0.1f);
             }
         }

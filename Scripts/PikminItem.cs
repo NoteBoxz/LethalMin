@@ -762,7 +762,16 @@ namespace LethalMin
             // Iterate over the new list
             foreach (var pikmin in pikminToRemove)
             {
-                pikmin.SetToIdle();
+                if (pikmin.CurrentTask != null)
+                {
+                    if (pikmin.CurrentTask is not CarryItemTask)
+                    {
+                        LethalMin.Logger.LogWarning($"Pikmin {pikmin.DebugID} current task is not carry item task???");
+                        continue; // Skip if the pikmin is not carrying the item
+                    }
+
+                    pikmin.FinishTask();
+                }
             }
 
             // Clear the original list
@@ -960,7 +969,7 @@ namespace LethalMin
 
             if (CurrentRoute != null && IsOwner)
             {
-                CurrentRoute.UpdateRouteItem();
+                CurrentRoute.UpdateRoute();
                 if (RouteRecallInterval > 0)
                 {
                     RouteRecallInterval -= Time.deltaTime;

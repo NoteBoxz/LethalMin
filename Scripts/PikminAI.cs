@@ -132,7 +132,6 @@ namespace LethalMin
         public PikminLinkAnimation CurrentLinkAnim = null!;
         public PikminVehicleController? CurrentVehicle = null!;
         public Transform? CurrentVehiclePoint = null!;
-        public PikminRoute ReturnToShipRoute = null!;
         public ITrajectoryModifier? trajectoryModifier = null!;
         public bool Invincible = false;
         public float DeathTimer = 1;
@@ -542,7 +541,7 @@ namespace LethalMin
                 RemoveEnemy: true,
                 CollisionMode: -1,
                 Unlatch: true,
-                DestroyRoute: true
+                RemoveTask: true
             );
             Pmanager.RemovePikminAI(this);
         }
@@ -566,7 +565,7 @@ namespace LethalMin
 
             UpdateIdleAnimation();
 
-            if(CurrentTask != null)
+            if (CurrentTask != null)
             {
                 CurrentTask.Update();
             }
@@ -886,7 +885,7 @@ namespace LethalMin
         bool RemoveEnemy = true,
         int CollisionMode = 1,
         bool Unlatch = true,
-        bool DestroyRoute = true,
+        bool RemoveTask = true,
         bool RemoveOverridePositions = true,
         bool SetLayingFalse = true)
         {
@@ -914,9 +913,9 @@ namespace LethalMin
             {
                 TryUnlatchPikmin();
             }
-            if (DestroyRoute)
+            if (RemoveTask)
             {
-                DestoryShipRoute();
+                CurrentTask = null;
             }
             if (RemoveOverridePositions)
             {
@@ -1060,19 +1059,13 @@ namespace LethalMin
         public virtual void HandleWorkStateOnOwnerClient()
         {
             if (CurrentTask != null)
+            {
                 CurrentTask.IntervaledUpdate();
-
-            // if (ReturnToShipRoute != null && TargetItem == null)
-            // {
-            //     // If the Pikmin is on a route to the ship, follow that route
-            //     ReturnToShipRoute.UpdateRoutePikmin();
-            //     return;
-            // }
-            // else if (ReturnToShipRoute != null)
-            // {
-            //     // If the Pikmin is on a route to the ship, but has a target item, stop following the route
-            //     DestoryShipRoute();
-            // }
+            }
+            else
+            {
+                LethalMin.Logger.LogWarning($"{DebugID}: Work state with no task assigned!");
+            }
         }
         public virtual void HandleAttackStateOnOwnerClient()
         {
@@ -1248,15 +1241,38 @@ namespace LethalMin
             }
         }
 
-        public virtual void SetCurrentTask(int TaskID)
+        public virtual void SetCurrentTask(string TaskID)
         {
             LethalMin.Logger.LogInfo($"{DebugID}: Setting current task to {TaskID}");
+            if (CurrentTask != null)
+            {
+                CurrentTask.TaskIntercepted();
+            }
             switch (TaskID)
             {
-                case 0:
-                    CurrentTask = new PikminCarryItemTask(this, TargetItem);
+                case "CarryItem":
+                    CurrentTask = new CarryItemTask(this, TargetItem);
+                    break;
+                case "ReturnToShip":
+                    CurrentTask = new ReturnToShipTask(this);
                     break;
             }
+        }
+
+        public virtual void FinishTask()
+        {
+            LethalMin.Logger.LogInfo($"{DebugID}: Task finished");
+            if (CurrentTask != null)
+            {
+                CurrentTask.TaskEnd();
+                CurrentTask = null;
+            }
+        }
+
+        public virtual void RemoveCurrentTask()
+        {
+            LethalMin.Logger.LogInfo($"{DebugID}: Removing current task");
+            CurrentTask = null;
         }
 
         public void CheckToSetVehicle()
@@ -1489,7 +1505,7 @@ namespace LethalMin
                 RemoveEnemy: true,
                 CollisionMode: -1,
                 Unlatch: true,
-                DestroyRoute: true
+                RemoveTask: true
             );
         }
 
@@ -1690,7 +1706,7 @@ namespace LethalMin
                 RemoveEnemy: true,
                 CollisionMode: 1,
                 Unlatch: true,
-                DestroyRoute: true
+                RemoveTask: true
             );
 
             //LethalMin.Logger.LogDebug($"{DebugID}: previous leader: {PikUtils.NullableName(previousLeader)}");
@@ -2230,7 +2246,7 @@ namespace LethalMin
                 RemoveEnemy: true,
                 CollisionMode: 3,
                 Unlatch: true,
-                DestroyRoute: true
+                RemoveTask: true
             );
 
             PlayAnimation(animController.AnimPack.EditorKnockbackAnim);
@@ -3193,7 +3209,7 @@ namespace LethalMin
                 RemoveEnemy: true,
                 CollisionMode: -1,
                 Unlatch: true,
-                DestroyRoute: true,
+                RemoveTask: true,
                 RemoveOverridePositions: true,
                 SetLayingFalse: false
             );
@@ -3519,7 +3535,7 @@ namespace LethalMin
             TargetItem = itm;
             AgentLookTarget = itm.transform;
             TargetItemPoint = boolVal;
-            SetCurrentTask(0);
+            SetCurrentTask("CarryItem");
             SwitchToBehaviourStateOnLocalClient(2);
             ChangeIntent(Pintent.RunTowards);
         }
@@ -3636,24 +3652,6 @@ namespace LethalMin
 
 
         #region Routing
-        public virtual void CreateShipRoute()
-        {
-            DestoryShipRoute();
-            ReturnToShipRoute = new PikminRoute(this);
-            LethalMin.Logger.LogDebug($"{DebugID}: Creating ship route");
-        }
-
-        public void DestoryShipRoute()
-        {
-            if (ReturnToShipRoute != null)
-            {
-                LethalMin.Logger.LogInfo($"{DebugID}: Destroying ship route");
-                ReturnToShipRoute.DestoryRoute();
-                ReturnToShipRoute = null!;
-            }
-        }
-
-
         [ServerRpc]
         public void UseEntranceServerRpc(NetworkObjectReference Ref, bool Inside, bool PlaySFX = true)
         {

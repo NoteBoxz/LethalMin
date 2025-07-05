@@ -6,18 +6,18 @@ using UnityEngine.Video;
 
 namespace LethalMin.Pikmin
 {
-    public class PikminCarryItemTask : PikminTask
+    public class CarryItemTask : PikminTask
     {
         public PikminItem OwnersItem = null!;
 
-        public PikminCarryItemTask(PikminAI owner, PikminItem ownersItem) : base(owner)
+        public CarryItemTask(PikminAI owner, PikminItem ownersItem) : base(owner)
         {
             OwnersItem = ownersItem;
         }
 
         public override void IntervaledUpdate()
         {
-            if(Owner == null || OwnersItem == null)
+            if (Owner == null || OwnersItem == null)
             {
                 LethalMin.Logger.LogWarning($"PCIT: Owner or OwnersItem is null in IntervaledUpdate");
                 return;
@@ -43,28 +43,28 @@ namespace LethalMin.Pikmin
             if (!Owner.pikminType.CanCarryObjects)
             {
                 LethalMin.Logger.LogWarning($"{DebugID}: Pikmin type {pikminType.PikminName} cannot carry objects, switching to idle state");
-                Owner.SetToIdleServerRpc();
+                TaskEnd(true);
                 return;
             }
             if (OwnersItem == null)
             {
                 // Guard clause: If there's no target item to work on, log a warning and switch to idle state
                 LethalMin.Logger.LogWarning($"{DebugID}: OwnersItem is null when working");
-                Owner.SetToIdleServerRpc();
+                TaskEnd(true);
                 return;
             }
             if (Owner.TargetItemPoint == null)
             {
                 // Guard clause: If there's no grab position on the target item, log a warning and switch to idle state
                 LethalMin.Logger.LogWarning($"{DebugID}: OwnersItemPoint is null when working");
-                Owner.SetToIdleServerRpc();
+                TaskEnd(true);
                 return;
             }
             if (OwnersItem.settings.GrabableToPikmin == false)
             {
                 // Guard clause: If the item is not grabable by Pikmin, log a warning and switch to idle state
                 LethalMin.Logger.LogWarning($"{DebugID}: OwnersItem is stopped being grabable to Pikmin when working");
-                Owner.SetToIdleServerRpc();
+                TaskEnd(true);
                 return;
             }
             if (Vector3.Distance(Owner.transform.position, Owner.TargetItemPoint.transform.position) > pikminType.ItemDetectionRange * 2
@@ -72,7 +72,7 @@ namespace LethalMin.Pikmin
             {
                 // If Pikmin is too far away from item and isn't already carrying it, give up and return to idle
                 LethalMin.Logger.LogInfo($"{DebugID}: Is too far away");
-                Owner.SetToIdleServerRpc();
+                TaskEnd(true);
                 return;
             }
 
@@ -88,7 +88,7 @@ namespace LethalMin.Pikmin
                 if (OwnersItem.HasArrived)
                 {
                     // If the item has already reached its destination, no need to grab it
-                    Owner.SetToIdleServerRpc();
+                    TaskEnd(true);
                     LethalMin.Logger.LogWarning($"{DebugID}: Is not grabbing item beacuse it has arrived");
                     return;
                 }

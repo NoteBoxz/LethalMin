@@ -269,9 +269,9 @@ namespace LethalMin.Pikmin
         }
 
         /// <summary>
-        /// Updates the route item and checks if the pikmin has reached the current node
+        /// Updates the route and checks if the pikmin has reached the current node
         /// </summary>
-        public void UpdateRouteItem()
+        public void UpdateRoute()
         {
             PikminAI ai = Pikmin;
 
@@ -299,42 +299,6 @@ namespace LethalMin.Pikmin
                     OnRouteEnd.Invoke();
                 }
                 LethalMin.Logger.LogInfo($"{ai.DebugID}: Reached node {CurNode.NodeName}");
-                LethalMin.Logger.LogInfo($"{Nodes.Count} - {CurrentPathIndex}");
-            }
-        }
-
-        /// <summary>
-        /// Updates the route pikmin and checks if the pikmin has reached the current node
-        /// </summary>
-        public void UpdateRoutePikmin()
-        {
-            if (Pikmin == null) return;
-
-            RouteNode CurNode = Nodes[CurrentPathIndex];
-
-            Pikmin.agent.speed = Pikmin.pikminType.GetSpeed(Pikmin.CurrentGrowthStage, Pikmin.ShouldRun);
-            UpdatePikminPath();
-
-            if (CurNode.IsPikminAtNode(Pikmin))
-            {
-                if (!CurNode.Buffer())
-                {
-                    //LethalMin.Logger.LogInfo($"Buffering at node {CurNode.NodeName} for {CurNode.CheckBuffer} seconds");
-                    return;
-                }
-
-                if (!PikUtils.IsOutOfRange(Nodes, CurrentPathIndex + 1))
-                {
-                    CurNode.OnNodeReached(this);
-                    CurrentPathIndex++;
-                }
-                else
-                {
-                    LethalMin.Logger.LogInfo($"{Pikmin.DebugID}: Reached last node and buffer time is up");
-                    Pikmin.SetToIdleServerRpc();
-                }
-
-                LethalMin.Logger.LogInfo($"{Pikmin.DebugID}: Reached node {CurNode.NodeName}");
                 LethalMin.Logger.LogInfo($"{Nodes.Count} - {CurrentPathIndex}");
             }
         }

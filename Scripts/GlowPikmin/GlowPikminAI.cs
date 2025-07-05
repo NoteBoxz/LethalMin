@@ -6,6 +6,7 @@ using LethalMin.Utils;
 using LethalMin.Pikmin;
 using GameNetcodeStuff;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace LethalMin
 {
@@ -34,11 +35,11 @@ namespace LethalMin
         bool RemoveEnemy = true,
         int CollisionMode = 1,
         bool Unlatch = true,
-        bool DestroyRoute = true,
+        bool RemoveTask = true,
         bool RemoveOverridePositions = true,
         bool SetLayingFalse = true)
         {
-            base.CallResetMethods(RemoveLeader, DropItem, RemoveEnemy, CollisionMode, Unlatch, DestroyRoute, RemoveOverridePositions);
+            base.CallResetMethods(RemoveLeader, DropItem, RemoveEnemy, CollisionMode, Unlatch, RemoveTask, RemoveOverridePositions);
             if (CollisionMode >= 0)
             {
                 CancleGlowmob();
@@ -656,11 +657,16 @@ namespace LethalMin
         }
 
 
-        public override void CreateShipRoute()
+        public override void SetCurrentTask(string TaskID)
         {
-            SetToIdle();
-            isOutside = true;
-            StartCoroutine(TeleportTo(StartOfRound.Instance.shipInnerRoomBounds.transform.position));
+            if (TaskID == "ReturnToShip")
+            {
+                SetToIdle();
+                isOutside = true;
+                StartCoroutine(TeleportTo(StartOfRound.Instance.shipInnerRoomBounds.transform.position));
+                return;
+            }
+            base.SetCurrentTask(TaskID);
         }
 
         [ServerRpc]
