@@ -47,7 +47,7 @@ namespace LethalMin
             switch (StateToSet)
             {
                 case LatchTriggerStateToSet.Attack:
-                    return (Pintent.Attack, 3);
+                    return (Pintent.Attack, 2);
                 case LatchTriggerStateToSet.Stuck:
                     return (Pintent.Stuck, 4);
                 default:

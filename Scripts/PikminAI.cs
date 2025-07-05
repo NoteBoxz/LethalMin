@@ -109,7 +109,7 @@ namespace LethalMin
         public int MaxGrowthStage = 2;
         public float GrowTimer = 100f;
         public Transform SproutTop = null!;
-        public PikminItem TargetItem = null!;
+        public PikminItem? TargetItem = null!;
         public BoolValue TargetItemPoint = null!;
         public int CurrentCarryStrength = 1;
         public Transform? AgentLookTarget = null;
@@ -119,14 +119,14 @@ namespace LethalMin
         public bool IsInShip;
         public bool IsOnShip;
         public PikminLatchTrigger? CurrentLatchTrigger = null;
-        public EnemyAI? TargetEnemy = null;
+        public PikminEnemy? TargetEnemy = null;
         public Vector3 LatchTriggerOffset;
         public Leader? LeaderWhistling;
         public PikminNoticeZone? LeaderWhistlingZone;
         public List<GameObject> TempObjects = new List<GameObject>();
         public Transform? DeathSnapToPos = null;
         public Quaternion RandomRotaion;
-        private Coroutine attackRoutine = null!;
+        public Coroutine attackRoutine = null!;
         private Coroutine panicSoundRoutine = null!;
         public List<string> DeathTimerAffecters = new List<string>();
         public PikminLinkAnimation CurrentLinkAnim = null!;
@@ -167,8 +167,6 @@ namespace LethalMin
         Vector3 LeavingPos = Vector3.zero;
         bool playLinkedAnimReversed = false;
         int targetOnionLinkIndex;
-        float timeSinceAttacking = 0;
-        bool wasSetToAttack;
         float timeOffNavMesh = 4;
         float timeIdel = 0;
         float tmeFalling = 0;
@@ -201,9 +199,8 @@ namespace LethalMin
         public const int IDLE = 0;
         public const int FOLLOW = 1;
         public const int WORK = 2;
-        public const int ATTACK = 3;
-        public const int PANIC = 4;
-        public const int LEAVING = 5;
+        public const int PANIC = 3;
+        public const int LEAVING = 4;
 
 
 
@@ -644,17 +641,6 @@ namespace LethalMin
             }
 
             //Attack
-            if (currentBehaviourStateIndex == ATTACK && CurrentIntention == Pintent.Attack && CurrentLatchTrigger == null && wasSetToAttack)
-            {
-                if (timeSinceAttacking >= 0)
-                {
-                    timeSinceAttacking -= Time.deltaTime;
-                }
-                else
-                {
-                    HandleAttackStateOnEveryClient();
-                }
-            }
             animController.IsAttacking = attackRoutine != null;
 
             //Panic
@@ -867,9 +853,6 @@ namespace LethalMin
                 case WORK:
                     HandleWorkStateOnOwnerClient();
                     break;
-                case ATTACK:
-                    HandleAttackStateOnOwnerClient();
-                    break;
                 case PANIC:
                     HandlePanicStateOnOwnerClient();
                     break;
@@ -948,10 +931,8 @@ namespace LethalMin
                     TargetItemPoint = itm.GetNearestGrabPosition(transform.position);
                     if (TargetItem && TargetItemPoint)
                     {
-                        SetPikminToItemServerRpc(TargetItem.NetworkObject,
-                        TargetItem.GrabToPositions.IndexOf(TargetItemPoint));
-                        SetPikminToItemLocalClient(TargetItem,
-                        TargetItem.GrabToPositions.IndexOf(TargetItemPoint));
+                        SetPikminToItemServerRpc(TargetItem.NetworkObject, TargetItem.GrabToPositions.IndexOf(TargetItemPoint));
+                        SetPikminToItemLocalClient(TargetItem, TargetItem.GrabToPositions.IndexOf(TargetItemPoint));
 
                         PathToPosition(TargetItem.transform.position);
                         return;
@@ -965,7 +946,7 @@ namespace LethalMin
             }
             if (!CurrentLatchTrigger && (!IsWildPikmin || IsWildPikmin && LethalMin.WildPikminAttack))
             {
-                EnemyAI? enm = GetClosestEnemy();
+                PikminEnemy? enm = GetClosestEnemy();
                 if (enm != null)
                 {
                     LethalMin.Logger.LogInfo($"{DebugID}: Found enemy: {enm.name}");
@@ -1065,42 +1046,6 @@ namespace LethalMin
             else
             {
                 LethalMin.Logger.LogWarning($"{DebugID}: Work state with no task assigned!");
-            }
-        }
-        public virtual void HandleAttackStateOnOwnerClient()
-        {
-            //Deal Damage
-            agent.stoppingDistance = 0;
-
-            if (CurrentIntention == Pintent.Attack && CurrentLatchTrigger && attackRoutine == null)
-            {
-                StartAttackOnLocalClient();
-                StartAttackServerRpc();
-                return;
-            }
-
-            if (CurrentIntention == Pintent.Attack && CurrentLatchTrigger == null && wasSetToAttack)
-            {
-                if (TargetEnemy == null)
-                {
-                    return;
-                }
-
-                PathToPosition(TargetEnemy.transform.position);
-
-                if (TargetEnemy.isEnemyDead)
-                {
-                    SetToIdleServerRpc();
-                    DoYay();
-                    return;
-                }
-                if (Vector3.Distance(transform.position, TargetEnemy.transform.position) >
-                 pikminType.EnemyDetectionRange * 4 + TargetEnemy.agent.radius + agent.radius)
-                {
-                    SetToIdleServerRpc();
-                    LethalMin.Logger.LogWarning($"{DebugID}: Went out of range of enemy");
-                    return;
-                }
             }
         }
         public virtual void HandlePanicStateOnOwnerClient()
@@ -1223,48 +1168,48 @@ namespace LethalMin
                 IsDoingOnionAnimation = true;
             }
         }
-        /// <summary>
-        /// Doing a lot of pesudo syncing here...
-        /// </summary>
-        public virtual void HandleAttackStateOnEveryClient()
-        {
-            if (TargetEnemy == null)
-            {
-                SetToIdle();
-                LethalMin.Logger.LogWarning($"{DebugID}: Was reset to idle because of null enemy");
-                return;
-            }
-            if (Vector3.Distance(transform.position, TargetEnemy.transform.position) < pikminType.AttackDistance + TargetEnemy.agent.radius + agent.radius)
-            {
-                PlayAudioOnLocalClient(PikminSoundPackSounds.Attack);
-                StartCoroutine(TryHitEnemy(TargetEnemy));
-            }
-        }
 
         public virtual void SetCurrentTask(string TaskID)
         {
             LethalMin.Logger.LogInfo($"{DebugID}: Setting current task to {TaskID}");
             if (CurrentTask != null)
             {
+                LethalMin.Logger.LogWarning($"{DebugID}: Current task is not null when setting new task! Intercepting current task: ({CurrentTask.GetType().Name})");
                 CurrentTask.TaskIntercepted();
             }
             switch (TaskID)
             {
                 case "CarryItem":
-                    CurrentTask = new CarryItemTask(this, TargetItem);
+                    CurrentTask = new CarryItemTask(this);
                     break;
                 case "ReturnToShip":
                     CurrentTask = new ReturnToShipTask(this);
                     break;
+                case "AttackEnemy":
+                    CurrentTask = new AttackEnemyTask(this);
+                    break;
             }
         }
+
+        [ServerRpc]
+        public void FinishTaskServerRpc()
+        {
+            FinishTaskClientRpc();
+        }
+
+        [ClientRpc]
+        public void FinishTaskClientRpc()
+        {
+            FinishTask();
+        }
+
 
         public virtual void FinishTask()
         {
             LethalMin.Logger.LogInfo($"{DebugID}: Task finished");
             if (CurrentTask != null)
             {
-                CurrentTask.TaskEnd();
+                CurrentTask.TaskEnd(false);
                 CurrentTask = null;
             }
         }
@@ -1366,7 +1311,7 @@ namespace LethalMin
                     }
                     if (!CurrentLatchTrigger)
                     {
-                        EnemyAI? enm = GetClosestEnemy();
+                        PikminEnemy? enm = GetClosestEnemy();
                         if (enm != null)
                         {
                             LethalMin.Logger.LogInfo($"{DebugID}: Found enemy (Charge): {enm.name}");
@@ -1434,8 +1379,8 @@ namespace LethalMin
         {
             CallResetMethods();
 
-            TargetEnemy = enm.enemyScript;
-            SetPikminToEnemyLocalClient(enm.enemyScript);
+            TargetEnemy = enm;
+            SetPikminToEnemyLocalClient(enm);
         }
 
 
@@ -2085,7 +2030,7 @@ namespace LethalMin
 
             if (!IsOwner || CurrentIntention != Pintent.Thrown || !pikminType.CanLatchOnToObjects
             || !collidedEnemy.TryGetComponent(out PikminEnemy Penemy) || !other.TryGetComponent(out PikminLatchTrigger latchTrigger)
-            || !PikChecks.IsEnemyVaildToAttack(collidedEnemy))
+            || !PikChecks.IsEnemyVaildToAttack(Penemy))
             {
                 return;
             }
@@ -2293,6 +2238,10 @@ namespace LethalMin
             LethalMin.Logger.LogInfo($"{DebugID}: Latching onto {latchTrigger.name}");
             SetCollisionMode(0);
             StuckEscapeTimer = latchTrigger.WhistleTime;
+            if (latchTrigger.StateToSet == LatchTriggerStateToSet.Attack)
+            {
+                SetCurrentTask("AttackEnemy");
+            }
             ChangeIntent(latchTrigger.GetPikminState().Item1);
             SwitchToBehaviourStateOnLocalClient(latchTrigger.GetPikminState().Item2);
 
@@ -2632,13 +2581,13 @@ namespace LethalMin
 
 
         #region Attacking
-        public virtual EnemyAI? GetClosestEnemy(float overrideDetectionRadius = -1)
+        public virtual PikminEnemy? GetClosestEnemy(float overrideDetectionRadius = -1)
         {
             float detectionRadius = overrideDetectionRadius == -1 ? pikminType.EnemyDetectionRange : overrideDetectionRadius;
-            EnemyAI? bestCandidate = null;
+            PikminEnemy? bestCandidate = null;
             float bestDistance = float.MaxValue;
 
-            foreach (EnemyAI enemy in Pmanager.EnemyAIs)
+            foreach (PikminEnemy enemy in Pmanager.PikminEnemies)
             {
                 // Skip invalid enemies immediately
                 if (enemy == null)
@@ -2652,12 +2601,12 @@ namespace LethalMin
                     continue;
 
                 // Handle special case for converting dead enemies
-                if (LethalMin.ConvertEnemyBodiesToItems && !LethalMin.EnemyBodyConvertBlacklistConfig.InternalValue.Contains(enemy.enemyType.enemyName)
+                if (LethalMin.ConvertEnemyBodiesToItems && !LethalMin.EnemyBodyConvertBlacklistConfig.InternalValue.Contains(enemy.enemyScript.enemyType.enemyName)
                  && !LethalMin.IsDependencyLoaded("Entity378.sellbodies") &&
-                    enemy.isEnemyDead && !enemy.enemyType.destroyOnDeath && !PikminManager.instance.ConvertedAIs.Contains(enemy))
+                    enemy.enemyScript.isEnemyDead && !enemy.enemyScript.enemyType.destroyOnDeath && !PikminManager.instance.ConvertedAIs.Contains(enemy.enemyScript))
                 {
                     LethalMin.Logger.LogMessage($"{DebugID}: Converting {enemy.gameObject.name} to grabbable object");
-                    PikminManager.instance.ConvertedAIs.Add(enemy);
+                    PikminManager.instance.ConvertedAIs.Add(enemy.enemyScript);
                     PikminManager.instance.ConvertEnemyToGrabbableObjectServerRpc(enemy.NetworkObject);
                     continue;
                 }
@@ -2691,7 +2640,7 @@ namespace LethalMin
             {
                 return;
             }
-            if (Ref.TryGet(out NetworkObject obj) && obj.TryGetComponent(out EnemyAI enm))
+            if (Ref.TryGet(out NetworkObject obj) && obj.TryGetComponent(out PikminEnemy enm))
             {
                 SetPikminToEnemyLocalClient(enm);
             }
@@ -2700,40 +2649,45 @@ namespace LethalMin
                 LethalMin.Logger.LogError($"{DebugID}: Could not find enemy");
             }
         }
-        public void SetPikminToEnemyLocalClient(EnemyAI enemy)
+        public void SetPikminToEnemyLocalClient(PikminEnemy enemy)
         {
             TargetEnemy = enemy;
-            wasSetToAttack = true;
-            ChangeIntent(Pintent.Attack);
             AgentLookTarget = enemy.transform;
-            SwitchToBehaviourStateOnLocalClient(3);
+            ChangeIntent(Pintent.Attack);
+            SetCurrentTask("AttackEnemy");
+            SwitchToBehaviourStateOnLocalClient(2);
         }
 
-        IEnumerator TryHitEnemy(EnemyAI ai)
+        public virtual void AttackEnemyWhenNear()
         {
-            timeSinceAttacking = pikminType.AttackRate;
+            if (TargetEnemy == null)
+            {
+                return;
+            }
+            float HitRange = pikminType.AttackDistance + TargetEnemy.enemyScript.agent.radius + TargetEnemy.enemyScript.agent.radius;
+            if (Vector3.Distance(transform.position, TargetEnemy.transform.position) < HitRange)
+            {
+                PlayAudioOnLocalClient(PikminSoundPackSounds.Attack);
+                StartCoroutine(HitEnemyStanding(TargetEnemy));
+            }
+        }
+
+        public virtual IEnumerator HitEnemyStanding(PikminEnemy Penemy)
+        {
             PlayAnimation(animController.AnimPack.EditorStandingAttackAnim);
 
             yield return new WaitForSeconds(pikminType.AttackRate / 2);
-            if (ai == null)
+
+            if (Penemy == null)
             {
                 LethalMin.Logger.LogWarning($"{DebugID}: Attempted to hit a null enemy");
                 yield break; // Exit if the enemy is null
             }
 
-            PikminEnemy Penemy = ai.GetComponent<PikminEnemy>();
+            if (IsOwner && (!IsWildPikmin || IsWildPikmin && LethalMin.WildPikminAttackDamage))
+                Penemy.HitEnemyServerRpc(pikminType.GetAttackStrength(CurrentGrowthStage), NetworkObject);
 
-            if (Penemy != null)
-            {
-                if (IsOwner && (!IsWildPikmin || IsWildPikmin && LethalMin.WildPikminAttackDamage))
-                    Penemy.HitEnemyServerRpc(pikminType.GetAttackStrength(CurrentGrowthStage), NetworkObject);
-
-                PlayAudioOnLocalClient(PikminSoundPackSounds.HitSFX, false);
-            }
-            else
-            {
-                LethalMin.Logger.LogWarning($"{DebugID}: Unabled to get PikminEnemy from {ai.gameObject.name}");
-            }
+            PlayAudioOnLocalClient(PikminSoundPackSounds.HitSFX, false);
         }
 
         public void RemoveTargetEnemy()
@@ -2743,7 +2697,10 @@ namespace LethalMin
                 AgentLookTarget = null;
             }
             TargetEnemy = null!;
-            wasSetToAttack = false;
+            if (CurrentTask != null && CurrentTask is AttackEnemyTask)
+            {
+                RemoveCurrentTask();
+            }
         }
 
         /// <summary>
@@ -2873,7 +2830,8 @@ namespace LethalMin
             RandomRotaion = Quaternion.Euler(enemyRandom.Next(0, 360), enemyRandom.Next(0, 360), enemyRandom.Next(0, 360));
         }
 
-        public override void HitEnemy(int force = 1, PlayerControllerB? playerWhoHit = null, bool playHitSFX = false, int hitID = -1)
+        public new void HitEnemyOnLocalClient(int force = 1, Vector3 hitDirection = default(Vector3),
+        PlayerControllerB? playerWhoHit = null, bool playHitSFX = false, int hitID = -1)
         {
             if (Invincible)
             {
@@ -2884,15 +2842,16 @@ namespace LethalMin
 
             if (IsDeadOrDying)
             {
+                LethalMin.Logger.LogInfo($"{DebugID}: Hit While Dead or Dying");
                 return;
             }
 
-            // if (previousLeader != null && playerWhoHit == previousLeader.Controller && currentBehaviourStateIndex == 3 && !friednlyFire)
-            // {
-            //     LethalMin.Logger.LogInfo($"{DebugID}: Hit by previous leader in attack state, ignoring hit");
-            //     DeathSnapToPos = null!;
-            //     return;
-            // }
+            if (previousLeader != null && playerWhoHit == previousLeader.Controller && CurrentIntention == Pintent.Attack && !friednlyFire)
+            {
+                LethalMin.Logger.LogInfo($"{DebugID}: Hit by previous leader in attack state, ignoring hit");
+                DeathSnapToPos = null!;
+                return;
+            }
 
             if (leader != null && playerWhoHit != null && playerWhoHit == leader.Controller && !friednlyFire)
             {
@@ -2901,6 +2860,11 @@ namespace LethalMin
                 return;
             }
 
+            base.HitEnemyOnLocalClient(force, hitDirection, playerWhoHit, playHitSFX, hitID);
+        }
+
+        public override void HitEnemy(int force = 1, PlayerControllerB? playerWhoHit = null, bool playHitSFX = false, int hitID = -1)
+        {
             base.HitEnemy(force, playerWhoHit, playHitSFX, hitID);
 
             if (IsWildPikmin && LethalMin.WildPikminNoDeath)
@@ -3549,7 +3513,7 @@ namespace LethalMin
         public void GrabItemClientRpc()
         {
             if (!IsOwner)
-                GrabItemOnLocalClient(TargetItem);
+                GrabItemOnLocalClient(TargetItem!);
         }
 
         public void GrabItemOnLocalClient(PikminItem itm)
@@ -3576,7 +3540,7 @@ namespace LethalMin
 
         public void SetAsCarryingItem(bool cullAudio = true)
         {
-            if (TargetItem.PrimaryPikminOnItem != this)
+            if (TargetItem!.PrimaryPikminOnItem != this)
                 SetCollisionMode(0);
             AgentLookTarget = null;
             ChangeIntent(Pintent.Carry);

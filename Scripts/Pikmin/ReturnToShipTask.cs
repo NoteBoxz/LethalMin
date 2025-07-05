@@ -9,7 +9,7 @@ namespace LethalMin.Pikmin
     public class ReturnToShipTask : PikminTask
     {
         public PikminRoute ReturnToShipRoute = null!; // Route to the ship, if any
-        public ReturnToShipTask(PikminAI owner) : base(owner)
+        public ReturnToShipTask(PikminAI pikminAssigningTo) : base(pikminAssigningTo)
         {
 
         }
@@ -17,18 +17,18 @@ namespace LethalMin.Pikmin
         public override void OnTaskCreated()
         {
             base.OnTaskCreated();
-            ReturnToShipRoute = new PikminRoute(Owner);
-            ReturnToShipRoute.OnRouteEnd.AddListener(() => TaskEnd(true));
+            ReturnToShipRoute = new PikminRoute(pikmin);
+            ReturnToShipRoute.OnRouteEnd.AddListener(pikmin.FinishTask);
         }
 
         public override void IntervaledUpdate()
         {
-            if (Owner == null)
+            if (pikmin == null)
             {
-                LethalMin.Logger.LogWarning($"PCIT: Owner or OwnersItem is null in IntervaledUpdate");
+                LethalMin.Logger.LogWarning($"RTST: Owner is null in IntervaledUpdate");
                 return;
             }
-            NavMeshAgent agent = Owner.agent;
+            NavMeshAgent agent = pikmin.agent;
 
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
             agent.stoppingDistance = 0;

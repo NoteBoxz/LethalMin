@@ -28,9 +28,9 @@ namespace LethalMin
             }
         }
 
-        public override EnemyAI? GetClosestEnemy(float overrideDetectionRadius = -1)
+        public override PikminEnemy? GetClosestEnemy(float overrideDetectionRadius = -1)
         {
-            EnemyAI? enemy = base.GetClosestEnemy(overrideDetectionRadius);
+            PikminEnemy? enemy = base.GetClosestEnemy(overrideDetectionRadius);
 
             if (enemy == null || enemy.GetComponentInChildren<PikminLatchTrigger>() == null)
             {
@@ -40,19 +40,17 @@ namespace LethalMin
             return enemy;
         }
 
-        public override void HandleAttackStateOnEveryClient()
+        public override void AttackEnemyWhenNear()
         {
             if (TargetEnemy == null)
             {
-                SetToIdle();
-                LethalMin.Logger.LogWarning($"{DebugID}: Was reset to idle because of null enemy");
                 return;
             }
             if (Stunned || IsEmbeded || hasBounced)
             {
                 return;
             }
-            if (agent.enabled && Vector3.Distance(transform.position, TargetEnemy.transform.position) < 5f + TargetEnemy.agent.radius + agent.radius)
+            if (agent.enabled && Vector3.Distance(transform.position, TargetEnemy.transform.position) < 5f + TargetEnemy.enemyScript.agent.radius + agent.radius)
             {
                 SelfThrown = true;
                 DoJumpOnLocalClient((TargetEnemy.transform.position - transform.position).normalized);
@@ -220,15 +218,10 @@ namespace LethalMin
                 animController.PlayLandAnim();
 
                 SetCollisionMode(1);
-                if (currentBehaviourStateIndex == ATTACK)
-                {
-                    ChangeIntent(Pintent.Attack);
-                    LethalMin.Logger.LogDebug($"{gameObject.name} is now ready to attack after landing.");
-                }
-                else
+                if (CurrentIntention != Pintent.Attack)
                 {
                     SetToIdle();
-                    LethalMin.Logger.LogDebug($"{gameObject.name} is now idle after landing, not in attack state.");
+                    LethalMin.Logger.LogFatal($"{gameObject.name} is now idle after landing, not in attack state.");
                 }
                 return;
             }

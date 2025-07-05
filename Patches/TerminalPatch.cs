@@ -26,11 +26,11 @@ namespace LethalMin.Patches
                     keyword.word = "pikminsignal";
                     LethalMin.Logger.LogDebug($"Changed keyword 'pikmin-signal' to 'pikminsignal' for compatibility with Lethal Min");
                 }
-                if (keyword.word == "pikmin-container")
-                {
-                    keyword.word = "pikmincontainer";
-                    LethalMin.Logger.LogDebug($"Changed keyword 'pikmin-container' to 'pikmincontainer' for compatibility with Lethal Min");
-                }
+                // if (keyword.word == "pikmin-container")
+                // {
+                //     keyword.word = "pikmincontainer";
+                //     LethalMin.Logger.LogDebug($"Changed keyword 'pikmin-container' to 'pikmincontainer' for compatibility with Lethal Min");
+                // }
             }
 
             foreach (TerminalKeyword waitingKeyword in KeywordsWaitingToBeAdded)

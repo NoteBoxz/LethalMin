@@ -165,25 +165,20 @@ namespace LethalMin.Utils
             && itm.settings.GrabableToPikmin
             && !PikminRoute.NodeCache.Any(node => node.IsInRange(itm.ItemScript.transform.position));
         }
-        public static bool IsEnemyVaildToAttack(EnemyAI enemy)
+        public static bool IsEnemyVaildToAttack(PikminEnemy Penemy)
         {
-            if(enemy == null)
+            EnemyAI enemy = Penemy.enemyScript;
+
+            if (enemy == null)
             {
                 return false;
-            }
-
-            bool CanBeAttacked = true;
-            PikminEnemy pikEnemy = enemy.GetComponent<PikminEnemy>();
-            if (pikEnemy != null)
-            {
-                CanBeAttacked = pikEnemy.CanBeAttacked;
             }
 
             return
             !enemy.isEnemyDead
             && enemy.enemyType != LethalMin.PikminEnemyType
-            && (enemy.enemyType.canDie || pikEnemy != null && pikEnemy.OverrideCanDie)
-            && CanBeAttacked
+            && (enemy.enemyType.canDie || Penemy.OverrideCanDie)
+            && Penemy.CanBeAttacked
             && !IsEnemyBlackListed(enemy)
             && (LethalMin.IsDependencyLoaded("LethalMon") && !LETHALMON_ISENEMYTAMED(enemy) || !LethalMin.IsDependencyLoaded("LethalMon"));
         }

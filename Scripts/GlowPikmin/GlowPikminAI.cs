@@ -405,10 +405,9 @@ namespace LethalMin
 
             //OWNER ONLY RUNNING CODE\\
 
-            EnemyAI? enemy = GetClosestEnemy(25);
-            PikminEnemy enemy1 = null!;
+            PikminEnemy? enemy = GetClosestEnemy(25);
 
-            if (enemy == null || !enemy.TryGetComponent(out enemy1))
+            if (enemy == null)
             {
                 ApplyPhysics(true);
                 ShouldReturnToPreviousLeader = true;
@@ -419,8 +418,8 @@ namespace LethalMin
 
             if (!(pikminType.CanLatchOnToObjects
             && enemy != null
-            && enemy.enemyType != enemyType
-            && !enemy.isEnemyDead))
+            && enemy.enemyScript.enemyType != enemyType
+            && !enemy.enemyScript.isEnemyDead))
             {
                 ApplyPhysics(true);
                 ShouldReturnToPreviousLeader = true;
@@ -430,7 +429,7 @@ namespace LethalMin
             }
 
             PikminLatchTrigger trigger = null!;
-            foreach (PikminLatchTrigger latchTrigger in enemy1.LatchTriggers)
+            foreach (PikminLatchTrigger latchTrigger in enemy.LatchTriggers)
             {
                 if (trigger == null || Vector3.Distance(latchTrigger.transform.position, transform.position) < Vector3.Distance(trigger.transform.position, transform.position))
                 {
@@ -447,10 +446,10 @@ namespace LethalMin
                 yield break;
             }
 
-            int Index = enemy1.LatchTriggers.IndexOf(trigger);
+            int Index = enemy.LatchTriggers.IndexOf(trigger);
             Vector3 approximateContactPoint = trigger.GetComponent<Collider>().ClosestPoint(TargetPos);
 
-            if (enemy1 == null || !trigger.TryLatch(this, approximateContactPoint, true, true))
+            if (enemy == null || !trigger.TryLatch(this, approximateContactPoint, true, true))
             {
                 ApplyPhysics(true);
                 ShouldReturnToPreviousLeader = true;
@@ -472,8 +471,8 @@ namespace LethalMin
 
             yield return new WaitForSeconds(Random.Range(0.0f, 0.1f));
 
-            LatchPikminOnToEnemy(enemy1, trigger.GetComponent<Collider>().ClosestPoint(transform.position), Index);
-            LatchPikminOnToEnemyServerRpc(enemy1.NetworkObject, trigger.GetComponent<Collider>().ClosestPoint(transform.position), Index);
+            LatchPikminOnToEnemy(enemy, trigger.GetComponent<Collider>().ClosestPoint(transform.position), Index);
+            LatchPikminOnToEnemyServerRpc(enemy.NetworkObject, trigger.GetComponent<Collider>().ClosestPoint(transform.position), Index);
         }
         public Vector3 GetBurstFlyPos(float radius = 5)
         {
