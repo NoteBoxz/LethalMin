@@ -19,7 +19,10 @@ namespace LethalMin.Pikmin
         {
             if (pikmin == null || pikminItem == null)
             {
-                LethalMin.Logger.LogWarning($"PCIT: Owner or OwnersItem is null in IntervaledUpdate");
+                if(pikmin == null)
+                    LethalMin.Logger.LogWarning("PCIT: Pikmin is null in IntervaledUpdate");
+                if(pikminItem == null && pikmin != null)
+                    LethalMin.Logger.LogWarning($"{pikmin.DebugID}: PCIT: PikminItem is null in IntervaledUpdate");
                 return;
             }
 

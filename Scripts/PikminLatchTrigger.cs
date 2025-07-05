@@ -101,6 +101,7 @@ namespace LethalMin
             const int KNOCKOFF = 0;
             const int TURNONRB = 1;
             const int TURNONNA = 2;
+            const int TURNONNAYAY = 3;
             List<PikminAI> pikminToRemove = new List<PikminAI>(PikminOnLatch);
             switch (Mode)
             {
@@ -125,6 +126,14 @@ namespace LethalMin
                     {
                         ai.SetToIdle();
                         ai.SetCollisionMode(1);
+                    }
+                    break;
+                case TURNONNAYAY:
+                    foreach (PikminAI ai in pikminToRemove)
+                    {
+                        ai.SetToIdle();
+                        ai.SetCollisionMode(1);
+                        ai.DoYay();
                     }
                     break;
             }

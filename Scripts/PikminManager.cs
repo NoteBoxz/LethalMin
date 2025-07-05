@@ -1021,6 +1021,7 @@ namespace LethalMin
 
             PikminItem itm = prop.GetComponentInChildren<PikminItem>();
             EnemyGrabbableObject ego = enemy.gameObject.AddComponent<EnemyGrabbableObject>();
+            itm.hackEnemyGrabbableObject = ego;
             ego.grabbableObject = prop;
             itm.Initalize();
 

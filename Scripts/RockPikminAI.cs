@@ -221,7 +221,7 @@ namespace LethalMin
                 if (CurrentIntention != Pintent.Attack)
                 {
                     SetToIdle();
-                    LethalMin.Logger.LogFatal($"{gameObject.name} is now idle after landing, not in attack state.");
+                    LethalMin.Logger.LogDebug($"{gameObject.name} is now idle after landing, not in attack state.");
                 }
                 return;
             }

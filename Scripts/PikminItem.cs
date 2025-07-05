@@ -52,6 +52,8 @@ namespace LethalMin
         public bool AlreadyPartalInitalized = false;
         bool ShouldGrab => TotalCarryStrength >= CarryStrengthNeeded && !IsBeingCarried && IsOwner;
         bool HadItemScript = false;
+        [HideInInspector]
+        public EnemyGrabbableObject hackEnemyGrabbableObject = null!;
 
 
 
@@ -331,8 +333,6 @@ namespace LethalMin
                 return;
             }
 
-            CreateRoute();
-
             if (soundRoutine != null)
             {
                 StopCoroutine(soundRoutine);
@@ -383,6 +383,8 @@ namespace LethalMin
                 ai.SetAsCarryingItem();
             }
             IsBeingCarried = true;
+
+            CreateRoute();
 
             OnItemGrabbed.Invoke(this);
         }

@@ -406,6 +406,15 @@ public static class PikUtils
         }
     }
 
+    public static unsafe EnemyAI ReviveEnemy(EnemyAI ai, Vector3 RevivePos)
+    {
+        ai.NetworkObject.Despawn();
+        GameObject gameObject = UnityEngine.Object.Instantiate(ai.enemyType.enemyPrefab, RevivePos, Quaternion.Euler(new Vector3(0f, 0f, 0f)));
+        gameObject.GetComponentInChildren<NetworkObject>().Spawn(destroyWithScene: true);
+        RoundManager.Instance.SpawnedEnemies.Add(gameObject.GetComponent<EnemyAI>());
+        return gameObject.GetComponent<EnemyAI>();
+    }
+
     public static unsafe void RevivePlayer(PlayerControllerB player, Vector3 RevivePos)
     {
         int index = StartOfRound.Instance.allPlayerScripts.ToList().IndexOf(player);

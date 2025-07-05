@@ -8,7 +8,7 @@ namespace LethalMin.Pikmin
     public class AttackEnemyTask : PikminTask
     {
         public PikminEnemy? enemy => pikmin.TargetEnemy;
-        public bool IsPikminOnEnemy => enemy != null && pikmin.CurrentLatchTrigger != null && enemy.LatchTriggers.Contains(pikmin.CurrentLatchTrigger);
+        public bool IsPikminOnEnemy => pikmin.CurrentLatchTrigger != null;
         string DebugID => $"{pikmin.DebugID} - AttackEnemyTask";
         public override bool DoYayOnTaskEnd => true;
 
