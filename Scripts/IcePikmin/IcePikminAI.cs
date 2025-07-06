@@ -79,7 +79,7 @@ namespace LethalMin
                 return;
             }
 
-            if (currentBehaviourStateIndex == 0 && !IsDeadOrDying && !IsAirborn)
+            if (currentBehaviourStateIndex == IDLE && !IsDeadOrDying && !IsAirborn)
             {
                 if (!CurWaterIn.IsFrozen && !CurWaterIn.PikminInWater.Contains(this))
                     AddToWaterServerRpc(PikminManager.instance.FreezeableWaters.IndexOf(CurWaterIn));

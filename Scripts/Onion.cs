@@ -462,6 +462,15 @@ namespace LethalMin
 
                     return;
                 }
+        
+                if (LethalMin.AllowOnionToReviveMaskeds &&
+                item.hackEnemyGrabbableObject != null && item.hackEnemyGrabbableObject.ai is MaskedPlayerEnemy)
+                {
+                    if (IsServer)
+                        SetEnemyToBeRevived(item.hackEnemyGrabbableObject);
+
+                    return;
+                }
 
                 int sproutsToSpawn = item.settings.SproutsToSpawn;
                 if (item.settings.PerferedType == targetType && item.settings.PerferedTypeMultipler > 0)
@@ -535,6 +544,33 @@ namespace LethalMin
             LethalMin.Logger.LogMessage($"LethalMin: reviving player {player.playerUsername} via onion {gameObject.name}!");
             PikUtils.RevivePlayer(player, transform.position);
             player.GetComponent<Leader>().SetAsLeafling(TypeID);
+        }
+
+        public virtual void SetEnemyToBeRevived(EnemyGrabbableObject enemyGrab)
+        {
+            if (enemyGrab == null)
+            {
+                LethalMin.Logger.LogError($"LethalMin: null enemy grab when setting enemy to be revived!");
+                return;
+            }
+            if (enemyGrab.ai == null)
+            {
+                LethalMin.Logger.LogError($"LethalMin: null ai when setting enemy to be revived!");
+                return;
+            }
+            if (StartOfRound.Instance.allPlayersDead)
+            {
+                LethalMin.Logger.LogWarning($"LethalMin: all players are dead, not reviving enemy {enemyGrab.ai.gameObject.name}!");
+                return;
+            }
+
+            // Revive the enemy
+            LethalMin.Logger.LogMessage($"LethalMin: reviving enemy {enemyGrab.ai.gameObject.name} via onion {gameObject.name}!");
+            EnemyAI ai = PikUtils.ReviveEnemy(enemyGrab.ai, transform.position);
+            if (ai.TryGetComponent(out MaskedPlayerPikminEnemy MPPE))
+            {
+                MPPE.SetAsLeafling();
+            }
         }
 
         public virtual void AddSproutsToSpawn(PikminType typeToAdd, int numberToAdd)

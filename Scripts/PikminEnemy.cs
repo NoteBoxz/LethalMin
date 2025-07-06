@@ -57,11 +57,6 @@ namespace LethalMin
             PikminManager.instance.PikminEnemies.Remove(this);
         }
 
-        public void OnDisable()
-        {
-            PikminManager.instance.PikminEnemies.Remove(this);
-        }
-
         protected virtual void Update()
         {
             if (enemyScript.isEnemyDead && !IsDead)
@@ -379,11 +374,11 @@ namespace LethalMin
                 if (PLtrigger.networkAddon != null)
                 {
                     if (PLtrigger.networkAddon.IsOwner)
-                        PLtrigger.networkAddon.RemoveAllPikminServerRpc(2);
+                        PLtrigger.networkAddon.RemoveAllPikminServerRpc(3);
                 }
                 else
                 {
-                    PLtrigger.RemoveAllPikmin(2);
+                    PLtrigger.RemoveAllPikmin(3);
                 }
                 PLtrigger.OnPikminHit.RemoveAllListeners();
                 PLtrigger.enabled = false;

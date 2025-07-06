@@ -84,7 +84,7 @@ namespace LethalMin.Pikmin
             else
             {
                 LethalMin.Logger.LogError($"{NodeName}: Invalid route node cache, no check distance or region provided!");
-                PikminItemRoute.NodeCache.Remove(this);
+                PikminRoute.NodeCache.Remove(this);
                 return false;
             }
         }

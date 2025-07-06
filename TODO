@@ -1,7 +1,6 @@
 -- To Do --
 
 - Add Dep Type Converstions for Onions
-- Refactor Withdraw Hud Code before adding in 10 shift thing
 
 -- bugs --
 
@@ -16,8 +15,6 @@
 -- things to refactor --
 
 - Re-do Map spawning varibles for Pikmin Types to allow more spesfic configing
-
-- Implument proper task system instead of just carrying and attacking
 
 - Add system for a single snap point instead of just multiple spesfic ones for the car, idle, ect.
 

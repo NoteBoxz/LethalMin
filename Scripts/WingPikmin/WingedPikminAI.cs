@@ -79,8 +79,8 @@ namespace LethalMin
         {
             if (Laying)
                 return false; // Don't fly while laying
-            if (currentBehaviourStateIndex == 4)
-                return false; // Don't fly while attacking
+            if (currentBehaviourStateIndex == PANIC)
+                return false; // Don't fly while Panicing
             if (TargetItem != null && TargetItem.PrimaryPikminOnItem == this && !IsWingedPikminOnItem(TargetItem))
                 return false; // Don't fly while carrying items and no other Winged Pikmin is on it
 
@@ -117,15 +117,15 @@ namespace LethalMin
 
         private float GetFlightHeight()
         {
-            if (currentBehaviourStateIndex == 1)
+            if (currentBehaviourStateIndex == FOLLOW)
                 return OverrideFollowPosition != null ? 0f : 4f; // Following state
 
-            if (currentBehaviourStateIndex == 2 && TargetItem != null && !TargetItem.PikminOnItem.Contains(this))
+            if (currentBehaviourStateIndex == WORK && TargetItem != null && !TargetItem.PikminOnItem.Contains(this))
             {
                 return 0f;
             }
 
-            if (currentBehaviourStateIndex == 2 && TargetItem != null && TargetItem.PrimaryPikminOnItem == this && TargetItem.CurrentRoute != null)
+            if (currentBehaviourStateIndex == WORK && TargetItem != null && TargetItem.PrimaryPikminOnItem == this && TargetItem.CurrentRoute != null)
             {
                 return TargetItem.CurrentRoute.Nodes[TargetItem.CurrentRoute.CurrentPathIndex].IsPikminNearNode(this, 10f) ? 0f : 4f;
             }

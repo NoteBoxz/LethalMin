@@ -163,27 +163,22 @@ namespace LethalMin.Utils
             && itm.PikminOnItem.Count < itm.GrabToPositions.Count
             && !itm.HasArrived
             && itm.settings.GrabableToPikmin
-            && !PikminItemRoute.NodeCache.Any(node => node.IsInRange(itm.ItemScript.transform.position));
+            && !PikminRoute.NodeCache.Any(node => node.IsInRange(itm.ItemScript.transform.position));
         }
-        public static bool IsEnemyVaildToAttack(EnemyAI enemy)
+        public static bool IsEnemyVaildToAttack(PikminEnemy Penemy)
         {
-            if(enemy == null)
+            EnemyAI enemy = Penemy.enemyScript;
+
+            if (enemy == null)
             {
                 return false;
-            }
-
-            bool CanBeAttacked = true;
-            PikminEnemy pikEnemy = enemy.GetComponent<PikminEnemy>();
-            if (pikEnemy != null)
-            {
-                CanBeAttacked = pikEnemy.CanBeAttacked;
             }
 
             return
             !enemy.isEnemyDead
             && enemy.enemyType != LethalMin.PikminEnemyType
-            && (enemy.enemyType.canDie || pikEnemy != null && pikEnemy.OverrideCanDie)
-            && CanBeAttacked
+            && (enemy.enemyType.canDie || Penemy.OverrideCanDie)
+            && Penemy.CanBeAttacked
             && !IsEnemyBlackListed(enemy)
             && (LethalMin.IsDependencyLoaded("LethalMon") && !LETHALMON_ISENEMYTAMED(enemy) || !LethalMin.IsDependencyLoaded("LethalMon"));
         }
@@ -272,7 +267,7 @@ namespace LethalMin.Utils
         //     bool hasAvailableGrabPositions = itm.PikminOnItem.Count < itm.GrabToPositions.Count;
         //     LethalMin.Logger.LogMessage($"IsPikminItemValid: Available grab positions: {hasAvailableGrabPositions} (PikminOnItem: {itm.PikminOnItem.Count}, GrabToPositions: {itm.GrabToPositions.Count})");
 
-        //     var nodeInRange = PikminItemRoute.NodeCache.FirstOrDefault(node => node.IsInRange(itm.ItemScript.transform.position));
+        //     var nodeInRange = PikminRoute.NodeCache.FirstOrDefault(node => node.IsInRange(itm.ItemScript.transform.position));
         //     bool isNotInNodeRange = nodeInRange == null;
 
         //     if (isNotInNodeRange)

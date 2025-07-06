@@ -53,7 +53,7 @@ namespace LethalMin
                 RemoveEnemy: true,
                 CollisionMode: 1,
                 Unlatch: true,
-                DestroyRoute: true,
+                RemoveTask: true,
                 RemoveOverridePositions: true,
                 SetLayingFalse: true
             );

@@ -431,10 +431,10 @@ namespace LethalMin
         {
             LethalMin.Logger.LogInfo($"__ LethalMin On Game Loaded __");
             //PikUtils.AddTextToChangeOnLocalClient($"Game Loaded, initializing PikminManager");
-            PikminItemRoute.NodeCache.Clear();
-            PikminItemRoute.GetFloorData();
-            PikminItemRoute.FireNodes = PikminItemRoute.FindFireExitRouteNodes();
-            PikminItemRoute.MoonSettingss = Resources.FindObjectsOfTypeAll<MoonSettings>().ToList();
+            PikminRoute.NodeCache.Clear();
+            PikminRoute.GetFloorData();
+            PikminRoute.FireNodes = PikminRoute.FindFireExitRouteNodes();
+            PikminRoute.MoonSettingss = Resources.FindObjectsOfTypeAll<MoonSettings>().ToList();
             CanPathOnMoonGlobal = PikChecks.IsNavMeshOnMap();
             EndOfGameStats.Refresh();
             SpawnTeleportTriggers();
@@ -1021,6 +1021,7 @@ namespace LethalMin
 
             PikminItem itm = prop.GetComponentInChildren<PikminItem>();
             EnemyGrabbableObject ego = enemy.gameObject.AddComponent<EnemyGrabbableObject>();
+            itm.hackEnemyGrabbableObject = ego;
             ego.grabbableObject = prop;
             itm.Initalize();
 
@@ -2223,9 +2224,9 @@ namespace LethalMin
 
                 List<PikminAI> PrioritizedPikmin = PikminAIs
                     .OrderBy(p => !p.IsWildPikmin)          // Wild pikmin first (true comes before false)
-                    .ThenBy(p => p.currentBehaviourStateIndex != 0) // BehaviourStateIndex 0 (idle) next
-                    .ThenBy(p => p.currentBehaviourStateIndex != 1) // BehaviourStateIndex 1 (follow) next
-                    .ThenBy(p => p.currentBehaviourStateIndex != 2) // BehaviourStateIndex 2 (work) next
+                    .ThenBy(p => p.currentBehaviourStateIndex != PikminAI.IDLE) // BehaviourStateIndex 0 (idle) next
+                    .ThenBy(p => p.currentBehaviourStateIndex != PikminAI.FOLLOW) // BehaviourStateIndex 1 (follow) next
+                    .ThenBy(p => p.currentBehaviourStateIndex != PikminAI.WORK) // BehaviourStateIndex 2 (work) next
                     .ToList();
 
                 foreach (PikminAI pikmin in PrioritizedPikmin)
@@ -2241,15 +2242,15 @@ namespace LethalMin
                     {
                         wildRemoved++;
                     }
-                    else if (pikmin.currentBehaviourStateIndex == 0) // Idle
+                    else if (pikmin.currentBehaviourStateIndex == PikminAI.IDLE) // Idle
                     {
                         IdleRemoved++;
                     }
-                    else if (pikmin.currentBehaviourStateIndex == 1) // Following
+                    else if (pikmin.currentBehaviourStateIndex == PikminAI.FOLLOW) // Following
                     {
                         FollowingRemoved++;
                     }
-                    else if (pikmin.currentBehaviourStateIndex == 2) // Working
+                    else if (pikmin.currentBehaviourStateIndex == PikminAI.WORK) // Working
                     {
                         WorkingRemoved++;
                     }

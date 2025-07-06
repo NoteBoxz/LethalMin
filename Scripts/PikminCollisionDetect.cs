@@ -25,7 +25,7 @@ namespace LethalMin
                 return;
             }
 
-            if (mainPikmin.currentBehaviourStateIndex == 4 &&
+            if (mainPikmin.currentBehaviourStateIndex == PikminAI.PANIC &&
             mainPikmin.LeaderWhistling == null &&
             other.TryGetComponent(out PikminNoticeZone zone) &&
             zone.LeaderScript != null && zone.CanSavePikmin && zone.Active)
@@ -78,7 +78,7 @@ namespace LethalMin
                 return;
             }
 
-            if (mainPikmin.currentBehaviourStateIndex == 4 &&
+            if (mainPikmin.currentBehaviourStateIndex == PikminAI.PANIC &&
             mainPikmin.LeaderWhistling != null &&
             other.TryGetComponent(out PikminNoticeZone zone) &&
             mainPikmin.LeaderWhistling == zone.LeaderScript && zone.Active)

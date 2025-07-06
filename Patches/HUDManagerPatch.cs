@@ -69,20 +69,7 @@ namespace LethalMin.Patches
         public static void AddStatSlots(HUDManager __instance)
         {
             __instance.gameObject.AddComponent<PikminEndOfGameStatUIElements>();
-
-            // foreach (CanvasGroup group in __instance.endgameStatsAnimator.GetComponentsInChildren<CanvasGroup>())
-            // {
-            //     if (group.gameObject.name == "Penalty")
-            //     {
-            //         continue;
-            //     }
-            //     if (group.gameObject.name == "LevelUp")
-            //     {
-            //         continue;
-            //     }
-            //     group.enabled = false;
-            // }
-
+            
             PikminEndOfGameStatUIElements elements = __instance.gameObject.GetComponent<PikminEndOfGameStatUIElements>();
 
             elements.PikminRaisedTexts = new PikminRaisedTextBox[__instance.statsUIElements.playerNamesText.Length];

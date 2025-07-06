@@ -73,8 +73,8 @@ namespace LethalMin
                 if (ai.leader == LeaderScript) { return; }
                 if (ai.leader != null) { return; }
                 if (ai.IsAirborn) { return; }
-                if (ai.currentBehaviourStateIndex == 4) { return; }
-                if (ai.currentBehaviourStateIndex == 5) { return; }
+                if (ai.currentBehaviourStateIndex == PikminAI.PANIC) { return; }
+                if (ai.currentBehaviourStateIndex == PikminAI.LEAVING) { return; }
                 if (!ai.HasBeenInitalized) { return; }
                 if (!ValidStates.Contains(ai.CurrentIntention))
                 {

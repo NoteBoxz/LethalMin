@@ -47,12 +47,12 @@ namespace LethalMin
             switch (StateToSet)
             {
                 case LatchTriggerStateToSet.Attack:
-                    return (Pintent.Attack, 3);
+                    return (Pintent.Attack, PikminAI.WORK);
                 case LatchTriggerStateToSet.Stuck:
-                    return (Pintent.Stuck, 4);
+                    return (Pintent.Stuck, PikminAI.PANIC);
                 default:
                     LethalMin.Logger.LogError($"Invalid state to set: {StateToSet}");
-                    return (Pintent.Stuck, 4);
+                    return (Pintent.Stuck, PikminAI.PANIC);
             }
         }
 
@@ -101,6 +101,7 @@ namespace LethalMin
             const int KNOCKOFF = 0;
             const int TURNONRB = 1;
             const int TURNONNA = 2;
+            const int TURNONNAYAY = 3;
             List<PikminAI> pikminToRemove = new List<PikminAI>(PikminOnLatch);
             switch (Mode)
             {
@@ -125,6 +126,14 @@ namespace LethalMin
                     {
                         ai.SetToIdle();
                         ai.SetCollisionMode(1);
+                    }
+                    break;
+                case TURNONNAYAY:
+                    foreach (PikminAI ai in pikminToRemove)
+                    {
+                        ai.SetToIdle();
+                        ai.SetCollisionMode(1);
+                        ai.DoYay();
                     }
                     break;
             }

@@ -25,6 +25,11 @@ namespace LethalMin.HUD
             for (int i = 0; i < PikminRaisedTexts.Length; i++)
             {
                 PikminRaisedTextBox text = PikminRaisedTexts[i];
+                if (StartOfRound.Instance.ClientPlayerList.Count > 4 && LethalMin.HideResultsWhenMoreThanFour)
+                {
+                    text.gameObject.SetActive(false);
+                    continue;
+                }
                 Leader lead = PikminManager.instance.EndOfGameStats.PikminRaised.Keys.ElementAt(i);
                 text.gameObject.SetActive(PikChecks.IsPlayerConnected(lead.Controller));
                 text.text.text = PikminManager.instance.EndOfGameStats.PikminRaised[lead].ToString();

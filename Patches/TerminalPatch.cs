@@ -21,15 +21,15 @@ namespace LethalMin.Patches
 
             foreach (TerminalKeyword keyword in __instance.terminalNodes.allKeywords)
             {
-                if (keyword.word == "pikmin-signal")
+                if (keyword.word == "Pikmin-Signal")
                 {
                     keyword.word = "pikminsignal";
-                    LethalMin.Logger.LogDebug($"Changed keyword 'pikmin-signal' to 'pikminsignal' for compatibility with Lethal Min");
+                    LethalMin.Logger.LogDebug($"Changed keyword 'pikmin-signal' to 'pikminsignal' for compatibility with LethalMin");
                 }
-                if (keyword.word == "pikmin-container")
+                if (keyword.word == "Pikmin-Container")
                 {
                     keyword.word = "pikmincontainer";
-                    LethalMin.Logger.LogDebug($"Changed keyword 'pikmin-container' to 'pikmincontainer' for compatibility with Lethal Min");
+                    LethalMin.Logger.LogDebug($"Changed keyword 'pikmin-container' to 'pikmincontainer' for compatibility with LethalMin");
                 }
             }
 

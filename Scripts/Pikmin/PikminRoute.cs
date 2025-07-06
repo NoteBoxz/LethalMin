@@ -4,14 +4,23 @@ using LCOffice.Components;
 using LethalMin.Compats;
 using LethalMin.Patches;
 using LethalMin.Utils;
+using LethalMon;
 using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 namespace LethalMin.Pikmin
 {
-    public class PikminItemRoute
+    public struct PikminRouteData
+    {
+        public (Leader, float)? TargetPlayer;
+        public Onion? TargetOnion;
+        public RouteNode? OverrideDestNode;
+        public bool UseDoors;
+    }
+    public class PikminRoute
     {
         //The exitpoint on an entance teleport is the InsidePosition
         //The entrancePoint on an exit teleport is the OutsidePosition
@@ -39,14 +48,19 @@ namespace LethalMin.Pikmin
         List<RouteNode> OnionNodes = new List<RouteNode>();
         public static Collider OverrideShipBounds = null!;
 
-        public PikminItemRoute(PikminItem Item)
+        public PikminRoute(PikminItem Item)
         {
-            this.Item = Item;
             if (Item.PrimaryPikminOnItem == null)
             {
                 LethalMin.Logger.LogError($"PikminItem {Item.gameObject.name} has no primary pikmin");
                 return;
             }
+            if (Item.settings.RouteToPlayer && Item.PrimaryLeader != null)
+            {
+                RouteData.TargetPlayer = (Item.PrimaryLeader, Item.settings.RouteToPlayerStoppingDistance);
+            }
+            RouteData.TargetOnion = Item.TargetOnion;
+            RouteData.UseDoors = false;
             Pikmin = Item.PrimaryPikminOnItem;
             IsPathOutside = Pikmin.isOutside;
             ShipNode.CheckBuffer = 1;
@@ -55,11 +69,11 @@ namespace LethalMin.Pikmin
             GetNodes(true);
         }
 
-        public PikminItemRoute(PikminAI Pikmin)
+        public PikminRoute(PikminAI Pikmin)
         {
             this.Pikmin = Pikmin;
-            Item = null!;
             IsPathOutside = Pikmin.isOutside;
+            RouteData.UseDoors = true;
             GetNodes(true);
         }
 
@@ -68,7 +82,7 @@ namespace LethalMin.Pikmin
         public RouteNode ExitUsedInside = null!, ExitUsedOutside = null!;
         List<NavMeshPathVisualizer> Visualizers = new List<NavMeshPathVisualizer>();
         public List<RouteNode> Nodes = new List<RouteNode>();
-        public PikminItem? Item;
+        public PikminRouteData RouteData = new PikminRouteData();
         public PikminAI Pikmin = null!;
         public int CurrentPathIndex = 0;
         public bool IsPathPossible;
@@ -79,6 +93,9 @@ namespace LethalMin.Pikmin
         public static List<MoonSettings> MoonSettingss = new List<MoonSettings>();
         private List<string> previousRouteNodeNames = new List<string>();
         private bool isFirstRoute = true;
+        public UnityEvent OnPointReached = new UnityEvent();
+        public UnityEvent OnRouteEnd = new UnityEvent();
+        public UnityEvent<EntranceTeleport> OnReachDoor = new UnityEvent<EntranceTeleport>();
 
 
         #region Node Processing
@@ -112,14 +129,23 @@ namespace LethalMin.Pikmin
                 }
             }
 
+            if (RouteData.OverrideDestNode != null)
+            {
+                if (Debug)
+                    LethalMin.Logger.LogInfo($"Creating route for override destination: {RouteData.OverrideDestNode.NodeName}");
+                Nodes.Add(RouteData.OverrideDestNode);
+                CastRoute(Debug);
+                return;
+            }
+
             //Player route
-            if (Item != null && Item.settings.RouteToPlayer && Item.PrimaryLeader != null)
+            if (RouteData.TargetPlayer != null)
             {
                 RouteNode PlayerNode = new RouteNode();
                 PlayerNode.NodeName = "Player";
-                PlayerNode.Point = Item.PrimaryLeader.transform;
+                PlayerNode.Point = RouteData.TargetPlayer.Value.Item1.transform;
                 PlayerNode.Type = RouteNode.RouteNodeType.Point;
-                PlayerNode.CheckDistance = Item.settings.RouteToPlayerDroppingDistance;
+                PlayerNode.CheckDistance = RouteData.TargetPlayer.Value.Item2;
 
                 NodeCache.Remove(PlayerNode.cachedNode);
                 PlayerNode.cachedNode = null!;
@@ -129,8 +155,7 @@ namespace LethalMin.Pikmin
             }
 
             //Company building route
-            if (LethalMin.OnCompany &&
-            (!LethalMin.TakeItemsToOnionOnCompany.InternalValue || Item != null && Item.TargetOnion == null))
+            if (LethalMin.OnCompany && (!LethalMin.TakeItemsToOnionOnCompany.InternalValue || RouteData.TargetOnion == null))
             {
                 if (Debug)
                     LethalMin.Logger.LogInfo($"Creating route for company building");
@@ -143,11 +168,6 @@ namespace LethalMin.Pikmin
                         5f
                     );
                     NodeCache[0].CheckDistance = 10;
-                }
-                if (Item != null)
-                {
-                    Item.TargetOnion = null!;
-                    Item.PikminCounter.SetCounterColor(Item.DefultColor);
                 }
                 Nodes.Add(CompanyCounterNode);
                 CastRoute(Debug);
@@ -245,31 +265,18 @@ namespace LethalMin.Pikmin
             // Update previous route for next comparison
             previousRouteNodeNames = new List<string>(currentRouteNodeNames);
 
-            if (Item != null && Item.TargetOnion != null && Nodes[Nodes.Count - 1].InstanceIdentifiyer != Item.TargetOnion.ItemDropPos)
-            {
-                LethalMin.Logger.LogWarning($"Last node is not the target onion drop pos, setting target onion to null.");
-                Item.TargetOnion = null!;
-                Item.PikminCounter.SetCounterColor(Item.DefultColor);
-            }
-
             //RecalculateVisualizer();
         }
 
         /// <summary>
-        /// Updates the route item and checks if the pikmin has reached the current node
+        /// Updates the route and checks if the pikmin has reached the current node
         /// </summary>
-        public void UpdateRouteItem()
+        public void UpdateRoute()
         {
-            if (Item == null) return;
-            if (Item.PrimaryPikminOnItem == null) return;
-
-            Pikmin = Item.PrimaryPikminOnItem;
-
             PikminAI ai = Pikmin;
 
             RouteNode CurNode = Nodes[CurrentPathIndex];
 
-            ai.agent.speed = Item.GetSpeed();
             UpdatePikminPath();
 
             if (CurNode.IsPikminAtNode(ai))
@@ -284,52 +291,14 @@ namespace LethalMin.Pikmin
                 {
                     CurNode.OnNodeReached(this);
                     CurrentPathIndex++;
-                    Item.IncrumentRouteIndexServerRpc();
+                    OnPointReached.Invoke();
                 }
                 else
                 {
                     LethalMin.Logger.LogInfo($"{ai.DebugID}: Reached last node and buffer time is up");
-                    Item.OnRouteEnd();
-                    if (Item.NetworkObject.IsSpawned)
-                        Item.OnRouteEndServerRpc();
+                    OnRouteEnd.Invoke();
                 }
                 LethalMin.Logger.LogInfo($"{ai.DebugID}: Reached node {CurNode.NodeName}");
-                LethalMin.Logger.LogInfo($"{Nodes.Count} - {CurrentPathIndex}");
-            }
-        }
-
-        /// <summary>
-        /// Updates the route pikmin and checks if the pikmin has reached the current node
-        /// </summary>
-        public void UpdateRoutePikmin()
-        {
-            if (Pikmin == null) return;
-
-            RouteNode CurNode = Nodes[CurrentPathIndex];
-
-            Pikmin.agent.speed = Pikmin.pikminType.GetSpeed(Pikmin.CurrentGrowthStage, Pikmin.ShouldRun);
-            UpdatePikminPath();
-
-            if (CurNode.IsPikminAtNode(Pikmin))
-            {
-                if (!CurNode.Buffer())
-                {
-                    //LethalMin.Logger.LogInfo($"Buffering at node {CurNode.NodeName} for {CurNode.CheckBuffer} seconds");
-                    return;
-                }
-
-                if (!PikUtils.IsOutOfRange(Nodes, CurrentPathIndex + 1))
-                {
-                    CurNode.OnNodeReached(this);
-                    CurrentPathIndex++;
-                }
-                else
-                {
-                    LethalMin.Logger.LogInfo($"{Pikmin.DebugID}: Reached last node and buffer time is up");
-                    Pikmin.SetToIdleServerRpc();
-                }
-
-                LethalMin.Logger.LogInfo($"{Pikmin.DebugID}: Reached node {CurNode.NodeName}");
                 LethalMin.Logger.LogInfo($"{Nodes.Count} - {CurrentPathIndex}");
             }
         }
@@ -390,7 +359,7 @@ namespace LethalMin.Pikmin
         public List<RouteNode> CreateRouteOutdoors()
         {
             List<RouteNode> Nodes = new List<RouteNode>();
-            bool ShouldGoToOnion = LethalMin.TakeItemsToTheOnion && Item != null && Item.TargetOnion != null;
+            bool ShouldGoToOnion = LethalMin.TakeItemsToTheOnion && RouteData.TargetOnion != null;
 
             // Determine the best destination (ship or vehicle)
             RouteNode[]? selectedCarPath = null;
@@ -433,15 +402,15 @@ namespace LethalMin.Pikmin
             }
 
             // Check if an onion path is better
-            if (ShouldGoToOnion && Item?.TargetOnion != null)
+            if (ShouldGoToOnion && RouteData.TargetOnion != null)
             {
-                Vector3 pos = Item.TargetOnion.ItemDropPos.position;
+                Vector3 pos = RouteData.TargetOnion.ItemDropPos.position;
                 if (NavMesh.SamplePosition(pos, out NavMeshHit hit, 5f, NavMesh.AllAreas))
                 {
                     pos = hit.position;
                 }
-                OnionNode = new RouteNode($"Onion ({Item.TargetOnion.onionType.TypeName})", pos, 0.1f);
-                OnionNode.InstanceIdentifiyer = Item.TargetOnion.ItemDropPos;
+                OnionNode = new RouteNode($"Onion ({RouteData.TargetOnion.onionType.TypeName})", pos, 0.1f);
+                OnionNode.InstanceIdentifiyer = RouteData.TargetOnion.ItemDropPos;
             }
 
             // Add the appropriate destination to the route
@@ -482,7 +451,7 @@ namespace LethalMin.Pikmin
             const int PRIORITIZE_EXIT = 0;
             const int PRIORITIZE_ELEVATOR = 1;
             bool ShouldGoOutside = LethalMin.CanPathOutsideWhenInside.InternalValue;
-            bool ShouldGoToOnion = LethalMin.TakeItemsToTheOnion && Item != null && Item.TargetOnion != null;
+            bool ShouldGoToOnion = LethalMin.TakeItemsToTheOnion && RouteData.TargetOnion != null;
 
             //Local Nodes list
             List<RouteNode> Nodes = new List<RouteNode>();
@@ -573,15 +542,15 @@ namespace LethalMin.Pikmin
                     AllMissing = true;
                 }
             }
-            else if (ShouldGoToOnion && Item?.TargetOnion != null)
+            else if (ShouldGoToOnion && RouteData.TargetOnion != null)
             {
-                Vector3 pos = Item.TargetOnion.ItemDropPos.position;
+                Vector3 pos = RouteData.TargetOnion.ItemDropPos.position;
                 if (NavMesh.SamplePosition(pos, out NavMeshHit hit, 5f, NavMesh.AllAreas))
                 {
                     pos = hit.position;
                 }
-                RouteNode node = new RouteNode($"Onion ({Item.TargetOnion.onionType.TypeName})", pos, 0.1f);
-                node.InstanceIdentifiyer = Item.TargetOnion.ItemDropPos;
+                RouteNode node = new RouteNode($"Onion ({RouteData.TargetOnion.onionType.TypeName})", pos, 0.1f);
+                node.InstanceIdentifiyer = RouteData.TargetOnion.ItemDropPos;
                 TargetEndRouteNode = node;
                 ShouldGoOutside = true;
             }
@@ -1252,7 +1221,7 @@ namespace LethalMin.Pikmin
             }
             return routeNodes;
         }
-        public static List<RouteNode[]> FindCarRouteNodes(PikminItemRoute route = null!)
+        public static List<RouteNode[]> FindCarRouteNodes(PikminRoute route = null!)
         {
             List<RouteNode[]> routeNodes = new List<RouteNode[]>();
             PikminAI? ai = route.Pikmin;
@@ -1302,7 +1271,7 @@ namespace LethalMin.Pikmin
             }
             return routeNodes;
         }
-        public static List<RouteNode> FindOnionRouteNodes(PikminItemRoute route = null!)
+        public static List<RouteNode> FindOnionRouteNodes(PikminRoute route = null!)
         {
             List<RouteNode> routeNodes = new List<RouteNode>();
             PikminAI? ai = route.Pikmin;
@@ -1393,7 +1362,7 @@ namespace LethalMin.Pikmin
             if (Nodes.Count == 0) return;
 
             // Get the starting position (PrimaryPikminOnItem's position) for the first node
-            Vector3 rawStartPos = Item == null ? Pikmin.transform.position : Item.transform.position;
+            Vector3 rawStartPos = Pikmin.transform.position;
 
             // Check if the start position has changed significantly
             if (Vector3.Distance(rawStartPos, lastStartPos) < updateThreshold)

@@ -136,7 +136,7 @@ namespace LethalMin
             {
                 if (Vector3.Distance(Pos, ai.transform.position) > range) continue; // Skip if not within range
 
-                if (ai != null && ai.currentBehaviourStateIndex == 0 && !ai.IsDeadOrDying
+                if (ai != null && ai.currentBehaviourStateIndex == PikminAI.IDLE && !ai.IsDeadOrDying
                 && !PikChecks.IsPikminResistantToHazard(ai, PikminHazard.Spore, false))
                 {
                     return true; // Found a valid pikmin nearby
@@ -189,14 +189,17 @@ namespace LethalMin
             {
                 return; // don't spawn if they weren't a leafling before death
             }
-
+            maskedLeader.wasLeaflingBeforeDeath = false;
+            SetAsLeafling();
+        }
+        public void SetAsLeafling()
+        {
             IsLeafling = true;
             GameObject LeaflingSprout = Instantiate(LethalMin.assetBundle.LoadAsset<GameObject>("Assets/LethalMin/MaskedSprout.prefab"));
             LeaflingSprout.transform.SetParent(maskedPlayerEnemy.headTransform);
             LeaflingSprout.transform.localPosition = new Vector3(0, 0.3f, 0);
             LeaflingSprout.transform.localScale = new Vector3(0.65f, 0.65f, 0.65f);
             LeaflingSprout.transform.localRotation = new Quaternion(0.2164f, 0, 0, -0.9763f);
-            maskedLeader.wasLeaflingBeforeDeath = false;
             LethalMin.Logger.LogInfo($"Spawned Leafling Sprout on {gameObject.name}");
         }
 

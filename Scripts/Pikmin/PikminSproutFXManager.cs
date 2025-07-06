@@ -41,7 +41,7 @@ namespace LethalMin
             {
                 return;
             }
-            GlowAnim.SetBool("Glow", minmin.currentBehaviourStateIndex == 0 && minmin.CurrentIntention == Pintent.Idle && !minmin.Laying || minmin.ForceSproutGlow);
+            GlowAnim.SetBool("Glow", minmin.currentBehaviourStateIndex == PikminAI.IDLE && minmin.CurrentIntention == Pintent.Idle && !minmin.Laying || minmin.ForceSproutGlow);
             GlowSprt.color = minmin.pikminType.UseOverrideSproutGlowColor ? minmin.pikminType.OverrideSproutGlowColor : minmin.pikminType.PikminPrimaryColor;
 
             switch (minmin.CurPanicAnim)
