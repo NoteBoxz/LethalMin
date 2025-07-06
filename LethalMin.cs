@@ -631,6 +631,7 @@ namespace LethalMin
         public static ConfigItem<bool> AllowOnionsToRevivePlayers = null!;
         public static ConfigItem<bool> AllowOnionToReviveMaskeds = null!;
         public static ConfigItem<bool> AllowOnionFusing = null!;
+        public static ConfigItem<bool> HideResultsWhenMoreThanFour = null!;
         public static ConfigItem<bool> ConvertEnemyBodiesToItems = null!;
         public static ConfigItem<bool> ShowOnionsInSpace = null!;
         public static ConfigItem<Vector3> SpaceOnionPosition = null!;
@@ -1009,6 +1010,15 @@ namespace LethalMin
                 "Global Ghost SFX",
                 true,
                 "When true, you will be able to hear Pikmin Ghosts no matter where you are on the moon.",
+                false,
+                ConfigItemAuthority.Local);
+  
+
+            HideResultsWhenMoreThanFour = new ConfigItem<bool>(
+                "General",
+                "Hide Custom Reports With More Players",
+                true,
+                "Hide the Pikmin raised counters for every player when there are more than four players in the game. To prevent names from being covered.",
                 false,
                 ConfigItemAuthority.Local);
 

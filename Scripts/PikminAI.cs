@@ -1664,6 +1664,8 @@ namespace LethalMin
             if (IsWildPikmin)
             {
                 Pmanager.PikminAICounter.Add(this);
+                PikminManager.instance.EndOfGameStats.PikminRaised[leader] += 1;
+                PikminManager.instance.FiredStats.TotalPikminRaised += 1;
                 IsWildPikmin = false;
             }
 
@@ -2830,8 +2832,7 @@ namespace LethalMin
             RandomRotaion = Quaternion.Euler(enemyRandom.Next(0, 360), enemyRandom.Next(0, 360), enemyRandom.Next(0, 360));
         }
 
-        public new void HitEnemyOnLocalClient(int force = 1, Vector3 hitDirection = default(Vector3),
-        PlayerControllerB? playerWhoHit = null, bool playHitSFX = false, int hitID = -1)
+        public override void HitEnemy(int force = 1, PlayerControllerB? playerWhoHit = null, bool playHitSFX = false, int hitID = -1)
         {
             if (Invincible)
             {
@@ -2860,11 +2861,6 @@ namespace LethalMin
                 return;
             }
 
-            base.HitEnemyOnLocalClient(force, hitDirection, playerWhoHit, playHitSFX, hitID);
-        }
-
-        public override void HitEnemy(int force = 1, PlayerControllerB? playerWhoHit = null, bool playHitSFX = false, int hitID = -1)
-        {
             base.HitEnemy(force, playerWhoHit, playHitSFX, hitID);
 
             if (IsWildPikmin && LethalMin.WildPikminNoDeath)

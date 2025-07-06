@@ -116,6 +116,16 @@ namespace LethalMin.Patches
             }
         }
 
+        [HarmonyPatch(nameof(StartOfRound.EndOfGame))]
+        [HarmonyPostfix]
+        public static void EndOfGamePostfix(StartOfRound __instance)
+        {
+            if (__instance.IsServer)
+            {
+                PikminManager.instance.SyncGameStatsClientRpc(PikminManager.instance.EndOfGameStats, PikminManager.instance.FiredStats);
+            }
+        }
+
 
         [HarmonyPatch(nameof(StartOfRound.FirePlayersAfterDeadlineClientRpc))]
         [HarmonyPostfix]

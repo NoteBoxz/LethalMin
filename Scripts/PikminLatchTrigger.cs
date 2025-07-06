@@ -47,12 +47,12 @@ namespace LethalMin
             switch (StateToSet)
             {
                 case LatchTriggerStateToSet.Attack:
-                    return (Pintent.Attack, 2);
+                    return (Pintent.Attack, PikminAI.WORK);
                 case LatchTriggerStateToSet.Stuck:
-                    return (Pintent.Stuck, 4);
+                    return (Pintent.Stuck, PikminAI.PANIC);
                 default:
                     LethalMin.Logger.LogError($"Invalid state to set: {StateToSet}");
-                    return (Pintent.Stuck, 4);
+                    return (Pintent.Stuck, PikminAI.PANIC);
             }
         }
 
