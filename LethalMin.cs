@@ -2890,7 +2890,7 @@ namespace LethalMin
                         catch (FileNotFoundException e)
                         {
                             // Log warning about missing dependency and continue
-                            Logger.LogWarning($"Skipping method {method.Name} due to missing dependency: {e}");
+                            Logger.LogDebug($"Skipping method {method.Name} due to missing dependency: {e}");
                         }
                         catch (Exception e)
                         {
@@ -2997,10 +2997,10 @@ namespace LethalMin
                 Logger.LogWarning("ReflectionTypeLoadException caught while getting types. Some types will be skipped.");
                 foreach (var loaderException in e.LoaderExceptions)
                 {
-                    Logger.LogWarning($"Loader Exception: {loaderException.Message}");
+                    Logger.LogDebug($"Loader Exception: {loaderException.Message}");
                     if (loaderException is FileNotFoundException fileNotFound)
                     {
-                        Logger.LogWarning($"Could not load file: {fileNotFound.FileName}");
+                        Logger.LogDebug($"Could not load file: {fileNotFound.FileName}");
                     }
                 }
                 return e.Types.Where(t => t != null).ToArray();

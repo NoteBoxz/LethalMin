@@ -1,10 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using LCOffice.Components;
 using LethalMin.Compats;
 using LethalMin.Patches;
 using LethalMin.Utils;
-using LethalMon;
 using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
@@ -924,7 +923,7 @@ namespace LethalMin.Pikmin
 
             bool IsPiggyDungen()
             {
-                return GameObject.FindAnyObjectByType<ElevatorSystem>() != null;
+                return Object.FindObjectOfType<LCOffice.Components.ElevatorController>();
             }
 
             bool IsVanillaDungen()
@@ -942,7 +941,7 @@ namespace LethalMin.Pikmin
             if (LethalMin.IsDependencyLoaded("Piggy.LCOffice") && IsPiggyDungen())
             {
                 LethalMin.Logger.LogInfo($"Piggy LC-Office detected, getting floor data.");
-                GetPiggyFloorData();
+                PikminManager.instance.StartCoroutine(WaitGetPiggyFloorData());
                 IsGettingFloorData = false;
                 return;
             }
@@ -1004,6 +1003,16 @@ namespace LethalMin.Pikmin
             LethalMin.Logger.LogInfo("Registered Vanilla Minshaft Floors");
         }
 
+        /// <summary>
+        /// Because LC office mod loads its elevator system after the dungen is loaded, we need to wait for it to be available.
+        /// </summary>
+        /// <returns></returns>
+        public static IEnumerator WaitGetPiggyFloorData()
+        {
+            yield return new WaitUntil(() => LCOffice.Components.ElevatorSystem.System != null);
+
+            GetPiggyFloorData();
+        }
 
         /// <summary>
         /// Gets the floor data from the Piggy LC-Office mod.
@@ -1011,7 +1020,7 @@ namespace LethalMin.Pikmin
         public static void GetPiggyFloorData()
         {
             List<RouteNode> FireExits = FindFireExitRouteNodes();
-            ElevatorSystem ElevatorSystem = GameObject.FindObjectOfType<ElevatorSystem>();
+            LCOffice.Components.ElevatorSystem ElevatorSystem = Object.FindObjectOfType<LCOffice.Components.ElevatorSystem>();
             PlayerPhysicsRegion ElevatorRegion = ElevatorSystem.animator.GetComponentInChildren<PlayerPhysicsRegion>();
             Scene currentScene = SceneManager.GetSceneByName(RoundManager.Instance.currentLevel.sceneName);
 

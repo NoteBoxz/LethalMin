@@ -3107,7 +3107,7 @@ namespace LethalMin
 
             LethalMin.Logger.LogInfo($"{DebugID}: Zapped to death");
             hitBeforeKillWasCalled = true;
-            PikminZap zap = GameObject.Instantiate(LethalMin.PikminZapPrefab, transform.position, transform.rotation).GetComponent<PikminZap>();
+            PikminZap zap = Instantiate(LethalMin.PikminZapPrefab, transform.position, transform.rotation).GetComponent<PikminZap>();
             EnableEnemyMesh(enable: false, overrideDoNotSet: true);
             zap.LostType = pikminType;
             zap.InMemoryof = DebugID;

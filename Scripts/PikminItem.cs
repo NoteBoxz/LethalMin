@@ -959,6 +959,16 @@ namespace LethalMin
                 RemoveAllPikminFromItemServerRpc();
             }
 
+            // Get each carry strength of every pikmin in the PikminOnItem list
+            if (PikminOnItem.Count > 0)
+            {
+                var carryStrengths = PikminOnItem.Select(pikmin => pikmin.CurrentCarryStrength).ToArray();
+                TotalCarryStrength = carryStrengths.Sum();
+            }
+            else
+            {
+                TotalCarryStrength = 0;
+            }
 
             if (TotalCarryStrength < CarryStrengthNeeded && IsBeingCarried && IsOwner)
             {
@@ -1019,17 +1029,6 @@ namespace LethalMin
                     LethalMin.Logger.LogWarning($"{gameObject.name} has no GrabPositionContainer, creating one");
                 CreateGrabPositions();
                 return;
-            }
-
-            // Get each carry strength of every pikmin in the PikminOnItem list
-            if (PikminOnItem.Count > 0)
-            {
-                var carryStrengths = PikminOnItem.Select(pikmin => pikmin.CurrentCarryStrength).ToArray();
-                TotalCarryStrength = carryStrengths.Sum();
-            }
-            else
-            {
-                TotalCarryStrength = 0;
             }
 
             PikminCounter.gameObject.SetActive(PikminOnItem.Count > 0);
