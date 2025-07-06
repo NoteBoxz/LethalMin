@@ -201,6 +201,7 @@ namespace LethalMin
         public const int WORK = 2;
         public const int PANIC = 3;
         public const int LEAVING = 4;
+        public bool AddToRaisedOnInitAssign = false;
 
 
 
@@ -300,14 +301,17 @@ namespace LethalMin
                 if (SpawnProps.AddToSpawnCount)
                     PikminManager.instance.FiredStats.TotalPikminRaised += 1;
 
+                if (SpawnProps.AddToSpawnCountForWild)
+                    AddToRaisedOnInitAssign = true;
+
                 if (SpawnProps.SpawnAnimationDelay > 0)
-                {
-                    StartCoroutine(PlayDelayedAnimation(SpawnProps.SpawnAnimation, SpawnProps.SpawnAnimationDelay));
-                }
-                else
-                {
-                    animController.PlayAnimation(SpawnProps.SpawnAnimation, 0);
-                }
+                    {
+                        StartCoroutine(PlayDelayedAnimation(SpawnProps.SpawnAnimation, SpawnProps.SpawnAnimationDelay));
+                    }
+                    else
+                    {
+                        animController.PlayAnimation(SpawnProps.SpawnAnimation, 0);
+                    }
 
                 if (SpawnProps.MovementBuffer > 0)
                 {
@@ -1664,8 +1668,11 @@ namespace LethalMin
             if (IsWildPikmin)
             {
                 Pmanager.PikminAICounter.Add(this);
-                PikminManager.instance.EndOfGameStats.PikminRaised[leader] += 1;
-                PikminManager.instance.FiredStats.TotalPikminRaised += 1;
+                if (AddToRaisedOnInitAssign)
+                {
+                    PikminManager.instance.EndOfGameStats.PikminRaised[leader] += 1;
+                    PikminManager.instance.FiredStats.TotalPikminRaised += 1;
+                }
                 IsWildPikmin = false;
             }
 

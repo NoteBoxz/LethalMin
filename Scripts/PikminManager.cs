@@ -824,6 +824,7 @@ namespace LethalMin
 
                 PikminSpawnProps props = new PikminSpawnProps();
                 props.IsOutside = randomType.SpawnsOutdoors;
+                props.AddToSpawnCountForWild = true;
 
                 SpawnPikminOnServer(randomType, spawnPos, RandomYRotation, props);
 

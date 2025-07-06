@@ -18,6 +18,7 @@ namespace LethalMin.Pikmin
             OverrideBirthDate = "";
             IsOutside = true;
             AddToSpawnCount = false;
+            AddToSpawnCountForWild = false;
         }
 
         public string SpawnAnimation;
@@ -32,6 +33,7 @@ namespace LethalMin.Pikmin
         public string OverrideBirthDate;
         public bool IsOutside;
         public bool AddToSpawnCount;
+        public bool AddToSpawnCountForWild;
 
         //Allows RPCS to be called with this struct as a varible
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
@@ -48,6 +50,7 @@ namespace LethalMin.Pikmin
             serializer.SerializeValue(ref IsOutside);
             serializer.SerializeValue(ref AddToSpawnCount);
             serializer.SerializeValue(ref MovementBuffer);
+            serializer.SerializeValue(ref AddToSpawnCountForWild);
         }
     }
 }
