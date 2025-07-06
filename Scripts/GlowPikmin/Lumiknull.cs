@@ -129,19 +129,27 @@ namespace LethalMin
             if (!IsActive) return;
 
             GrabbableObject grab = playerDepositing.currentlyHeldObjectServer;
-            if (grab != null)
+            if (grab == null)
             {
-                playerDepositing.DespawnHeldObject();
-                grab.grabbable = false;
-                PikminItem item = grab.GetComponentInChildren<PikminItem>();
-                if (item == null)
-                {
-                    return;
-                }
-                bool check = StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Eclipsed &&
-                 TimeOfDay.Instance.globalTime < LethalMin.LumiknullActivateTime.InternalValue;
-                AttemptDepositItemServerRpc(playerDepositing.OwnerClientId, !check ? item.CarryStrengthNeeded : Mathf.Max(1, item.CarryStrengthNeeded / 2f));
+                LethalMin.Logger.LogWarning($"Lumiknull: {playerDepositing.OwnerClientId} tried to deposit an item that is not held!");
+                return;
             }
+            PikminItem item = grab.GetComponentInChildren<PikminItem>();
+            if (item == null)
+            {
+                LethalMin.Logger.LogWarning($"Lumiknull: {playerDepositing.OwnerClientId} tried to deposit an item that is not a PikminItem!");
+                return;
+            }
+
+            bool check = StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Eclipsed &&
+             TimeOfDay.Instance.globalTime < LethalMin.LumiknullActivateTime.InternalValue;
+
+            float ammount = !check ? item.CarryStrengthNeeded : Mathf.Max(1, item.CarryStrengthNeeded / 2f);
+            
+            grab.grabbable = false;
+
+            playerDepositing.DespawnHeldObject();
+            AttemptDepositItemServerRpc(playerDepositing.OwnerClientId, ammount);
         }
 
         [ServerRpc(RequireOwnership = false)]
