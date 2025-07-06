@@ -809,6 +809,7 @@ namespace LethalMin
         #region LC-Office
         public static ConfigItem<bool> AddNavLinkToThridFloorOffice = null!;
         public static ConfigItem<bool> BlockEnemiesFromEnteringThirdFloorOffice = null!;
+        public static ConfigItem<bool> AllowMetalDetectorToZap = null!;
         #endregion
 
         #region Zeranos
@@ -2001,6 +2002,14 @@ namespace LethalMin
                 "Block Enemies From Entering Third Floor Office",
                 true,
                 "Blocks enemies (aside from pikmin) from entering the elevator on the third floor of LC-Office. Too keep the bugged functionailty of other entites not being able to enter the elevator.",
+                false,
+                ConfigItemAuthority.Client);
+
+            AllowMetalDetectorToZap = new ConfigItem<bool>(
+                "LC-Office",
+                "Allow Metal Detector To Zap",
+                true,
+                "Allows the metal detector to zap pikmin.",
                 false,
                 ConfigItemAuthority.Client);
             #endregion

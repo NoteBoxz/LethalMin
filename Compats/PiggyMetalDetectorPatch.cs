@@ -19,6 +19,8 @@ namespace LethalMin.Compats
         [HarmonyPostfix]
         public static void OnTriggerStayPostfix(MetalDetector __instance, Collider other)
         {
+            if (!LethalMin.AllowMetalDetectorToZap) return;
+            
             try
             {
                 if (!__instance.powered) return;
