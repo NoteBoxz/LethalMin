@@ -13,8 +13,6 @@ While not essential, a video of the bug occurring in-game would also be greatly 
 # Known Bugs
 
 - ReXuvination causes the pikmin collision detect to break
-- end of day stats cover more company extra slots
 - grabbing an onion item at the same time it leaves causes the infamous LC interaction bug
 - spamming glow seeds causes the infamous LC interaction bug
-- the AvoidMoons list requires the moons numbers to be inputed
 - It's impossible to prevent Pikmin from spawning on a spesefic moon
