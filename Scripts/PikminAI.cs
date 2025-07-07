@@ -888,10 +888,6 @@ namespace LethalMin
             {
                 this.RemoveLeader();
             }
-            if (CollisionMode >= 0)
-            {
-                SetCollisionMode(CollisionMode);
-            }
             if (CurrentVehicle != null)
             {
                 SetOffVehicle(false);
@@ -912,6 +908,10 @@ namespace LethalMin
             if (SetLayingFalse)
             {
                 Laying = false;
+            }
+            if (CollisionMode >= 0)
+            {
+                SetCollisionMode(CollisionMode);
             }
         }
 

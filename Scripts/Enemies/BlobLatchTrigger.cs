@@ -61,6 +61,10 @@ namespace LethalMin
             {
                 return false;
             }
+            if (LethalMin.UseConfigsForEnemies && !LethalMin.Blob_TrapPikmin.InternalValue)
+            {
+                return false;
+            }
             return base.TryLatch(pikmin, Point, IsDirectHit, DoCheckOnly);
         }
 
