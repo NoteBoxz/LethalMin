@@ -26,7 +26,7 @@ namespace LethalMin.Pikmin
         }
 
         /// <summary>
-        /// Called every frame, one every client
+        /// Called every frame, called on every client
         /// </summary>
         public virtual void Update()
         {
