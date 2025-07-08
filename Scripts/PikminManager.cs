@@ -1018,7 +1018,6 @@ namespace LethalMin
             settings.CarryStrength = EnemyWeightsMap.ContainsKey(enemy.enemyType.enemyName) ? EnemyWeightsMap[enemy.enemyType.enemyName] :
             PikUtils.CalculatePikminItemWeight(Iprops);
             settings.SproutsToSpawn = settings.CarryStrength;
-            settings.ServerAuthParenting = true;
 
             PikminItem itm = prop.GetComponentInChildren<PikminItem>();
             EnemyGrabbableObject ego = enemy.gameObject.AddComponent<EnemyGrabbableObject>();

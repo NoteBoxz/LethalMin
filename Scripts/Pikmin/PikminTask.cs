@@ -47,6 +47,11 @@ namespace LethalMin.Pikmin
         /// <param name="callRpc"></param>
         public virtual void TaskEnd(bool callRpc = true, bool DontDoYayAnyway = false)
         {
+            if(pikmin == null)
+            {
+                LethalMin.Logger.LogWarning("PT: TaskEnd called but pikmin is null.");
+                return;
+            }
             if (pikmin.CurrentTask == this)
             {
                 if (callRpc)

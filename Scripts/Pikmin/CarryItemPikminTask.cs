@@ -12,17 +12,19 @@ namespace LethalMin.Pikmin
 
         public CarryItemTask(PikminAI pikminAssigningTo) : base(pikminAssigningTo)
         {
-            
+
         }
 
         public override void IntervaledUpdate()
         {
             if (pikmin == null || pikminItem == null)
             {
-                if(pikmin == null)
+                if (pikmin == null)
                     LethalMin.Logger.LogWarning("PCIT: Pikmin is null in IntervaledUpdate");
-                if(pikminItem == null && pikmin != null)
+                if (pikminItem == null && pikmin != null)
                     LethalMin.Logger.LogWarning($"{pikmin.DebugID}: PCIT: PikminItem is null in IntervaledUpdate");
+
+                TaskEnd();
                 return;
             }
 
@@ -31,16 +33,22 @@ namespace LethalMin.Pikmin
             string DebugID = $"{pikmin.DebugID} - CarryItemTask";
             bool IsOnItem = pikminItem.PikminOnItem.Contains(pikmin);
 
-            agent.speed = pikminItem.GetSpeed();
-
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
-            if (pikminItem != null && IsOnItem && pikminItem.settings.RouteToPlayer)
+            if (IsOnItem && pikminItem.settings.RouteToPlayer)
             {
                 agent.stoppingDistance = pikminItem.settings.RouteToPlayerStoppingDistance;
             }
             else
             {
                 agent.stoppingDistance = 0;
+            }
+            if (IsOnItem)
+            {
+                agent.speed = pikminItem.GetSpeed();
+            }
+            else
+            {
+                agent.speed = pikminType.GetSpeed(pikmin.CurrentGrowthStage, true);
             }
 
             if (!pikmin.pikminType.CanCarryObjects)
