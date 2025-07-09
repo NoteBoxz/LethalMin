@@ -1382,20 +1382,20 @@ namespace LethalMin
                 {
                     continue;
                 }
-                float oddsValue = 0.5f; 
+                float oddsValue = 0.5f;
                 string cleanedPlanetName = System.Text.RegularExpressions.Regex.Replace(
-                    curLevel.PlanetName, 
-                    "^\\d+", 
+                    curLevel.PlanetName,
+                    "^\\d+",
                     "").Trim().ToLower();
-                
+
                 foreach (string MoonName in type.FavoredMoons)
-                {      
+                {
                     if (MoonName.ToLower().Contains(cleanedPlanetName))
                     {
                         oddsValue *= type.SpawnChanceMultiplier;
                     }
                 }
-                
+
                 foreach (string MoonName in type.AvoidMoons)
                 {
                     if (MoonName.ToLower().Contains(cleanedPlanetName))
@@ -1909,7 +1909,7 @@ namespace LethalMin
             LethalMin.Logger.LogMessage($"---Saving LethalMin Data---");
 
             LethalMin.Logger.LogDebug($"SavePath: {SaveManager.settings.path}");
-            
+
             IsSaving = true;
 
             SaveManager.Save("pikminLeft", EndOfGameStats.PikminLeft);
@@ -2143,6 +2143,9 @@ namespace LethalMin
                 Dictionary<string, List<PikminData>> onionPikminData =
                     SaveManager.Load<Dictionary<string, List<PikminData>>>("onionPikmin");
 
+                // Define a reasonable batch size to avoid overflow
+                const int batchSize = 100;
+                int batchCount = 0;
 
                 foreach (Onion onion in Onions)
                 {
@@ -2151,8 +2154,20 @@ namespace LethalMin
                         string onionKey = $"onion_{onion.onionType.OnionTypeID}";
                         if (onionPikminData.ContainsKey(onionKey))
                         {
-                            onion.SetPikminClientRpc(onionPikminData[onionKey].ToArray());
-                            LethalMin.Logger.LogInfo($"Restored {onionPikminData[onionKey].Count} pikmin to onion {onion.onionType.OnionTypeID}");
+                            // Reset the onion first
+                            onion.SetPikminClientRpc(new PikminData[0]);
+
+                            // Split into batches and send each batch
+                            List<PikminData> pikminList = onionPikminData[onionKey];
+                            for (int i = 0; i < pikminList.Count; i += batchSize)
+                            {
+                                int count = Mathf.Min(batchSize, pikminList.Count - i);
+                                PikminData[] batch = pikminList.GetRange(i, count).ToArray();
+                                onion.AddPikminClientRpc(batch);
+                                batchCount++;
+                            }
+
+                            LethalMin.Logger.LogInfo($"Restored {onionPikminData[onionKey].Count} pikmin to onion {onion.onionType.OnionTypeID} in {batchCount} batches");
                         }
                     }
                     else
@@ -2163,8 +2178,17 @@ namespace LethalMin
                             string onionKey = $"onion_{OnType.OnionTypeID}";
                             if (onionPikminData.ContainsKey(onionKey))
                             {
-                                onion.AddPikminClientRpc(onionPikminData[onionKey].ToArray());
-                                LethalMin.Logger.LogInfo($"Restored {onionPikminData[onionKey].Count} pikmin to onion {onion.onionType.OnionTypeID}");
+                                // Split into batches and send each batch
+                                List<PikminData> pikminList = onionPikminData[onionKey];
+                                for (int i = 0; i < pikminList.Count; i += batchSize)
+                                {
+                                    int count = Mathf.Min(batchSize, pikminList.Count - i);
+                                    PikminData[] batch = pikminList.GetRange(i, count).ToArray();
+                                    onion.AddPikminClientRpc(batch);
+                                    batchCount++;
+                                }
+
+                                LethalMin.Logger.LogInfo($"Restored {onionPikminData[onionKey].Count} pikmin to onion {onion.onionType.OnionTypeID} in {batchCount} batches");
                             }
                         }
                     }
