@@ -1326,7 +1326,11 @@ namespace LethalMin
                 "Pikmin Behavior",
                 "Follow Mode",
                 PfollowMode.LegacyBehind,
-                "The way pikmin follow their leader.",
+                "The way pikmin follow their leader." +
+                @"
+                 New: Makes the pikmin follow the leader in a formation simular to the pikmin games
+                 LegacyBehind Makes the pikmin looesly follow the leader
+                 LegacyFollow Makes the pikmin path directly to the leader (can be buggy)",
                 false,
                 ConfigItemAuthority.Client);
             PikminFollowMode.OnValueChanged += (_) => SetFollowMode();

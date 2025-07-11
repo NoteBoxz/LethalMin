@@ -2144,7 +2144,7 @@ namespace LethalMin
                     SaveManager.Load<Dictionary<string, List<PikminData>>>("onionPikmin");
 
                 // Define a reasonable batch size to avoid overflow
-                const int batchSize = 100;
+                const int batchSize = 50;
                 int batchCount = 0;
 
                 foreach (Onion onion in Onions)
@@ -2168,6 +2168,7 @@ namespace LethalMin
                             }
 
                             LethalMin.Logger.LogInfo($"Restored {onionPikminData[onionKey].Count} pikmin to onion {onion.onionType.OnionTypeID} in {batchCount} batches");
+                            batchCount = 0;
                         }
                     }
                     else
