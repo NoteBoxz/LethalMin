@@ -12,6 +12,7 @@ While not essential, a video of the bug occurring in-game would also be greatly 
 
 # Known Bugs
 
+- BetterEmotes Breaks the Plucking Animation
 - ReXuvination causes the pikmin collision detect to break
 - grabbing an onion item at the same time it leaves causes the infamous LC interaction bug
 - spamming glow seeds causes the infamous LC interaction bug

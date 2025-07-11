@@ -4,8 +4,7 @@
 
 -- bugs --
 
-- Enemy Body positions are desynced between clients (not for the host)
-- Pikmin don't fully go to grab items
+- BetterEmotes Breaks the Plucking Animation
 - ReXuvination causes the pikmin collision detect to break
 - grabbing an onion item at the same time it leaves causes the infamous LC interaction bug
 - spamming glow seeds causes the infamous LC interaction bug
