@@ -630,5 +630,22 @@ namespace LethalMin
 
             curPack = Sounds[CurrentSoundPackIndex.Value];
         }
+
+        public override void EnableItemMeshes(bool enable)
+        {
+            MeshRenderer[] componentsInChildren = base.gameObject.GetComponentsInChildren<MeshRenderer>(true);
+            for (int i = 0; i < componentsInChildren.Length; i++)
+            {
+                if (!componentsInChildren[i].gameObject.CompareTag("DoNotSet") && !componentsInChildren[i].gameObject.CompareTag("InteractTrigger"))
+                {
+                    componentsInChildren[i].enabled = enable;
+                }
+            }
+            SkinnedMeshRenderer[] componentsInChildren2 = base.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            for (int j = 0; j < componentsInChildren2.Length; j++)
+            {
+                componentsInChildren2[j].enabled = enable;
+            }
+        }
     }
 }

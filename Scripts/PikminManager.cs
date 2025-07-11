@@ -2190,6 +2190,7 @@ namespace LethalMin
                                 }
 
                                 LethalMin.Logger.LogInfo($"Restored {onionPikminData[onionKey].Count} pikmin to onion {onion.onionType.OnionTypeID} in {batchCount} batches");
+                                batchCount = 0;
                             }
                         }
                     }
