@@ -633,17 +633,26 @@ namespace LethalMin
 
         public override void EnableItemMeshes(bool enable)
         {
-            MeshRenderer[] componentsInChildren = base.gameObject.GetComponentsInChildren<MeshRenderer>(true);
+            base.EnableItemMeshes(enable);
+            MeshRenderer[] componentsInChildren = gameObject.GetComponentsInChildren<MeshRenderer>(true);
             for (int i = 0; i < componentsInChildren.Length; i++)
             {
+                if (componentsInChildren[i].gameObject.activeSelf)
+                {
+                    continue; // Don't change active state of active objects
+                }
                 if (!componentsInChildren[i].gameObject.CompareTag("DoNotSet") && !componentsInChildren[i].gameObject.CompareTag("InteractTrigger"))
                 {
                     componentsInChildren[i].enabled = enable;
                 }
             }
-            SkinnedMeshRenderer[] componentsInChildren2 = base.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            SkinnedMeshRenderer[] componentsInChildren2 = gameObject.GetComponentsInChildren<SkinnedMeshRenderer>(true);
             for (int j = 0; j < componentsInChildren2.Length; j++)
             {
+                if (componentsInChildren2[j].gameObject.activeSelf)
+                {
+                    continue; // Don't change active state of active objects
+                }
                 componentsInChildren2[j].enabled = enable;
             }
         }
