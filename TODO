@@ -5,9 +5,11 @@
 - Add config to allow leaders to take items from Pikmin
 - Add Friendlyier Fire mode
 - Tweek Onion Spawning
+- Fix blues getting trapped in the hydrogere
 
 -- bugs --
 
+- The Onion HUD counter can go into the negetives when one player withdraws a type that already has some pikmin selected to be taken out
 - BetterEmotes Breaks the Plucking Animation
 - ReXuvination causes the pikmin collision detect to break
 - grabbing an onion item at the same time it leaves causes the infamous LC interaction bug
