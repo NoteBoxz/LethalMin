@@ -50,7 +50,7 @@ namespace LethalMin
         public List<Renderer> ExtraRenderers = new List<Renderer>();
         public bool DontUseInitClientRpc = false;
         public bool AlreadyPartalInitalized = false;
-        bool ShouldGrab => TotalCarryStrength >= CarryStrengthNeeded && !IsBeingCarried && IsOwner;
+        bool ShouldGrab => !ItemScript.isHeld && TotalCarryStrength >= CarryStrengthNeeded && !IsBeingCarried && IsOwner;
         bool HadItemScript = false;
         [HideInInspector]
         public EnemyGrabbableObject hackEnemyGrabbableObject = null!;
@@ -754,21 +754,17 @@ namespace LethalMin
         }
 
         [ServerRpc]
-        public void RemoveAllPikminFromItemServerRpc(bool SetCarriedToFalse = false)
+        public void RemoveAllPikminFromItemServerRpc()
         {
-            RemoveAllPikminFromItemClientRpc(SetCarriedToFalse);
+            RemoveAllPikminFromItemClientRpc();
         }
         [ClientRpc]
-        public void RemoveAllPikminFromItemClientRpc(bool SetCarriedToFalse)
+        public void RemoveAllPikminFromItemClientRpc()
         {
-            RemoveAllPikminFromItemOnLocalClient(SetCarriedToFalse);
+            RemoveAllPikminFromItemOnLocalClient();
         }
-        private void RemoveAllPikminFromItemOnLocalClient(bool SetCarriedToFalse = false)
+        private void RemoveAllPikminFromItemOnLocalClient()
         {
-            if (SetCarriedToFalse)
-            {
-                IsBeingCarried = false;
-            }
             // Create a new list to store the pikmin we need to remove
             List<PikminAI> pikminToRemove = new List<PikminAI>(PikminOnItem);
 
@@ -791,6 +787,39 @@ namespace LethalMin
             PikminOnItem.Clear();
         }
 
+        [ServerRpc]
+        public void RemoveFromPikminServerRpc()
+        {
+            RemoveFromPikminClientRpc();
+        }
+        [ClientRpc]
+        public void RemoveFromPikminClientRpc()
+        {
+            RemoveFromPikminOnLocalClient();
+        }
+        private void RemoveFromPikminOnLocalClient()
+        {
+            foreach (PikminAI ai in PikminOnItem)
+            {
+                if (!IsBeingCarried)
+                {
+                    break;
+                }
+                if (ai != null)
+                {
+                    ai.PlayAudioOnLocalClient(PikminSoundPackSounds.Lost);
+                }
+            }
+            IsBeingCarried = false;
+            ItemScript.isHeldByEnemy = false;
+            lastPrimaryPikminOnItem = null!;
+
+            PikminCounter.SetCounterColor(DefultColor);
+
+            ClearCurrentRoute();
+
+            RemoveAllPikminFromItemOnLocalClient();
+        }
 
         public NetworkObject GetPhysicsRegionOfDroppedObject(PikminAI pikminDropping, out Vector3 hitPoint)
         {
@@ -955,7 +984,7 @@ namespace LethalMin
             if (ItemScript.isHeld && PikminOnItem.Count > 0 && IsOwner)
             {
                 LethalMin.Logger.LogInfo($"{gameObject.name}: Stopping Carry because player held item");
-                RemoveAllPikminFromItemServerRpc(true);
+                RemoveFromPikminServerRpc();
             }
 
             if (ItemScript.isHeldByEnemy && !IsBeingCarried && PikminOnItem.Count > 0 && IsOwner)
