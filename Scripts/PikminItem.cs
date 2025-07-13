@@ -347,6 +347,13 @@ namespace LethalMin
             ItemScript.EnablePhysics(enable: false);
             PrimaryPikminOnItem.SetCollisionMode(1);
             bool ShouldTakeItemToOnion = true;
+            if (LethalMin.TakeItemsFromPikmin)
+            {
+                foreach (var item in ItemScript.propColliders)
+                {
+                    item.enabled = true;
+                }
+            }
 
             if (LethalMin.OnCompany && !LethalMin.TakeItemsToOnionOnCompany.InternalValue)
             {
@@ -747,17 +754,21 @@ namespace LethalMin
         }
 
         [ServerRpc]
-        public void RemoveAllPikminFromItemServerRpc()
+        public void RemoveAllPikminFromItemServerRpc(bool SetCarriedToFalse = false)
         {
-            RemoveAllPikminFromItemClientRpc();
+            RemoveAllPikminFromItemClientRpc(SetCarriedToFalse);
         }
         [ClientRpc]
-        public void RemoveAllPikminFromItemClientRpc()
+        public void RemoveAllPikminFromItemClientRpc(bool SetCarriedToFalse)
         {
-            RemoveAllPikminFromItemOnLocalClient();
+            RemoveAllPikminFromItemOnLocalClient(SetCarriedToFalse);
         }
-        private void RemoveAllPikminFromItemOnLocalClient()
+        private void RemoveAllPikminFromItemOnLocalClient(bool SetCarriedToFalse = false)
         {
+            if (SetCarriedToFalse)
+            {
+                IsBeingCarried = false;
+            }
             // Create a new list to store the pikmin we need to remove
             List<PikminAI> pikminToRemove = new List<PikminAI>(PikminOnItem);
 
@@ -944,7 +955,7 @@ namespace LethalMin
             if (ItemScript.isHeld && PikminOnItem.Count > 0 && IsOwner)
             {
                 LethalMin.Logger.LogInfo($"{gameObject.name}: Stopping Carry because player held item");
-                RemoveAllPikminFromItemServerRpc();
+                RemoveAllPikminFromItemServerRpc(true);
             }
 
             if (ItemScript.isHeldByEnemy && !IsBeingCarried && PikminOnItem.Count > 0 && IsOwner)

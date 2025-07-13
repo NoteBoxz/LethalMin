@@ -641,6 +641,7 @@ namespace LethalMin
         public static ConfigItem<bool> TriggerLandmines = null!;
         public static ConfigItem<bool> GlobalGhostSFX = null!;
         public static ConfigItem<bool> DieInPlayerDeathZone = null!;
+        public static ConfigItem<bool> TakeItemsFromPikmin = null!;
         #endregion
 
         #region Apperance
@@ -1028,6 +1029,14 @@ namespace LethalMin
                 "Pikmin Die In Player Death Zones",
                 false,
                 "Makes it so pikmin dies when enter death zones that kill players. For example the catwalk jump pit.",
+                false,
+                ConfigItemAuthority.Client);
+
+            TakeItemsFromPikmin = new ConfigItem<bool>(
+                "General",
+                "Take Items From Pikmin",
+                false,
+                "Allows players to take items from pikmin",
                 false,
                 ConfigItemAuthority.Client);
             #endregion
