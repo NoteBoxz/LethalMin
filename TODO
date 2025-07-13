@@ -11,7 +11,7 @@
 
 - The Onion HUD counter can go into the negetives when one player withdraws a type that already has some pikmin selected to be taken out
 - BetterEmotes Breaks the Plucking Animation
-- ReXuvination causes the pikmin collision detect to break
+- Non-VR players are unable to pluck sprouts
 - grabbing an onion item at the same time it leaves causes the infamous LC interaction bug
 - spamming glow seeds causes the infamous LC interaction bug
 - the AvoidMoons list requires the moons numbers to be inputed
