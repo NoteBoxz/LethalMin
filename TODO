@@ -5,15 +5,10 @@
 - Add Friendlyier Fire mode
 - Tweek Onion Spawning
 - Fix blues getting trapped in the hydrogere
-
--- bugs --
-
-- The Onion HUD counter can go into the negetives when one player withdraws a type that already has some pikmin selected to be taken out
-- BetterEmotes Breaks the Plucking Animation
-- Non-VR players are unable to pluck sprouts when playing with VR players
-- grabbing an onion item at the same time it leaves causes the infamous LC interaction bug
-- spamming glow seeds causes the infamous LC interaction bug
-- It's impossible to prevent Pikmin from spawning on a spesefic moon
+- Fix Non-VR players are unable to pluck sprouts when playing with VR players
+- Fix BetterEmotes Breaking the Plucking Animation
+- Fix The Onion HUD counter can go into the negetives when one player withdraws a type that already has some pikmin selected to be taken out
+- Tweek Lumiknull spawn position
 
 
 -- things to refactor --
