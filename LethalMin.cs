@@ -582,7 +582,7 @@ namespace LethalMin
                 return;
             }
             int UnregistedType = 0;
-            foreach(PikminType type in Otype.TypesCanHold)
+            foreach (PikminType type in Otype.TypesCanHold)
             {
                 if (!RegisteredPikminTypes.ContainsKey(type.PikminTypeID))
                 {
@@ -590,7 +590,7 @@ namespace LethalMin
                     UnregistedType++;
                 }
             }
-            if(UnregistedType == Otype.TypesCanHold.Length)
+            if (UnregistedType == Otype.TypesCanHold.Length)
             {
                 Logger.LogWarning($"Onion Type: {Otype.TypeName} has no registered types! Skipping registration.");
                 return;
@@ -934,7 +934,7 @@ namespace LethalMin
                 "Allow onions to revive players when they are killed",
                 false,
                 ConfigItemAuthority.Client);
-            
+
             AllowOnionToReviveMaskeds = new ConfigItem<bool>(
                 "General",
                 "Allow Onions To Revive Masked Players",
@@ -1014,7 +1014,7 @@ namespace LethalMin
                 "When true, you will be able to hear Pikmin Ghosts no matter where you are on the moon.",
                 false,
                 ConfigItemAuthority.Local);
-  
+
 
             HideResultsWhenMoreThanFour = new ConfigItem<bool>(
                 "General",
@@ -1294,7 +1294,9 @@ namespace LethalMin
             AttackBlacklistConfig = new ConfigItem<List<string>>(
                 "Pikmin Behavior",
                 "Attack Blacklist",
-                new List<string> { { "Docile Locust Bees" }, { "Manticoil" }, { "Red Locust Bees" }, { "Blob" } },
+                new List<string> { { "Docile Locust Bees" }, { "Manticoil" }, { "Red Locust Bees" }, { "Blob" },
+                {"Nemo"}, {"InternNPC"}, {"BellCrab"}, {"Nancy"}, {"Nancy"}, {"Janior"}, {"Peace Keeper "},
+                {"Guardsman"}, {"Tornado"}, {"FireStorm"}, {"Hurricane"}},
                 "The list of enemy names that pikmin can't attack",
                 true,
                 ConfigItemAuthority.Client);
