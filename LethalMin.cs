@@ -1295,7 +1295,7 @@ namespace LethalMin
                 "Pikmin Behavior",
                 "Attack Blacklist",
                 new List<string> { { "Docile Locust Bees" }, { "Manticoil" }, { "Red Locust Bees" }, { "Blob" },
-                {"Nemo"}, {"InternNPC"}, {"BellCrab"}, {"Nancy"}, {"Nancy"}, {"Janior"}, {"Peace Keeper "},
+                {"Nemo"}, {"InternNPC"}, {"BellCrab"}, {"Nancy"}, {"Nancy"}, {"Janior"}, {"Peace Keeper"},
                 {"Guardsman"}, {"Tornado"}, {"FireStorm"}, {"Hurricane"}},
                 "The list of enemy names that pikmin can't attack",
                 true,
