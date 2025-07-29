@@ -9,6 +9,7 @@
 - Fix BetterEmotes Breaking the Plucking Animation
 - Fix The Onion HUD counter can go into the negetives when one player withdraws a type that already has some pikmin selected to be taken out
 - Tweek Lumiknull spawn position
+- Fix Zeneros Cliping with 100 Pikmin in eleavtor
 
 
 -- things to refactor --
@@ -37,6 +38,12 @@
 - when you tame a hygrodere with a boombox its unable to trap pikmin.
 
 - Fix Welcome To Ooblterra bugging out Pikmin's Pathfinding
+
+- Add Idlers alert
+
+- Add Flarlicks that give bonus pikmin when collected
+
+- Add Code Rebirth Compat
 
 (⌄⌄⌄ Concepts From BucketBoi ⌄⌄⌄)
 
