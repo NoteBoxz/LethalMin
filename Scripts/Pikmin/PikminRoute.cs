@@ -163,7 +163,7 @@ namespace LethalMin.Pikmin
                     NodeCache.Clear();
                     CompanyCounterNode = new RouteNode(
                         "Company Counter",
-                        GameObject.FindObjectOfType<DepositItemsDesk>().triggerCollider.transform.position,
+                        Object.FindObjectOfType<DepositItemsDesk>().triggerCollider.transform.position,
                         5f
                     );
                     NodeCache[0].CheckDistance = 10;

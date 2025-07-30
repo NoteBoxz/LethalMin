@@ -1,4 +1,3 @@
-using System;
 using GameNetcodeStuff;
 using HarmonyLib;
 using LethalMin.Utils;
@@ -73,7 +72,7 @@ namespace LethalMin.Patches
                 return;
             }
             // Hide every object that will be saved (We don't want to despawn the objects before they can be saved)
-            foreach (Sprout spr in GameObject.FindObjectsOfType<Sprout>())
+            foreach (Sprout spr in Object.FindObjectsOfType<Sprout>())
             {
                 foreach (Renderer render in spr.GetComponentsInChildren<Renderer>())
                 {
@@ -81,7 +80,7 @@ namespace LethalMin.Patches
                 }
             }
 
-            foreach (Onion oni in GameObject.FindObjectsOfType<Onion>())
+            foreach (Onion oni in Object.FindObjectsOfType<Onion>())
             {
                 if (oni.DontDespawnOnGameEnd)
                 {
@@ -164,7 +163,7 @@ namespace LethalMin.Patches
                     }
                 }
             }
-            catch (Exception e)
+            catch (System.Exception e)
             {
                 LethalMin.Logger.LogError($"Failed to show pikmin within ship! {e}");
             }

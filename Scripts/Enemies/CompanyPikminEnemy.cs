@@ -11,7 +11,7 @@ namespace LethalMin
         public List<CompanyMonsterCollisionDetect> Detects = new List<CompanyMonsterCollisionDetect>();
         void Start()
         {
-            Detects = GameObject.FindObjectsOfType<CompanyMonsterCollisionDetect>().ToList();
+            Detects = Object.FindObjectsOfType<CompanyMonsterCollisionDetect>().ToList();
             //Sort by name
             Detects = Detects.OrderBy(x => x.name).ToList();
         }
