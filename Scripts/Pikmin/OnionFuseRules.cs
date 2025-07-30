@@ -10,8 +10,6 @@ namespace LethalMin.Pikmin
     public class OnionFuseRules : ScriptableObject
     {
         public OnionType[] OnionsToFuse = new OnionType[0];
-        [Tooltip("To refernce vanilla onions, use: 'NoteBoxz.RedOnion' for example")]
-        public string[] OnionReferncesToFuse = new string[0];
 
         [Tooltip("Set by mod, do not change.")]
         [HideInInspector]

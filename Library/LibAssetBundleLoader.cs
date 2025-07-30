@@ -26,6 +26,7 @@ namespace LethalMin.Library
             Dictionary<LibOnionFuseRules, OnionFuseRules> ConvertedFuseRulesList = new Dictionary<LibOnionFuseRules, OnionFuseRules>();
             Dictionary<LibPiklopediaEntry, PiklopediaEntry> ConvertedPiklopediaEntries = new Dictionary<LibPiklopediaEntry, PiklopediaEntry>();
             Dictionary<PikminType, LibOnionType> ConvertedTypeTargetOnions = new Dictionary<PikminType, LibOnionType>();
+            List<LibOnionType> OTypesWithOvrRules = new List<LibOnionType>();
 
 #pragma warning disable CS0612 // Type or member is obsolete
             LethalMinLibrary.PikminType[] LegacyTypes = bundle.LoadAllAssets<LethalMinLibrary.PikminType>();
@@ -129,6 +130,8 @@ namespace LethalMin.Library
                                 typesCanHold.Add(LibAssetBundleLoader.ConvertedTypesList[libPikminType]);
                                 ConvertedOnionType.TypesCanHold = typesCanHold.ToArray();
                             }
+                            if (LibOnionType.OverrideFuseRules != null)
+                                OTypesWithOvrRules.Add(LibOnionType);
                         }
                         else
                         {
@@ -153,6 +156,21 @@ namespace LethalMin.Library
                         if (LibFuseRule.ModInfo != null && LibFuseRule.ModInfo.DontLoad)
                         {
                             LethalMin.Logger.LogDebug($"Skipping loading of OnionFuseRules '{LibFuseRule.name}' from bundle '{bundle.name}' due to DontLoad flag.");
+                            foreach (LibOnionType libOnionType in OTypesWithOvrRules)
+                            {
+                                if (LibFuseRule.ReplacementObject is not null)
+                                {
+                                    OnionType ConvertedOnionType = LibAssetBundleLoader.ConvertedOTypesList[libOnionType];
+                                    OnionFuseRules? replacementFuseRules = LibFuseRule.ReplacementObject as OnionFuseRules;
+                                    if (ConvertedOnionType != null && replacementFuseRules != null)
+                                    {
+                                        List<OnionType> TempTypesCanFuse = new List<OnionType>(replacementFuseRules.OnionsToFuse);
+                                        TempTypesCanFuse.Add(ConvertedOnionType);
+                                        replacementFuseRules.OnionsToFuse = TempTypesCanFuse.ToArray();
+                                        LethalMin.Logger.LogDebug($"Added {ConvertedOnionType.name} to replacement fuse rules {replacementFuseRules.name} for {LibFuseRule.name}");
+                                    }
+                                }
+                            }
                             continue;
                         }
                         OnionFuseRules fuseRules = ScriptableObject.CreateInstance<OnionFuseRules>();
@@ -164,6 +182,14 @@ namespace LethalMin.Library
                             if (ConvertedOTypesList.ContainsKey(libOnionType))
                             {
                                 typesCanFuse.Add(ConvertedOTypesList[libOnionType]);
+                            }
+                        }
+                        foreach (LibOnionType libOnionType in OTypesWithOvrRules)
+                        {
+                            if (libOnionType.OverrideFuseRules == LibFuseRule)
+                            {
+                                typesCanFuse.Add(ConvertedOTypesList[libOnionType]);
+                                LethalMin.Logger.LogDebug($"Added {ConvertedOTypesList[libOnionType].name} to fuse rules for {LibFuseRule.name} from OVR rules");
                             }
                         }
                         fuseRules.OnionsToFuse = typesCanFuse.ToArray();
