@@ -24,6 +24,8 @@ namespace LethalMin.HUD
 
         public void Update()
         {
+            if (PikminManager.instance == null)
+                return;
             if (PikminManager.instance.LocalLeader == null)
             {
                 return;

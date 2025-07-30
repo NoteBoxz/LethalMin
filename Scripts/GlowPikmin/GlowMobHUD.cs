@@ -19,6 +19,8 @@ namespace LethalMin.HUD
 
         public void Update()
         {
+            if (PikminManager.instance == null)
+                return;
             Leader leader = PikminManager.instance.LocalLeader;
             if (leader == null || leader.glowmob == null)
             {
@@ -32,7 +34,7 @@ namespace LethalMin.HUD
             if (!HasReachedFull && leader.glowmob.IsReady)
             {
                 HasReachedFull = true;
-                anim.Play("GlowReady"); 
+                anim.Play("GlowReady");
                 leader.glowmob.OnReadyServerRpc();
                 leader.glowmob.OnReady();
             }
