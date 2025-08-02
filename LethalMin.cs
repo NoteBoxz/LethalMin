@@ -37,6 +37,7 @@ namespace LethalMin
     [BepInDependency("imabatby.lethallevelloader", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("BMX.LobbyCompatibility", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("giosuel.Imperium", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("pacoito.itolib", BepInDependency.DependencyFlags.SoftDependency)]
     public class LethalMin : BaseUnityPlugin
     {
         public static LethalMin Instance { get; private set; } = null!;

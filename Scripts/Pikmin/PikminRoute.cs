@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using itolib.PlayZone;
 using LethalMin.Compats;
 using LethalMin.Patches;
 using LethalMin.Utils;
@@ -233,7 +234,13 @@ namespace LethalMin.Pikmin
                 .Select(n => n == null || n.NodeName == null ? "null" : n.NodeName)
                 .ToList();
 
+            string? floorOn = CurrentFloorData == null || CurrentFloorData.Count <= 0 || Pikmin == null ? null : GetFloorPikminIsOn(Pikmin)?.FloorTitle;
+
             string currentRouteString = string.Join(" -> ", currentRouteNodeNames);
+            if (floorOn != null)
+            {
+                currentRouteString = string.Concat(floorOn + " ", currentRouteString);
+            }
 
             // Check if route has changed
             bool routeChanged = false;
@@ -921,6 +928,11 @@ namespace LethalMin.Pikmin
             DefultFloorData = null!;
             IsGettingFloorData = true;
 
+            bool IsPlayDungen()
+            {
+                return Object.FindObjectOfType<itolib.PlayZone.PlayZoneElevator>();
+            }
+
             bool IsPiggyDungen()
             {
                 return Object.FindObjectOfType<LCOffice.Components.ElevatorController>();
@@ -942,6 +954,14 @@ namespace LethalMin.Pikmin
             {
                 LethalMin.Logger.LogInfo($"Piggy LC-Office detected, getting floor data.");
                 PikminManager.instance.StartCoroutine(WaitGetPiggyFloorData());
+                IsGettingFloorData = false;
+                return;
+            }
+
+            if (LethalMin.IsDependencyLoaded("LethalMatt.PlayZone") && IsPlayDungen())
+            {
+                LethalMin.Logger.LogInfo($"PlayZone detected, getting floor data.");
+                GetPlayFloorData();
                 IsGettingFloorData = false;
                 return;
             }
@@ -1155,6 +1175,48 @@ namespace LethalMin.Pikmin
             }
 
             LethalMin.Logger.LogInfo("Registered LC-Office Floors");
+        }
+
+        /// <summary>
+        /// Gets the floor data from the PlayZone mod.
+        /// </summary>
+        public static void GetPlayFloorData()
+        {
+            RouteNode MainNode = new RouteNode(
+                "Main",
+                RoundManager.FindMainEntranceScript(true),
+                0.45f
+            );
+
+            PlayZoneElevator elevator = Object.FindObjectOfType<PlayZoneElevator>();
+
+            RouteNode ElevatorNode = new RouteNode(
+                "Elevator",
+                elevator.transform.position,
+                -1,
+                elevator.GetComponentInChildren<PlayerPhysicsRegion>().GetComponent<Collider>()
+            );
+
+            ElevatorNode.CheckBuffer = 0.25f;
+            MineshaftElevatorControllerPatch.node = ElevatorNode;
+
+            FloorData F2 = new FloorData();
+            F2.MainExits.Add(MainNode);
+            F2.FloorRoot = RoundManager.FindMainEntrancePosition();
+            F2.Elevators.Add(ElevatorNode);
+            F2.FloorTitle = "(Floor2) Ground";
+            CurrentFloorData.Add(F2);
+
+            DefultFloorData = F2;
+
+            FloorData F1 = new FloorData();
+            F1.FireExits.AddRange(FindFireExitRouteNodes());
+            F1.FloorRoot = elevator.doorAnimatorLower?.transform.position ?? elevator.transform.position;
+            F1.Elevators.Add(ElevatorNode);
+            F1.FloorTitle = "(Floor1) Fun";
+            CurrentFloorData.Add(F1);
+
+            LethalMin.Logger.LogInfo("Registered PlayZone Floors");
         }
         #endregion
 

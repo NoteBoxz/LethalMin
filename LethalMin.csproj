@@ -97,6 +97,9 @@
       <Reference Include="SellBodies" Publicize="true">
         <HintPath>..\..\Needed\SellBodies\SellBodies.dll</HintPath>
       </Reference>
+      <Reference Include="pacoito.itolib" Publicize="true">
+        <HintPath>..\..\Needed\pacoito-itolib\itolib.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
     <!-- Define properties for Netcode Patcher paths -->

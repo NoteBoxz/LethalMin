@@ -18,7 +18,7 @@ namespace LethalMin
         {
             if (item == null)
             {
-                LethalMin.Logger.LogError($"({gameObject.name})'s item is null, destroying counter. Please ensure that the counte is removed when the item is destroyed.");
+                LethalMin.Logger.LogWarning($"({gameObject.name})'s item is null, destroying counter.");
                 Destroy(gameObject);
                 return;
             }
