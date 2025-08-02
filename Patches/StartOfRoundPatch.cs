@@ -115,9 +115,9 @@ namespace LethalMin.Patches
             }
         }
 
-        [HarmonyPatch(nameof(StartOfRound.EndOfGame))]
+        [HarmonyPatch(nameof(StartOfRound.unloadSceneForAllPlayers))]
         [HarmonyPostfix]
-        public static void EndOfGamePostfix(StartOfRound __instance)
+        public static void unloadSceneForAllPlayersPostfix(StartOfRound __instance)
         {
             if (__instance.IsServer)
             {
