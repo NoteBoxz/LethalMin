@@ -9,7 +9,7 @@
 - Fix The Onion HUD counter can go into the negetives when one player withdraws a type that already has some pikmin selected to be taken out
 - Tweek Lumiknull spawn position
 - Fix Zeneros Cliping with 100 Pikmin in eleavtor
-- The chair interaction bugs Pikmin
+- Fix Pikmin Flip Flopping Between Exits
 
 
 -- things to refactor --

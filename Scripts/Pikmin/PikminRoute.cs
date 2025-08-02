@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using itolib.PlayZone;
 using LethalMin.Compats;
 using LethalMin.Patches;
 using LethalMin.Utils;
@@ -234,7 +233,8 @@ namespace LethalMin.Pikmin
                 .Select(n => n == null || n.NodeName == null ? "null" : n.NodeName)
                 .ToList();
 
-            string? floorOn = CurrentFloorData == null || CurrentFloorData.Count <= 0 || Pikmin == null ? null : GetFloorPikminIsOn(Pikmin)?.FloorTitle;
+            string? floorOn = CurrentFloorData == null || CurrentFloorData.Count <= 0
+            || Pikmin == null || Pikmin.isOutside ? null : GetFloorPikminIsOn(Pikmin)?.FloorTitle;
 
             string currentRouteString = string.Join(" -> ", currentRouteNodeNames);
             if (floorOn != null)
@@ -740,6 +740,7 @@ namespace LethalMin.Pikmin
                     {
                         Nodes.Add(TargetEndRouteNode);
                     }
+                    
                     return Nodes;
                 }
                 // Case 2: Use elevator if available when using floor data
@@ -765,7 +766,7 @@ namespace LethalMin.Pikmin
                         }
                         else
                         {
-                            LethalMin.Logger.LogDebug($"No default route node found");
+                            LethalMin.Logger.LogDebug($"No default elevator route node found");
                             return Nodes;
                         }
                     }
@@ -1188,11 +1189,17 @@ namespace LethalMin.Pikmin
                 0.45f
             );
 
-            PlayZoneElevator elevator = Object.FindObjectOfType<PlayZoneElevator>();
+            itolib.PlayZone.PlayZoneElevator elevator = Object.FindObjectOfType<itolib.PlayZone.PlayZoneElevator>();
+
+            if (elevator == null || elevator.elevatorAnimator == null)
+            {
+                LethalMin.Logger.LogError("PlayZone Elevator not found or elevatorAnimator is null.");
+                return;
+            }
 
             RouteNode ElevatorNode = new RouteNode(
                 "Elevator",
-                elevator.transform.position,
+                elevator.GetComponentInChildren<PlayerPhysicsRegion>().transform,
                 -1,
                 elevator.GetComponentInChildren<PlayerPhysicsRegion>().GetComponent<Collider>()
             );

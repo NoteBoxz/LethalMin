@@ -389,9 +389,9 @@ namespace LethalMin
         {
             if (IsServer)
             {
+                LethalMin.Logger.LogInfo("Syncing Game Stats to clients");
                 return;
             }
-            LethalMin.Logger.LogInfo("Syncing Game Stats to clients");
             EndOfGameStats = stats;
             FiredStats = fired;
         }
@@ -479,7 +479,7 @@ namespace LethalMin
         public void OnGameEnd()
         {
             LethalMin.Logger.LogInfo($"Game Ended, Deinitializing PikminManager");
-            
+
             foreach (PikminAI pikmin in PikminAIs)
             {
                 if (!pikmin.isOutside || pikmin.IsWildPikmin || pikmin.IsDeadOrDying)

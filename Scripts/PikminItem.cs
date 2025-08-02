@@ -49,7 +49,7 @@ namespace LethalMin
         public Leader? PrimaryLeader = null;
         public List<Renderer> ExtraRenderers = new List<Renderer>();
         public bool DontUseInitClientRpc = false;
-        public bool PartiallyInitalized = false;
+        public bool AlreadyPartalInitalized = false;
         bool ShouldGrab => !ItemScript.isHeld && TotalCarryStrength >= CarryStrengthNeeded && !IsBeingCarried && IsOwner;
         bool HadItemScript = false;
         [HideInInspector]
@@ -135,7 +135,7 @@ namespace LethalMin
             CarryStrengthNeeded = settings.CarryStrength;
             ExtraRenderers = settings.ExtraRenderers;
 
-            if (PartiallyInitalized)
+            if (AlreadyPartalInitalized)
             {
                 GrabPositionContainer.SetParent(null);
                 PikminCounter.transform.SetParent(null);
@@ -224,7 +224,7 @@ namespace LethalMin
 
         public void GetorCreateSettings()
         {
-            if (PartiallyInitalized)
+            if (AlreadyPartalInitalized)
             {
                 return;
             }
@@ -1057,7 +1057,7 @@ namespace LethalMin
 
             if (PikminCounter == null)
             {
-                if (PartiallyInitalized)
+                if (AlreadyPartalInitalized)
                     LethalMin.Logger.LogWarning($"{gameObject.name} has no Pikmin Counter, creating one");
                 CreateCounter();
                 return;
@@ -1065,7 +1065,7 @@ namespace LethalMin
 
             if (GrabPositionContainer == null)
             {
-                if (PartiallyInitalized)
+                if (AlreadyPartalInitalized)
                     LethalMin.Logger.LogWarning($"{gameObject.name} has no GrabPositionContainer, creating one");
                 CreateGrabPositions();
                 return;

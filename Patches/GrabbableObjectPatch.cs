@@ -142,7 +142,7 @@ namespace LethalMin.Patches
                 pikminItemNode.CreateCounter();
                 pikminItemNode.PikminCounter.gameObject.SetActive(false);
                 pikminItemNode.PikminCounter.transform.SetParent(pikminItemNode.transform);
-                pikminItemNode.PartiallyInitalized = true;
+                pikminItemNode.AlreadyPartalInitalized = true;
                 return pikminItemNode;
             }
         }
