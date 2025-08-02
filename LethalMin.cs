@@ -545,7 +545,9 @@ namespace LethalMin
             }
             if (Ptype.CustomTypeScript != null)
             {
-                AddCustomScriptToPikminAI(Ptype.CustomTypeScript);
+                PikminAI TypeAdded = AddCustomScriptToPikminAI(Ptype.CustomTypeScript);
+                Destroy(Ptype.CustomTypeScript);
+                Ptype.CustomTypeScript = TypeAdded;
             }
 
             PikminAnimationPack? pack = Ptype.modelRefernces.AnimatorController?.AnimPack;
@@ -2586,7 +2588,7 @@ namespace LethalMin
         #endregion
 
 
-        public static void AddCustomScriptToPikminAI(PikminAI script)
+        public static PikminAI AddCustomScriptToPikminAI(PikminAI script)
         {
             Type customAIType = script.GetType();
             GameObject prefab = PikminEnemyType.enemyPrefab;
@@ -2630,6 +2632,8 @@ namespace LethalMin
             customAI.enabled = false;
 
             LethalMin.Logger.LogInfo($"Added Custom Script: {customAIType.Name} to PikminAI!");
+
+            return customAI;
         }
 
 

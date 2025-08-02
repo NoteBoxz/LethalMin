@@ -25,7 +25,7 @@ namespace LethalMin
         public Animator FXAnimator = null!;
         public UnlockableItemDef def = null!;
         public float Cooldown;
-        public bool SpedUp = false;
+        public bool SpedUp => StartOfRound.Instance.inShipPhase;
         string formerInteractTip = "";
 
         void Start()
@@ -70,7 +70,6 @@ namespace LethalMin
         public void CallPikminToBase(Leader? leaderCalled)
         {
             if (Cooldown > 0) return;
-            SpedUp = false;
             CallSound.Play();
             FXAnimator.SetTrigger("doburst");
             Cooldown = LethalMin.PikminSignalCooldownCheat == -1 ? 300f : LethalMin.PikminSignalCooldownCheat;
@@ -110,7 +109,6 @@ namespace LethalMin
             }
             else if (string.IsNullOrEmpty(OverrideCooldownText))
             {
-                SpedUp = false;
                 OverrideCooldownText = "Ready";
                 button.hoverTip = formerInteractTip;
             }

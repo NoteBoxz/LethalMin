@@ -479,12 +479,7 @@ namespace LethalMin
         public void OnGameEnd()
         {
             LethalMin.Logger.LogInfo($"Game Ended, Deinitializing PikminManager");
-
-            if (Object.FindObjectOfType<PikCaller>() != null)
-            {
-                Object.FindObjectOfType<PikCaller>().SpedUp = true;
-            }
-
+            
             foreach (PikminAI pikmin in PikminAIs)
             {
                 if (!pikmin.isOutside || pikmin.IsWildPikmin || pikmin.IsDeadOrDying)

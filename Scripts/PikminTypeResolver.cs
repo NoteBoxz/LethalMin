@@ -73,7 +73,7 @@ namespace LethalMin
             }
 
             // Determine which AI type to keep
-            System.Type typeToKeep = typeToResolve.CustomTypeScript != null
+            Type typeToKeep = typeToResolve.CustomTypeScript != null
                 ? typeToResolve.CustomTypeScript.GetType()
                 : DefaultAI.GetType();
 

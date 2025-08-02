@@ -137,6 +137,10 @@ namespace LethalMin.Pikmin
                     return;
                 }
             }
+            if (NodeName == "Ship" && LethalMin.OnCompany)
+            {
+                return;
+            }
             cachedNode = new CachedRouteNode(this);
             cachedNode.SkipWhenCanPathOutsideWhenInside = SkipCacheWhenCanPathOutsideWhenInside;
             PikminRoute.NodeCache.Add(cachedNode);

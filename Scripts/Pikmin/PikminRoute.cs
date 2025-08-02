@@ -56,7 +56,7 @@ namespace LethalMin.Pikmin
             }
             if (Item.settings.RouteToPlayer && Item.PrimaryLeader != null)
             {
-                RouteData.TargetPlayer = (Item.PrimaryLeader, Item.settings.RouteToPlayerStoppingDistance);
+                RouteData.TargetPlayer = (Item.PrimaryLeader, Item.settings.RouteToPlayerDroppingDistance);
             }
             RouteData.TargetOnion = Item.TargetOnion;
             RouteData.UseDoors = false;
