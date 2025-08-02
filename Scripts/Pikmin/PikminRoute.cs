@@ -1209,6 +1209,7 @@ namespace LethalMin.Pikmin
 
             FloorData F2 = new FloorData();
             F2.MainExits.Add(MainNode);
+            F2.FireExits.AddRange(FindFireExitRouteNodes());
             F2.FloorRoot = RoundManager.FindMainEntrancePosition();
             F2.Elevators.Add(ElevatorNode);
             F2.FloorTitle = "(Floor2) Ground";
