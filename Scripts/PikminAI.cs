@@ -3410,7 +3410,7 @@ namespace LethalMin
             foreach (PikminItem item in Pmanager.PikminItems)
             {
                 // Skip invalid items immediately
-                if (item == null || item.ItemScript == null || !item.settings.GrabableToPikmin)
+                if (item == null || item.ItemScript == null || item.settings.ExcludeFromGetItemsCheck || !item.settings.GrabableToPikmin)
                 {
                     continue;
                 }

@@ -936,7 +936,7 @@ namespace LethalMin
                 true,
                 "Allow onions to revive players when they are killed",
                 false,
-                ConfigItemAuthority.Client);
+                ConfigItemAuthority.Host);
 
             AllowOnionToReviveMaskeds = new ConfigItem<bool>(
                 "General",
@@ -944,7 +944,7 @@ namespace LethalMin
                 true,
                 "Allow onions to revive masked players when they are killed",
                 false,
-                ConfigItemAuthority.Client);
+                ConfigItemAuthority.Host);
 
             AllowOnionFusing = new ConfigItem<bool>(
                 "General",
