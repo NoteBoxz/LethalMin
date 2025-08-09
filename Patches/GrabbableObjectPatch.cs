@@ -69,6 +69,11 @@ namespace LethalMin.Patches
                 LethalMin.Logger.LogError("GrabbableObject is null. Cannot create PikminItem.");
                 return null;
             }
+            if(__instance.itemProperties == null)
+            {
+                LethalMin.Logger.LogWarning($"GrabbableObject {__instance.name} has no itemProperties. Cannot create PikminItem.");
+                return null;
+            }
             if (__instance.GetComponentInChildren<PikminItem>() != null)
             {
                 // If a PikminItem already exists, no need to create another one
