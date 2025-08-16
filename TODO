@@ -1,15 +1,17 @@
 -- To Do --
 
-- Fix Pikmin Death Desync
+- Refactor Route System to allow compatiblty with Conflux and Outfall
 - Add Friendlyier Fire mode
 - Tweek Onion Spawning
 - Fix blues getting trapped in the hydrogere
-- Fix Non-VR players are unable to pluck sprouts when playing with VR players
-- Fix BetterEmotes Breaking the Plucking Animation
+- Fix Pikmin Flip Flopping Between Exits
 - Fix The Onion HUD counter can go into the negetives when one player withdraws a type that already has some pikmin selected to be taken out
 - Tweek Lumiknull spawn position
+
+- Fix Non-VR players are unable to pluck sprouts when playing with VR players
+- Fix BetterEmotes Breaking the Plucking Animation
 - Fix Zeneros Cliping with 100 Pikmin in eleavtor
-- Fix Pikmin Flip Flopping Between Exits
+- Fix Pikmin Death Desync
 
 
 -- things to refactor --
