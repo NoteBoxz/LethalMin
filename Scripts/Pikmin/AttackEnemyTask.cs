@@ -5,6 +5,9 @@ using UnityEngine.Video;
 
 namespace LethalMin.Pikmin
 {
+    /// <summary>
+    /// Task for having a Pikmin attack its target enemy
+    /// </summary>
     public class AttackEnemyTask : PikminTask
     {
         public PikminEnemy? enemy => pikmin.TargetEnemy;

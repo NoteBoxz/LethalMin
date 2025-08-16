@@ -6,6 +6,9 @@ using UnityEngine.Video;
 
 namespace LethalMin.Pikmin
 {
+    /// <summary>
+    /// Used to have a Pikmin walk to and grab and item
+    /// </summary>
     public class CarryItemTask : PikminTask
     {
         public PikminItem? pikminItem => pikmin.TargetItem;
