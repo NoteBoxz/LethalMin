@@ -1,13 +1,7 @@
 -- To Do --
-<<<<<<< HEAD
 
 - Add Friendlyier Fire mode
 - Tweek Onion Spawning
-=======
-- Add Friendlyier Fire mode
-- Tweek Onion Spawning
-- Fix blues getting trapped in the hydrogere
->>>>>>> 3578a4f0581871b17a96e7151b14539f25d8b60e
 - Fix The Onion HUD counter can go into the negetives when one player withdraws a type that already has some pikmin selected to be taken out
 - Tweek Lumiknull spawn position
 - Fix Non-VR players are unable to pluck sprouts when playing with VR players
