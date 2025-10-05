@@ -37,7 +37,7 @@ namespace LethalMin.Patches
         [HarmonyPostfix]
         private static void StartPikminManagerA(StartOfRound __instance, ulong clientId, string sceneName, LoadSceneMode loadSceneMode)
         {
-            if (sceneName == __instance.currentLevel.sceneName)
+            if (sceneName == __instance.currentLevel.sceneName && __instance.localPlayerController.OwnerClientId == clientId)
             {
                 PikminManager.instance.OnGameStarted();
             }

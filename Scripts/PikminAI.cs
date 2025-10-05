@@ -305,13 +305,13 @@ namespace LethalMin
                     AddToRaisedOnInitAssign = true;
 
                 if (SpawnProps.SpawnAnimationDelay > 0)
-                    {
-                        StartCoroutine(PlayDelayedAnimation(SpawnProps.SpawnAnimation, SpawnProps.SpawnAnimationDelay));
-                    }
-                    else
-                    {
-                        animController.PlayAnimation(SpawnProps.SpawnAnimation, 0);
-                    }
+                {
+                    StartCoroutine(PlayDelayedAnimation(SpawnProps.SpawnAnimation, SpawnProps.SpawnAnimationDelay));
+                }
+                else
+                {
+                    animController.PlayAnimation(SpawnProps.SpawnAnimation, 0);
+                }
 
                 if (SpawnProps.MovementBuffer > 0)
                 {
@@ -334,7 +334,8 @@ namespace LethalMin
                 EnableEnemyMesh(true);
             }
 
-            LethalMin.Logger.LogDebug($"{DebugID} spawned with type {pikminType.PikminName} and ID: {DebugID} At: {transform.position}");
+            LethalMin.Logger.LogDebug($"{DebugID} spawned with type {pikminType.PikminName} and ID: {DebugID} At: {transform.position} " +
+             $"random seed: {randomSeed} index: {thisEnemyIndex}");
             if (IsOwner)
             {
                 agent.Warp(StoredSpawnPosition);

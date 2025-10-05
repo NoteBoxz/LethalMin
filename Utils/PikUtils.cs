@@ -277,7 +277,7 @@ public static class PikUtils
     public static string GenerateRandomString(System.Random RNG)
     {
         int length = RNG.Next(4, 8);
-        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" + "abcdefghijklmnopqrstuvwxyz";
+        const string chars = LethalMin.FullEnglishAlhabet + LethalMin.FullNumbers;
         return new string(Enumerable.Repeat(chars, length)
          .Select(s => s[RNG.Next(0, s.Length)]).ToArray());
     }

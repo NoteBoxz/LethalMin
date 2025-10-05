@@ -10,6 +10,8 @@ namespace LethalMin.Patches
     [HarmonyPatch(typeof(RoundManager))]
     public class RoundManagerPatch
     {
+        public static bool CallOnGameLoaded = false;
+
         [HarmonyPatch(nameof(RoundManager.FinishGeneratingNewLevelClientRpc))]
         [HarmonyPrefix]
         private static void FinishGeneratingNewLevelClientRpcPrefix(RoundManager __instance)
@@ -21,11 +23,30 @@ namespace LethalMin.Patches
                     return;
                 }
 
-                PikminManager.instance.OnGameLoaded();
+                CallOnGameLoaded = true;
             }
             catch (Exception e)
             {
                 LethalMin.Logger.LogError($"Error in FinishGeneratingNewLevelClientRpcPrefix: {e}");
+            }
+        }
+
+        [HarmonyPatch(nameof(RoundManager.FinishGeneratingNewLevelClientRpc))]
+        [HarmonyPriority(Priority.Last)]
+        [HarmonyPostfix]
+        public static void FinishGeneratingNewLevelClientRpcPostfix(RoundManager __instance)
+        {
+            try
+            {
+                if (CallOnGameLoaded)
+                {
+                    CallOnGameLoaded = false;
+                    PikminManager.instance.OnGameLoaded();
+                }
+            }
+            catch (Exception e)
+            {
+                LethalMin.Logger.LogError($"Error in FinishGeneratingNewLevelClientRpcPostfix: {e}");
             }
         }
 

@@ -96,6 +96,10 @@ namespace LethalMin
         public static GameObject GrabPosPrefab = null!;
         public static OnionSoundPack DefaultOnionSoundPack = null!;
         public static OnionType ShipOnionType = null!;
+        public const string FullEnglishAlphabetUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        public const string FullEnglishAlphabetLower = "abcdefghijklmnopqrstuvwxyz";
+        public const string FullEnglishAlhabet = FullEnglishAlphabetUpper + FullEnglishAlphabetLower;
+        public const string FullNumbers = "0123456789";
 
 
         private void Awake()
