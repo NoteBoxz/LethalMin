@@ -21,7 +21,7 @@ namespace LethalMin.Patches
                 return;
             }
 
-            if (__instance.timesTriggered >= 4 && __instance.TryGetComponent(out PikminBridgeTrigger pikminBridgeTrigger))
+            if (__instance.timesTriggered + 1 >= 4 && __instance.TryGetComponent(out PikminBridgeTrigger pikminBridgeTrigger))
             {
                 pikminBridgeTrigger.KnockoffPikmin();
             }
