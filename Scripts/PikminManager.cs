@@ -585,11 +585,11 @@ namespace LethalMin
                 }
             }
 
-            foreach (BridgeTriggerType2 bridge in FindObjectsOfType<BridgeTriggerType2>(true))
+            foreach (BridgeTriggerType2 bridge2 in FindObjectsOfType<BridgeTriggerType2>(true))
             {
-                if (bridge.GetComponent<PikminBridgeTrigger>() == null)
+                if (bridge2.GetComponent<PikminBridgeTrigger>() == null)
                 {
-                    bridge.gameObject.AddComponent<PikminBridgeTrigger>();
+                    bridge2.gameObject.AddComponent<PikminBridgeTrigger>();
                 }
             }
         }

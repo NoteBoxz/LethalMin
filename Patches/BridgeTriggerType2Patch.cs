@@ -14,14 +14,14 @@ namespace LethalMin.Patches
     {
         [HarmonyPatch(nameof(BridgeTriggerType2.AddToBridgeInstabilityServerRpc))]
         [HarmonyPrefix]
-        private static void DoPfall(BridgeTriggerType2 __instance)
+        private static void DoPfallType2(BridgeTriggerType2 __instance)
         {
             if (PikChecks.IsServerRpcNoOwnershipPrefixValid(__instance) == false)
             {
                 return;
             }
-            
-            if (__instance.bridgeFell && __instance.TryGetComponent(out PikminBridgeTrigger pikminBridgeTrigger))
+
+            if (__instance.timesTriggered >= 4 && __instance.TryGetComponent(out PikminBridgeTrigger pikminBridgeTrigger))
             {
                 pikminBridgeTrigger.KnockoffPikmin();
             }

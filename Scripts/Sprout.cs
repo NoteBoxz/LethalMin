@@ -491,34 +491,42 @@ namespace LethalMin
 
         /// <summary>
         /// Called when the animation is stopped
+        /// Player is null on other clients
         /// </summary>
         public void OnCancleAnimation(PlayerControllerB player)
         {
+            if (player == null || !player.IsOwner)
+            {
+                return;
+            }
             LethalMin.Logger.LogInfo($"Sprout animation was cancled");
+
             if (pluckRoutine != null)
             {
                 StopCoroutine(pluckRoutine);
                 pluckRoutine = null!;
             }
+            IsBeingPlucked = false;
+            player.GetComponent<Leader>().CustomAnimController.RevertAnimator();
+
             if (interactTrigger != null)
             {
-                SyncAnimCancleServerRpc(interactTrigger.playerScriptInSpecialAnimation.OwnerClientId);
-                interactTrigger.playerScriptInSpecialAnimation.GetComponent<Leader>().CustomAnimController.RevertAnimator();
+                SyncAnimCancleRpc(interactTrigger.playerScriptInSpecialAnimation.OwnerClientId);
             }
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        public void SyncAnimCancleServerRpc(ulong ID)
-        {
-            SyncAnimCancleClientRpc(ID);
-        }
-
-        [ClientRpc]
-        public void SyncAnimCancleClientRpc(ulong ID)
+        [Rpc(SendTo.NotMe)]
+        public void SyncAnimCancleRpc(ulong ID)
         {
             if (StartOfRound.Instance.localPlayerController.OwnerClientId == ID)
             {
                 return;
+            }
+
+            Leader? leader = LethalMin.GetLeaderViaID(ID);
+            if (leader == null)
+            {
+                LethalMin.Logger.LogError($"Sprout Failed to find leader with ID {ID} when syncing cancle");
             }
 
             LethalMin.Logger.LogInfo($"Sprout animation was cancled (synced)");
@@ -529,14 +537,7 @@ namespace LethalMin
                 pluckRoutine = null!;
             }
             IsBeingPlucked = false;
-
-            Leader? leader = LethalMin.GetLeaderViaID(ID);
-            if (leader == null)
-            {
-                LethalMin.Logger.LogError($"Sprout Failed to find leader with ID {ID} when syncing cancle");
-                return;
-            }
-            leader.CustomAnimController.RevertAnimator();
+            leader?.CustomAnimController.RevertAnimator();
         }
 
         IEnumerator PluckRoutine(PlayerControllerB player)
