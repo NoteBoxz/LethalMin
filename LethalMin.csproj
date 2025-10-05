@@ -51,8 +51,8 @@
         <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.1" PrivateAssets="all" />
         <PackageReference Include="BepInEx.Core" Version="5.*" PrivateAssets="all" />
         <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" PrivateAssets="all" />
-        <PackageReference Include="LethalCompany.GameLibs.Steam" Version="70.0.0-ngd.0" Publicize="true" PrivateAssets="all" />
-        <PackageReference Include="UnityEngine.Modules" Version="2022.3.9" IncludeAssets="compile" PrivateAssets="all" />
+        <PackageReference Include="LethalCompany.GameLibs.Steam" Version="*-*" Publicize="true" PrivateAssets="all" />
+        <PackageReference Include="UnityEngine.Modules" Version="2022.3.62" IncludeAssets="compile" PrivateAssets="all" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
@@ -102,19 +102,61 @@
       </Reference>
     </ItemGroup>
 
-    <!-- Define properties for Netcode Patcher paths -->
+    <!-- Common Props Import -->
     <PropertyGroup>
-        <NetcodePatcherDir>..\NetcodePatcher.Cli.4.3.0.win-x64</NetcodePatcherDir>
-        <NetcodePatcherDepsDir>$(NetcodePatcherDir)\deps</NetcodePatcherDepsDir>
-        <NetcodePatcherExe>$(NetcodePatcherDir)\NetcodePatcher.Cli.exe</NetcodePatcherExe>
+        <CommonPropsFile>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'Directory.Lethal.props'))\Directory.Lethal.props</CommonPropsFile>
+        <EnableNetcodePatcher Condition="'$(EnableNetcodePatcher)' == ''">true</EnableNetcodePatcher>
     </PropertyGroup>
 
+    <Import Project="$(CommonPropsFile)" Condition="Exists('$(CommonPropsFile)')" />
+
+    <!-- Netcode Patcher Configuration -->
+    <PropertyGroup Condition="'$(EnableNetcodePatcher)' == 'true'">
+        <NetcodePatcherDir Condition="'$(NetcodePatcherDir)' == ''">..\NetcodePatcher.Cli.4.3.0.win-x64</NetcodePatcherDir>
+        <NetcodePatcherDepsDir>$(NetcodePatcherDir)\deps</NetcodePatcherDepsDir>
+        <NetcodePatcherExe>$(NetcodePatcherDir)\NetcodePatcher.Cli.exe</NetcodePatcherExe>
+        <NetcodeVersion Condition="'$(NetcodeVersion)' == ''">1.12.0</NetcodeVersion>
+        <UnityVersion Condition="'$(UnityVersion)' == ''">2022.3.62</UnityVersion>
+        <TransportVersion Condition="'$(TransportVersion)' == ''">1.0.0</TransportVersion>
+    </PropertyGroup>
+
+    <!-- Debug Props Status (only in Debug builds) -->
+    <Target Name="LogPropsStatus" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+        <Message Text="Props file: $(CommonPropsFile)" Importance="high" />
+        <Message Text="Props file imported successfully" Importance="high" Condition="Exists('$(CommonPropsFile)')" />
+        <Message Text="Props file not found - skipped import" Importance="high" Condition="!Exists('$(CommonPropsFile)')" />
+    </Target>
+    
     <!-- Netcode Patcher Post-Build Event -->
-    <Target Name="NetcodePatch" AfterTargets="PostBuildEvent">
+    <Target Name="NetcodePatch" AfterTargets="PostBuildEvent" 
+            Condition="'$(EnableNetcodePatcher)' == 'true' AND Exists('$(NetcodePatcherExe)')">
+        
+        <PropertyGroup>
+            <TempDepsDir>$(NetcodePatcherDepsDir)_$(MSBuildProcessId)</TempDepsDir>
+        </PropertyGroup>
+        
+        <!-- Prepare temporary deps directory -->
+        <RemoveDir Directories="$(TempDepsDir)" Condition="Exists('$(TempDepsDir)')" />
+        <MakeDir Directories="$(TempDepsDir)" />
+        
+        <!-- Collect and copy reference files -->
         <ItemGroup>
-            <ReferencePaths Include="@(ReferencePathWithRefAssemblies->'%(Identity)')" />
+            <NetcodeDependencies Include="@(ReferencePathWithRefAssemblies)" 
+                                Condition="Exists('%(Identity)')" />
         </ItemGroup>
-        <Copy SourceFiles="@(ReferencePaths)" DestinationFolder="$(NetcodePatcherDepsDir)" />
-        <Exec Command="&quot;$(NetcodePatcherExe)&quot; -nv 1.5.2 &quot;$(TargetPath)&quot; &quot;$(NetcodePatcherDepsDir)&quot;" />
+        
+        <Copy SourceFiles="@(NetcodeDependencies)" 
+              DestinationFolder="$(TempDepsDir)" 
+              SkipUnchangedFiles="true" />
+        
+        <!-- Run netcode patcher with error handling -->
+        <Message Text="Running Netcode Patcher..." Importance="high" />
+        <Exec Command="&quot;$(NetcodePatcherExe)&quot; -uv $(UnityVersion) -nv $(NetcodeVersion) -tv $(TransportVersion) &quot;$(TargetPath)&quot; &quot;$(TempDepsDir)&quot;" 
+              ContinueOnError="false" />
+        
+        <!-- Clean up temporary directory -->
+        <RemoveDir Directories="$(TempDepsDir)" Condition="Exists('$(TempDepsDir)')" />
+
+        <Message Text="Netcode patching completed successfully (uv = $(UnityVersion), nv = $(NetcodeVersion), tv = $(TransportVersion))" Importance="high" />
     </Target>
 </Project>
