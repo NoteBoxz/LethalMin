@@ -5,6 +5,7 @@ using Unity.Netcode;
 using System.Collections.Generic;
 using LethalMin;
 using System.Collections;
+using LethalMin.Utils;
 
 namespace LethalMin.Patches
 {
@@ -15,14 +16,11 @@ namespace LethalMin.Patches
         [HarmonyPrefix]
         private static void DoPfall(BridgeTrigger __instance)
         {
-            if ((object)__instance.NetworkManager == null || !__instance.NetworkManager.IsListening)
+            if (PikChecks.IsClientRpcPrefixValid(__instance) == false)
             {
                 return;
             }
-            if (__instance.__rpc_exec_stage != NetworkBehaviour.__RpcExecStage.Client || (!__instance.NetworkManager.IsClient && !__instance.NetworkManager.IsHost))
-            {
-                return;
-            }
+            
             if (__instance.TryGetComponent(out PikminBridgeTrigger pikminBridgeTrigger))
             {
                 pikminBridgeTrigger.KnockoffPikmin();

@@ -63,14 +63,11 @@ namespace LethalMin.Patches
         [HarmonyPrefix]
         public static void EndOfGameClientRpcPrefix(StartOfRound __instance)
         {
-            if ((object)__instance.NetworkManager == null || !__instance.NetworkManager.IsListening)
+            if (PikChecks.IsClientRpcPrefixValid(__instance) == false)
             {
                 return;
             }
-            if (__instance.__rpc_exec_stage != NetworkBehaviour.__RpcExecStage.Client || (!__instance.NetworkManager.IsClient && !__instance.NetworkManager.IsHost))
-            {
-                return;
-            }
+
             // Hide every object that will be saved (We don't want to despawn the objects before they can be saved)
             foreach (Sprout spr in Object.FindObjectsOfType<Sprout>())
             {
@@ -101,18 +98,13 @@ namespace LethalMin.Patches
         [HarmonyPrefix]
         public static void PurgeSave(StartOfRound __instance)
         {
-            if ((object)__instance.NetworkManager == null || !__instance.NetworkManager.IsListening)
+            if (PikChecks.IsClientRpcPrefixValid(__instance) == false)
             {
                 return;
             }
-            if (__instance.__rpc_exec_stage != NetworkBehaviour.__RpcExecStage.Client || (!__instance.NetworkManager.IsClient && !__instance.NetworkManager.IsHost))
-            {
-                return;
-            }
-            if (__instance.IsServer && !LethalMin.DontPurgeAfterFire)
-            {
-                PikminManager.instance.ClearSavedData();
-            }
+            
+            PikminManager.instance.ClearSavedData();
+
         }
 
         [HarmonyPatch(nameof(StartOfRound.unloadSceneForAllPlayers))]

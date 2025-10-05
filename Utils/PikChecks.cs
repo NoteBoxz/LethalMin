@@ -251,6 +251,64 @@ namespace LethalMin.Utils
             }
             return false;
         }
+        public static bool IsServerRpcPrefixValid(NetworkBehaviour __instance)
+        {
+            string methodCalled = new System.Diagnostics.StackTrace().GetFrame(1).GetMethod().Name;
+            NetworkManager networkManager = __instance.NetworkManager;
+            if ((object)networkManager == null || !networkManager.IsListening)
+            {
+                LethalMin.Logger.LogDebug($"IsServerRpcPrefixValid: NetworkManager is null or not listening when calling {methodCalled}");
+                return false;
+            }
+            if (__instance.__rpc_exec_stage != NetworkBehaviour.__RpcExecStage.Execute && (networkManager.IsClient || networkManager.IsHost))
+            {
+                if (__instance.OwnerClientId != networkManager.LocalClientId)
+                {
+                    LethalMin.Logger.LogDebug($"IsServerRpcPrefixValid: OwnerClientId {__instance.OwnerClientId} does not match LocalClientId {networkManager.LocalClientId} when calling {methodCalled}");
+                    return false;
+                }
+            }
+            if (__instance.__rpc_exec_stage == NetworkBehaviour.__RpcExecStage.Execute && (networkManager.IsServer || networkManager.IsHost))
+                return true;
+
+            LethalMin.Logger.LogDebug($"IsServerRpcPrefixValid: RpcExecStage is {__instance.__rpc_exec_stage}, IsServer: {networkManager.IsServer}, IsHost: {networkManager.IsHost} when calling {methodCalled}");
+            return false;
+        }
+        public static bool IsServerRpcNoOwnershipPrefixValid(NetworkBehaviour __instance)
+        {
+            string methodCalled = new System.Diagnostics.StackTrace().GetFrame(1).GetMethod().Name;
+
+            NetworkManager networkManager = __instance.NetworkManager;
+            if ((object)networkManager == null || !networkManager.IsListening)
+            {
+                LethalMin.Logger.LogDebug($"IsServerRpcPrefixNoOwnershipValid: NetworkManager is null or not listening when calling {methodCalled}");
+                return false;
+            }
+            if (__instance.__rpc_exec_stage != NetworkBehaviour.__RpcExecStage.Execute || (!networkManager.IsServer && !networkManager.IsHost))
+            {
+                LethalMin.Logger.LogDebug($"IsServerRpcPrefixNoOwnershipValid: RpcExecStage is {__instance.__rpc_exec_stage}, IsServer: {networkManager.IsServer}, IsHost: {networkManager.IsHost} when calling {methodCalled}");
+                return false;
+            }   
+            
+            return true;
+        }
+        public static bool IsClientRpcPrefixValid(NetworkBehaviour __instance)
+        {
+            string methodCalled = new System.Diagnostics.StackTrace().GetFrame(1).GetMethod().Name;
+            NetworkManager networkManager = __instance.NetworkManager;
+            if ((object)networkManager != null && networkManager.IsListening)
+            {
+                if (__instance.__rpc_exec_stage == NetworkBehaviour.__RpcExecStage.Execute && (networkManager.IsClient || networkManager.IsHost))
+                {
+                    return true;
+                }
+
+                LethalMin.Logger.LogDebug($"IsClientRpcPrefixValid: RpcExecStage is {__instance.__rpc_exec_stage}, IsClient: {networkManager.IsClient}, IsHost: {networkManager.IsHost} {methodCalled}");
+                return false;
+            }
+            LethalMin.Logger.LogDebug($"IsClientRpcPrefixValid: NetworkManager is null or not listening {methodCalled}");
+            return false;
+        }
 
         // internal static bool IsPikminItemValid(PikminItem itm)
         // {

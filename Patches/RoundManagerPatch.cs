@@ -16,11 +16,7 @@ namespace LethalMin.Patches
         {
             try
             {
-                if ((object)__instance.NetworkManager == null || !__instance.NetworkManager.IsListening)
-                {
-                    return;
-                }
-                if (__instance.__rpc_exec_stage != NetworkBehaviour.__RpcExecStage.Client || (!__instance.NetworkManager.IsClient && !__instance.NetworkManager.IsHost))
+                if (PikChecks.IsClientRpcPrefixValid(__instance) == false)
                 {
                     return;
                 }

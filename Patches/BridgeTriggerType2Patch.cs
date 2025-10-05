@@ -5,6 +5,7 @@ using Unity.Netcode;
 using System.Collections.Generic;
 using LethalMin;
 using System.Collections;
+using LethalMin.Utils;
 
 namespace LethalMin.Patches
 {
@@ -15,9 +16,9 @@ namespace LethalMin.Patches
         [HarmonyPrefix]
         private static void DoPfall(BridgeTriggerType2 __instance)
         {
-            if (__instance.__rpc_exec_stage != NetworkBehaviour.__RpcExecStage.Server || (!__instance.NetworkManager.IsServer && !__instance.NetworkManager.IsHost))
+            if (PikChecks.IsServerRpcNoOwnershipPrefixValid(__instance) == false)
             {
-                return; // Skip original method if not on server
+                return;
             }
             
             if (__instance.bridgeFell && __instance.TryGetComponent(out PikminBridgeTrigger pikminBridgeTrigger))

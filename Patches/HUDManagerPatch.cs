@@ -6,6 +6,7 @@ using GameNetcodeStuff;
 using HarmonyLib;
 using LethalMin;
 using LethalMin.HUD;
+using LethalMin.Utils;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
@@ -69,7 +70,7 @@ namespace LethalMin.Patches
         public static void AddStatSlots(HUDManager __instance)
         {
             __instance.gameObject.AddComponent<PikminEndOfGameStatUIElements>();
-            
+
             PikminEndOfGameStatUIElements elements = __instance.gameObject.GetComponent<PikminEndOfGameStatUIElements>();
 
             elements.PikminRaisedTexts = new PikminRaisedTextBox[__instance.statsUIElements.playerNamesText.Length];
@@ -137,10 +138,11 @@ namespace LethalMin.Patches
         [HarmonyPrefix]
         static bool ScanNewCreatureServerRpcPrefix(HUDManager __instance, int enemyID)
         {
-            if (__instance.__rpc_exec_stage != NetworkBehaviour.__RpcExecStage.Server || (!__instance.NetworkManager.IsServer && !__instance.NetworkManager.IsHost))
+            if (PikChecks.IsServerRpcNoOwnershipPrefixValid(__instance) == false)
             {
-                return true; // Skip original method if not on server
+                return true;
             }
+
             if (LethalMin.EnemyIDsOverridenByPiklopedia.Contains(enemyID) && !__instance.terminalScript.scannedEnemyIDs.Contains(enemyID))
             {
                 __instance.terminalScript.scannedEnemyIDs.Add(enemyID);
@@ -157,14 +159,11 @@ namespace LethalMin.Patches
         [HarmonyPrefix]
         static bool ScanNewCreatureClientRpcPrefix(HUDManager __instance, int enemyID)
         {
-            if ((object)__instance.NetworkManager == null || !__instance.NetworkManager.IsListening)
+            if (PikChecks.IsClientRpcPrefixValid(__instance) == false)
             {
                 return true;
             }
-            if (__instance.__rpc_exec_stage != NetworkBehaviour.__RpcExecStage.Client || (!__instance.NetworkManager.IsClient && !__instance.NetworkManager.IsHost))
-            {
-                return true;
-            }
+            
             if (LethalMin.EnemyIDsOverridenByPiklopedia.Contains(enemyID) && !__instance.terminalScript.scannedEnemyIDs.Contains(enemyID))
             {
                 __instance.terminalScript.scannedEnemyIDs.Add(enemyID);

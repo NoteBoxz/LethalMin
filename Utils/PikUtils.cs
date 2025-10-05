@@ -406,7 +406,7 @@ public static class PikUtils
         }
     }
 
-    public static unsafe EnemyAI ReviveEnemy(EnemyAI ai, Vector3 RevivePos)
+    public static EnemyAI ReviveEnemy(EnemyAI ai, Vector3 RevivePos)
     {
         ai.NetworkObject.Despawn();
         GameObject gameObject = UnityEngine.Object.Instantiate(ai.enemyType.enemyPrefab, RevivePos, Quaternion.Euler(new Vector3(0f, 0f, 0f)));
@@ -415,7 +415,7 @@ public static class PikUtils
         return gameObject.GetComponent<EnemyAI>();
     }
 
-    public static unsafe void RevivePlayer(PlayerControllerB player, Vector3 RevivePos)
+    public static void RevivePlayer(PlayerControllerB player, Vector3 RevivePos)
     {
         int index = StartOfRound.Instance.allPlayerScripts.ToList().IndexOf(player);
         bool IsPlayer = StartOfRound.Instance.localPlayerController == player;
@@ -655,7 +655,7 @@ public static class PikUtils
         }
     }
 
-    public static unsafe void ReorganizeNetworkBehaviours(NetworkObject networkObject)
+    public static void ReorganizeNetworkBehaviours(NetworkObject networkObject)
     {
         if (networkObject == null)
         {
