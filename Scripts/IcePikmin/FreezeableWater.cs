@@ -39,8 +39,8 @@ namespace LethalMin
             audioSource.playOnAwake = false;
             audioSource.spatialBlend = 1.0f; // 3D sound
             audioSource.rolloffMode = AudioRolloffMode.Logarithmic; // Logarithmic rolloff for realistic sound distance attenuation
-            audioSource.minDistance = 25f; // Minimum distance for sound to be heard
-            audioSource.maxDistance = 70f; // Maximum distance for sound to be heard
+            audioSource.minDistance = 5f; // Minimum distance for sound to be heard
+            audioSource.maxDistance = 15f; // Maximum distance for sound to be heard
             flood = GetComponentInParent<FloodWeather>();
             if (flood != null)
             {

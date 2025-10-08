@@ -508,7 +508,7 @@ namespace LethalMin
             audio.spatialBlend = 1.0f; // 3D sound
             audio.rolloffMode = AudioRolloffMode.Linear;
             audio.minDistance = 5f;
-            audio.maxDistance = 50f;
+            audio.maxDistance = 15f;
             AudioClip shatterSound = LethalMin.assetBundle.LoadAsset<AudioClip>("Assets/LethalMin/wav_bnk_AkB_Ambience_CaveAquarium/Amb_CaveAquarium_WaterBox_UnFreeze.wav");
             audio.PlayOneShot(shatterSound);
 

@@ -698,6 +698,21 @@ public static class PikUtils
 
         return copy as T;
     }
+    
+    public static List<EnemyAI> GetAliveEnemiesNearPosition(Vector3 position, float radius)
+    {
+        List<EnemyAI> aliveEnemies = new List<EnemyAI>();
+        
+        foreach (EnemyAI enemy in PikminManager.instance.EnemyAIs)
+        {
+            if (enemy != null && !enemy.isEnemyDead && Vector3.Distance(enemy.transform.position, position) < radius)
+            {
+                aliveEnemies.Add(enemy);
+            }
+        }
+        
+        return aliveEnemies;
+    }
 
     public static GameObject CreateDebugCube(Vector3 Pos)
     {
