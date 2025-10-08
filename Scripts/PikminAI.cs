@@ -3655,32 +3655,20 @@ namespace LethalMin
                 LethalMin.Logger.LogError($"{DebugID}: Entrance exit point is null, cannot use entrance (blocked???)");
                 return;
             }
-            Vector3 InsidePosition = entrance.exitPoint.position;
-            Vector3 OutsidePosition = entrance.entrancePoint.position;
+            Vector3 EntranceDestPos = entrance.exitPoint.position;
 
             if (PlaySFX)
             {
                 entrance.PlayAudioAtTeleportPositions();
             }
 
-            if (Inside)
+            if (IsOwner && agent.enabled)
             {
-                if (IsOwner && agent.enabled)
-                {
-                    agent.Warp(InsidePosition);
-                }
-                transform2.TeleportOnLocalClient(InsidePosition);
-                isOutside = false;
+                agent.Warp(EntranceDestPos);
             }
-            else
-            {
-                if (IsOwner && agent.enabled)
-                {
-                    agent.Warp(OutsidePosition);
-                }
-                transform2.TeleportOnLocalClient(OutsidePosition);
-                isOutside = true;
-            }
+            transform2.TeleportOnLocalClient(EntranceDestPos);
+
+            isOutside = !Inside;
         }
 
         public virtual void WarpToMatchLeaderDoors(bool isInside)

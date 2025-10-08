@@ -127,7 +127,7 @@ namespace LethalMin
 
             if (currentBehaviourStateIndex == WORK && TargetItem != null && TargetItem.PrimaryPikminOnItem == this && TargetItem.CurrentRoute != null)
             {
-                return TargetItem.CurrentRoute.Nodes[TargetItem.CurrentRoute.CurrentPathIndex].IsPikminNearNode(this, 10f) ? 0f : 4f;
+                return TargetItem.CurrentRoute.Nodes[TargetItem.CurrentRoute.CurrentNodeIndex].IsPikminNearNode(this, 10f) ? 0f : 4f;
             }
 
             if (NoFlyOffsetStaets.Contains(currentBehaviourStateIndex))

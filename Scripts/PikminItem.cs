@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using LethalLib.Modules;
 using LethalMin.Pikmin;
+using LethalMin.Routeing;
 using LethalMin.Utils;
 using TMPro;
 using Unity.Mathematics;
@@ -1021,7 +1022,7 @@ namespace LethalMin
 
             if (CurrentRoute != null && IsOwner)
             {
-                CurrentRoute.UpdateRoute();
+                CurrentRoute.Update();
                 if (RouteRecallInterval > 0)
                 {
                     RouteRecallInterval -= Time.deltaTime;
@@ -1029,7 +1030,6 @@ namespace LethalMin
                 else if (CurrentRoute != null)
                 {
                     RouteRecallInterval = 0.25f + UnityEngine.Random.Range(0.1f, 0.25f);
-                    CurrentRoute.GetNodes();
                     if (PikminOnItem.Count > 0)
                     {
                         PrimaryLeader = PikUtils.GetLeaderFromMultiplePikmin(PikminOnItem);
@@ -1158,10 +1158,19 @@ namespace LethalMin
             ClearCurrentRoute();
             if (PrimaryPikminOnItem != null)
             {
-                CurrentRoute = new PikminRoute(this);
-                CurrentRoute.OnPointReached.AddListener(IncrumentRouteIndexOwnerSide);
-                CurrentRoute.OnRouteEnd.AddListener(OnRouteEndOwnerSide);
-                CurrentRoute.OnReachDoor.AddListener(UseEntranceOwnerSide);
+                PikminRouteRequest request = new PikminRouteRequest
+                {
+                    Pikmin = PrimaryPikminOnItem,
+                    Intent = PrimaryPikminOnItem.isOutside ? RouteIntent.ToShip : RouteIntent.ToExit,
+                    // ToExit will get them outside, then they can path normally to ship
+                    MustUseExits = true,
+                    PreferShortest = true,
+                    HandleEntrances = false
+                };
+                CurrentRoute = PikminRouteManager.Instance.CreateRoute(request);
+                CurrentRoute.OnNodeReached.AddListener(OnNodeReached);
+                CurrentRoute.OnRouteComplete.AddListener(OnRouteEndOwnerSide);
+                CurrentRoute.OnRouteInvalidated.AddListener(OnRouteInvalidated);
                 LethalMin.Logger.LogInfo($"{gameObject.name} has created a route");
             }
             else
@@ -1169,6 +1178,16 @@ namespace LethalMin
                 LethalMin.Logger.LogWarning($"{gameObject.name} has no primary pikmin to create a route");
             }
         }
+
+        public void OnNodeReached(RouteNode node)
+        {
+            LethalMin.Logger.LogInfo($"{gameObject.name} has reached a route node: {node.name}");
+            if (node.entrancePoint != null && node.entrancePoint.TryGetComponent(out EntranceTeleport entrance))
+            {
+                UseEntranceOwnerSide(entrance);
+            }
+        }
+
         public void ClearCurrentRoute()
         {
             if (CurrentRoute != null)
@@ -1177,6 +1196,11 @@ namespace LethalMin
                 CurrentRoute = null!;
                 LethalMin.Logger.LogInfo($"{gameObject.name} has cleared its route");
             }
+        }
+
+        public void OnRouteInvalidated(RouteValidation.InvalidationReason reason)
+        {
+            LethalMin.Logger.LogWarning($"{gameObject.name} route has been invalidated ({reason}), clearing route");
         }
 
         public void OnRouteEndOwnerSide()
@@ -1230,34 +1254,6 @@ namespace LethalMin
                 {
                     LethalMin.Logger.LogError($"{gameObject.name} has a null pikmin in its list when doing yays");
                 }
-            }
-        }
-
-        void IncrumentRouteIndexOwnerSide()
-        {
-            if (!IsOwner)
-                return;
-
-            IncrumentRouteIndexServerRpc();
-        }
-
-        [ServerRpc]
-        public void IncrumentRouteIndexServerRpc()
-        {
-            IncrumentRouteIndexClientRpc();
-        }
-        [ClientRpc]
-        public void IncrumentRouteIndexClientRpc()
-        {
-            if (!IsOwner)
-                IncrumentRouteIndex();
-        }
-        public void IncrumentRouteIndex()
-        {
-            LethalMin.Logger.LogInfo($"{gameObject.name} is incrementing route index");
-            if (CurrentRoute != null)
-            {
-                CurrentRoute.CurrentPathIndex++;
             }
         }
 

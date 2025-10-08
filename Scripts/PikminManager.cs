@@ -18,6 +18,7 @@ using LethalModDataLib.Features;
 using UnityEngine.Animations.Rigging;
 using LethalMin.Achivements;
 using GameNetcodeStuff;
+using LethalMin.Routeing;
 
 namespace LethalMin
 {
@@ -44,6 +45,7 @@ namespace LethalMin
         public Coroutine ChargeTweenCoroutine = null!;
         public bool UseSaveModLib => LethalMin.IsDependencyLoaded("MaxWasUnavailable.LethalModDataLib");
         public ShipPhaseOnionContainer shipPhaseOnionContainer = null!;
+        public MoonSettings? CurrentMoonSettings = null;
         public Dictionary<string, int> LeaflingPlayers = new Dictionary<string, int>();
         internal NetworkVariable<bool> Cheat_WhistleMakesNoiseAtNoticeZone = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         internal NetworkVariable<bool> Cheat_DontMakeAudibleNoises = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -61,14 +63,9 @@ namespace LethalMin
         #region Initialization & Core Methods
         void Awake()
         {
-            if (instance == null)
-            {
-                instance = this;
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
+            instance = this;
+            name = "Pikmin Manager";
+            gameObject.AddComponent<PikminRouteManager>();
         }
         void Start()
         {
@@ -433,12 +430,9 @@ namespace LethalMin
         {
             LethalMin.Logger.LogInfo($"__ LethalMin On Game Loaded __");
             //PikUtils.AddTextToChangeOnLocalClient($"Game Loaded, initializing PikminManager");
-            PikminRoute.NodeCache.Clear();
-            PikminRoute.GetFloorData();
-            PikminRoute.FireNodes = PikminRoute.FindFireExitRouteNodes();
-            PikminRoute.MoonSettingss = Resources.FindObjectsOfTypeAll<MoonSettings>().ToList();
             CanPathOnMoonGlobal = PikChecks.IsNavMeshOnMap();
             EndOfGameStats.Refresh();
+            GetMoonSettings();
             SpawnTeleportTriggers();
             AddWaterTriggers();
             AddBridgeTriggers();
@@ -467,6 +461,7 @@ namespace LethalMin
                     netObj.Spawn();
                 }
             }
+            PikminRouteManager.Instance.OnGameLoaded();
             LethalMin.Logger.LogInfo($"Can path on moon: {CanPathOnMoonGlobal} {PikChecks.IsNavMeshOnMap()}");
 
             // if (IsServer)
@@ -542,6 +537,21 @@ namespace LethalMin
 
 
         #region Game Load Initalizeations
+
+        public void GetMoonSettings()
+        {
+            CurrentMoonSettings = null;
+            foreach (MoonSettings settings in Resources.FindObjectsOfTypeAll<MoonSettings>())
+            {
+                if (settings.Level == RoundManager.Instance.currentLevel)
+                {
+                    CurrentMoonSettings = settings;
+                    LethalMin.Logger.LogInfo($"Found Moon Settings for {settings.name} on {settings.Level.sceneName}");
+                    return;
+                }
+            }
+        }
+
         public void AddDeathTriggers()
         {
             foreach (KillLocalPlayer killLocalPlayer in FindObjectsOfType<KillLocalPlayer>(true))

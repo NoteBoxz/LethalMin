@@ -1,0 +1,34 @@
+using UnityEngine;
+
+namespace LethalMin.Routeing;
+
+public enum RouteIntent
+{
+    ToShip,           // Get to the ship by any means
+    ToOnion,          // Get to a specific onion
+    ToPlayer,         // Follow/reach a player
+    ToCounter,        // Company building counter
+    ToVehicle,        // Any open vehicle
+    ToExit,           // Just get outside (for ReturnToShip when inside)
+    ToElevator,       // Use elevator (internal navigation)
+    ToSpecificPoint   // Custom destination
+}
+
+public class PikminRouteRequest
+{
+    public RouteIntent Intent;
+    public PikminAI Pikmin = null!;
+    public PikminItem? CarriedItem;
+    
+    // Intent-specific data
+    public Onion? TargetOnion;           // For ToOnion
+    public Leader? TargetPlayer;         // For ToPlayer
+    public Vector3? CustomDestination;   // For ToSpecificPoint
+    public Transform? CustomTransform;   // For ToSpecificPoint
+    
+    // Constraints
+    public bool MustUseExits = true;     // Can use doors/elevators
+    public bool PreferShortest = true;   // vs PreferSafest
+    public bool HandleEntrances = true; // Whether to handle entrance nodes automatically
+    public float MaxDistance = -1;       // -1 = no limit
+}

@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.ProBuilder.Csg;
 
-namespace LethalMin.Pikmin
+namespace LethalMin.Routeing
 {
     public class FloorData
     {
