@@ -938,8 +938,9 @@ namespace LethalMin
         public static ConfigItem<float> PlayerNoticeZoneSize = null!;
         public static ConfigItem<float> PikminDamageMultipler = null!;
         public static ConfigItem<float> PikminSpeedMultipler = null!;
-        public static ConfigItem<bool> DontPurgeAfterFire = null!;
         public static ConfigItem<float> ChargeCooldown = null!;
+        public static ConfigItem<float> ChargeDistance = null!;
+        public static ConfigItem<bool> DontPurgeAfterFire = null!;
         #endregion
 
         #region Funi
@@ -2449,19 +2450,27 @@ namespace LethalMin
                 false,
                 ConfigItemAuthority.Host);
 
-            DontPurgeAfterFire = new ConfigItem<bool>(
+            ChargeDistance = new ConfigItem<float>(
                 "`Cheats`",
-                "Dont Remove Save After Fire",
-                false,
-                "Makes it so the save file is not cleared after being fired",
+                "Charge Distance",
+                -1.0f,
+                "The distance pikmin can be charged (in units)",
                 false,
                 ConfigItemAuthority.Host);
-      
+
             ChargeCooldown = new ConfigItem<float>(
                 "`Cheats`",
                 "Charge Cooldown",
                 -1.0f,
                 "The cooldown for charging pikmin (in seconds)",
+                false,
+                ConfigItemAuthority.Host);
+
+            DontPurgeAfterFire = new ConfigItem<bool>(
+                "`Cheats`",
+                "Dont Remove Save After Fire",
+                false,
+                "Makes it so the save file is not cleared after being fired",
                 false,
                 ConfigItemAuthority.Host);
             #endregion

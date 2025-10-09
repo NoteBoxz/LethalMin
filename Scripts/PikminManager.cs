@@ -140,6 +140,7 @@ namespace LethalMin
                 Cheat_PikminDamageMultipler.Value = LethalMin.PikminDamageMultipler;
                 Cheat_PikminSpeedMultipler.Value = LethalMin.PikminSpeedMultipler;
                 Cheat_ChargeCoolDown.Value = LethalMin.ChargeCooldown;
+                Cheat_ChargeDistance.Value = LethalMin.ChargeDistance;
             }
             if (!StartOfRound.Instance.inShipPhase && IsServer)
             {
