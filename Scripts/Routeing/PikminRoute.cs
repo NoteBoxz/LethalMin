@@ -23,6 +23,7 @@ public class PikminRoute
     private float lastUpdateTime;
     private const float UPDATE_INTERVAL = 0.1f; // Update 10 times per second
     private bool createdThisFrame = true;
+    private bool FiredRouteComplete = false;
 
     public PikminRoute(PikminRouteRequest request, RouteContext context, List<RouteNode> nodes)
     {
@@ -35,6 +36,18 @@ public class PikminRoute
 
     public void Update()
     {
+        if (Nodes.Count == 0)
+        {
+            LethalMin.Logger.LogWarning("Route has no nodes! Auto Ending...");
+
+            if (!FiredRouteComplete)
+                OnRouteComplete?.Invoke();
+
+            FiredRouteComplete = true;
+
+            return;
+        }
+
         // Validate route is still good
         RouteValidation.InvalidationReason reason = validator.ValidateCurrentRoute(this);
         if (reason != RouteValidation.InvalidationReason.None)
@@ -45,9 +58,11 @@ public class PikminRoute
         }
 
         // Path to current node
-        lastUpdateTime = Time.time;
-        if (lastUpdateTime - UPDATE_INTERVAL >= Time.time && !createdThisFrame)
+        if (lastUpdateTime - UPDATE_INTERVAL <= Time.time || createdThisFrame)
+        {
             UpdatePikminPath();
+            lastUpdateTime = Time.time;
+        }
 
         // Check if reached current node
         if (Nodes[CurrentNodeIndex].IsPikminAtNode(Request.Pikmin))
@@ -57,15 +72,20 @@ public class PikminRoute
 
             OnNodeReached?.Invoke(Nodes[CurrentNodeIndex]);
 
-            // Handle special node types
             Nodes[CurrentNodeIndex].NodeReached(this);
 
             // Move to next node or finish
             if (!DontIncrumentNodeIndex)
                 CurrentNodeIndex++;
-            if (CurrentNodeIndex >= Nodes.Count)
+
+            LethalMin.Logger.LogDebug($"Pikmin reached node {CurrentNodeIndex}/{Nodes.Count}");
+
+            if (CurrentNodeIndex >= Nodes.Count && !FiredRouteComplete)
             {
                 OnRouteComplete?.Invoke();
+                FiredRouteComplete = true;
+
+                LethalMin.Logger.LogInfo("Pikmin route complete.");
             }
         }
 

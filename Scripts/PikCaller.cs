@@ -90,7 +90,7 @@ namespace LethalMin
                 ai.ChangeIntent(Pintent.Idle);
                 ai.SetCurrentTask("ReturnToShip");
                 ai.SwitchToBehaviourStateOnLocalClient(PikminAI.WORK);
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForEndOfFrame();
             }
         }
 

@@ -14,10 +14,12 @@ public class PikminRouteManager : MonoBehaviour
     }
 
     public List<FloorData> CurrentFloorData = new List<FloorData>();
-    public RouteNode ShipNode = null!;
-    public Dictionary<EntranceTeleport, GameObject> EntranceExitPoints = new Dictionary<EntranceTeleport, GameObject>();
+    public Dictionary<EntranceTeleport, Transform> EntranceExitPoints = new Dictionary<EntranceTeleport, Transform>();
     public bool CurrentLevelHasMultipleDungeons;
     public bool RefreshCachePerRoute => CurrentLevelHasMultipleDungeons && !CLHMDtrueOnLoad; // to handle levels that change dungeon count mid-game
+    public List<EntranceTeleport> EntrancePathableCheckBlacklist = new List<EntranceTeleport>(); // to handle entrances with teleport triggers
+    public RouteNode ShipNode = null!;
+    public List<RouteNode> EntranceNodes = new List<RouteNode>();
 
     private List<RouteGenerationStrategy> strategies = new List<RouteGenerationStrategy>();
     private RouteValidation validator = new RouteValidation();
@@ -28,16 +30,17 @@ public class PikminRouteManager : MonoBehaviour
         // Register strategies in priority order
         strategies.Add(new DirectPlayerStrategy());      // 250 - highest
         strategies.Add(new MoonOverrideStrategy());      // 200 
-        strategies.Add(new DirectOutdoorStrategy());     // 100
-        strategies.Add(new GoOutsideStrategy());         // 90
-        strategies.Add(new ElevatorStrategy());          // 80
+        strategies.Add(new DirectOutdoorStrategy());     // 90
+        strategies.Add(new IndoorToOutdoorStrategy());   // 90
+        strategies.Add(new DirectIndoorStrategy());      // 90
+        strategies.Add(new OutdoorToIndoorStrategy());   // 90
         strategies.Add(new FallbackStrategy());          // 0 - lowest
 
         // Create Ship Node
         ShipNode = new RouteNode
         (
             name: "Ship",
-            point: StartOfRound.Instance.shipInnerRoomBounds.bounds.center,
+            point: StartOfRound.Instance.insideShipPositions[5],
             check: StartOfRound.Instance.shipInnerRoomBounds
         );
         ShipNode.CheckBuffer = 2.5f;
@@ -46,6 +49,34 @@ public class PikminRouteManager : MonoBehaviour
     public void OnGameLoaded()
     {
         CLHMDtrueOnLoad = CurrentLevelHasMultipleDungeons;
+        EntranceTeleport[] entrances = Object.FindObjectsOfType<EntranceTeleport>();
+        RefreshEntrancePairs(entrances);
+        EntranceNodes = GetAllEntranceNodes(entrances);
+    }
+
+    public void RefreshEntrancePairs(EntranceTeleport[] entrances)
+    {
+        EntranceExitPoints.Clear();
+        string log = $"Found {entrances.Length} entrances:";
+
+        foreach (EntranceTeleport entrance in entrances)
+        {
+            if (!entrance.isEntranceToBuilding)
+                continue;
+
+            foreach (EntranceTeleport entranceB in entrances)
+            {
+                if (entrance.entranceId == entranceB.entranceId && entrance != entranceB
+                && !EntranceExitPoints.ContainsKey(entrance) && !EntranceExitPoints.ContainsKey(entranceB))
+                {
+                    EntranceExitPoints.Add(entrance, entranceB.entrancePoint);
+                    EntranceExitPoints.Add(entranceB, entrance.entrancePoint);
+                    log += $"\n - {entrance.name} <=> {entranceB.name}";
+                }
+            }
+        }
+
+        LethalMin.Logger.LogDebug(log);
     }
 
     public void OnGameEnded()
@@ -59,7 +90,9 @@ public class PikminRouteManager : MonoBehaviour
         RouteContext context = BuildContext(request);
 
         // Log Context Varibles
-        LethalMin.Logger.LogInfo($"Route Context: IsInside={context.IsInside}, IsInShip={context.IsInShip}, CurrentFloor={(context.CurrentFloor != null ? context.CurrentFloor.FloorTitle : "null")}, DestinationIsInside={context.DestinationIsInside}, DestinationIsInShip={context.DestinationIsInShip}");
+        LethalMin.Logger.LogDebug($"({request.Intent}) Route Context: IsInside={context.IsInside}, IsInShip={context.IsInShip},"
+        + $" CurrentFloor={(context.CurrentFloor != null ? context.CurrentFloor.FloorTitle : "null")},"
+        + $" DestinationIsInside={context.DestinationIsInside}, DestinationIsInShip={context.DestinationIsInShip}");
 
         // Find best strategy
         RouteGenerationStrategy strategy = strategies
@@ -70,20 +103,27 @@ public class PikminRouteManager : MonoBehaviour
         // Log chosen strategy
         if (strategy != null)
         {
-            LethalMin.Logger.LogInfo($"Chosen Route Strategy: {strategy.GetType().Name} (Priority {strategy.Priority})");
+            LethalMin.Logger.LogDebug($"Chosen Route Strategy: {strategy.GetType().Name} (Priority {strategy.Priority})");
         }
         else
-        {
-            LethalMin.Logger.LogWarning("No Route Strategy could handle the request");
-        }
-
-        if (strategy == null)
         {
             LethalMin.Logger.LogError($"No strategy could handle route request: {request.Intent}");
             return null!;
         }
 
+        if (RefreshCachePerRoute)
+        {
+            LethalMin.Logger.LogDebug("Refreshing Entrance Pairs Cache");
+            EntranceTeleport[] entrances = Object.FindObjectsOfType<EntranceTeleport>();
+            RefreshEntrancePairs(entrances);
+            EntranceNodes = GetAllEntranceNodes(entrances);
+        }
+
         List<RouteNode> nodes = strategy.GenerateRoute(request, context);
+
+        //Log each route node name
+        string nodeLog = "Generated Route Nodes: " + string.Join(" -> ", nodes.Select(n => n.name));
+        LethalMin.Logger.LogDebug(nodeLog);
 
         // Create route with the generated nodes
         PikminRoute route = new PikminRoute(request, context, nodes);
@@ -202,6 +242,22 @@ public class PikminRouteManager : MonoBehaviour
             vehicleNodes.Add(vehicleNode);
         }
         return vehicleNodes;
+    }
+
+    public List<RouteNode> GetAllEntranceNodes(EntranceTeleport[] entrances)
+    {
+        List<RouteNode> entranceNodes = new List<RouteNode>();
+        foreach (EntranceTeleport entrance in entrances)
+        {
+            RouteNode entranceNode = new RouteNode
+            (
+                name: entrance.name,
+                point: entrance,
+                check: 1f
+            );
+            entranceNodes.Add(entranceNode);
+        }
+        return entranceNodes;
     }
 
     public RouteNode? GetPossibleCounterNode()

@@ -27,8 +27,6 @@ public class PikminRouteRequest
     public Transform? CustomTransform;   // For ToSpecificPoint
 
     // Constraints
-    public bool MustUseExits = true;     // Can use doors/elevators
-    public bool PreferShortest = true;   // vs PreferSafest
     public bool HandleEntrances = true; // Whether to handle entrance nodes automatically
     public float CustomCheckDistance = 1;  // Only used for ToPlayer and ToSpecificPoint
     public Collider CustomCheckCollider = null!; // Optional collider to use for ToSpecificPoint

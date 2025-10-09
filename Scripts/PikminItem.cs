@@ -1161,10 +1161,8 @@ namespace LethalMin
                 PikminRouteRequest request = new PikminRouteRequest
                 {
                     Pikmin = PrimaryPikminOnItem,
-                    Intent = PrimaryPikminOnItem.isOutside ? RouteIntent.ToShip : RouteIntent.ToExit,
-                    // ToExit will get them outside, then they can path normally to ship
-                    MustUseExits = true,
-                    PreferShortest = true,
+                    Intent = DetermineRouteIntent(),
+                    TargetOnion = TargetOnion,
                     HandleEntrances = false
                 };
                 CurrentRoute = PikminRouteManager.Instance.CreateRoute(request);
@@ -1177,6 +1175,11 @@ namespace LethalMin
             {
                 LethalMin.Logger.LogWarning($"{gameObject.name} has no primary pikmin to create a route");
             }
+        }
+
+        public RouteIntent DetermineRouteIntent()
+        {
+            return RouteIntent.ToShip;
         }
 
         public void OnNodeReached(RouteNode node)

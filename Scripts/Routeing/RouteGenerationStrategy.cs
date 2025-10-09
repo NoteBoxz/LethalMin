@@ -5,6 +5,9 @@ using UnityEngine.AI;
 
 namespace LethalMin.Routeing;
 
+/// <summary>
+/// Base class for route generation strategies.
+/// </summary>
 public abstract class RouteGenerationStrategy
 {
     public virtual bool CanHandle(PikminRouteRequest request, RouteContext context)
@@ -35,8 +38,45 @@ public abstract class RouteGenerationStrategy
         bool foundPath = NavMesh.CalculatePath(startPos, endPos, NavMesh.AllAreas, path);
         return foundPath && path.status == NavMeshPathStatus.PathComplete;
     }
+
+    protected RouteNode GetMostPathableEntranceNode(bool Outside, Vector3 from, List<RouteNode> entranceNodes)
+    {
+        RouteNode? bestNode = null;
+        float bestDistance = float.MaxValue;
+
+        foreach (RouteNode node in entranceNodes)
+        {
+            if (node.entrancePoint == null)
+                continue;
+            if (node.entrancePoint.isEntranceToBuilding && !Outside)
+                continue;
+            if (!node.entrancePoint.isEntranceToBuilding && Outside)
+                continue;
+
+            if (IsDestinationReachable(from, node.GetPosition()))
+            {
+                float distance = Vector3.Distance(from, node.GetPosition());
+                LethalMin.Logger.LogDebug($"Entrance Node {node.name} is reachable at distance {distance}");
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    bestNode = node;
+                }
+            }
+            else
+            {
+                LethalMin.Logger.LogDebug($"Entrance Node {node.name} is NOT reachable");
+            }
+        }
+
+        return bestNode ?? entranceNodes.OrderBy(n => Vector3.Distance(from, n.GetPosition())).First();
+    }
 }
 
+/// <summary>
+/// Direct route to player strategy.
+/// Primarlly used for the ManEater
+/// </summary>
 public class DirectPlayerStrategy : RouteGenerationStrategy
 {
     public override List<RouteIntent> UnsupportedIntents => new List<RouteIntent>
@@ -48,7 +88,7 @@ public class DirectPlayerStrategy : RouteGenerationStrategy
         return request.Intent == RouteIntent.ToPlayer;
     }
 
-    public override int Priority => 250; // Highest - simplest case
+    public override int Priority => 250; // Highest for obvious reasons
 
     public override List<RouteNode> GenerateRoute(PikminRouteRequest request, RouteContext context)
     {
@@ -66,6 +106,10 @@ public class DirectPlayerStrategy : RouteGenerationStrategy
     }
 }
 
+/// <summary>
+/// Direct route to outdoor destination strategy.
+/// Used when both start and end are outside.
+/// </summary>
 public class DirectOutdoorStrategy : RouteGenerationStrategy
 {
     public override List<RouteIntent> UnsupportedIntents => new List<RouteIntent>
@@ -81,7 +125,7 @@ public class DirectOutdoorStrategy : RouteGenerationStrategy
         return base.CanHandle(request, context) && !context.IsInside && !context.DestinationIsInside;
     }
 
-    public override int Priority => 100; // Highest - simplest case
+    public override int Priority => 90; // Basic Priority
 
     public override List<RouteNode> GenerateRoute(PikminRouteRequest request, RouteContext context)
     {
@@ -130,7 +174,7 @@ public class DirectOutdoorStrategy : RouteGenerationStrategy
 
             case RouteIntent.ToElevator: // Unsupported
                 break;
-                
+
             case RouteIntent.ToPlayer: // Unsupported
                 break;
         }
@@ -139,7 +183,11 @@ public class DirectOutdoorStrategy : RouteGenerationStrategy
     }
 }
 
-public class GoOutsideStrategy : RouteGenerationStrategy
+/// <summary>
+/// Route strategy for going from indoors to outdoors.
+/// Used when starting inside and needing to go outside.
+/// </summary>
+public class IndoorToOutdoorStrategy : RouteGenerationStrategy
 {
     public override List<RouteIntent> UnsupportedIntents => new List<RouteIntent>
     {
@@ -148,18 +196,23 @@ public class GoOutsideStrategy : RouteGenerationStrategy
     public override bool CanHandle(PikminRouteRequest request, RouteContext context)
     {
         // Handle when inside and need to go outside
-        return base.CanHandle(request, context) && context.IsInside && context.NeedToExitBuilding;
+        return base.CanHandle(request, context) && context.NeedToExitBuilding;
     }
 
-    public override int Priority => 90;
+    public override int Priority => 90; // Basic Priority
+
+    public DirectOutdoorStrategy directOutdoor = new DirectOutdoorStrategy();
 
     public override List<RouteNode> GenerateRoute(PikminRouteRequest request, RouteContext context)
     {
         List<RouteNode> nodes = new List<RouteNode>();
+        RouteNode mostPathableEntrance = GetMostPathableEntranceNode(false, request.Pikmin.agent.transform.position, manager.EntranceNodes);
 
         switch (request.Intent)
         {
             case RouteIntent.ToShip:
+                nodes.Add(mostPathableEntrance);
+                nodes.AddRange(directOutdoor.GenerateRoute(request, context));
                 break;
             case RouteIntent.ToOnion:
                 break;
@@ -181,7 +234,11 @@ public class GoOutsideStrategy : RouteGenerationStrategy
     }
 }
 
-public class ElevatorStrategy : RouteGenerationStrategy
+/// <summary>
+/// Direct route to indoor destination strategy.
+/// Used when both start and end are inside.
+/// </summary>
+public class DirectIndoorStrategy : RouteGenerationStrategy
 {
     public override List<RouteIntent> UnsupportedIntents => new List<RouteIntent>
     {
@@ -189,15 +246,16 @@ public class ElevatorStrategy : RouteGenerationStrategy
 
     public override bool CanHandle(PikminRouteRequest request, RouteContext context)
     {
-        // Only handle if we are unable to reach an exit on the current floor
-        return base.CanHandle(request, context) && context.CurrentFloor != null;
+        // Can only handle if we're inside and destination is inside
+        return base.CanHandle(request, context) && context.IsInside && context.DestinationIsInside;
     }
 
-    public override int Priority => 80;
+    public override int Priority => 90; // Basic Priority
+
 
     public override List<RouteNode> GenerateRoute(PikminRouteRequest request, RouteContext context)
     {
-        List<RouteNode> nodes = new List<RouteNode>();
+        List<RouteNode> nodes = new List<RouteNode>(); ;
 
         switch (request.Intent)
         {
@@ -223,6 +281,57 @@ public class ElevatorStrategy : RouteGenerationStrategy
     }
 }
 
+/// <summary>
+/// Route strategy for going from outdoors to indoors.
+/// Used when starting outside and needing to go inside.
+/// </summary>
+public class OutdoorToIndoorStrategy : RouteGenerationStrategy
+{
+    public override List<RouteIntent> UnsupportedIntents => new List<RouteIntent>
+    {
+    };
+
+    public override bool CanHandle(PikminRouteRequest request, RouteContext context)
+    {
+        // Handle when outside and need to go inside
+        return base.CanHandle(request, context) && context.NeedToEnterBuilding;
+    }
+
+    public override int Priority => 90; // Basic Priority
+
+    public DirectIndoorStrategy directIndoor = new DirectIndoorStrategy();
+
+    public override List<RouteNode> GenerateRoute(PikminRouteRequest request, RouteContext context)
+    {
+        List<RouteNode> nodes = new List<RouteNode>(); ;
+
+        switch (request.Intent)
+        {
+            case RouteIntent.ToShip:
+                break;
+            case RouteIntent.ToOnion:
+                break;
+            case RouteIntent.ToVehicle:
+                break;
+            case RouteIntent.ToCounter:
+                break;
+            case RouteIntent.ToExit:
+                break;
+            case RouteIntent.ToElevator:
+                break;
+            case RouteIntent.ToPlayer:
+                break;
+            case RouteIntent.ToSpecificPoint:
+                break;
+        }
+
+        return nodes;
+    }
+}
+
+/// <summary>
+/// Route strategy that defers to the moon mod's pathing override if enabled.
+/// </summary>
 public class MoonOverrideStrategy : RouteGenerationStrategy
 {
     public override List<RouteIntent> UnsupportedIntents => new List<RouteIntent>
@@ -234,7 +343,7 @@ public class MoonOverrideStrategy : RouteGenerationStrategy
         return base.CanHandle(request, context) && PikminManager.instance.CurrentMoonSettings != null && PikminManager.instance.CurrentMoonSettings.OverridePathing;
     }
 
-    public override int Priority => 200; // Highest - moon-specific always wins
+    public override int Priority => 200; // Second Highest
 
     /// <summary>
     /// Expected to be patched by the moon mod's code.
@@ -246,11 +355,13 @@ public class MoonOverrideStrategy : RouteGenerationStrategy
     {
         List<RouteNode> nodes = new List<RouteNode>();
 
-
         return nodes;
     }
 }
 
+/// <summary>
+/// Fallback strategy if no other strategies can handle the request.
+/// </summary>
 public class FallbackStrategy : RouteGenerationStrategy
 {
     public override List<RouteIntent> UnsupportedIntents => new List<RouteIntent>
@@ -266,10 +377,28 @@ public class FallbackStrategy : RouteGenerationStrategy
 
     public override List<RouteNode> GenerateRoute(PikminRouteRequest request, RouteContext context)
     {
-        List<RouteNode> nodes = new List<RouteNode>();
+        List<RouteNode> nodes = new List<RouteNode>(); ;
 
+        switch (request.Intent)
+        {
+            case RouteIntent.ToShip:
+                break;
+            case RouteIntent.ToOnion:
+                break;
+            case RouteIntent.ToVehicle:
+                break;
+            case RouteIntent.ToCounter:
+                break;
+            case RouteIntent.ToExit:
+                break;
+            case RouteIntent.ToElevator:
+                break;
+            case RouteIntent.ToPlayer:
+                break;
+            case RouteIntent.ToSpecificPoint:
+                break;
+        }
 
         return nodes;
     }
 }
-
