@@ -698,11 +698,11 @@ public static class PikUtils
 
         return copy as T;
     }
-    
+
     public static List<EnemyAI> GetAliveEnemiesNearPosition(Vector3 position, float radius)
     {
         List<EnemyAI> aliveEnemies = new List<EnemyAI>();
-        
+
         foreach (EnemyAI enemy in PikminManager.instance.EnemyAIs)
         {
             if (enemy != null && !enemy.isEnemyDead && Vector3.Distance(enemy.transform.position, position) < radius)
@@ -710,7 +710,7 @@ public static class PikUtils
                 aliveEnemies.Add(enemy);
             }
         }
-        
+
         return aliveEnemies;
     }
 
