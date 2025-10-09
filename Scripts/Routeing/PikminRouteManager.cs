@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using DunGen;
 using GameNetcodeStuff;
 using UnityEngine;
 
@@ -13,17 +14,20 @@ public class PikminRouteManager : MonoBehaviour
         Instance = this;
     }
 
+    public List<Dungeon> Dungeons = new List<Dungeon>();
     public List<FloorData> CurrentFloorData = new List<FloorData>();
     public Dictionary<EntranceTeleport, Transform> EntranceExitPoints = new Dictionary<EntranceTeleport, Transform>();
     public bool CurrentLevelHasMultipleDungeons;
-    public bool RefreshCachePerRoute => CurrentLevelHasMultipleDungeons && !CLHMDtrueOnLoad; // to handle levels that change dungeon count mid-game
+    public bool RefreshCachePerRoute => CurrentLevelHasMultipleDungeons && !cLHMDtrueOnLoad; // to handle levels that change dungeon count mid-game
     public List<EntranceTeleport> EntrancePathableCheckBlacklist = new List<EntranceTeleport>(); // to handle entrances with teleport triggers
+
     public RouteNode ShipNode = null!;
     public List<RouteNode> EntranceNodes = new List<RouteNode>();
 
     private List<RouteGenerationStrategy> strategies = new List<RouteGenerationStrategy>();
     private RouteValidation validator = new RouteValidation();
-    private bool CLHMDtrueOnLoad = false;
+    private bool cLHMDtrueOnLoad = false;
+    private bool insideLogFlag = false;
 
     public void Start()
     {
@@ -48,10 +52,18 @@ public class PikminRouteManager : MonoBehaviour
 
     public void OnGameLoaded()
     {
-        CLHMDtrueOnLoad = CurrentLevelHasMultipleDungeons;
+        if (Dungeons.Count == 0)
+        {
+            LethalMin.Logger.LogWarning("No Dungeons found in scene on game load.");
+        }
+
+        cLHMDtrueOnLoad = CurrentLevelHasMultipleDungeons;
+        insideLogFlag = false;
         EntranceTeleport[] entrances = Object.FindObjectsOfType<EntranceTeleport>();
         RefreshEntrancePairs(entrances);
         EntranceNodes = GetAllEntranceNodes(entrances);
+        if (Dungeons.Count > 0)
+            CurrentFloorData = FloorDataGenerator.GenerateFloorDataInterior(Dungeons[0]);
     }
 
     public void RefreshEntrancePairs(EntranceTeleport[] entrances)
@@ -143,14 +155,22 @@ public class PikminRouteManager : MonoBehaviour
         switch (request.Intent)
         {
             case RouteIntent.ToShip:
-                context.DestinationIsInside = false;
-                context.DestinationIsInShip = true; // Ship is outside (usually)
+                context.DestinationIsInside = IsInDungeon(LethalMin.SSRenviourment.transform.position)
+                && Vector3.Distance(LethalMin.SSRenviourment.transform.position, LethalMin.enviormentStartPos) > 200f; // Outfall my beloved
+                context.DestinationIsInShip = true;
+
+                // lets hope this for some reason does not get set to true for any other level than outfall
+                if (context.DestinationIsInside && !insideLogFlag)
+                {
+                    insideLogFlag = true;
+                    LethalMin.Logger.LogMessage($"SHIP IS INSIDE?!?!?!??!??!?!?!?!?!?!!??????!?!?!?!?!??!?!?!?!?!?!?!?!?!?!?????");
+                }
                 break;
             case RouteIntent.ToOnion:
-                context.DestinationIsInside = false;
+                context.DestinationIsInside = false; // Outfall and any moon like it should disable onion spawning in it's moon settings
                 break;
             case RouteIntent.ToExit:
-                context.DestinationIsInside = true;
+                context.DestinationIsInside = context.IsInside;
                 break;
             case RouteIntent.ToPlayer:
                 if (request.TargetPlayer == null)
@@ -164,10 +184,9 @@ public class PikminRouteManager : MonoBehaviour
                 break;
             case RouteIntent.ToVehicle:
                 context.DestinationIsInside = false; // If zeekees or another mod adds indoor vehicles we're screwed
-                context.DestinationIsInShip = false; // Vehicles can't be in ship
                 break;
             case RouteIntent.ToCounter:
-                context.DestinationIsInside = false;
+                context.DestinationIsInside = false; // Imagine a company interior :D
                 break;
             case RouteIntent.ToElevator:
                 context.DestinationIsInside = true;
@@ -298,6 +317,17 @@ public class PikminRouteManager : MonoBehaviour
             );
         }
         return specificPointNode;
+    }
+
+    public RouteNode GetPlayerNode(PikminRouteRequest request)
+    {
+        RouteNode playerNode = new RouteNode
+        (
+            name: "Player",
+            point: request.TargetPlayer!.transform,
+            check: request.CustomCheckDistance
+        );
+        return playerNode;
     }
 
     public static bool IsInShipBounds(Vector3 position)

@@ -98,6 +98,8 @@ namespace LethalMin
         public static GameObject GrabPosPrefab = null!;
         public static OnionSoundPack DefaultOnionSoundPack = null!;
         public static OnionType ShipOnionType = null!;
+        public static GameObject SSRenviourment = null!;
+        public static Vector3 enviormentStartPos = Vector3.zero;
         public const string FullEnglishAlphabetUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         public const string FullEnglishAlphabetLower = "abcdefghijklmnopqrstuvwxyz";
         public const string FullEnglishAlhabet = FullEnglishAlphabetUpper + FullEnglishAlphabetLower;
@@ -937,6 +939,7 @@ namespace LethalMin
         public static ConfigItem<float> PikminDamageMultipler = null!;
         public static ConfigItem<float> PikminSpeedMultipler = null!;
         public static ConfigItem<bool> DontPurgeAfterFire = null!;
+        public static ConfigItem<float> ChargeCooldown = null!;
         #endregion
 
         #region Funi
@@ -2451,6 +2454,14 @@ namespace LethalMin
                 "Dont Remove Save After Fire",
                 false,
                 "Makes it so the save file is not cleared after being fired",
+                false,
+                ConfigItemAuthority.Host);
+      
+            ChargeCooldown = new ConfigItem<float>(
+                "`Cheats`",
+                "Charge Cooldown",
+                -1.0f,
+                "The cooldown for charging pikmin (in seconds)",
                 false,
                 ConfigItemAuthority.Host);
             #endregion

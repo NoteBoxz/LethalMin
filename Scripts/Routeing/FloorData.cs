@@ -16,8 +16,6 @@ namespace LethalMin.Routeing
         public Vector3 FloorRoot;
         public string FloorTitle = "Floor";
         public List<RouteNode> Elevators = new List<RouteNode>();
-        public List<RouteNode> MainExits = new List<RouteNode>();
-        public List<RouteNode> FireExits = new List<RouteNode>();
-        public List<RouteNode> AlterntiveExits = new List<RouteNode>();
+        public List<RouteNode> Exits = new List<RouteNode>();
     }
 }

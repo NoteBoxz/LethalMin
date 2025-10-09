@@ -11,6 +11,7 @@ public class PikminRoute
     public List<RouteNode> Nodes { get; private set; }
     public int CurrentNodeIndex { get; private set; }
     public PikminAI Pikmin => Request.Pikmin;
+    public RouteNode CurNode => Nodes[CurrentNodeIndex];
     public bool DontIncrumentNodeIndex = false;
     public bool HandleEntrances = true; // Whether to handle entrance nodes automatically
 
@@ -52,7 +53,7 @@ public class PikminRoute
         RouteValidation.InvalidationReason reason = validator.ValidateCurrentRoute(this);
         if (reason != RouteValidation.InvalidationReason.None)
         {
-            LethalMin.Logger.LogWarning($"Route invalidated: {reason}");
+            //LethalMin.Logger.LogWarning($"Route invalidated on node {CurNode.name}: {reason}");
             OnRouteInvalidated?.Invoke(reason);
             return; // Let the owner decide to regenerate
         }
@@ -65,14 +66,14 @@ public class PikminRoute
         }
 
         // Check if reached current node
-        if (Nodes[CurrentNodeIndex].IsPikminAtNode(Request.Pikmin))
+        if (CurNode.IsPikminAtNode(Request.Pikmin))
         {
-            if (!Nodes[CurrentNodeIndex].Buffer())
+            if (!CurNode.Buffer())
                 return; // Still buffering
 
-            OnNodeReached?.Invoke(Nodes[CurrentNodeIndex]);
+            OnNodeReached?.Invoke(CurNode);
 
-            Nodes[CurrentNodeIndex].NodeReached(this);
+            CurNode.NodeReached(this);
 
             // Move to next node or finish
             if (!DontIncrumentNodeIndex)
@@ -97,10 +98,7 @@ public class PikminRoute
     {
         if (Pikmin == null) return;
 
-        RouteNode CurNode = Nodes[CurrentNodeIndex];
-
-        Vector3 targetPosition = CurNode.GetPosition();
-        Pikmin.PathToPosition(targetPosition);
+        Pikmin.PathToPosition(CurNode.GetPosition());
     }
 
     public void DestoryRoute()

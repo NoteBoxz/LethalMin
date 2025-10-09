@@ -5,7 +5,7 @@ namespace LethalMin.Routeing;
 
 public class RouteValidation
 {
-    private float lastValidationTime;
+    private float lastValidationTime = Time.time;
     private const float VALIDATION_INTERVAL = 1f; // Check every second, not every frame
 
     public enum InvalidationReason
@@ -27,8 +27,7 @@ public class RouteValidation
 
         // Check if current target node is still reachable
         RouteNode currentNode = route.Nodes[route.CurrentNodeIndex];
-        Vector3? nodePos = currentNode.GetPosition();
-        if (!nodePos.HasValue || !IsDestinationReachable(route.Pikmin.transform.position, nodePos.Value))
+        if (!IsDestinationReachable(route.Pikmin.agent.transform.position, currentNode.GetPosition()))
             return InvalidationReason.NodeBecameUnreachable;
 
         return InvalidationReason.None;

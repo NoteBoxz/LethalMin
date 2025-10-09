@@ -107,11 +107,11 @@ public class RouteNode
         if (CheckRegion != null)
         {
             //LethalMin.Logger.LogInfo($"Checking region for {NodeName} {CheckRegion.bounds.Contains(ai.transform.position)}");
-            return CheckRegion.bounds.Contains(ai.transform.position);
+            return CheckRegion.bounds.Contains(ai.agent.transform.position);
         }
         else
         {
-            return Vector3.Distance(ai.transform.position, Pos.Value) <= CheckDistance;
+            return Vector3.Distance(ai.agent.transform.position, Pos.Value) <= CheckDistance;
         }
     }
 
@@ -122,7 +122,7 @@ public class RouteNode
         {
             return false;
         }
-        return Vector3.Distance(ai.transform.position, Pos.Value) <= distance;
+        return Vector3.Distance(ai.agent.transform.position, Pos.Value) <= distance;
     }
 
     public void NodeReached(PikminRoute route)

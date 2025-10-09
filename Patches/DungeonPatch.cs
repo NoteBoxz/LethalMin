@@ -20,6 +20,7 @@ namespace LethalMin.Patches
             {
                 int numberOfDungeons = Object.FindObjectsOfType<Dungeon>().Length;
                 PikminRouteManager.Instance.CurrentLevelHasMultipleDungeons = numberOfDungeons > 1;
+                PikminRouteManager.Instance.Dungeons.Add(__instance);
                 LethalMin.Logger.LogInfo($"Number of Dungeons in Scene: {numberOfDungeons} (Multiple Dungeons: {PikminRouteManager.Instance.CurrentLevelHasMultipleDungeons})");
             }
             catch (System.Exception ex)

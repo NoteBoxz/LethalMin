@@ -44,7 +44,7 @@ namespace LethalMin.Pikmin
 
         private void OnRouteInvalidated(RouteValidation.InvalidationReason reason)
         {
-            LethalMin.Logger.LogInfo($"{pikmin.DebugID}: Route invalidated ({reason}), regenerating");
+            LethalMin.Logger.LogDebug($"{pikmin.DebugID}: Route invalidated on node {route.CurNode.name} ({reason}), regenerating");
             CreateRoute();
         }
 

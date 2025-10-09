@@ -268,24 +268,41 @@ namespace LethalMin
                     return;
                 }
             }
-            ChargeButtonCooldown = 0.1f; // Cooldown for the charge button to prevent spamming
-            Vector3 ChargePos = playerHeldBy.transform.position + playerHeldBy.transform.forward * 15f;
+            ChargeButtonCooldown = PikminManager.instance.Cheat_ChargeCoolDown.Value == -1 ? 0.1f : PikminManager.instance.Cheat_ChargeCoolDown.Value;
+
+            // Determine ray origin and direction based on VR mode
+            Vector3 rayOrigin;
+            Vector3 rayDirection;
+
             if (LethalMin.InVRMode)
             {
-                ChargePos = transform.position + transform.forward * 15f;
+                rayOrigin = transform.position;
+                rayDirection = transform.forward;
             }
-            Transform linecasttransform = noticeZone.LeaderScript.NoticeZone.transform;
-            if (LethalMin.InVRMode)
+            else if (playerCamera != null)
             {
-                linecasttransform = WhisStartPoint;
+                rayOrigin = playerCamera.transform.position;
+                rayDirection = playerCamera.transform.forward;
             }
-            if (Physics.Linecast(linecasttransform.position + linecasttransform.up * 2 + linecasttransform.forward * 1.5f,
-            ChargePos + Vector3.up * 2, out RaycastHit hitInfo, LethalMin.PikminColideable))
+            else
             {
-                LethalMin.Logger.LogInfo($"WhistleItem: Charge linecast hit at {hitInfo.point} by {hitInfo.collider.gameObject.name}");
+                // Fallback to player position if camera is not available
+                rayOrigin = playerHeldBy.transform.position;
+                rayDirection = playerHeldBy.transform.forward;
+            }
+            float chargeDistance = PikminManager.instance.Cheat_ChargeDistance.Value == -1 ? 15 : PikminManager.instance.Cheat_ChargeDistance.Value;
+
+            // Calculate default charge position
+            Vector3 ChargePos = rayOrigin + rayDirection * chargeDistance;
+
+            // Use raycast to check for obstacles
+            if (Physics.Raycast(rayOrigin, rayDirection, out RaycastHit hitInfo, chargeDistance, LethalMin.PikminColideable))
+            {
+                LethalMin.Logger.LogInfo($"WhistleItem: Charge raycast hit at {hitInfo.point} by {hitInfo.collider.gameObject.name}");
                 ChargePos = hitInfo.point;
             }
-            if (NavMesh.SamplePosition(ChargePos, out NavMeshHit hit, 15f, NavMesh.AllAreas))
+
+            if (NavMesh.SamplePosition(ChargePos, out NavMeshHit hit, 5f, NavMesh.AllAreas))
             {
                 ChargePos = hit.position;
             }
@@ -318,7 +335,6 @@ namespace LethalMin
             audioSource.PlayOneShot(chargeSound);
             if (WhistleAnim != null)
                 WhistleAnim.SetTrigger("char");
-            //PikUtils.CreateDebugCube(Color.red).transform.position = ChargePos;
             if (IsOwner)
             {
                 if (!(LethalMin.InVRMode && LethalMin.DisableChargeMotionBlur))

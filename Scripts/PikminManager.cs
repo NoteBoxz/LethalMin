@@ -58,8 +58,8 @@ namespace LethalMin
         internal NetworkVariable<float> Cheat_PlayerNoticeZoneSize = new NetworkVariable<float>(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         internal NetworkVariable<float> Cheat_PikminDamageMultipler = new NetworkVariable<float>(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         internal NetworkVariable<float> Cheat_PikminSpeedMultipler = new NetworkVariable<float>(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-
-
+        internal NetworkVariable<float> Cheat_ChargeCoolDown = new NetworkVariable<float>(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        internal NetworkVariable<float> Cheat_ChargeDistance = new NetworkVariable<float>(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         #region Initialization & Core Methods
         void Awake()
         {
@@ -139,6 +139,7 @@ namespace LethalMin
                 Cheat_PlayerNoticeZoneSize.Value = LethalMin.PlayerNoticeZoneSize;
                 Cheat_PikminDamageMultipler.Value = LethalMin.PikminDamageMultipler;
                 Cheat_PikminSpeedMultipler.Value = LethalMin.PikminSpeedMultipler;
+                Cheat_ChargeCoolDown.Value = LethalMin.ChargeCooldown;
             }
             if (!StartOfRound.Instance.inShipPhase && IsServer)
             {

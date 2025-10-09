@@ -53,6 +53,7 @@ namespace LethalMin
         public bool AlreadyPartalInitalized = false;
         bool ShouldGrab => !ItemScript.isHeld && TotalCarryStrength >= CarryStrengthNeeded && !IsBeingCarried && IsOwner;
         bool HadItemScript = false;
+        bool isRegeneratingRoute = false;
         [HideInInspector]
         public EnemyGrabbableObject hackEnemyGrabbableObject = null!;
 
@@ -1169,7 +1170,9 @@ namespace LethalMin
                 CurrentRoute.OnNodeReached.AddListener(OnNodeReached);
                 CurrentRoute.OnRouteComplete.AddListener(OnRouteEndOwnerSide);
                 CurrentRoute.OnRouteInvalidated.AddListener(OnRouteInvalidated);
-                LethalMin.Logger.LogInfo($"{gameObject.name} has created a route");
+                if (!isRegeneratingRoute)
+                    LethalMin.Logger.LogInfo($"{gameObject.name} has created a route");
+                isRegeneratingRoute = false;
             }
             else
             {
@@ -1204,6 +1207,8 @@ namespace LethalMin
         public void OnRouteInvalidated(RouteValidation.InvalidationReason reason)
         {
             LethalMin.Logger.LogWarning($"{gameObject.name} route has been invalidated ({reason}), clearing route");
+            isRegeneratingRoute = true;
+            CreateRoute();
         }
 
         public void OnRouteEndOwnerSide()

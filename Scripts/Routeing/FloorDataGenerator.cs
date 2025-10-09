@@ -1,14 +1,17 @@
 using System.Collections.Generic;
+using DunGen;
 using UnityEngine;
 using UnityEngine.AI;
 
 namespace LethalMin.Routeing;
 
-public class FloorDataGenerator
+public static class FloorDataGenerator
 {
     // Called when level loads or when new dungeon generated
-    public static void GenerateFloorDataInterior(GameObject dungeonRoot)
+    public static List<FloorData> GenerateFloorDataInterior(Dungeon dungeon)
     {
-        // Implementation will be added here
+        List<FloorData> floorDataList = new List<FloorData>();
+
+        return floorDataList;
     }
 }
