@@ -1287,7 +1287,8 @@ namespace LethalMin
                 agent.speed = pikminType.GetSpeed(CurrentGrowthStage, ShouldRun) * 3.5f;
                 ChargeTimer += Time.deltaTime;
                 CheckInterval += Time.deltaTime;
-                if (Vector3.Distance(transform.position, ChargePos) < 0.5f)
+                if (Vector3.Distance(transform.position, ChargePos) < 0.5f
+                || OverrideFollowPosition == null)
                 {
                     break;
                 }
