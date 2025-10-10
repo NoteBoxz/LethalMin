@@ -1223,16 +1223,7 @@ namespace LethalMin
 
             if (!PrimaryPikminOnItem.isOutside)
             {
-                RouteIntent ChosenIntent;
-                if (LethalMin.CanPathOutsideWhenInside && LethalMin.TakeItemsToTheCar)
-                {
-                    ChosenIntent = RouteIntent.ToVehicle;
-                    if (TestRoute(ChosenIntent))
-                    {
-                        return ChosenIntent;
-                    }
-                }
-                ChosenIntent = LethalMin.CanPathOutsideWhenInside ? RouteIntent.ToShip : RouteIntent.ToExit;
+                RouteIntent ChosenIntent = LethalMin.CanPathOutsideWhenInside ? RouteIntent.ToShip : RouteIntent.ToExit;
                 if (TestRoute(ChosenIntent))
                 {
                     return ChosenIntent;
@@ -1244,6 +1235,16 @@ namespace LethalMin
                     {
                         return ChosenIntent;
                     }
+                }
+            }
+            
+            if (PikminManager.instance.Vehicles.Count > 0 && LethalMin.TakeItemsToTheCar)
+            {
+                RouteIntent ChosenIntent;
+                ChosenIntent = RouteIntent.ToVehicle;
+                if (TestRoute(ChosenIntent))
+                {
+                    return ChosenIntent;
                 }
             }
 

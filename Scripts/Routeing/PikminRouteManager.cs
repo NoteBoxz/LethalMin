@@ -265,7 +265,7 @@ public class PikminRouteManager : MonoBehaviour
         return onionNodes;
     }
 
-    public List<RouteNode> GetAllPossibleVehicleNodes()
+    public List<RouteNode> GetAllPossibleVehicleNodes(PikminRouteRequest request)
     {
         List<RouteNode> vehicleNodes = new List<RouteNode>();
         foreach (PikminVehicleController vehicle in PikminManager.instance.Vehicles)
@@ -277,7 +277,7 @@ public class PikminRouteManager : MonoBehaviour
             RouteNode vehicleNode = new RouteNode
             (
                 name: vehicle.gameObject.name,
-                point: vehicle.PikminCheckRegion.bounds.center,
+                point: vehicle.GetAvaiblePikminPoint(request.Pikmin),
                 check: vehicle.PikminCheckRegion
             );
             vehicleNodes.Add(vehicleNode);

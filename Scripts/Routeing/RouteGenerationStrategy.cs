@@ -286,13 +286,15 @@ public class DirectOutdoorStrategy : RouteGenerationStrategy
                 break;
 
             case RouteIntent.ToVehicle:
-                List<RouteNode> vehicleNodes = manager.GetAllPossibleVehicleNodes();
+                List<RouteNode> vehicleNodes = manager.GetAllPossibleVehicleNodes(request);
                 if (vehicleNodes.Count == 0)
                 {
                     LethalMin.Logger.LogWarning("No vehicle nodes found!");
                     break;
                 }
                 RouteNode? bestVehicleNode = GetMostPathableNode(GetPathStartPos(request), vehicleNodes);
+                if(bestVehicleNode != null)
+                    nodes.Add(bestVehicleNode);
                 break;
 
             case RouteIntent.ToCounter:
