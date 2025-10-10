@@ -37,7 +37,8 @@ namespace LethalMin.Pikmin
             bool IsOnItem = pikminItem.PikminOnItem.Contains(pikmin);
 
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
-            if (IsOnItem && pikminItem.settings.RouteToPlayer)
+            if (IsOnItem && pikminItem.settings.RouteToPlayer 
+            && pikminItem.CurrentRoute != null && pikminItem.CurrentRoute.CurNode.InstanceIdentifiyer == pikminItem.PrimaryLeader)
             {
                 agent.stoppingDistance = pikminItem.settings.RouteToPlayerStoppingDistance;
             }

@@ -844,7 +844,7 @@ namespace LethalMin
 
         public void SpawnTeleportTriggers()
         {
-            GameObject SpawnTeleportTrigger(Vector3 TPostion, Vector3 Scale, Vector3 DestPos)
+            GameObject SpawnTeleportTrigger(Vector3 TPostion, Vector3 Scale, Vector3 DestPos, int ID)
             {
                 Scene currentScene = SceneManager.GetSceneByName(RoundManager.Instance.currentLevel.sceneName);
 
@@ -862,6 +862,8 @@ namespace LethalMin
                 TPZone.GetComponent<PikminTeleportTrigger>().Destination = Dest.transform;
                 SceneManager.MoveGameObjectToScene(Dest, currentScene);
 
+                PikminRouteManager.Instance.AddedTelepointsForExits.Add(ID, Dest.transform);
+
                 Destroy(TPZone.GetComponent<Renderer>());
                 Destroy(Dest.GetComponent<Renderer>());
                 Destroy(Dest.GetComponent<Collider>());
@@ -872,26 +874,27 @@ namespace LethalMin
             //Offense's FireExit
             if (RoundManager.Instance.currentLevel.sceneName == "Level7Offense")
             {
-                SpawnTeleportTrigger(new Vector3(-6.9494f, 18.3041f, -134.7692f), new Vector3(10f, 10f, 10f), new Vector3(7.9994f, 0.4394f, -136.0314f));
+                SpawnTeleportTrigger(new Vector3(-6.9494f, 18.3041f, -134.7692f), new Vector3(10f, 10f, 10f), new Vector3(7.9994f, 0.4394f, -136.0314f), 1);
             }
 
             //Assurance's FireExit
             if (RoundManager.Instance.currentLevel.sceneName == "Level2Assurance")
             {
-                SpawnTeleportTrigger(new Vector3(101.3612f, 15.7869f, -74.0713f), new Vector3(2.5527f, 4.6818f, 7.8745f), new Vector3(99.9956f, 2.2635f, -57.4636f));
+                SpawnTeleportTrigger(new Vector3(101.3612f, 15.7869f, -74.0713f), new Vector3(2.5527f, 4.6818f, 7.8745f), new Vector3(99.9956f, 2.2635f, -57.4636f), 1);
             }
 
             //March's 3rd FireExit
             if (RoundManager.Instance.currentLevel.sceneName == "Level4March")
             {
-                SpawnTeleportTrigger(new Vector3(125.5447f, 8.4454f, -17.235f), new Vector3(1.0982f, 0.8345f, 5.8745f), new Vector3(129.4601f, 6.4522f, -16.061f));
+                SpawnTeleportTrigger(new Vector3(125.5447f, 8.4454f, -17.235f), new Vector3(1.0982f, 0.8345f, 5.8745f), new Vector3(129.4601f, 6.4522f, -16.061f), 3);
             }
 
             //Embrion's Main
             if (RoundManager.Instance.currentLevel.sceneName == "Level11Embrion")
             {
-                GameObject go = SpawnTeleportTrigger(new Vector3(-190.1637f, 10.6708f, -16.6201f), new Vector3(4.0527f, 10.9381f, 18.4337f), new Vector3(-181.8325f, 0.5593f, -15.6719f));
-                go.transform.rotation = Quaternion.Euler(0, 40, 0);
+                GameObject point =
+                SpawnTeleportTrigger(new Vector3(-190.1637f, 10.6708f, -16.6201f), new Vector3(4.0527f, 10.9381f, 18.4337f), new Vector3(-181.8325f, 0.5593f, -15.6719f), 0);
+                point.transform.rotation = Quaternion.Euler(0, 40, 0);
             }
         }
 

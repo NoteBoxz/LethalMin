@@ -314,7 +314,7 @@ namespace LethalMin
         {
             ChargeCooldown = PikminManager.instance.Cheat_ChargeCoolDown.Value == -1 ? 0.1f : PikminManager.instance.Cheat_ChargeCoolDown.Value;
             LethalMin.Logger.LogInfo($"WhistleItem: ChargeUse at position {ChargePos} by {playerHeldBy?.playerUsername}");
-            OverridePikminPosition pikminPosition = new OverridePikminPosition(ChargePos, true, 4f, 5f);
+            OverridePikminPosition pikminPosition = new OverridePikminPosition(ChargePos, true, 4f, 0.1f);
             audioSource.PlayOneShot(chargeSound);
             if (WhistleAnim != null)
                 WhistleAnim.SetTrigger("char");
@@ -331,7 +331,12 @@ namespace LethalMin
                     continue;
                 }
                 ai.OverrideFollowPosition = pikminPosition;
-                ai.StartCoroutine(ai.DoCharge(4, ChargePos));
+                if (ai.chargeRoutine != null)
+                {
+                    ai.StopCoroutine(ai.chargeRoutine);
+                    ai.chargeRoutine = null;
+                }
+                ai.chargeRoutine = ai.StartCoroutine(ai.DoCharge(4, ChargePos));
             }
         }
 

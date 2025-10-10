@@ -1037,12 +1037,6 @@ namespace LethalMin
                     }
                 }
             }
-            if (TargetOnion != null && CurrentRoute != null && CurrentRoute.Nodes[CurrentRoute.Nodes.Count - 1].InstanceIdentifiyer != TargetOnion.ItemDropPos)
-            {
-                LethalMin.Logger.LogWarning($"Last node is not the target onion drop pos, setting target onion to null.");
-                TargetOnion = null!;
-                PikminCounter.SetCounterColor(DefultColor);
-            }
 
             if (GrabPositionContainer != null)
             {
@@ -1166,6 +1160,12 @@ namespace LethalMin
                     TargetOnion = TargetOnion,
                     HandleEntrances = false
                 };
+                if (request.Intent == RouteIntent.ToPlayer)
+                {
+                    PrimaryLeader = PikUtils.GetLeaderFromMultiplePikmin(PikminOnItem);
+                    request.TargetPlayer = PrimaryLeader;
+                    request.CustomCheckDistance = settings.RouteToPlayerDroppingDistance;
+                }
                 CurrentRoute = PikminRouteManager.Instance.CreateRoute(request);
                 CurrentRoute.OnNodeReached.AddListener(OnNodeReached);
                 CurrentRoute.OnRouteComplete.AddListener(OnRouteEndOwnerSide);
@@ -1180,11 +1180,98 @@ namespace LethalMin
             }
         }
 
-        public RouteIntent DetermineRouteIntent()
+        public virtual RouteIntent DetermineRouteIntent()
         {
-            RouteIntent ChosenIntent = RouteIntent.ToShip;
-            
-            return ChosenIntent;
+            if (PrimaryPikminOnItem == null)
+            {
+                LethalMin.Logger.LogError($"{gameObject.name} has no primary pikmin to determine route intent");
+                return RouteIntent.ToShip;
+            }
+
+            if (settings.RouteToPlayer)
+            {
+                return RouteIntent.ToPlayer;
+            }
+
+            if (TargetOnion != null && (!LethalMin.OnCompany || LethalMin.OnCompany && LethalMin.TakeItemsToOnionOnCompany))
+            {
+                RouteIntent ChosenIntent = RouteIntent.ToOnion;
+                if (TestRoute(ChosenIntent))
+                {
+                    return ChosenIntent;
+                }
+                else
+                {
+                    LethalMin.Logger.LogWarning($"Failed to find path to onion, setting target onion to null.");
+                    TargetOnion = null!;
+                    PikminCounter.SetCounterColor(DefultColor);
+                }
+            }
+
+            if (LethalMin.OnCompany)
+            {
+                RouteIntent ChosenIntent = RouteIntent.ToCounter;
+                if (!ItemScript.itemProperties.isScrap && !LethalMin.CarryNonScrapItemsOnCompany)
+                {
+                    ChosenIntent = RouteIntent.ToShip;
+                }
+                if (TestRoute(ChosenIntent))
+                {
+                    return ChosenIntent;
+                }
+            }
+
+            if (!PrimaryPikminOnItem.isOutside)
+            {
+                RouteIntent ChosenIntent;
+                if (LethalMin.CanPathOutsideWhenInside && LethalMin.TakeItemsToTheCar)
+                {
+                    ChosenIntent = RouteIntent.ToVehicle;
+                    if (TestRoute(ChosenIntent))
+                    {
+                        return ChosenIntent;
+                    }
+                }
+                ChosenIntent = LethalMin.CanPathOutsideWhenInside ? RouteIntent.ToShip : RouteIntent.ToExit;
+                if (TestRoute(ChosenIntent))
+                {
+                    return ChosenIntent;
+                }
+                else if (PikminRouteManager.Instance.CurrentFloorData != null)
+                {
+                    ChosenIntent = RouteIntent.ToElevator;
+                    if (TestRoute(ChosenIntent))
+                    {
+                        return ChosenIntent;
+                    }
+                }
+            }
+
+            return RouteIntent.ToShip;
+        }
+
+        public bool TestRoute(RouteIntent intent)
+        {
+            PikminRouteRequest testRequest = new PikminRouteRequest
+            {
+                Pikmin = PrimaryPikminOnItem!,
+                Intent = intent,
+                TargetOnion = TargetOnion,
+                HandleEntrances = false
+            };
+            PikminRoute testRoute;
+            testRoute = PikminRouteManager.Instance.CreateRoute(testRequest);
+            if (testRoute == null || !testRoute.IsFullPath)
+            {
+                LethalMin.Logger.LogWarning($"{gameObject.name} could not create a route to the {intent}");
+                return false;
+            }
+            else
+            {
+                LethalMin.Logger.LogInfo($"{gameObject.name} successfully created a test route to the {intent}");
+                testRoute.DestoryRoute();
+                return true;
+            }
         }
 
         public void OnNodeReached(RouteNode node)
@@ -1272,21 +1359,21 @@ namespace LethalMin
             if (!IsOwner)
                 return;
 
-            UseEntranceServerRpc(entrance.NetworkObject, false);
+            UseEntranceServerRpc(entrance.NetworkObject);
         }
 
         [ServerRpc]
-        public void UseEntranceServerRpc(NetworkObjectReference Ref, bool Inside)
+        public void UseEntranceServerRpc(NetworkObjectReference Ref)
         {
-            UseEntranceClientRpc(Ref, Inside);
+            UseEntranceClientRpc(Ref);
         }
 
         [ClientRpc]
-        public void UseEntranceClientRpc(NetworkObjectReference Ref, bool Inside)
+        public void UseEntranceClientRpc(NetworkObjectReference Ref)
         {
             if (Ref.TryGet(out NetworkObject obj) && obj.TryGetComponent(out EntranceTeleport entrance))
             {
-                UseEntranceOnLocalClient(entrance, Inside);
+                UseEntranceOnLocalClient(entrance, entrance.isEntranceToBuilding);
             }
             else
             {

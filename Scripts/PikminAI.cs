@@ -196,6 +196,7 @@ namespace LethalMin
         public static int PikminSoundID = 0;
         bool wasInvisCheatOn;
         bool friednlyFire => leader == null ? LethalMin.FriendlyFire : leader.FriendlyFire.Value;
+        public Coroutine? chargeRoutine = null;
         public const int IDLE = 0;
         public const int FOLLOW = 1;
         public const int WORK = 2;
@@ -1268,9 +1269,13 @@ namespace LethalMin
             PlayAnimation(animController.AnimPack.EditorNoticeAnim);
             if (!IsOwner)
             {
+                chargeRoutine = null;
+                OverrideFollowPosition = null;
                 yield break;
             }
 
+            float prevSD = agent.stoppingDistance;
+            agent.stoppingDistance = 0f;
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
             float HoldTimer = 0f;
             while (HoldTimer < 0.15f)
@@ -1287,8 +1292,7 @@ namespace LethalMin
                 agent.speed = pikminType.GetSpeed(CurrentGrowthStage, ShouldRun) * 3.5f;
                 ChargeTimer += Time.deltaTime;
                 CheckInterval += Time.deltaTime;
-                if (Vector3.Distance(transform.position, ChargePos) < 0.5f
-                || OverrideFollowPosition == null)
+                if (OverrideFollowPosition == null)
                 {
                     break;
                 }
@@ -1306,6 +1310,8 @@ namespace LethalMin
                             {
                                 FindItemViaChargeServerRpc(TargetItem.NetworkObject, TargetItem.GrabToPositions.IndexOf(TargetItemPoint));
                                 PathToPosition(TargetItem.transform.position);
+                                OverrideFollowPosition = null;
+                                chargeRoutine = null;
                                 yield break;
                             }
                             else
@@ -1326,6 +1332,8 @@ namespace LethalMin
                             {
                                 FindEnemyViaChargeServerRpc(TargetEnemy.NetworkObject);
                                 PathToPosition(TargetEnemy.transform.position);
+                                OverrideFollowPosition = null;
+                                chargeRoutine = null;
                                 yield break;
                             }
                             else
@@ -1339,9 +1347,12 @@ namespace LethalMin
                 yield return new WaitForEndOfFrame();
             }
 
+            agent.stoppingDistance = prevSD;
             agent.speed = pikminType.GetSpeed(CurrentGrowthStage, ShouldRun);
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.LowQualityObstacleAvoidance;
             LethalMin.Logger.LogInfo($"{DebugID}: Charge finished after {ChargeTimer} seconds. Stopping charge.");
+            OverrideFollowPosition = null;
+            chargeRoutine = null;
         }
 
         [ServerRpc]
@@ -3418,11 +3429,6 @@ namespace LethalMin
                 }
 
                 if (LethalMin.ItemBlacklistConfig.InternalValue.Contains(item.ItemScript.itemProperties.itemName))
-                {
-                    continue;
-                }
-
-                if (LethalMin.OnCompany && !LethalMin.CarryNonScrapItemsOnCompany && !item.ItemScript.itemProperties.isScrap)
                 {
                     continue;
                 }

@@ -19,7 +19,7 @@ public class PikminRouteManager : MonoBehaviour
     public Dictionary<EntranceTeleport, Transform> EntranceExitPoints = new Dictionary<EntranceTeleport, Transform>();
     public bool CurrentLevelHasMultipleDungeons;
     public bool RefreshCachePerRoute => CurrentLevelHasMultipleDungeons && !cLHMDtrueOnLoad; // to handle levels that change dungeon count mid-game
-    public List<EntranceTeleport> EntrancePathableCheckBlacklist = new List<EntranceTeleport>(); // to handle entrances with teleport triggers
+    public Dictionary<int, Transform> AddedTelepointsForExits = new Dictionary<int, Transform>();
 
     public RouteNode ShipNode = null!;
     public List<RouteNode> EntranceNodes = new List<RouteNode>();
@@ -32,13 +32,11 @@ public class PikminRouteManager : MonoBehaviour
     public void Start()
     {
         // Register strategies in priority order
-        strategies.Add(new DirectPlayerStrategy());      // 250 - highest
-        strategies.Add(new MoonOverrideStrategy());      // 200 
+        strategies.Add(new MoonOverrideStrategy());      // 200 - high
         strategies.Add(new DirectOutdoorStrategy());     // 90
         strategies.Add(new IndoorToOutdoorStrategy());   // 90
         strategies.Add(new DirectIndoorStrategy());      // 90
-        strategies.Add(new OutdoorToIndoorStrategy());   // 90
-        strategies.Add(new FallbackStrategy());          // 0 - lowest
+        strategies.Add(new OutdoorToIndoorStrategy());   // 90 - low
 
         // Create Ship Node
         ShipNode = new RouteNode
@@ -76,14 +74,22 @@ public class PikminRouteManager : MonoBehaviour
             if (!entrance.isEntranceToBuilding)
                 continue;
 
-            foreach (EntranceTeleport entranceB in entrances)
+            foreach (EntranceTeleport exit in entrances)
             {
-                if (entrance.entranceId == entranceB.entranceId && entrance != entranceB
-                && !EntranceExitPoints.ContainsKey(entrance) && !EntranceExitPoints.ContainsKey(entranceB))
+                if (entrance.entranceId == exit.entranceId && entrance != exit
+                && !EntranceExitPoints.ContainsKey(entrance) && !EntranceExitPoints.ContainsKey(exit))
                 {
-                    EntranceExitPoints.Add(entrance, entranceB.entrancePoint);
-                    EntranceExitPoints.Add(entranceB, entrance.entrancePoint);
-                    log += $"\n - {entrance.name} <=> {entranceB.name}";
+                    EntranceExitPoints.Add(entrance, exit.entrancePoint);
+                    if (AddedTelepointsForExits.ContainsKey(entrance.entranceId))
+                    {
+                        EntranceExitPoints.Add(exit, AddedTelepointsForExits[entrance.entranceId]);
+                        log += $"\n - ({entrance.name} -> {AddedTelepointsForExits[entrance.entranceId].name}) <=> {exit.name} [Manually Added]";
+                    }
+                    else
+                    {
+                        EntranceExitPoints.Add(exit, entrance.entrancePoint);
+                        log += $"\n - {entrance.name} <=> {exit.name}";
+                    }
                 }
             }
         }
@@ -95,6 +101,7 @@ public class PikminRouteManager : MonoBehaviour
     {
         CurrentFloorData.Clear();
         EntranceExitPoints.Clear();
+        AddedTelepointsForExits.Clear();
     }
 
     public PikminRoute CreateRoute(PikminRouteRequest request)
@@ -102,9 +109,9 @@ public class PikminRouteManager : MonoBehaviour
         RouteContext context = BuildContext(request);
 
         // Log Context Varibles
-        LethalMin.Logger.LogDebug($"({request.Intent}) Route Context: IsInside={context.IsInside}, IsInShip={context.IsInShip},"
+        string contextStr = $"\n({request.Intent}) Route Context: IsInside={context.IsInside}, IsInShip={context.IsInShip},"
         + $" CurrentFloor={(context.CurrentFloor != null ? context.CurrentFloor.FloorTitle : "null")},"
-        + $" DestinationIsInside={context.DestinationIsInside}, DestinationIsInShip={context.DestinationIsInShip}");
+        + $" DestinationIsInside={context.DestinationIsInside}, DestinationIsInShip={context.DestinationIsInShip}";
 
         // Find best strategy
         RouteGenerationStrategy strategy = strategies
@@ -115,11 +122,11 @@ public class PikminRouteManager : MonoBehaviour
         // Log chosen strategy
         if (strategy != null)
         {
-            LethalMin.Logger.LogDebug($"Chosen Route Strategy: {strategy.GetType().Name} (Priority {strategy.Priority})");
+            LethalMin.Logger.LogDebug($"Chosen Route Strategy: {strategy.GetType().Name} (Priority {strategy.Priority}) {contextStr}");
         }
         else
         {
-            LethalMin.Logger.LogError($"No strategy could handle route request: {request.Intent}");
+            LethalMin.Logger.LogError($"No strategy could handle route request: {request.Intent} {contextStr}");
             return null!;
         }
 
@@ -263,6 +270,10 @@ public class PikminRouteManager : MonoBehaviour
         List<RouteNode> vehicleNodes = new List<RouteNode>();
         foreach (PikminVehicleController vehicle in PikminManager.instance.Vehicles)
         {
+            if (!vehicle.controller.backDoorOpen)
+            {
+                continue; // Skip vehicles with closed doors
+            }
             RouteNode vehicleNode = new RouteNode
             (
                 name: vehicle.gameObject.name,
@@ -338,6 +349,7 @@ public class PikminRouteManager : MonoBehaviour
             point: request.TargetPlayer!.transform,
             check: request.CustomCheckDistance
         );
+        playerNode.InstanceIdentifiyer = request.TargetPlayer;
         return playerNode;
     }
 

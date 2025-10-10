@@ -8,13 +8,14 @@ public class PikminRoute
 {
     public PikminRouteRequest Request { get; private set; }
     public RouteContext Context { get; private set; }
-    public List<RouteNode> Nodes { get; private set; }
+    public List<RouteNode> Nodes { get; private set; } = new List<RouteNode>();
     public int CurrentNodeIndex { get; private set; }
     public PikminAI Pikmin => Request.Pikmin;
     public RouteNode CurNode => Nodes[CurrentNodeIndex];
     public bool DontIncrumentNodeIndex = false;
     public bool HandleEntrances = true; // Whether to handle entrance nodes automatically
     public bool Pathable = true; // Whether the route is pathable by the Pikmin
+    public bool IsFullPath => Pathable && Nodes.Count > 0;
 
     // Events
     public UnityEvent<RouteNode> OnNodeReached = new UnityEvent<RouteNode>();

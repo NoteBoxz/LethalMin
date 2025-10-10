@@ -1388,7 +1388,7 @@ namespace LethalMin
                 "Pikmin Behavior",
                 "Carry Non-Scrap Items On Company",
                 false,
-                "Makes it so pikmin carry Non-Scrap items (Flashlights, Keys, etc.) to the company counter",
+                "Makes it so pikmin carry Non-Scrap items (Flashlights, Keys, etc.) to the company counter instead of the ship",
                 false,
                 ConfigItemAuthority.Client);
 

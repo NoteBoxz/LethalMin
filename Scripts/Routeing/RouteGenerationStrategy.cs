@@ -19,11 +19,10 @@ public abstract class RouteGenerationStrategy
     public abstract List<RouteNode> GenerateRoute(PikminRouteRequest request, RouteContext context);
     public abstract List<RouteIntent> UnsupportedIntents { get; }
     protected PikminRouteManager manager = PikminRouteManager.Instance;
-    protected List<RouteNode> onionNodes = PikminRouteManager.Instance.GetAllPossibleOnionNodes();
 
     protected bool IsDestinationReachable(Vector3 from, Vector3 to, NavMeshPath path = null!, bool OffsetOntoNavMesh = true)
     {
-        if (path != null && path.status == NavMeshPathStatus.PathComplete)
+        if (path != null && path.status == NavMeshPathStatus.PathComplete) // Early exit if the provided path is already complete
             return true;
 
         path = new NavMeshPath();
@@ -41,12 +40,12 @@ public abstract class RouteGenerationStrategy
         bool foundPath = NavMesh.CalculatePath(startPos, endPos, NavMesh.AllAreas, path);
         return foundPath && path.status == NavMeshPathStatus.PathComplete;
     }
-
     protected RouteNode GetMostPathableEntranceNode(bool Outside, Vector3 from, List<RouteNode> entranceNodes, RouteNode exitPointCheckNode = null!)
     {
         RouteNode? bestNode = null;
         float bestDistance = float.MaxValue;
         string outsideStr = Outside ? "outside" : "inside";
+        List<RouteNode> validNodes = new List<RouteNode>();
 
         foreach (RouteNode node in entranceNodes)
         {
@@ -56,16 +55,25 @@ public abstract class RouteGenerationStrategy
                 continue;
             if (!node.entrancePoint.isEntranceToBuilding && Outside)
                 continue;
+            validNodes.Add(node);
 
             Vector3 nodePos = node.GetPosition();
             NavMeshPath path = new NavMeshPath();
             NavMesh.CalculatePath(from, nodePos, NavMesh.AllAreas, path);
 
-            if (IsDestinationReachable(from, nodePos, path)
-            && (exitPointCheckNode == null
-            || !manager.EntranceExitPoints.ContainsKey(node.entrancePoint)
-            || manager.EntrancePathableCheckBlacklist.Contains(node.entrancePoint)
-            || IsDestinationReachable(manager.EntranceExitPoints[node.entrancePoint].position, exitPointCheckNode.GetPosition())))
+            bool shouldCheckExitPath = exitPointCheckNode != null
+                && manager.EntranceExitPoints.ContainsKey(node.entrancePoint);
+
+            if (shouldCheckExitPath)
+                outsideStr = Outside ? "outside -> inside" : "inside -> outside";
+
+            // Check if the entrance node itself is reachable
+            bool entranceIsReachable = IsDestinationReachable(from, nodePos, path);
+
+            // Check if the exit path is valid (if needed)
+            bool exitPathIsValid = !shouldCheckExitPath || IsExitPathReachable(node, exitPointCheckNode!);
+
+            if (entranceIsReachable && exitPathIsValid)
             {
                 float distance = CalculatePathLength(from, nodePos, path);
                 LethalMin.Logger.LogDebug($"{outsideStr} Entrance Node {node.name} is reachable at distance {distance}");
@@ -92,13 +100,30 @@ public abstract class RouteGenerationStrategy
                 LethalMin.Logger.LogError($"No {outsideStr} entrance nodes available!");
                 return null!;
             }
-            bestNode = entranceNodes.OrderBy(n => Vector3.Distance(from, n.GetPosition())).First();
+            bestNode = validNodes.OrderBy(n => Vector3.Distance(from, n.GetPosition())).First();
             bestNode = new RouteNode(bestNode);
             bestNode.name += " (Unpathable)";
             bestNode.UnpathableOnCreation = true;
         }
 
         return bestNode!;
+    }
+
+    private bool IsExitPathReachable(RouteNode node, RouteNode exitPointCheckNode)
+    {
+        // Check if the mapped exit point is reachable
+        if (IsDestinationReachable(manager.EntranceExitPoints[node.entrancePoint].position, exitPointCheckNode.GetPosition()))
+            return true;
+
+        // Check if there's an alternate exit point that's reachable
+        bool hasAlternateExitPoint = node.entrancePoint.exitPoint != null
+            && manager.EntranceExitPoints[node.entrancePoint] != node.entrancePoint.exitPoint;
+
+        if (hasAlternateExitPoint
+            && IsDestinationReachable(node.entrancePoint.exitPoint!.position, exitPointCheckNode.GetPosition()))
+            return true;
+
+        return false;
     }
 
     protected RouteNode? GetMostPathableElevator(Vector3 from, FloorData data)
@@ -138,7 +163,7 @@ public abstract class RouteGenerationStrategy
             }
         }
 
-        if(bestNode == null && data.Elevators.Count > 0)
+        if (bestNode == null && data.Elevators.Count > 0)
         {
             LethalMin.Logger.LogWarning("No elevator nodes are directly reachable, defaulting to closest elevator node");
             bestNode = data.Elevators.OrderBy(n => Vector3.Distance(from, n.GetPosition())).First();
@@ -177,7 +202,7 @@ public abstract class RouteGenerationStrategy
             }
         }
 
-        if(bestNode == null && nodes.Count > 0)
+        if (bestNode == null && nodes.Count > 0)
         {
             LethalMin.Logger.LogWarning("No nodes are directly reachable, defaulting to closest node");
             bestNode = nodes.OrderBy(n => Vector3.Distance(from, n.GetPosition())).First();
@@ -216,33 +241,6 @@ public abstract class RouteGenerationStrategy
 }
 
 /// <summary>
-/// Direct route to player strategy.
-/// Primarlly used for the ManEater
-/// </summary>
-public class DirectPlayerStrategy : RouteGenerationStrategy
-{
-    public override List<RouteIntent> UnsupportedIntents => new List<RouteIntent>
-    {
-    };
-
-    public override bool CanHandle(PikminRouteRequest request, RouteContext context)
-    {
-        return request.Intent == RouteIntent.ToPlayer;
-    }
-
-    public override int Priority => 250; // Highest for obvious reasons
-
-    public override List<RouteNode> GenerateRoute(PikminRouteRequest request, RouteContext context)
-    {
-        List<RouteNode> nodes = new List<RouteNode>();
-
-        nodes.Add(manager.GetPlayerNode(request));
-
-        return nodes;
-    }
-}
-
-/// <summary>
 /// Direct route to outdoor destination strategy.
 /// Used when both start and end are outside.
 /// </summary>
@@ -272,9 +270,14 @@ public class DirectOutdoorStrategy : RouteGenerationStrategy
                 break;
 
             case RouteIntent.ToOnion:
-                foreach (RouteNode onionNode in onionNodes)
+                if (request.TargetOnion == null)
                 {
-                    if (onionNode.InstanceIdentifiyer != null && onionNode.InstanceIdentifiyer == request.TargetOnion?.ItemDropPos)
+                    LethalMin.Logger.LogWarning("No target onion specified in request!");
+                    break;
+                }
+                foreach (RouteNode onionNode in PikminRouteManager.Instance.GetAllPossibleOnionNodes())
+                {
+                    if (onionNode.InstanceIdentifiyer != null && onionNode.InstanceIdentifiyer == request.TargetOnion!.ItemDropPos)
                     {
                         nodes.Add(onionNode);
                         break;
@@ -453,7 +456,7 @@ public class OutdoorToIndoorStrategy : RouteGenerationStrategy
     {
         List<RouteNode> nodes = new List<RouteNode>();
 
-        RouteNode mostPathableExit = GetMostPathableEntranceNode(false, GetPathStartPos(request), manager.EntranceNodes);
+        RouteNode mostPathableExit = GetMostPathableEntranceNode(true, GetPathStartPos(request), manager.EntranceNodes);
 
         PikminRouteRequest movedRequest = new PikminRouteRequest(request);
         movedRequest.StartOverride = mostPathableExit.GetPosition();
@@ -466,7 +469,7 @@ public class OutdoorToIndoorStrategy : RouteGenerationStrategy
             return nodes;
         }
 
-        RouteNode mostPathableEntrance = GetMostPathableEntranceNode(false, GetPathStartPos(request), manager.EntranceNodes, insideNodes[0]);
+        RouteNode mostPathableEntrance = GetMostPathableEntranceNode(true, GetPathStartPos(request), manager.EntranceNodes, insideNodes[0]);
 
         nodes.Add(mostPathableEntrance);
         nodes.AddRange(insideNodes);
@@ -500,50 +503,6 @@ public class MoonOverrideStrategy : RouteGenerationStrategy
     public override List<RouteNode> GenerateRoute(PikminRouteRequest request, RouteContext context)
     {
         List<RouteNode> nodes = new List<RouteNode>();
-
-        return nodes;
-    }
-}
-
-/// <summary>
-/// Fallback strategy if no other strategies can handle the request.
-/// </summary>
-public class FallbackStrategy : RouteGenerationStrategy
-{
-    public override List<RouteIntent> UnsupportedIntents => new List<RouteIntent>
-    {
-    };
-
-    public override bool CanHandle(PikminRouteRequest request, RouteContext context)
-    {
-        return base.CanHandle(request, context) && true; // Always can handle
-    }
-
-    public override int Priority => 0; // Lowest priority
-
-    public override List<RouteNode> GenerateRoute(PikminRouteRequest request, RouteContext context)
-    {
-        List<RouteNode> nodes = new List<RouteNode>(); ;
-
-        switch (request.Intent)
-        {
-            case RouteIntent.ToShip:
-                break;
-            case RouteIntent.ToOnion:
-                break;
-            case RouteIntent.ToVehicle:
-                break;
-            case RouteIntent.ToCounter:
-                break;
-            case RouteIntent.ToExit:
-                break;
-            case RouteIntent.ToElevator:
-                break;
-            case RouteIntent.ToPlayer:
-                break;
-            case RouteIntent.ToSpecificPoint:
-                break;
-        }
 
         return nodes;
     }
