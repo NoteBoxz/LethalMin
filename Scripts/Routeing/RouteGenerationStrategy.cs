@@ -21,9 +21,12 @@ public abstract class RouteGenerationStrategy
     protected PikminRouteManager manager = PikminRouteManager.Instance;
     protected List<RouteNode> onionNodes = PikminRouteManager.Instance.GetAllPossibleOnionNodes();
 
-    protected bool IsDestinationReachable(Vector3 from, Vector3 to, bool OffsetOntoNavMesh = true)
+    protected bool IsDestinationReachable(Vector3 from, Vector3 to, NavMeshPath path = null!, bool OffsetOntoNavMesh = true)
     {
-        NavMeshPath path = new NavMeshPath();
+        if (path != null && path.status == NavMeshPathStatus.PathComplete)
+            return true;
+
+        path = new NavMeshPath();
         Vector3 startPos = from;
         Vector3 endPos = to;
 
@@ -55,13 +58,16 @@ public abstract class RouteGenerationStrategy
                 continue;
 
             Vector3 nodePos = node.GetPosition();
-            if (IsDestinationReachable(from, nodePos)
+            NavMeshPath path = new NavMeshPath();
+            NavMesh.CalculatePath(from, nodePos, NavMesh.AllAreas, path);
+
+            if (IsDestinationReachable(from, nodePos, path)
             && (exitPointCheckNode == null
             || !manager.EntranceExitPoints.ContainsKey(node.entrancePoint)
             || manager.EntrancePathableCheckBlacklist.Contains(node.entrancePoint)
             || IsDestinationReachable(manager.EntranceExitPoints[node.entrancePoint].position, exitPointCheckNode.GetPosition())))
             {
-                float distance = CalculatePathLength(from, nodePos);
+                float distance = CalculatePathLength(from, nodePos, path);
                 LethalMin.Logger.LogDebug($"{outsideStr} Entrance Node {node.name} is reachable at distance {distance}");
                 if (distance < bestDistance)
                 {
@@ -78,10 +84,24 @@ public abstract class RouteGenerationStrategy
         if (bestNode == null)
             LethalMin.Logger.LogWarning($"No {outsideStr} entrance nodes are directly reachable, defaulting to closest entrance node");
 
-        return bestNode ?? entranceNodes.OrderBy(n => Vector3.Distance(from, n.GetPosition())).First();
+        if (bestNode == null)
+        {
+            LethalMin.Logger.LogWarning($"No {outsideStr} entrance nodes are directly reachable, defaulting to closest entrance node");
+            if (entranceNodes.Count == 0)
+            {
+                LethalMin.Logger.LogError($"No {outsideStr} entrance nodes available!");
+                return null!;
+            }
+            bestNode = entranceNodes.OrderBy(n => Vector3.Distance(from, n.GetPosition())).First();
+            bestNode = new RouteNode(bestNode);
+            bestNode.name += " (Unpathable)";
+            bestNode.UnpathableOnCreation = true;
+        }
+
+        return bestNode!;
     }
 
-    protected RouteNode GetMostPathableElevator(Vector3 from, FloorData data)
+    protected RouteNode? GetMostPathableElevator(Vector3 from, FloorData data)
     {
         if (data.Elevators.Count == 0)
         {
@@ -99,9 +119,12 @@ public abstract class RouteGenerationStrategy
         foreach (RouteNode node in data.Elevators)
         {
             Vector3 nodePos = node.GetPosition();
-            if (IsDestinationReachable(from, nodePos))
+            NavMeshPath path = new NavMeshPath();
+            NavMesh.CalculatePath(from, nodePos, NavMesh.AllAreas, path);
+
+            if (IsDestinationReachable(from, nodePos, path))
             {
-                float distance = CalculatePathLength(from, nodePos);
+                float distance = CalculatePathLength(from, nodePos, path);
                 LethalMin.Logger.LogDebug($"Elevator Node {node.name} is reachable at distance {distance}");
                 if (distance < bestDistance)
                 {
@@ -115,13 +138,64 @@ public abstract class RouteGenerationStrategy
             }
         }
 
-        return bestNode!;
+        if(bestNode == null && data.Elevators.Count > 0)
+        {
+            LethalMin.Logger.LogWarning("No elevator nodes are directly reachable, defaulting to closest elevator node");
+            bestNode = data.Elevators.OrderBy(n => Vector3.Distance(from, n.GetPosition())).First();
+            bestNode = new RouteNode(bestNode);
+            bestNode.name += " (Unpathable)";
+            bestNode.UnpathableOnCreation = true;
+        }
+
+        return bestNode;
     }
 
-    protected float CalculatePathLength(Vector3 from, Vector3 to)
+    protected RouteNode? GetMostPathableNode(Vector3 from, List<RouteNode> nodes)
     {
-        NavMeshPath path = new NavMeshPath();
-        NavMesh.CalculatePath(from, to, NavMesh.AllAreas, path);
+        RouteNode? bestNode = null;
+        float bestDistance = float.MaxValue;
+
+        foreach (RouteNode node in nodes)
+        {
+            Vector3 nodePos = node.GetPosition();
+            NavMeshPath path = new NavMeshPath();
+            NavMesh.CalculatePath(from, nodePos, NavMesh.AllAreas, path);
+
+            if (IsDestinationReachable(from, nodePos, path))
+            {
+                float distance = CalculatePathLength(from, nodePos, path);
+                LethalMin.Logger.LogDebug($"Node {node.name} is reachable at distance {distance}");
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    bestNode = node;
+                }
+            }
+            else
+            {
+                LethalMin.Logger.LogDebug($"Node {node.name} is NOT reachable");
+            }
+        }
+
+        if(bestNode == null && nodes.Count > 0)
+        {
+            LethalMin.Logger.LogWarning("No nodes are directly reachable, defaulting to closest node");
+            bestNode = nodes.OrderBy(n => Vector3.Distance(from, n.GetPosition())).First();
+            bestNode = new RouteNode(bestNode);
+            bestNode.name += " (Unpathable)";
+            bestNode.UnpathableOnCreation = true;
+        }
+
+        return bestNode;
+    }
+
+    protected float CalculatePathLength(Vector3 from, Vector3 to, NavMeshPath path = null!)
+    {
+        if (path == null)
+        {
+            path = new NavMeshPath();
+            NavMesh.CalculatePath(from, to, NavMesh.AllAreas, path);
+        }
 
         float length = 0f;
         if (path.corners.Length < 2)
@@ -133,6 +207,11 @@ public abstract class RouteGenerationStrategy
         }
 
         return length;
+    }
+
+    protected Vector3 GetPathStartPos(PikminRouteRequest req)
+    {
+        return req.StartOverride != null ? req.StartOverride.Value : req.Pikmin.agent.transform.position;
     }
 }
 
@@ -204,14 +283,13 @@ public class DirectOutdoorStrategy : RouteGenerationStrategy
                 break;
 
             case RouteIntent.ToVehicle:
-                foreach (RouteNode vehicleNode in manager.GetAllPossibleVehicleNodes())
+                List<RouteNode> vehicleNodes = manager.GetAllPossibleVehicleNodes();
+                if (vehicleNodes.Count == 0)
                 {
-                    if (vehicleNode.InstanceIdentifiyer != null)
-                    {
-                        nodes.Add(vehicleNode);
-                        break;
-                    }
+                    LethalMin.Logger.LogWarning("No vehicle nodes found!");
+                    break;
                 }
+                RouteNode? bestVehicleNode = GetMostPathableNode(GetPathStartPos(request), vehicleNodes);
                 break;
 
             case RouteIntent.ToCounter:
@@ -226,7 +304,7 @@ public class DirectOutdoorStrategy : RouteGenerationStrategy
 
             case RouteIntent.ToExit:
                 List<RouteNode> TargetExits = context.CurrentFloor == null ? manager.EntranceNodes : context.CurrentFloor.Exits;
-                RouteNode BestExitNode = GetMostPathableEntranceNode(true, request.Pikmin.agent.transform.position, TargetExits);
+                RouteNode BestExitNode = GetMostPathableEntranceNode(true, GetPathStartPos(request), TargetExits);
                 nodes.Add(BestExitNode);
                 break;
 
@@ -266,13 +344,21 @@ public class IndoorToOutdoorStrategy : RouteGenerationStrategy
     public override List<RouteNode> GenerateRoute(PikminRouteRequest request, RouteContext context)
     {
         List<RouteNode> nodes = new List<RouteNode>();
-        List<RouteNode> outsideNodes = directOutdoor.GenerateRoute(request, context);
+
+        RouteNode mostPathableExit = GetMostPathableEntranceNode(false, GetPathStartPos(request), manager.EntranceNodes);
+
+        PikminRouteRequest movedRequest = new PikminRouteRequest(request);
+        movedRequest.StartOverride = mostPathableExit.GetPosition();
+
+        List<RouteNode> outsideNodes = directOutdoor.GenerateRoute(movedRequest, context);
+
         if (outsideNodes.Count == 0)
         {
-            LethalMin.Logger.LogWarning("No outside nodes generated for indoor to outdoor route, aborting route generation.");
+            LethalMin.Logger.LogWarning("No outside nodes generated, cannot create route.");
             return nodes;
         }
-        RouteNode mostPathableEntrance = GetMostPathableEntranceNode(false, request.Pikmin.agent.transform.position, manager.EntranceNodes, outsideNodes[0]);
+
+        RouteNode mostPathableEntrance = GetMostPathableEntranceNode(false, GetPathStartPos(request), manager.EntranceNodes, outsideNodes[0]);
 
         nodes.Add(mostPathableEntrance);
         nodes.AddRange(outsideNodes);
@@ -315,7 +401,7 @@ public class DirectIndoorStrategy : RouteGenerationStrategy
 
             case RouteIntent.ToExit:
                 List<RouteNode> TargetExits = context.CurrentFloor == null ? manager.EntranceNodes : context.CurrentFloor.Exits;
-                RouteNode BestExitNode = GetMostPathableEntranceNode(true, request.Pikmin.agent.transform.position, TargetExits);
+                RouteNode BestExitNode = GetMostPathableEntranceNode(true, GetPathStartPos(request), TargetExits);
                 nodes.Add(BestExitNode);
                 break;
 
@@ -325,7 +411,7 @@ public class DirectIndoorStrategy : RouteGenerationStrategy
                     LethalMin.Logger.LogWarning("No current floor data available for elevator routing.");
                     break;
                 }
-                RouteNode BestElevatorNode = GetMostPathableElevator(request.Pikmin.agent.transform.position, context.CurrentFloor);
+                RouteNode? BestElevatorNode = GetMostPathableElevator(GetPathStartPos(request), context.CurrentFloor);
                 if (BestElevatorNode != null)
                     nodes.Add(BestElevatorNode);
                 break;
@@ -366,13 +452,21 @@ public class OutdoorToIndoorStrategy : RouteGenerationStrategy
     public override List<RouteNode> GenerateRoute(PikminRouteRequest request, RouteContext context)
     {
         List<RouteNode> nodes = new List<RouteNode>();
-        List<RouteNode> insideNodes = directIndoor.GenerateRoute(request, context);
+
+        RouteNode mostPathableExit = GetMostPathableEntranceNode(false, GetPathStartPos(request), manager.EntranceNodes);
+
+        PikminRouteRequest movedRequest = new PikminRouteRequest(request);
+        movedRequest.StartOverride = mostPathableExit.GetPosition();
+
+        List<RouteNode> insideNodes = directIndoor.GenerateRoute(movedRequest, context);
+
         if (insideNodes.Count == 0)
         {
-            LethalMin.Logger.LogWarning("No outside nodes generated for outdoor to indoor route, aborting route generation.");
+            LethalMin.Logger.LogWarning("No inside nodes generated, cannot create route.");
             return nodes;
         }
-        RouteNode mostPathableEntrance = GetMostPathableEntranceNode(true, request.Pikmin.agent.transform.position, manager.EntranceNodes, insideNodes[0]);
+
+        RouteNode mostPathableEntrance = GetMostPathableEntranceNode(false, GetPathStartPos(request), manager.EntranceNodes, insideNodes[0]);
 
         nodes.Add(mostPathableEntrance);
         nodes.AddRange(insideNodes);

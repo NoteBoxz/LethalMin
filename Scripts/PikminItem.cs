@@ -1182,7 +1182,9 @@ namespace LethalMin
 
         public RouteIntent DetermineRouteIntent()
         {
-            return RouteIntent.ToShip;
+            RouteIntent ChosenIntent = RouteIntent.ToShip;
+            
+            return ChosenIntent;
         }
 
         public void OnNodeReached(RouteNode node)

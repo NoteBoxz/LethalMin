@@ -312,7 +312,7 @@ namespace LethalMin
         }
         public void ChargeUse(Vector3 ChargePos)
         {
-            ChargeCooldown = PikminManager.instance.Cheat_ChargeCoolDown.Value == -1 ? 2f : PikminManager.instance.Cheat_ChargeCoolDown.Value;
+            ChargeCooldown = PikminManager.instance.Cheat_ChargeCoolDown.Value == -1 ? 0.1f : PikminManager.instance.Cheat_ChargeCoolDown.Value;
             LethalMin.Logger.LogInfo($"WhistleItem: ChargeUse at position {ChargePos} by {playerHeldBy?.playerUsername}");
             OverridePikminPosition pikminPosition = new OverridePikminPosition(ChargePos, true, 4f, 5f);
             audioSource.PlayOneShot(chargeSound);

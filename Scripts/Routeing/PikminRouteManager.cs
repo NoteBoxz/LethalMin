@@ -132,13 +132,24 @@ public class PikminRouteManager : MonoBehaviour
         }
 
         List<RouteNode> nodes = strategy.GenerateRoute(request, context);
+        bool unpathableNodeFound = false;
+        foreach (RouteNode node in nodes)
+        {
+            if (node.UnpathableOnCreation)
+            {
+                unpathableNodeFound = true;
+                break;
+            }
+        }
 
         //Log each route node name
         string nodeLog = "Generated Route Nodes: " + string.Join(" -> ", nodes.Select(n => n.name));
+        nodeLog += unpathableNodeFound ? "\n(Unpathable Node Found)" : "";
         LethalMin.Logger.LogDebug(nodeLog);
 
         // Create route with the generated nodes
         PikminRoute route = new PikminRoute(request, context, nodes);
+        route.Pathable = !unpathableNodeFound;
         return route;
     }
 

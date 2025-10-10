@@ -25,6 +25,7 @@ public class RouteNode
     /// </summary>
     public EntranceTeleport entrancePoint = null!;
     public float NavMeshSampleRadius = 5f;
+    public bool UnpathableOnCreation = false; // Whether to mark the route as unpathable when this node is created
 
     [Header("Check Settings")]
     public bool Skip = false;
@@ -93,6 +94,22 @@ public class RouteNode
         CheckDistance = check;
     }
 
+    public RouteNode(RouteNode other)
+    {
+        name = other.name;
+        Type = other.Type;
+        vectorPoint = other.vectorPoint;
+        transformPoint = other.transformPoint;
+        entrancePoint = other.entrancePoint;
+        NavMeshSampleRadius = other.NavMeshSampleRadius;
+        UnpathableOnCreation = other.UnpathableOnCreation;
+        AlwaysUseNavMeshOffset = other.AlwaysUseNavMeshOffset;
+        CheckBuffer = other.CheckBuffer;
+        CheckDistance = other.CheckDistance;
+        CheckRegion = other.CheckRegion;
+        InstanceIdentifiyer = other.InstanceIdentifiyer;
+    }
+    
     public bool IsPikminAtNode(PikminAI ai)
     {
         if (Skip)

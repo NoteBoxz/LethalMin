@@ -25,9 +25,30 @@ public class PikminRouteRequest
     public Leader? TargetPlayer;         // For ToPlayer
     public Vector3 CustomDestination;   // For ToSpecificPoint
     public Transform? CustomTransform;   // For ToSpecificPoint
+    public Vector3? StartOverride; // Optional start position override
 
     // Constraints
     public bool HandleEntrances = true; // Whether to handle entrance nodes automatically
     public float CustomCheckDistance = 1;  // Only used for ToPlayer and ToSpecificPoint
     public Collider CustomCheckCollider = null!; // Optional collider to use for ToSpecificPoint
+
+    public PikminRouteRequest(PikminRouteRequest other)
+    {
+        Intent = other.Intent;
+        Pikmin = other.Pikmin;
+        CarriedItem = other.CarriedItem;
+        TargetOnion = other.TargetOnion;
+        TargetPlayer = other.TargetPlayer;
+        CustomDestination = other.CustomDestination;
+        CustomTransform = other.CustomTransform;
+        StartOverride = other.StartOverride;
+        HandleEntrances = other.HandleEntrances;
+        CustomCheckDistance = other.CustomCheckDistance;
+        CustomCheckCollider = other.CustomCheckCollider;
+    }
+
+    public PikminRouteRequest()
+    {
+        
+    }
 }

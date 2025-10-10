@@ -14,6 +14,7 @@ public class PikminRoute
     public RouteNode CurNode => Nodes[CurrentNodeIndex];
     public bool DontIncrumentNodeIndex = false;
     public bool HandleEntrances = true; // Whether to handle entrance nodes automatically
+    public bool Pathable = true; // Whether the route is pathable by the Pikmin
 
     // Events
     public UnityEvent<RouteNode> OnNodeReached = new UnityEvent<RouteNode>();
@@ -55,7 +56,12 @@ public class PikminRoute
         {
             //LethalMin.Logger.LogWarning($"Route invalidated on node {CurNode.name}: {reason}");
             OnRouteInvalidated?.Invoke(reason);
+            Pathable = false;
             return; // Let the owner decide to regenerate
+        }
+        else
+        {
+            Pathable = true;
         }
 
         // Path to current node
