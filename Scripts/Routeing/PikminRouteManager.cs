@@ -45,7 +45,8 @@ public class PikminRouteManager : MonoBehaviour
             point: StartOfRound.Instance.insideShipPositions[5],
             check: StartOfRound.Instance.shipInnerRoomBounds
         );
-        ShipNode.CheckBuffer = 2.5f;
+        ShipNode.CheckDistance = 5f;
+        ShipNode.CheckBuffer = 1f;
     }
 
     public void OnGameLoaded()
@@ -280,6 +281,8 @@ public class PikminRouteManager : MonoBehaviour
                 point: vehicle.GetAvaiblePikminPoint(request.Pikmin),
                 check: vehicle.PikminCheckRegion
             );
+            vehicleNode.CheckBuffer = 1f;
+            vehicleNode.CheckDistance = 1f;
             vehicleNodes.Add(vehicleNode);
         }
         return vehicleNodes;
@@ -351,6 +354,28 @@ public class PikminRouteManager : MonoBehaviour
         );
         playerNode.InstanceIdentifiyer = request.TargetPlayer;
         return playerNode;
+    }
+
+    public static EntranceTeleport GetClosestEntrance(Vector3 position, bool CompareOutside)
+    {
+        float closestDistance = Mathf.Infinity;
+        EntranceTeleport closestEntrance = null!;
+        foreach (EntranceTeleport entrance in PikminRouteManager.Instance.EntranceExitPoints.Keys)
+        {
+            if (CompareOutside != entrance.isEntranceToBuilding)
+            {
+                continue;
+            }
+
+            float dist = Vector3.Distance(position, entrance.entrancePoint.position);
+
+            if (dist < closestDistance)
+            {
+                closestDistance = dist;
+                closestEntrance = entrance;
+            }
+        }
+        return closestEntrance;
     }
 
     public static bool IsInShipBounds(Vector3 position)

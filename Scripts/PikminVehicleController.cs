@@ -83,6 +83,9 @@ namespace LethalMin
                 }
                 Point.transform.SetParent(PointsRegion.transform, true);
                 Point.transform.rotation = Quaternion.identity;
+
+                PikminPoints[pikmin] = Point.transform;
+
                 LethalMin.Logger.LogInfo($"Created point at {Point.transform.position} for {pikmin.DebugID}");
                 return Point.transform;
             }

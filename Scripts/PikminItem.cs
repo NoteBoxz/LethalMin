@@ -1193,12 +1193,12 @@ namespace LethalMin
                 return RouteIntent.ToPlayer;
             }
 
-            if (TargetOnion != null && (!LethalMin.OnCompany || LethalMin.OnCompany && LethalMin.TakeItemsToOnionOnCompany))
+            // Try onion route if applicable
+            if (TargetOnion != null && (!LethalMin.OnCompany || LethalMin.TakeItemsToOnionOnCompany))
             {
-                RouteIntent ChosenIntent = RouteIntent.ToOnion;
-                if (TestRoute(ChosenIntent))
+                if (TestRoute(RouteIntent.ToOnion))
                 {
-                    return ChosenIntent;
+                    return RouteIntent.ToOnion;
                 }
                 else
                 {
@@ -1208,44 +1208,80 @@ namespace LethalMin
                 }
             }
 
+            // Try company counter route if applicable
             if (LethalMin.OnCompany)
             {
-                RouteIntent ChosenIntent = RouteIntent.ToCounter;
-                if (!ItemScript.itemProperties.isScrap && !LethalMin.CarryNonScrapItemsOnCompany)
+                RouteIntent companyIntent = (!ItemScript.itemProperties.isScrap && !LethalMin.CarryNonScrapItemsOnCompany)
+                    ? RouteIntent.ToShip
+                    : RouteIntent.ToCounter;
+
+                if (TestRoute(companyIntent))
                 {
-                    ChosenIntent = RouteIntent.ToShip;
-                }
-                if (TestRoute(ChosenIntent))
-                {
-                    return ChosenIntent;
+                    return companyIntent;
                 }
             }
 
-            if (!PrimaryPikminOnItem.isOutside)
+            // Calculate distances for vehicle routing
+            Vector3 distanceComparisonPoint = PrimaryPikminOnItem.isOutside ? ItemScript.transform.position :
+            PikminRouteManager.GetClosestEntrance(ItemScript.transform.position, false).entrancePoint.position;
+            float closestCarDistance = Mathf.Infinity;
+            foreach (PikminVehicleController vehicle in PikminManager.instance.Vehicles)
             {
-                RouteIntent ChosenIntent = LethalMin.CanPathOutsideWhenInside ? RouteIntent.ToShip : RouteIntent.ToExit;
-                if (TestRoute(ChosenIntent))
+                if (!vehicle.controller.backDoorOpen)
                 {
-                    return ChosenIntent;
+                    continue;
                 }
-                else if (PikminRouteManager.Instance.CurrentFloorData != null)
+                float dist = Vector3.Distance(vehicle.transform.position, distanceComparisonPoint);
+                if (dist < closestCarDistance)
                 {
-                    ChosenIntent = RouteIntent.ToElevator;
-                    if (TestRoute(ChosenIntent))
-                    {
-                        return ChosenIntent;
-                    }
+                    closestCarDistance = dist;
                 }
             }
-            
-            if (PikminManager.instance.Vehicles.Count > 0 && LethalMin.TakeItemsToTheCar)
+
+            float shipDistance = Vector3.Distance(StartOfRound.Instance.shipBounds.transform.position, distanceComparisonPoint);
+            bool shouldPreferVehicle = PikminManager.instance.Vehicles.Count > 0
+                                    && shipDistance > closestCarDistance
+                                    && LethalMin.TakeItemsToTheCar;
+
+            // Handle indoor routing
+            if (!PrimaryPikminOnItem.isOutside)
             {
-                RouteIntent ChosenIntent;
-                ChosenIntent = RouteIntent.ToVehicle;
-                if (TestRoute(ChosenIntent))
+                return DetermineIndoorRouteIntent(shouldPreferVehicle);
+            }
+
+            // Handle outdoor vehicle routing
+            if (shouldPreferVehicle && TestRoute(RouteIntent.ToVehicle))
+            {
+                return RouteIntent.ToVehicle;
+            }
+
+            // Default
+            return RouteIntent.ToShip;
+        }
+
+        private RouteIntent DetermineIndoorRouteIntent(bool shouldPreferVehicle)
+        {
+            RouteIntent primaryIntent = LethalMin.CanPathOutsideWhenInside ? RouteIntent.ToShip : RouteIntent.ToExit;
+
+            // Try vehicle first if preferred
+            if (shouldPreferVehicle && primaryIntent == RouteIntent.ToShip)
+            {
+                if (TestRoute(RouteIntent.ToVehicle))
                 {
-                    return ChosenIntent;
+                    return RouteIntent.ToVehicle;
                 }
+            }
+
+            // Try primary intent (ship or exit)
+            if (TestRoute(primaryIntent))
+            {
+                return primaryIntent;
+            }
+
+            // Try elevator as fallback
+            if (PikminRouteManager.Instance.CurrentFloorData != null && TestRoute(RouteIntent.ToElevator))
+            {
+                return RouteIntent.ToElevator;
             }
 
             return RouteIntent.ToShip;

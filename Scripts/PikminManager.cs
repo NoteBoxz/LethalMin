@@ -519,6 +519,8 @@ namespace LethalMin
                     FiredStats.TotalPikminLost++;
                 }
             }
+
+            PikminRouteManager.Instance.OnGameEnded();
         }
 
         public bool IsPikminInSafetyRange(PikminAI pikmin)

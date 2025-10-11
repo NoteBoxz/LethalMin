@@ -314,7 +314,7 @@ namespace LethalMin
         {
             ChargeCooldown = PikminManager.instance.Cheat_ChargeCoolDown.Value == -1 ? 0.1f : PikminManager.instance.Cheat_ChargeCoolDown.Value;
             LethalMin.Logger.LogInfo($"WhistleItem: ChargeUse at position {ChargePos} by {playerHeldBy?.playerUsername}");
-            OverridePikminPosition pikminPosition = new OverridePikminPosition(ChargePos, true, 4f, 0.1f);
+            OverridePikminPosition pikminPosition = new OverridePikminPosition("WhisCharge", ChargePos, true, 4f, 0.1f);
             audioSource.PlayOneShot(chargeSound);
             if (WhistleAnim != null)
                 WhistleAnim.SetTrigger("char");
@@ -325,9 +325,22 @@ namespace LethalMin
             }
             foreach (PikminAI ai in noticeZone.LeaderScript.PikminInSquad)
             {
+                float vol = ai.leader == null || ai.leader.PikminInSquad.Count == 0 ? 1.0f : 1.0f / ai.leader.PikminInSquad.Count;
+                ai.PlayAudioOnLocalClient(PikminSoundPackSounds.Charge.ToString(), true, vol);
+                ai.PlayAnimation(ai.animController.AnimPack.EditorNoticeAnim);
+                if (!ai.IsOwner)
+                {
+                    continue;
+                }
+                
                 if (Vector3.Distance(ai.transform.position, noticeZone.LeaderScript.transform.position) > 30f)
                 {
                     LethalMin.Logger.LogInfo($"WhistleItem: ChargeUse - {ai.name} is too far away, skipping charge.");
+                    continue;
+                }
+                if (ai.OverrideFollowPosition != null && ai.OverrideFollowPosition.Value.ID == "MoveToVPoint")
+                {
+                    LethalMin.Logger.LogInfo($"{ai.DebugID}: Charge interrupted by vehicle");
                     continue;
                 }
                 ai.OverrideFollowPosition = pikminPosition;
@@ -336,7 +349,7 @@ namespace LethalMin
                     ai.StopCoroutine(ai.chargeRoutine);
                     ai.chargeRoutine = null;
                 }
-                ai.chargeRoutine = ai.StartCoroutine(ai.DoCharge(4, ChargePos));
+                ai.chargeRoutine = ai.StartCoroutine(ai.DoCharge(4));
             }
         }
 
@@ -510,7 +523,7 @@ namespace LethalMin
                             if (ai != null && ai.pikminType != null && IdlePositions.ContainsKey(ai.pikminType))
                             {
                                 ai.LeaderAssesmentDelay = LethalMin.DismissWindownTime;
-                                ai.OverrideIdlePosition = new OverridePikminPosition(IdlePositions[ai.pikminType], true, 2f, 2f);
+                                ai.OverrideIdlePosition = new OverridePikminPosition("WhisDismiss", IdlePositions[ai.pikminType], true, 2f, 2f);
                             }
                         }
                     }

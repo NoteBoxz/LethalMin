@@ -109,37 +109,30 @@ public class RouteNode
         CheckRegion = other.CheckRegion;
         InstanceIdentifiyer = other.InstanceIdentifiyer;
     }
-    
+
     public bool IsPikminAtNode(PikminAI ai)
     {
         if (Skip)
         {
             return true;
         }
-        Vector3? Pos = GetPosition();
-        if (Pos == null)
-        {
-            return false;
-        }
+        Vector3 Pos = GetPosition();
         if (CheckRegion != null)
         {
-            //LethalMin.Logger.LogInfo($"Checking region for {NodeName} {CheckRegion.bounds.Contains(ai.transform.position)}");
-            return CheckRegion.bounds.Contains(ai.agent.transform.position);
+            bool AlsoCheckDistance = CheckDistance > 0;
+            return CheckRegion.bounds.Contains(ai.agent.transform.position)
+             && (!AlsoCheckDistance || Vector3.Distance(ai.agent.transform.position, Pos) <= CheckDistance);
         }
         else
         {
-            return Vector3.Distance(ai.agent.transform.position, Pos.Value) <= CheckDistance;
+            return Vector3.Distance(ai.agent.transform.position, Pos) <= CheckDistance;
         }
     }
 
     public bool IsPikminNearNode(PikminAI ai, float distance)
     {
-        Vector3? Pos = GetPosition();
-        if (Pos == null)
-        {
-            return false;
-        }
-        return Vector3.Distance(ai.agent.transform.position, Pos.Value) <= distance;
+        Vector3 Pos = GetPosition();
+        return Vector3.Distance(ai.agent.transform.position, Pos) <= distance;
     }
 
     public void NodeReached(PikminRoute route)

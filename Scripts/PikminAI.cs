@@ -7,6 +7,7 @@ using LethalMin.Pikmin;
 using LethalMin.Utils;
 using UnityEngine.AI;
 using GameNetcodeStuff;
+using Dissonance;
 
 namespace LethalMin
 {
@@ -47,8 +48,9 @@ namespace LethalMin
 
     public struct OverridePikminPosition
     {
-        public OverridePikminPosition(Vector3 position, bool useTimer = true, float timeToOverride = 2.5f, float distanceThreshold = -1)
+        public OverridePikminPosition(string ID, Vector3 position, bool useTimer = true, float timeToOverride = 2.5f, float distanceThreshold = -1)
         {
+            this.ID = ID;
             this.useTimer = useTimer;
             this.position = position;
             this.timeToOverride = timeToOverride;
@@ -75,6 +77,7 @@ namespace LethalMin
         {
             return UpdateTimer() || CheckDistance(aI.transform.position);
         }
+        public string ID;
         public Vector3 position;
         public bool useTimer = false;
         public float timeToOverride = 2.5f;
@@ -1230,8 +1233,17 @@ namespace LethalMin
         {
             PikminVehicleController? vehicleController = PikUtils.GetLeaderInCar(leader);
 
+            if (IsOwner && vehicleController == null && CurrentVehicle == null &&
+            OverrideFollowPosition != null && OverrideFollowPosition.Value.ID == "MoveToVPoint")
+            {
+                OverrideFollowPosition = null;
+                LethalMin.Logger.LogDebug($"{DebugID}: Vehicle moving to point cancelled, no vehicle found");
+            }
+
             if (vehicleController == CurrentVehicle)
+            {
                 return;
+            }
 
             if (vehicleController == null)
             {
@@ -1239,14 +1251,47 @@ namespace LethalMin
                 {
                     SetOffVehicle();
                 }
-                LethalMin.Logger.LogInfo($"{DebugID}: Leader is not in car");
                 return;
             }
 
-            CurrentVehiclePoint = vehicleController.GetAvaiblePikminPoint(this);
-            CurrentVehicle = vehicleController;
-            SetCollisionMode(0);
-            LethalMin.Logger.LogDebug($"{DebugID}: Set to vehicle: {vehicleController.name}");
+            Transform form = vehicleController.GetAvaiblePikminPoint(this);
+            if (IsOwner && Vector3.Distance(form.position, agent.transform.position) > 1f
+            && CurrentVehiclePoint == null)
+            {
+                agent.stoppingDistance = 0f;
+                agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+                if (OverrideFollowPosition == null)
+                    LethalMin.Logger.LogDebug($"{DebugID}: Moving to vehicle point: {form.position}");
+                OverrideFollowPosition = new OverridePikminPosition("MoveToVPoint", form.position, false);
+                if (chargeRoutine != null)
+                {
+                    StopCoroutine(chargeRoutine);
+                    chargeRoutine = null;
+                }
+            }
+            else if (IsOwner)
+            {
+                SetCollisionMode(0);
+                CurrentVehiclePoint = form;
+                OverrideFollowPosition = null;
+                CurrentVehicle = vehicleController;
+                GetInVehicleRpc(vehicleController.controller.NetworkObject);
+                LethalMin.Logger.LogDebug($"{DebugID}: Got in to vehicle: {vehicleController.name}");
+            }
+        }
+
+        [Rpc(SendTo.NotOwner)]
+        public void GetInVehicleRpc(NetworkObjectReference vehicleRef)
+        {
+            if (vehicleRef.TryGet(out NetworkObject obj) && obj.TryGetComponent(out PikminVehicleController vehicleController))
+            {
+                Transform form = vehicleController.GetAvaiblePikminPoint(this);
+                SetCollisionMode(0);
+                CurrentVehiclePoint = form;
+                OverrideFollowPosition = null;
+                CurrentVehicle = vehicleController;
+                LethalMin.Logger.LogDebug($"{DebugID}: Got in to vehicle (synced): {vehicleController.name}");
+            }
         }
 
         public void SetOffVehicle(bool SetCollMode = true)
@@ -1256,24 +1301,18 @@ namespace LethalMin
             CurrentVehiclePoint = null;
             CurrentVehicle = null;
             transform2.TeleportOnLocalClient(transform.position, transform.rotation);
+            if (IsOwner && OverrideFollowPosition != null && OverrideFollowPosition.Value.ID == "MoveToVPoint")
+            {
+                OverrideFollowPosition = null;
+            }
             if (SetCollMode)
                 SetCollisionMode(1);
             if (Check)
                 LethalMin.Logger.LogInfo($"{DebugID}: Set off vehicle");
         }
 
-        public IEnumerator DoCharge(float time, Vector3 ChargePos)
+        public IEnumerator DoCharge(float time)
         {
-            float vol = leader == null || leader.PikminInSquad.Count == 0 ? 1.0f : 1.0f / leader.PikminInSquad.Count;
-            PlayAudioOnLocalClient(PikminSoundPackSounds.Charge.ToString(), true, vol);
-            PlayAnimation(animController.AnimPack.EditorNoticeAnim);
-            if (!IsOwner)
-            {
-                chargeRoutine = null;
-                OverrideFollowPosition = null;
-                yield break;
-            }
-
             float prevSD = agent.stoppingDistance;
             agent.stoppingDistance = 0f;
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
