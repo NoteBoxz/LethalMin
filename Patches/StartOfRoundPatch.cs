@@ -44,6 +44,13 @@ namespace LethalMin.Patches
             }
         }
 
+        [HarmonyPatch(nameof(StartOfRound.SetShipReadyToLand))]
+        [HarmonyPostfix]
+        public static void StartPikminManager(StartOfRound __instance)
+        {
+            PikminManager.instance.OnGameEnded();
+        }
+
 
         [HarmonyPatch(nameof(StartOfRound.SceneManager_OnLoadComplete1))]
         [HarmonyPostfix]

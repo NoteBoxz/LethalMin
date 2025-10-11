@@ -1218,7 +1218,7 @@ namespace LethalMin
             // Try company counter route if applicable
             if (LethalMin.OnCompany)
             {
-                RouteIntent companyIntent = (!ItemScript.itemProperties.isScrap && !LethalMin.CarryNonScrapItemsOnCompany)
+                RouteIntent companyIntent = (!ItemScript.itemProperties.isScrap && !LethalMin.CarryNonScrapItemsToCompany)
                     ? RouteIntent.ToShip
                     : RouteIntent.ToCounter;
 

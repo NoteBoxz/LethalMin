@@ -520,7 +520,13 @@ namespace LethalMin
                     FiredStats.TotalPikminLost++;
                 }
             }
+        }
 
+        /// <summary>
+        /// Called when the game fully ends and the results screen is showed
+        /// </summary>
+        public void OnGameEnded()
+        {
             PikminRouteManager.Instance.OnGameEnded();
         }
 

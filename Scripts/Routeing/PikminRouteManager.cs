@@ -103,6 +103,7 @@ public class PikminRouteManager : MonoBehaviour
         CurrentFloorData.Clear();
         EntranceExitPoints.Clear();
         AddedTelepointsForExits.Clear();
+        FloorDataGenerator.DungeonFloorDataCache.Clear();
     }
 
     public PikminRoute CreateRoute(PikminRouteRequest request)
@@ -137,6 +138,10 @@ public class PikminRouteManager : MonoBehaviour
             EntranceTeleport[] entrances = Object.FindObjectsOfType<EntranceTeleport>();
             RefreshEntrancePairs(entrances);
             EntranceNodes = GetAllEntranceNodes(entrances);
+            if (Dungeons.Count == 1)
+                CurrentFloorData = FloorDataGenerator.GenerateFloorDataInterior(Dungeons[0]);
+            else if (Dungeons.Count > 1)
+                CurrentFloorData = FloorDataGenerator.GenerateFloorDataInterior(GetClosestDungeon(request.Pikmin.transform.position));
         }
 
         List<RouteNode> nodes = strategy.GenerateRoute(request, context);
@@ -376,6 +381,23 @@ public class PikminRouteManager : MonoBehaviour
             }
         }
         return closestEntrance;
+    }
+
+    public static Dungeon GetClosestDungeon(Vector3 position)
+    {
+        float closestDistance = Mathf.Infinity;
+        Dungeon closestDungeon = null!;
+        foreach (Dungeon dungeon in PikminRouteManager.Instance.Dungeons)
+        {
+            float dist = Vector3.Distance(position, dungeon.transform.position);
+
+            if (dist < closestDistance)
+            {
+                closestDistance = dist;
+                closestDungeon = dungeon;
+            }
+        }
+        return closestDungeon;
     }
 
     public static bool IsInShipBounds(Vector3 position)

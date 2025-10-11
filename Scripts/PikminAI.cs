@@ -3467,6 +3467,11 @@ namespace LethalMin
                     continue;
                 }
 
+                if(LethalMin.OnCompany && LethalMin.IgnoreNonScrapItemsToCompany && !item.ItemScript.itemProperties.isScrap)
+                {
+                    continue;
+                }
+
                 if (LethalMin.ItemBlacklistConfig.InternalValue.Contains(item.ItemScript.itemProperties.itemName))
                 {
                     continue;

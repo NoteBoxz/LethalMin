@@ -754,9 +754,10 @@ namespace LethalMin
         public static ConfigItem<List<string>> ItemBlacklistConfig = null!;
         public static ConfigItem<List<string>> EnemyBodyConvertBlacklistConfig = null!;
         public static ConfigItem<bool> UseExitsWhenCarryingItems = null!;
-        public static ConfigItem<bool> CarryNonScrapItemsOnCompany = null!;
         public static ConfigItem<PfollowMode> PikminFollowMode = null!;
         public static ConfigItem<float> TimeFallingFailSafe = null!;
+        public static ConfigItem<bool> CarryNonScrapItemsToCompany = null!;
+        public static ConfigItem<bool> IgnoreNonScrapItemsToCompany = null!;
         public static ConfigItem<bool> TakeItemsToOnionOnCompany = null!;
         public static ConfigItem<bool> TakeItemsToTheCar = null!;
         public static ConfigItem<bool> TakeItemsToTheOnion = null!;
@@ -1384,14 +1385,6 @@ namespace LethalMin
                 true,
                 ConfigItemAuthority.Host);
 
-            CarryNonScrapItemsOnCompany = new ConfigItem<bool>(
-                "Pikmin Behavior",
-                "Carry Non-Scrap Items On Company",
-                false,
-                "Makes it so pikmin carry Non-Scrap items (Flashlights, Keys, etc.) to the company counter instead of the ship",
-                false,
-                ConfigItemAuthority.Client);
-
             UseExitsWhenCarryingItems = new ConfigItem<bool>(
                 "Pikmin Behavior",
                 "Use Exits When Carrying Items",
@@ -1418,6 +1411,22 @@ namespace LethalMin
                 "Time Falling Fail Safe",
                 10f,
                 "The time it takes for a pikmin to be concitered falling infintly and teleport back into bounds",
+                false,
+                ConfigItemAuthority.Client);
+
+            CarryNonScrapItemsToCompany = new ConfigItem<bool>(
+                "Pikmin Behavior",
+                "Carry Non-Scrap Items To Company",
+                false,
+                "Makes it so pikmin carry Non-Scrap items (Flashlights, Keys, etc.) to the company counter instead of the ship",
+                false,
+                ConfigItemAuthority.Client);
+            
+            IgnoreNonScrapItemsToCompany = new ConfigItem<bool>(
+                "Pikmin Behavior",
+                "Ignore Non-Scrap Items On Company",
+                false,
+                "Makes it so pikmin ignore Non-Scrap items (Flashlights, Keys, etc.) on the company entirely",
                 false,
                 ConfigItemAuthority.Client);
 
