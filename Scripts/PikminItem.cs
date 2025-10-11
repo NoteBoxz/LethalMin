@@ -56,6 +56,7 @@ namespace LethalMin
         bool isRegeneratingRoute = false;
         [HideInInspector]
         public EnemyGrabbableObject hackEnemyGrabbableObject = null!;
+        float TimeSinceArrived = 0f;
 
 
 
@@ -1044,7 +1045,9 @@ namespace LethalMin
             }
 
             if (HasArrived && IsntHeldByPikmin()
-            || HasArrived && Vector3.Distance(ArrivePosition, ItemScript.transform.position) > 5f)
+            || HasArrived && Vector3.Distance(ArrivePosition, ItemScript.transform.position) > 5f
+            || Time.time - TimeSinceArrived > 2f && settings.CanProduceSprouts &&
+            (hackEnemyGrabbableObject == null || hackEnemyGrabbableObject.ai is not MaskedPlayerEnemy))
             {
                 HasArrived = false;
                 ArrivePosition = Vector3.zero;
@@ -1364,6 +1367,7 @@ namespace LethalMin
         {
             LethalMin.Logger.LogInfo($"{gameObject.name} has reached its route end");
             HasArrived = true;
+            TimeSinceArrived = Time.time;
             ArrivePosition = ItemScript.transform.position;
             StartCoroutine(DoYays(PikminOnItem));
             ClearCurrentRoute();

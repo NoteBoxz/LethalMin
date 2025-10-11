@@ -162,7 +162,8 @@ namespace LethalMin.Utils
             && (itm.ItemScript.grabbableToEnemies || itm.settings.OverrideGrabbableToEnemeis || itm.IsBeingCarried)
             && itm.PikminOnItem.Count < itm.GrabToPositions.Count
             && !itm.HasArrived
-            && itm.settings.GrabableToPikmin;
+            && itm.settings.GrabableToPikmin
+            && !PikminManager.instance.ItemArrivalZones.Any(zone => zone.IsItemInZone(itm));
         }
         public static bool IsEnemyVaildToAttack(PikminEnemy Penemy)
         {

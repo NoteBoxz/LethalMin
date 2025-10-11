@@ -236,6 +236,7 @@ namespace LethalMin
         public Dictionary<EnemyType, Item> EnemyItems { get; private set; } = new Dictionary<EnemyType, Item>();
         public HashSet<PuffminLeader> PuffminLeaders { get; private set; } = new HashSet<PuffminLeader>();
         public HashSet<PuffminAI> PuffminAIs { get; private set; } = new HashSet<PuffminAI>();
+        public HashSet<ItemArrivalZone> ItemArrivalZones { get; private set; } = new HashSet<ItemArrivalZone>();
         public List<FreezeableWater> FreezeableWaters = new List<FreezeableWater>();
         public List<int> ScannedPiklopediaIDs = new List<int>();
         public List<int> NewlyScannedPiklopediaIDs = new List<int>();
@@ -1045,6 +1046,9 @@ namespace LethalMin
 
 
 
+
+
+
         #region Achievements
         [Rpc(SendTo.Everyone)]
         public void SpawnWhatHappenedTriggerRpc(Vector3 position)
@@ -1075,6 +1079,9 @@ namespace LethalMin
             LethalMin.Logger.LogInfo($"What Happened Trigger placed at {triggerObj.scene.name}");
         }
         #endregion
+
+
+
 
 
 
