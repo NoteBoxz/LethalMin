@@ -21,7 +21,7 @@ namespace LethalMin
         private ArrivalZoneType zoneType;
         private Transform positionCheck = null!;
         private Collider zoneCollider = null!;
-        private float checkDistance = -1f;
+        private float checkDistance = 0.1f;
         private EntranceTeleport entranceTeleport = null!;
         private DepositItemsDesk desk = null!;
         private VehicleController vehicleController = null!;
@@ -31,6 +31,7 @@ namespace LethalMin
         {
             ItemArrivalZone newZone = obj.AddComponent<ItemArrivalZone>();
             newZone.zoneType = type;
+            LethalMin.Logger.LogInfo($"Created Item Arrival Zone of type {type} on object {obj.name}");
         }
 
         public void Start()
@@ -42,7 +43,7 @@ namespace LethalMin
                 case ArrivalZoneType.Exit:
                     entranceTeleport = GetComponent<EntranceTeleport>();
                     positionCheck = entranceTeleport.entrancePoint;
-                    checkDistance = 15f;
+                    checkDistance = 5f;
                     break;
                 case ArrivalZoneType.Ship:
                     zoneCollider = StartOfRound.Instance.shipInnerRoomBounds;
@@ -67,17 +68,17 @@ namespace LethalMin
             switch (zoneType)
             {
                 case ArrivalZoneType.Exit:
-                    return LethalMin.CanPathOutsideWhenInside;
+                    return LethalMin.UseExitsWhenCarryingItems;
 
                 case ArrivalZoneType.Ship:
                     return itemChecking.settings.CanProduceSprouts && PikminManager.instance.Onions.Count > 0
-                    || LethalMin.TakeItemsToOnionOnCompany && LethalMin.OnCompany && !itemChecking.ItemScript.itemProperties.isScrap;
+                    || LethalMin.TakeItemsToOnionOnCompany && LethalMin.OnCompany && itemChecking.ItemScript.itemProperties.isScrap;
 
                 case ArrivalZoneType.Crusier:
                     return Vector3.Distance(positionCheck.position, StartOfRound.Instance.shipBounds.transform.position) < 50f;
 
                 case ArrivalZoneType.MineElevator:
-                    return !mineShaftElevator.elevatorMovingDown && LethalMin.CanPathOutsideWhenInside.InternalValue;
+                    return !mineShaftElevator.elevatorMovingDown && LethalMin.UseExitsWhenCarryingItems.InternalValue;
 
                 case ArrivalZoneType.Counter:
                     return !itemChecking.ItemScript.itemProperties.isScrap;
@@ -90,7 +91,7 @@ namespace LethalMin
 
                 case ArrivalZoneType.Forever:
                     return false;
-                    
+
                 default:
                     return true;
             }
@@ -98,7 +99,7 @@ namespace LethalMin
 
         public bool LCOFFICE_CBMOOZ(PikminItem itemChecking)
         {
-            return ElevatorSystem.elevatorFloor == 1 && LethalMin.CanPathOutsideWhenInside.InternalValue;
+            return ElevatorSystem.elevatorFloor == 1 && LethalMin.UseExitsWhenCarryingItems.InternalValue;
         }
 
         public bool ZENEROS_CBMOOZ(PikminItem itemChecking)
@@ -108,9 +109,8 @@ namespace LethalMin
 
         public bool IsItemInZone(PikminItem item)
         {
-            float dist = Vector3.Distance(item.transform.position, positionCheck.position);
             bool inBounds = zoneCollider == null ? false : zoneCollider.bounds.Contains(item.transform.position);
-            bool withinRange = checkDistance == -1 ? false : dist <= checkDistance;
+            bool withinRange = positionCheck == null ? false : Vector3.Distance(item.transform.position, positionCheck.position) <= checkDistance;
 
             return !CanBeMovedOutofZone(item) && (inBounds || withinRange);
         }

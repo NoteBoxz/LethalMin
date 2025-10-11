@@ -753,7 +753,7 @@ namespace LethalMin
         public static ConfigItem<List<string>> AttackBlacklistConfig = null!;
         public static ConfigItem<List<string>> ItemBlacklistConfig = null!;
         public static ConfigItem<List<string>> EnemyBodyConvertBlacklistConfig = null!;
-        public static ConfigItem<bool> CanPathOutsideWhenInside = null!;
+        public static ConfigItem<bool> UseExitsWhenCarryingItems = null!;
         public static ConfigItem<bool> CarryNonScrapItemsOnCompany = null!;
         public static ConfigItem<PfollowMode> PikminFollowMode = null!;
         public static ConfigItem<float> TimeFallingFailSafe = null!;
@@ -1392,11 +1392,11 @@ namespace LethalMin
                 false,
                 ConfigItemAuthority.Client);
 
-            CanPathOutsideWhenInside = new ConfigItem<bool>(
+            UseExitsWhenCarryingItems = new ConfigItem<bool>(
                 "Pikmin Behavior",
-                "Can Path Outside When Inside",
+                "Use Exits When Carrying Items",
                 true,
-                "Whether or not Pikmin can path outside when inside the facility",
+                "Whether or not Pikmin can path outside directly to the ship when inside, or just leave it at an exit when inside",
                 false,
                 ConfigItemAuthority.Client);
 

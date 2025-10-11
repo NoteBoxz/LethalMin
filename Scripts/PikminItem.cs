@@ -149,6 +149,10 @@ namespace LethalMin
             {
                 CreateGrabPositions();
             }
+            if (hackEnemyGrabbableObject != null && hackEnemyGrabbableObject.ai != null && hackEnemyGrabbableObject.ai is MaskedPlayerEnemy)
+            {
+                HasArrived = true;
+            }
             PikminManager.instance.AddPikminItem(this);
             HasInitalized = true;
         }
@@ -1047,7 +1051,7 @@ namespace LethalMin
             if (HasArrived && IsntHeldByPikmin()
             || HasArrived && Vector3.Distance(ArrivePosition, ItemScript.transform.position) > 5f
             || Time.time - TimeSinceArrived > 2f && settings.CanProduceSprouts &&
-            (hackEnemyGrabbableObject == null || hackEnemyGrabbableObject.ai is not MaskedPlayerEnemy))
+            (hackEnemyGrabbableObject == null || hackEnemyGrabbableObject.ai == null || hackEnemyGrabbableObject.ai is not MaskedPlayerEnemy))
             {
                 HasArrived = false;
                 ArrivePosition = Vector3.zero;
@@ -1264,7 +1268,7 @@ namespace LethalMin
 
         private RouteIntent DetermineIndoorRouteIntent(bool shouldPreferVehicle)
         {
-            RouteIntent primaryIntent = LethalMin.CanPathOutsideWhenInside ? RouteIntent.ToShip : RouteIntent.ToExit;
+            RouteIntent primaryIntent = LethalMin.UseExitsWhenCarryingItems ? RouteIntent.ToShip : RouteIntent.ToExit;
 
             // Try vehicle first if preferred
             if (shouldPreferVehicle && primaryIntent == RouteIntent.ToShip)
@@ -1317,7 +1321,7 @@ namespace LethalMin
         public void OnNodeReached(RouteNode node)
         {
             LethalMin.Logger.LogInfo($"{gameObject.name} has reached a route node: {node.name}");
-            if (node.entrancePoint != null && node.entrancePoint.TryGetComponent(out EntranceTeleport entrance))
+            if (node.entrancePoint != null && LethalMin.UseExitsWhenCarryingItems && node.entrancePoint.TryGetComponent(out EntranceTeleport entrance))
             {
                 UseEntranceOwnerSide(entrance);
             }

@@ -90,9 +90,6 @@ public abstract class RouteGenerationStrategy
         }
 
         if (bestNode == null)
-            LethalMin.Logger.LogWarning($"No {outsideStr} entrance nodes are directly reachable, defaulting to closest entrance node");
-
-        if (bestNode == null)
         {
             LethalMin.Logger.LogWarning($"No {outsideStr} entrance nodes are directly reachable, defaulting to closest entrance node");
             if (entranceNodes.Count == 0)
@@ -105,6 +102,8 @@ public abstract class RouteGenerationStrategy
             bestNode.name += " (Unpathable)";
             bestNode.UnpathableOnCreation = true;
         }
+
+        bestNode.CheckDistance = !LethalMin.UseExitsWhenCarryingItems ? 3.0f : 1.0f;
 
         return bestNode!;
     }
@@ -406,7 +405,7 @@ public class DirectIndoorStrategy : RouteGenerationStrategy
 
             case RouteIntent.ToExit:
                 List<RouteNode> TargetExits = context.CurrentFloor == null ? manager.EntranceNodes : context.CurrentFloor.Exits;
-                RouteNode BestExitNode = GetMostPathableEntranceNode(true, GetPathStartPos(request), TargetExits);
+                RouteNode BestExitNode = GetMostPathableEntranceNode(false, GetPathStartPos(request), TargetExits);
                 nodes.Add(BestExitNode);
                 break;
 

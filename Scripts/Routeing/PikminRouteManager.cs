@@ -312,7 +312,7 @@ public class PikminRouteManager : MonoBehaviour
             RouteNode counterNode = new RouteNode
             (
                 name: "Counter",
-                point: counter.transform.position,
+                point: counter.triggerCollider.transform.position,
                 check: 2.5f
             );
             return counterNode;
