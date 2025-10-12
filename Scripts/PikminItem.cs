@@ -1234,7 +1234,7 @@ namespace LethalMin
 
             // Calculate distances for vehicle routing
             Vector3 distanceComparisonPoint = PrimaryPikminOnItem.isOutside ? ItemScript.transform.position :
-            PikminRouteManager.GetClosestEntrance(ItemScript.transform.position, false).entrancePoint.position;
+            PikminRouteManager.Instance.EntranceExitPoints[PikminRouteManager.GetClosestEntrance(ItemScript.transform.position, false)].position;
             float closestCarDistance = Mathf.Infinity;
             foreach (PikminVehicleController vehicle in PikminManager.instance.Vehicles)
             {
@@ -1257,6 +1257,7 @@ namespace LethalMin
             bool shouldPreferVehicle = PikminManager.instance.Vehicles.Count > 0
                                     && shipDistance > closestCarDistance
                                     && LethalMin.TakeItemsToTheCar;
+            //LethalMin.Logger.LogInfo($"{gameObject.name} ship distance: {shipDistance}, closest car distance: {closestCarDistance}, shouldPreferVehicle: {shouldPreferVehicle}");
 
             // Handle indoor routing
             if (!PrimaryPikminOnItem.isOutside)

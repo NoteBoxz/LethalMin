@@ -318,7 +318,7 @@ public static class FloorDataGenerator
     /// <summary>
     /// Gets the floor data from the PlayZone mod.
     /// </summary>
-    public static List<FloorData> GetPlayFloorData(Dungeon dungeon, PlayZoneElevator elevator)
+    public static List<FloorData> GetPlayFloorData(Dungeon dungeon, Object elevate)
     {
         List<FloorData> data = new List<FloorData>();
         RouteNode MainNode = new RouteNode(
@@ -326,6 +326,7 @@ public static class FloorDataGenerator
             RoundManager.FindMainEntranceScript(true),
             0.45f
         );
+        PlayZoneElevator? elevator = elevate as PlayZoneElevator;
 
         if (elevator == null || elevator.elevatorAnimator == null)
         {

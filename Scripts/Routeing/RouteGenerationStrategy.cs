@@ -358,7 +358,8 @@ public class IndoorToOutdoorStrategy : RouteGenerationStrategy
         }
 
         PikminRouteRequest movedRequest = new PikminRouteRequest(request);
-        movedRequest.StartOverride = mostPathableExit.GetPosition();
+        movedRequest.StartOverride = PikminRouteManager.Instance.EntranceExitPoints[mostPathableExit.entrancePoint].position;
+        LethalMin.Logger.LogDebug($"ITOS: Moved request start to {movedRequest.StartOverride}");
 
         List<RouteNode> outsideNodes = directOutdoor.GenerateRoute(movedRequest, context);
 
@@ -472,7 +473,8 @@ public class OutdoorToIndoorStrategy : RouteGenerationStrategy
         }
 
         PikminRouteRequest movedRequest = new PikminRouteRequest(request);
-        movedRequest.StartOverride = mostPathableExit.GetPosition();
+        movedRequest.StartOverride = PikminRouteManager.Instance.EntranceExitPoints[mostPathableExit.entrancePoint].position;
+        LethalMin.Logger.LogDebug($"OTIS: Moved request start to {movedRequest.StartOverride}");
 
         List<RouteNode> insideNodes = directIndoor.GenerateRoute(movedRequest, context);
 

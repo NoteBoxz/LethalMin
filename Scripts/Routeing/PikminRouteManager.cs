@@ -372,7 +372,7 @@ public class PikminRouteManager : MonoBehaviour
     {
         float closestDistance = Mathf.Infinity;
         EntranceTeleport closestEntrance = null!;
-        foreach (EntranceTeleport entrance in PikminRouteManager.Instance.EntranceExitPoints.Keys)
+        foreach (EntranceTeleport entrance in Instance.EntranceExitPoints.Keys)
         {
             if (CompareOutside != entrance.isEntranceToBuilding)
             {
