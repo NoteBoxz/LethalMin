@@ -57,6 +57,7 @@ namespace LethalMin
         [HideInInspector]
         public EnemyGrabbableObject hackEnemyGrabbableObject = null!;
         float TimeSinceArrived = 0f;
+        bool arrivedOnSpawn = false;
 
 
 
@@ -151,7 +152,11 @@ namespace LethalMin
             }
             if (hackEnemyGrabbableObject != null && hackEnemyGrabbableObject.ai != null && hackEnemyGrabbableObject.ai is MaskedPlayerEnemy)
             {
+                ArrivePosition = hackEnemyGrabbableObject.ai.transform.position;
+                TimeSinceArrived = Time.time;
                 HasArrived = true;
+                arrivedOnSpawn = true;
+                LethalMin.Logger.LogMessage($"PikminItem {gameObject.name} has arrived at {ArrivePosition} ({TimeSinceArrived}) because it was spawned from a masked");
             }
             PikminManager.instance.AddPikminItem(this);
             HasInitalized = true;
@@ -1050,8 +1055,7 @@ namespace LethalMin
 
             if (HasArrived && IsntHeldByPikmin()
             || HasArrived && Vector3.Distance(ArrivePosition, ItemScript.transform.position) > 5f
-            || Time.time - TimeSinceArrived > 2f && settings.CanProduceSprouts &&
-            (hackEnemyGrabbableObject == null || hackEnemyGrabbableObject.ai == null || hackEnemyGrabbableObject.ai is not MaskedPlayerEnemy))
+            || settings.CanProduceSprouts && Time.time - TimeSinceArrived > (arrivedOnSpawn ? 7f : 2f))
             {
                 HasArrived = false;
                 ArrivePosition = Vector3.zero;
@@ -1238,7 +1242,7 @@ namespace LethalMin
                 {
                     continue;
                 }
-                if(vehicle.IsNearByShip())
+                if (vehicle.IsNearByShip())
                 {
                     continue;
                 }

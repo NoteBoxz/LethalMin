@@ -10,7 +10,7 @@ namespace LethalMin
         public EnemyAI ai = null!;
         public GrabbableObject grabbableObject = null!;
         Vector3 InitalScale = Vector3.one;
-        public void Start()
+        public void Awake()
         {
             ai = GetComponent<EnemyAI>();
             InitalScale = transform.localScale;
