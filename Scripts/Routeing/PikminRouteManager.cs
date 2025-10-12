@@ -56,6 +56,9 @@ public class PikminRouteManager : MonoBehaviour
         {
             LethalMin.Logger.LogDebug("No Dungeons found in scene on game load.");
         }
+            
+        FloorDataGenerator.DungeonFloorDataCache.Clear();
+        FloorDataGenerator.EntranceDungeonCache.Clear();
 
         cLHMDtrueOnLoad = CurrentLevelHasMultipleDungeons;
         insideLogFlag = false;
