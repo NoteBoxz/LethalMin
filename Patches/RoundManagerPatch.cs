@@ -1,6 +1,7 @@
 using System;
 using GameNetcodeStuff;
 using HarmonyLib;
+using LethalMin.Routeing;
 using LethalMin.Utils;
 using Unity.Netcode;
 using UnityEngine;
@@ -47,6 +48,22 @@ namespace LethalMin.Patches
             catch (Exception e)
             {
                 LethalMin.Logger.LogError($"Error in FinishGeneratingNewLevelClientRpcPostfix: {e}");
+            }
+        }
+
+        [HarmonyPatch(nameof(RoundManager.SetExitIDs))]
+        [HarmonyPriority(Priority.Last)]
+        [HarmonyPostfix]
+        private static void SetExitIDs(RoundManager __instance)
+        {
+            try
+            {
+                EntranceTeleport[] entrances = GameObject.FindObjectsOfType<EntranceTeleport>();
+                PikminRouteManager.Instance.RefreshEntrancePairs(entrances);
+            }
+            catch (Exception e)
+            {
+                LethalMin.Logger.LogError($"Error in SetExitIDs Postfix: {e}");
             }
         }
 

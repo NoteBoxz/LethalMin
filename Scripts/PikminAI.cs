@@ -3700,13 +3700,13 @@ namespace LethalMin
             if (entrance.exitPoint == null)
             {
                 entrance.FindExitPoint();
+                LethalMin.Logger.LogWarning($"{DebugID}: Entrance exit point was null, trying to find it again");
             }
             if (entrance.exitPoint == null)
             {
                 LethalMin.Logger.LogError($"{DebugID}: Entrance exit point is null, cannot use entrance (blocked???)");
                 return;
             }
-            Vector3 EntranceDestPos = entrance.exitPoint.position;
 
             if (PlaySFX)
             {
@@ -3715,9 +3715,9 @@ namespace LethalMin
 
             if (IsOwner && agent.enabled)
             {
-                agent.Warp(EntranceDestPos);
+                agent.Warp(entrance.exitPoint.position);
             }
-            transform2.TeleportOnLocalClient(EntranceDestPos);
+            transform2.TeleportOnLocalClient(entrance.exitPoint.position);
 
             isOutside = !Inside;
         }

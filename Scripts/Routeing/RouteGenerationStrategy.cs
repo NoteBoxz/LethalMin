@@ -76,7 +76,7 @@ public abstract class RouteGenerationStrategy
             if (entranceIsReachable && exitPathIsValid)
             {
                 float distance = CalculatePathLength(from, nodePos, path);
-                LethalMin.Logger.LogDebug($"{outsideStr} Entrance Node {node.name} is reachable at distance {distance}");
+                LethalMin.Logger.LogDebug($"GMPEN: {outsideStr} Entrance Node {node.name} is reachable at distance {distance}");
                 if (distance < bestDistance)
                 {
                     bestDistance = distance;
@@ -85,16 +85,16 @@ public abstract class RouteGenerationStrategy
             }
             else
             {
-                LethalMin.Logger.LogDebug($"{outsideStr} Entrance Node {node.name} is NOT reachable");
+                LethalMin.Logger.LogDebug($"GMPEN: {outsideStr} Entrance Node {node.name} is NOT reachable");
             }
         }
 
         if (bestNode == null)
         {
-            LethalMin.Logger.LogWarning($"No {outsideStr} entrance nodes are directly reachable, defaulting to closest entrance node");
+            LethalMin.Logger.LogDebug($"GMPEN: No {outsideStr} entrance nodes are directly reachable, defaulting to closest entrance node");
             if (entranceNodes.Count == 0)
             {
-                LethalMin.Logger.LogError($"No {outsideStr} entrance nodes available!");
+                LethalMin.Logger.LogDebug($"GMPEN: No {outsideStr} entrance nodes available!");
                 return null!;
             }
             bestNode = validNodes.OrderBy(n => Vector3.Distance(from, n.GetPosition())).First();
@@ -292,7 +292,7 @@ public class DirectOutdoorStrategy : RouteGenerationStrategy
                     break;
                 }
                 RouteNode? bestVehicleNode = GetMostPathableNode(GetPathStartPos(request), vehicleNodes);
-                if(bestVehicleNode != null)
+                if (bestVehicleNode != null)
                     nodes.Add(bestVehicleNode);
                 break;
 
@@ -307,8 +307,7 @@ public class DirectOutdoorStrategy : RouteGenerationStrategy
                 break;
 
             case RouteIntent.ToExit:
-                List<RouteNode> TargetExits = context.CurrentFloor == null ? manager.EntranceNodes : context.CurrentFloor.Exits;
-                RouteNode BestExitNode = GetMostPathableEntranceNode(true, GetPathStartPos(request), TargetExits);
+                RouteNode BestExitNode = GetMostPathableEntranceNode(true, GetPathStartPos(request), manager.EntranceNodes);
                 nodes.Add(BestExitNode);
                 break;
 
@@ -348,8 +347,15 @@ public class IndoorToOutdoorStrategy : RouteGenerationStrategy
     public override List<RouteNode> GenerateRoute(PikminRouteRequest request, RouteContext context)
     {
         List<RouteNode> nodes = new List<RouteNode>();
+        List<RouteNode> TargetExits = context.CurrentFloor == null ? manager.EntranceNodes : context.CurrentFloor.Exits;
 
-        RouteNode mostPathableExit = GetMostPathableEntranceNode(false, GetPathStartPos(request), manager.EntranceNodes);
+        RouteNode mostPathableExit = GetMostPathableEntranceNode(false, GetPathStartPos(request), TargetExits);
+
+        if(mostPathableExit == null)
+        {
+            LethalMin.Logger.LogWarning("No pathable exit found, cannot create route.");
+            return nodes;
+        }
 
         PikminRouteRequest movedRequest = new PikminRouteRequest(request);
         movedRequest.StartOverride = mostPathableExit.GetPosition();
@@ -362,7 +368,7 @@ public class IndoorToOutdoorStrategy : RouteGenerationStrategy
             return nodes;
         }
 
-        RouteNode mostPathableEntrance = GetMostPathableEntranceNode(false, GetPathStartPos(request), manager.EntranceNodes, outsideNodes[0]);
+        RouteNode mostPathableEntrance = GetMostPathableEntranceNode(false, GetPathStartPos(request), TargetExits, outsideNodes[0]);
 
         nodes.Add(mostPathableEntrance);
         nodes.AddRange(outsideNodes);
@@ -458,6 +464,12 @@ public class OutdoorToIndoorStrategy : RouteGenerationStrategy
         List<RouteNode> nodes = new List<RouteNode>();
 
         RouteNode mostPathableExit = GetMostPathableEntranceNode(true, GetPathStartPos(request), manager.EntranceNodes);
+
+        if(mostPathableExit == null)
+        {
+            LethalMin.Logger.LogWarning("No pathable entrance found, cannot create route.");
+            return nodes;
+        }
 
         PikminRouteRequest movedRequest = new PikminRouteRequest(request);
         movedRequest.StartOverride = mostPathableExit.GetPosition();

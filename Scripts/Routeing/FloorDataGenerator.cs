@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using DunGen;
 using itolib.PlayZone;
 using LCOffice.Components;
@@ -19,18 +20,46 @@ public static class FloorDataGenerator
     }
 
     public static Dictionary<Dungeon, List<FloorData>> DungeonFloorDataCache = new Dictionary<Dungeon, List<FloorData>>();
+    public static Dictionary<RouteNode, Dungeon> EntranceDungeonCache = new Dictionary<RouteNode, Dungeon>();
 
     // Called when level loads or when new dungeon generated
     public static List<FloorData> GenerateFloorDataInterior(Dungeon dungeon)
     {
-        List<FloorData> floorDataList = new List<FloorData>();
-        DungeonType dungeonType = DetermineDungeonType(dungeon, out Object? elevatorObject);
-        if (dungeonType == DungeonType.None)
-            return floorDataList;
-
         if (DungeonFloorDataCache.ContainsKey(dungeon))
         {
             return DungeonFloorDataCache[dungeon];
+        }
+
+        List<FloorData> floorDataList = new List<FloorData>();
+        DungeonType dungeonType = DetermineDungeonType(dungeon, out Object? elevatorObject);
+
+        if (dungeonType == DungeonType.None)
+        {
+            DungeonFloorDataCache.Add(dungeon, floorDataList);
+            return floorDataList;
+        }
+
+        foreach (var entrance in PikminRouteManager.Instance.EntranceNodes)
+        {
+            if (entrance == null)
+                continue;
+
+            if (EntranceDungeonCache.ContainsKey(entrance))
+                continue;
+
+            EntranceTeleport? entranceScript = entrance.entrancePoint;
+            if (entranceScript == null || entranceScript.isEntranceToBuilding)
+                continue;
+
+            Dungeon closestDungeon = PikminRouteManager.GetClosestDungeon(entranceScript.transform.position);
+            if (closestDungeon == null)
+                continue;
+
+            if (!EntranceDungeonCache.ContainsKey(entrance))
+            {
+                EntranceDungeonCache.Add(entrance, closestDungeon);
+                LethalMin.Logger.LogInfo($"Mapped Entrance {entranceScript.name} to Dungeon {closestDungeon.name} ({PikminRouteManager.Instance.Dungeons.IndexOf(closestDungeon)})");
+            }
         }
 
         switch (dungeonType)
@@ -38,8 +67,7 @@ public static class FloorDataGenerator
             case DungeonType.VanillaDungen:
                 if (elevatorObject is MineshaftElevatorController elevator)
                 {
-                    floorDataList = GetVanillaFloorData(elevator);
-                    DungeonFloorDataCache.Add(dungeon, floorDataList);
+                    floorDataList = GetVanillaFloorData(dungeon, elevator);
                 }
                 else
                 {
@@ -54,13 +82,15 @@ public static class FloorDataGenerator
                 break;
         }
 
+        DungeonFloorDataCache.Add(dungeon, floorDataList);
+
         return floorDataList;
     }
 
     /// <summary>
     /// Gets the floor data from the vanilla mineshaft interior.
     /// </summary>
-    public static List<FloorData> GetVanillaFloorData(MineshaftElevatorController elevator)
+    public static List<FloorData> GetVanillaFloorData(Dungeon dungeon, MineshaftElevatorController elevator)
     {
         List<FloorData> data = new List<FloorData>();
         GameObject CustomBounds = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -73,20 +103,6 @@ public static class FloorDataGenerator
         //CustomBounds.GetComponent<Renderer>().material = LethalMin.assetBundle.LoadAsset<Material>("Assets/LethalMin/Materials/MapDotA.mat");
         CustomBounds.name = "Pikmin Elevator Bounds";
 
-        RouteNode MainNode = null!;
-        List<RouteNode> FireNodes = new List<RouteNode>();
-        foreach (RouteNode node in PikminRouteManager.Instance.EntranceNodes)
-        {
-            if (node.entrancePoint != null && !node.entrancePoint.isEntranceToBuilding)
-            {
-                if (node.entrancePoint.entranceId == 0)
-                    MainNode = node;
-                else
-                    FireNodes.Add(node);
-            }
-        }
-
-
         RouteNode ElevatorNode = new RouteNode
         (
             name: elevator.name,
@@ -98,18 +114,35 @@ public static class FloorDataGenerator
         ElevatorNode.CheckDistance = 1f;
 
         FloorData F1 = new FloorData();
-        F1.Exits.Add(MainNode);
-        F1.FloorRoot = RoundManager.FindMainEntrancePosition();
+        F1.FloorRoot = elevator.elevatorTopPoint.position - new Vector3(0, 0.5f, 0);
         F1.Elevators.Add(ElevatorNode);
         F1.FloorTitle = "(Floor1) Entrance";
         data.Add(F1);
 
         FloorData F2 = new FloorData();
-        F2.Exits.AddRange(FireNodes);
         F2.FloorRoot = elevator.elevatorBottomPoint.position;
         F2.Elevators.Add(ElevatorNode);
         F2.FloorTitle = "(Floor2) Mineshaft";
         data.Add(F2);
+
+        foreach (var kpv in EntranceDungeonCache)
+        {
+            if (kpv.Value != dungeon)
+                continue;
+
+
+            FloorData currentFloor = data.OrderBy(floor =>
+                    Mathf.Abs(kpv.Key.GetPosition().y - floor.FloorRoot.y))
+                    .FirstOrDefault();
+
+            if (currentFloor == F1)
+                F1.Exits.Add(kpv.Key);
+
+            if (currentFloor == F2)
+                F2.Exits.Add(kpv.Key);
+
+            LethalMin.Logger.LogDebug($"({kpv.Key.name}) Floor: {currentFloor.FloorTitle} Position: {kpv.Key.GetPosition()}");
+        }
 
         LethalMin.Logger.LogInfo("Registered Vanilla Minshaft Floors");
 
@@ -310,109 +343,118 @@ public static class FloorDataGenerator
 
     private static DungeonType DetermineDungeonType(Dungeon dungeon, out Object? elevatorObject)
     {
-        Object? foundElevator = null;
-
-        PlayZoneElevator? FindPlayElevator()
-        {
-            if (PikminRouteManager.Instance.Dungeons.Count == 1)
-            {
-                return Object.FindObjectOfType<PlayZoneElevator>();
-            }
-
-            // Multi Dungeon check
-            PlayZoneElevator[] elevators = Object.FindObjectsOfType<PlayZoneElevator>();
-            if (elevators == null || elevators.Length == 0)
-                return null;
-            
-            foreach (var elevator in elevators)
-            {
-                Dungeon ClosestDungeon = PikminRouteManager.GetClosestDungeon(elevator.transform.position);
-                LethalMin.Logger.LogDebug($"Closest Dungeon to {elevator.name} is {ClosestDungeon?.name}");
-                if (ClosestDungeon != null && ClosestDungeon == dungeon)
-                    return elevator;
-            }
-            return null;
-        }
-
-        ElevatorController? FindPiggyElevator()
-        {
-            if (PikminRouteManager.Instance.Dungeons.Count == 1)
-            {
-                return Object.FindObjectOfType<ElevatorController>();
-            }
-
-            // Multi Dungeon check
-            ElevatorController[] elevators = Object.FindObjectsOfType<ElevatorController>();
-            if (elevators == null || elevators.Length == 0)
-                return null;
-            
-            foreach (var elevator in elevators)
-            {
-                Dungeon ClosestDungeon = PikminRouteManager.GetClosestDungeon(elevator.transform.position);
-                LethalMin.Logger.LogDebug($"Closest Dungeon to {elevator.name} is {ClosestDungeon?.name}");
-                if (ClosestDungeon != null && ClosestDungeon == dungeon)
-                    return elevator;
-            }
-            return null;
-        }
-
-        MineshaftElevatorController? FindVanillaElevator()
-        {
-            if (PikminRouteManager.Instance.Dungeons.Count == 1)
-            {
-                return Object.FindObjectOfType<MineshaftElevatorController>();
-            }
-
-            // Multi Dungeon check
-            MineshaftElevatorController[] elevators = Object.FindObjectsOfType<MineshaftElevatorController>();
-            if (elevators == null || elevators.Length == 0)
-                return null;
-            
-            foreach (var elevator in elevators)
-            {
-                Dungeon ClosestDungeon = PikminRouteManager.GetClosestDungeon(elevator.transform.position);
-                LethalMin.Logger.LogDebug($"Closest Dungeon to {elevator.name} is {ClosestDungeon?.name}");
-                if (ClosestDungeon != null && ClosestDungeon == dungeon)
-                    return elevator;
-            }
-            return null;
-        }
-
-        MineshaftElevatorController? vanillaElevator = FindVanillaElevator();
+        MineshaftElevatorController? vanillaElevator = FindVanillaElevator(dungeon);
         if (vanillaElevator != null)
         {
             LethalMin.Logger.LogInfo($"Vanilla Dungen detected, getting floor data.");
-            foundElevator = vanillaElevator;
-            elevatorObject = foundElevator;
+            elevatorObject = vanillaElevator;
             return DungeonType.VanillaDungen;
         }
 
         if (LethalMin.IsDependencyLoaded("Piggy.LCOffice"))
         {
-            ElevatorController? piggyElevator = FindPiggyElevator();
-            if (piggyElevator != null)
-            {
-                LethalMin.Logger.LogInfo($"Piggy.LCOffice detected, getting floor data.");
-                foundElevator = piggyElevator;
-                elevatorObject = foundElevator;
-                return DungeonType.PiggyDungen;
-            }
+            return TryFindPiggyElevator(dungeon, out elevatorObject);
         }
 
         if (LethalMin.IsDependencyLoaded("LethalMatt.PlayZone"))
         {
-            PlayZoneElevator? playElevator = FindPlayElevator();
-            if (playElevator != null)
-            {
-                LethalMin.Logger.LogInfo($"LethalMatt.PlayZone detected, getting floor data.");
-                foundElevator = playElevator;
-                elevatorObject = foundElevator;
-                return DungeonType.PlayDungen;
-            }
+            return TryFindPlayElevator(dungeon, out elevatorObject);
         }
 
         LethalMin.Logger.LogDebug($"did not find any flor data");
         elevatorObject = null;
         return DungeonType.None;
+    }
+
+    private static DungeonType TryFindPiggyElevator(Dungeon dungeon, out Object? elevatorObject)
+    {
+        ElevatorController? piggyElevator = FindPiggyElevator(dungeon) as ElevatorController;
+        if (piggyElevator != null)
+        {
+            LethalMin.Logger.LogInfo($"Piggy.LCOffice detected, getting floor data.");
+            elevatorObject = piggyElevator;
+            return DungeonType.PiggyDungen;
+        }
+        elevatorObject = null;
+        return DungeonType.None;
+    }
+
+    private static DungeonType TryFindPlayElevator(Dungeon dungeon, out Object? elevatorObject)
+    {
+        PlayZoneElevator? playElevator = FindPlayElevator(dungeon) as PlayZoneElevator;
+        if (playElevator != null)
+        {
+            LethalMin.Logger.LogInfo($"LethalMatt.PlayZone detected, getting floor data.");
+            elevatorObject = playElevator;
+            return DungeonType.PlayDungen;
+        }
+        elevatorObject = null;
+        return DungeonType.None;
+    }
+
+    private static MineshaftElevatorController? FindVanillaElevator(Dungeon dungeon)
+    {
+        if (PikminRouteManager.Instance.Dungeons.Count == 1)
+        {
+            return Object.FindObjectOfType<MineshaftElevatorController>();
+        }
+
+        // Multi Dungeon check
+        MineshaftElevatorController[] elevators = Object.FindObjectsOfType<MineshaftElevatorController>();
+        if (elevators == null || elevators.Length == 0)
+            return null;
+
+        foreach (var elevator in elevators)
+        {
+            Dungeon ClosestDungeon = PikminRouteManager.GetClosestDungeon(elevator.transform.position);
+            LethalMin.Logger.LogDebug($"Closest Dungeon to {elevator.name} is {ClosestDungeon?.name}");
+            if (ClosestDungeon != null && ClosestDungeon == dungeon)
+                return elevator;
+        }
+        return null;
+    }
+
+    private static Object? FindPlayElevator(Dungeon dungeon)
+    {
+        if (PikminRouteManager.Instance.Dungeons.Count == 1)
+        {
+            return Object.FindObjectOfType<PlayZoneElevator>();
+        }
+
+        // Multi Dungeon check
+        PlayZoneElevator[] elevators = Object.FindObjectsOfType<PlayZoneElevator>();
+        if (elevators == null || elevators.Length == 0)
+            return null;
+
+        foreach (var elevator in elevators)
+        {
+            Dungeon ClosestDungeon = PikminRouteManager.GetClosestDungeon(elevator.transform.position);
+            LethalMin.Logger.LogDebug($"Closest Dungeon to {elevator.name} is {ClosestDungeon?.name}");
+            if (ClosestDungeon != null && ClosestDungeon == dungeon)
+                return elevator;
+        }
+        return null;
+    }
+
+    private static Object? FindPiggyElevator(Dungeon dungeon)
+    {
+        if (PikminRouteManager.Instance.Dungeons.Count == 1)
+        {
+            return Object.FindObjectOfType<ElevatorController>();
+        }
+
+        // Multi Dungeon check
+        ElevatorController[] elevators = Object.FindObjectsOfType<ElevatorController>();
+        if (elevators == null || elevators.Length == 0)
+            return null;
+
+        foreach (var elevator in elevators)
+        {
+            Dungeon ClosestDungeon = PikminRouteManager.GetClosestDungeon(elevator.transform.position);
+            LethalMin.Logger.LogDebug($"Closest Dungeon to {elevator.name} is {ClosestDungeon?.name}");
+            if (ClosestDungeon != null && ClosestDungeon == dungeon)
+                return elevator;
+        }
+        return null;
     }
 }

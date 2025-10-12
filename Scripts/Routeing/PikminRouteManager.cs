@@ -104,6 +104,7 @@ public class PikminRouteManager : MonoBehaviour
         EntranceExitPoints.Clear();
         AddedTelepointsForExits.Clear();
         FloorDataGenerator.DungeonFloorDataCache.Clear();
+        FloorDataGenerator.EntranceDungeonCache.Clear();
     }
 
     public PikminRoute CreateRoute(PikminRouteRequest request)
@@ -135,13 +136,9 @@ public class PikminRouteManager : MonoBehaviour
         if (RefreshCachePerRoute)
         {
             LethalMin.Logger.LogDebug("Refreshing Entrance Pairs Cache");
-            EntranceTeleport[] entrances = Object.FindObjectsOfType<EntranceTeleport>();
+            EntranceTeleport[] entrances = FindObjectsOfType<EntranceTeleport>();
             RefreshEntrancePairs(entrances);
             EntranceNodes = GetAllEntranceNodes(entrances);
-            if (Dungeons.Count == 1)
-                CurrentFloorData = FloorDataGenerator.GenerateFloorDataInterior(Dungeons[0]);
-            else if (Dungeons.Count > 1)
-                CurrentFloorData = FloorDataGenerator.GenerateFloorDataInterior(GetClosestDungeon(request.Pikmin.transform.position));
         }
 
         List<RouteNode> nodes = strategy.GenerateRoute(request, context);
@@ -173,7 +170,7 @@ public class PikminRouteManager : MonoBehaviour
         // Determine current location
         context.IsInside = request.Pikmin.isOutside == false;
         context.IsInShip = IsInShipBounds(request.Pikmin.transform.position);
-        context.CurrentFloor = GetFloorPikminIsOn(request.Pikmin);
+        context.CurrentFloor = context.IsInside ? GetFloorPikminIsOn(request.Pikmin) : null;
 
         // Determine destination location
         switch (request.Intent)
@@ -187,7 +184,8 @@ public class PikminRouteManager : MonoBehaviour
                 if (context.DestinationIsInside && !insideLogFlag)
                 {
                     insideLogFlag = true;
-                    LethalMin.Logger.LogMessage($"SHIP IS INSIDE?!?!?!??!??!?!?!?!?!?!!??????!?!?!?!?!??!?!?!?!?!?!?!?!?!?!?????");
+                    LethalMin.Logger.LogMessage($"SHIP IS INSIDE?!?!?!??!??!?!?!?!?!?!!??????!?!?!?!?!??!?!?!?!?!?!?!?!?!?!?????" +
+                    $" CurrentLevelScene: {StartOfRound.Instance.currentLevel.sceneName}");
                 }
                 break;
             case RouteIntent.ToOnion:
@@ -227,14 +225,19 @@ public class PikminRouteManager : MonoBehaviour
 
     public FloorData? GetFloorPikminIsOn(PikminAI pikmin)
     {
+        List<FloorData> floors = CurrentFloorData;
+        if (Dungeons.Count > 1)
+        {
+            floors = FloorDataGenerator.GenerateFloorDataInterior(GetClosestDungeon(pikmin.transform.position));
+        }
         FloorData FloorOn;
         FloorOn = null!;
-        if (CurrentFloorData.Count == 0)
+        if (floors.Count == 0)
         {
             return null;
         }
 
-        FloorData currentFloor = CurrentFloorData.OrderBy(floor =>
+        FloorData currentFloor = floors.OrderBy(floor =>
                 Mathf.Abs(pikmin.transform.position.y - floor.FloorRoot.y))
                 .FirstOrDefault();
 
@@ -385,10 +388,20 @@ public class PikminRouteManager : MonoBehaviour
 
     public static Dungeon GetClosestDungeon(Vector3 position)
     {
+        if (Instance.Dungeons.Count == 1)
+        {
+            return Instance.Dungeons[0];
+        }
+        
         float closestDistance = Mathf.Infinity;
         Dungeon closestDungeon = null!;
-        foreach (Dungeon dungeon in PikminRouteManager.Instance.Dungeons)
+        foreach (Dungeon dungeon in Instance.Dungeons)
         {
+            if (dungeon == null)
+            {
+                LethalMin.Logger.LogWarning("Null Dungeon found in Dungeon list");
+                continue;
+            }
             float dist = Vector3.Distance(position, dungeon.transform.position);
 
             if (dist < closestDistance)
