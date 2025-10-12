@@ -3,6 +3,7 @@ using System.Linq;
 using DunGen;
 using GameNetcodeStuff;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace LethalMin.Routeing;
 
@@ -316,20 +317,52 @@ public class PikminRouteManager : MonoBehaviour
         return entranceNodes;
     }
 
-    public RouteNode? GetPossibleCounterNode()
+    public RouteNode? GetPossibleCounterNode(PikminRouteRequest request)
     {
         DepositItemsDesk counter = Object.FindObjectOfType<DepositItemsDesk>();
         if (counter != null)
         {
+            Vector3 pikminPos = request.Pikmin.transform.position;
+            Vector3 counterPos = counter.triggerCollider.transform.position;
+
+            // Try to find a pathable position on the ground in front of the counter, since the company building doesn't have this issue we skip it there
+            Vector3 pathablePos = RoundManager.Instance.currentLevel.sceneName == "CompanyBuilding" ? counterPos : FindPathableCounterPosition(counterPos, pikminPos);
+
             RouteNode counterNode = new RouteNode
             (
                 name: "Counter",
-                point: counter.triggerCollider.transform.position,
+                point: pathablePos,
                 check: 2.5f
             );
             return counterNode;
         }
         return null;
+    }
+
+    private Vector3 FindPathableCounterPosition(Vector3 counterPos, Vector3 pikminPos)
+    {
+        // First, try to sample the NavMesh directly at the counter position
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(counterPos, out hit, 2f, NavMesh.AllAreas))
+        {
+            // Verify this position is actually reachable
+            NavMeshPath testPath = new NavMeshPath();
+            if (NavMesh.CalculatePath(pikminPos, hit.position, NavMesh.AllAreas, testPath)
+                && testPath.status == NavMeshPathStatus.PathComplete)
+            {
+                return hit.position;
+            }
+            else
+            {
+                // get last corner of path and return that
+                if (testPath.corners.Length > 0)
+                {
+                    return testPath.corners.Last();
+                }
+            }
+        }
+
+        return counterPos;
     }
 
     public RouteNode GetSpesficPointNode(PikminRouteRequest request)

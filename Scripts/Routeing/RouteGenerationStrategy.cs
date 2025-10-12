@@ -297,7 +297,7 @@ public class DirectOutdoorStrategy : RouteGenerationStrategy
                 break;
 
             case RouteIntent.ToCounter:
-                RouteNode? counterNode = manager.GetPossibleCounterNode();
+                RouteNode? counterNode = manager.GetPossibleCounterNode(request);
                 if (counterNode != null)
                     nodes.Add(counterNode);
                 break;
