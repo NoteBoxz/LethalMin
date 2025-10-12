@@ -53,7 +53,7 @@ public class PikminRouteManager : MonoBehaviour
     {
         if (Dungeons.Count == 0)
         {
-            LethalMin.Logger.LogWarning("No Dungeons found in scene on game load.");
+            LethalMin.Logger.LogDebug("No Dungeons found in scene on game load.");
         }
 
         cLHMDtrueOnLoad = CurrentLevelHasMultipleDungeons;
@@ -279,9 +279,13 @@ public class PikminRouteManager : MonoBehaviour
         List<RouteNode> vehicleNodes = new List<RouteNode>();
         foreach (PikminVehicleController vehicle in PikminManager.instance.Vehicles)
         {
-            if (!vehicle.controller.backDoorOpen)
+            if (!vehicle.controller.backDoorOpen || vehicle.controller.carDestroyed)
             {
                 continue; // Skip vehicles with closed doors
+            }
+            if (vehicle.IsNearByShip())
+            {
+                continue;
             }
             RouteNode vehicleNode = new RouteNode
             (
@@ -392,7 +396,7 @@ public class PikminRouteManager : MonoBehaviour
         {
             return Instance.Dungeons[0];
         }
-        
+
         float closestDistance = Mathf.Infinity;
         Dungeon closestDungeon = null!;
         foreach (Dungeon dungeon in Instance.Dungeons)

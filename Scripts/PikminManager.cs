@@ -288,6 +288,7 @@ namespace LethalMin
                 return;
             }
             Leaders.Add(leader);
+            Leaders = Leaders.OrderBy(l => l.name).ThenBy(l => l.OwnerClientId).ToList();
         }
 
         public void AddOnion(Onion onion)

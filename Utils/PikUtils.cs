@@ -320,7 +320,7 @@ public static class PikUtils
     {
         if (pikmin == null || pikmin.Length == 0)
         {
-            return null!;
+            return PikminManager.instance.Leaders[0];
         }
 
         Dictionary<Leader, int> leaderCounts = new Dictionary<Leader, int>();
@@ -353,7 +353,7 @@ public static class PikUtils
 
         if (leaderCounts.Count == 0)
         {
-            return null!;
+            return PikminManager.instance.Leaders[0];
         }
 
         return leaderCounts.OrderByDescending(x => x.Value).First().Key;

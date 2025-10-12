@@ -1234,7 +1234,11 @@ namespace LethalMin
             float closestCarDistance = Mathf.Infinity;
             foreach (PikminVehicleController vehicle in PikminManager.instance.Vehicles)
             {
-                if (!vehicle.controller.backDoorOpen)
+                if (!vehicle.controller.backDoorOpen || vehicle.controller.carDestroyed)
+                {
+                    continue;
+                }
+                if(vehicle.IsNearByShip())
                 {
                     continue;
                 }

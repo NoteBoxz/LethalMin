@@ -39,28 +39,7 @@ public static class FloorDataGenerator
             return floorDataList;
         }
 
-        foreach (var entrance in PikminRouteManager.Instance.EntranceNodes)
-        {
-            if (entrance == null)
-                continue;
-
-            if (EntranceDungeonCache.ContainsKey(entrance))
-                continue;
-
-            EntranceTeleport? entranceScript = entrance.entrancePoint;
-            if (entranceScript == null || entranceScript.isEntranceToBuilding)
-                continue;
-
-            Dungeon closestDungeon = PikminRouteManager.GetClosestDungeon(entranceScript.transform.position);
-            if (closestDungeon == null)
-                continue;
-
-            if (!EntranceDungeonCache.ContainsKey(entrance))
-            {
-                EntranceDungeonCache.Add(entrance, closestDungeon);
-                LethalMin.Logger.LogInfo($"Mapped Entrance {entranceScript.name} to Dungeon {closestDungeon.name} ({PikminRouteManager.Instance.Dungeons.IndexOf(closestDungeon)})");
-            }
-        }
+        UpdateEntranceDungeonCache(dungeon);
 
         switch (dungeonType)
         {
@@ -75,7 +54,7 @@ public static class FloorDataGenerator
                 }
                 break;
             case DungeonType.PlayDungen:
-
+                HandlePlayDunGen(elevatorObject!, dungeon, ref floorDataList);
                 break;
             case DungeonType.PiggyDungen:
 
@@ -85,6 +64,50 @@ public static class FloorDataGenerator
         DungeonFloorDataCache.Add(dungeon, floorDataList);
 
         return floorDataList;
+    }
+
+    public static void HandlePlayDunGen(Object elevatorObject, Dungeon dungeon, ref List<FloorData> floorDataList)
+    {
+        if (elevatorObject is PlayZoneElevator playElevator)
+        {
+            floorDataList = GetPlayFloorData(dungeon, playElevator);
+        }
+        else
+        {
+            LethalMin.Logger.LogError("Elevator object is not of type PlayZoneElevator.");
+        }
+    }
+
+    private static void UpdateEntranceDungeonCache(Dungeon dungeon)
+    {
+        foreach (var entrance in PikminRouteManager.Instance.EntranceNodes)
+        {
+            if (entrance == null)
+                continue;
+
+            if (EntranceDungeonCache.ContainsKey(entrance))
+                continue;
+
+            if (PikminRouteManager.Instance.Dungeons.Count == 1)
+            {
+                EntranceDungeonCache.Add(entrance, dungeon);
+                continue; // early exit for single dungeon levels
+            }
+
+            EntranceTeleport? entranceScript = entrance.entrancePoint;
+            if (entranceScript == null || entranceScript.isEntranceToBuilding)
+                continue;
+
+            Dungeon closestDungeon = PikminRouteManager.GetClosestDungeon(entranceScript.transform.position);
+            if (closestDungeon == null)
+                continue;
+
+            if (!EntranceDungeonCache.ContainsKey(entrance))
+            {
+                EntranceDungeonCache.Add(entrance, closestDungeon);
+                LethalMin.Logger.LogDebug($"Mapped Entrance {entranceScript.name} to Dungeon {closestDungeon.name} ({PikminRouteManager.Instance.Dungeons.IndexOf(closestDungeon)})");
+            }
+        }
     }
 
     /// <summary>
@@ -292,54 +315,69 @@ public static class FloorDataGenerator
     //     LethalMin.Logger.LogInfo("Registered LC-Office Floors");
     // }
 
-    // /// <summary>
-    // /// Gets the floor data from the PlayZone mod.
-    // /// </summary>
-    // public static void GetPlayFloorData()
-    // {
-    //     RouteNode MainNode = new RouteNode(
-    //         "Main",
-    //         RoundManager.FindMainEntranceScript(true),
-    //         0.45f
-    //     );
+    /// <summary>
+    /// Gets the floor data from the PlayZone mod.
+    /// </summary>
+    public static List<FloorData> GetPlayFloorData(Dungeon dungeon, PlayZoneElevator elevator)
+    {
+        List<FloorData> data = new List<FloorData>();
+        RouteNode MainNode = new RouteNode(
+            "Main",
+            RoundManager.FindMainEntranceScript(true),
+            0.45f
+        );
 
-    //     itolib.PlayZone.PlayZoneElevator elevator = Object.FindObjectOfType<itolib.PlayZone.PlayZoneElevator>();
+        if (elevator == null || elevator.elevatorAnimator == null)
+        {
+            LethalMin.Logger.LogError("PlayZone Elevator not found or elevatorAnimator is null.");
+            return data;
+        }
 
-    //     if (elevator == null || elevator.elevatorAnimator == null)
-    //     {
-    //         LethalMin.Logger.LogError("PlayZone Elevator not found or elevatorAnimator is null.");
-    //         return;
-    //     }
+        RouteNode ElevatorNode = new RouteNode
+        (
+            name: "Elevator",
+            point: elevator.GetComponentInChildren<PlayerPhysicsRegion>().transform,
+            check: elevator.GetComponentInChildren<PlayerPhysicsRegion>().GetComponent<Collider>()
+        );
 
-    //     RouteNode ElevatorNode = new RouteNode(
-    //         "Elevator",
-    //         elevator.GetComponentInChildren<PlayerPhysicsRegion>().transform,
-    //         -1,
-    //         elevator.GetComponentInChildren<PlayerPhysicsRegion>().GetComponent<Collider>()
-    //     );
+        ElevatorNode.CheckBuffer = 0.25f;
 
-    //     ElevatorNode.CheckBuffer = 0.25f;
-    //     MineshaftElevatorControllerPatch.node = ElevatorNode;
+        FloorData F2 = new FloorData();
+        F2.FloorRoot = elevator.doorAnimatorUpper!.transform.position;
+        F2.Elevators.Add(ElevatorNode);
+        F2.FloorTitle = "(Floor2) Ground";
+        data.Add(F2);
 
-    //     FloorData F2 = new FloorData();
-    //     F2.MainExits.Add(MainNode);
-    //     F2.FireExits.AddRange(FindFireExitRouteNodes());
-    //     F2.FloorRoot = RoundManager.FindMainEntrancePosition();
-    //     F2.Elevators.Add(ElevatorNode);
-    //     F2.FloorTitle = "(Floor2) Ground";
-    //     CurrentFloorData.Add(F2);
 
-    //     DefultFloorData = F2;
+        FloorData F1 = new FloorData();
+        F1.FloorRoot = elevator.doorAnimatorLower!.transform.position;
+        F1.Elevators.Add(ElevatorNode);
+        F1.FloorTitle = "(Floor1) Fun";
+        data.Add(F1);
 
-    //     FloorData F1 = new FloorData();
-    //     F1.FireExits.AddRange(FindFireExitRouteNodes());
-    //     F1.FloorRoot = elevator.doorAnimatorLower?.transform.position ?? elevator.transform.position;
-    //     F1.Elevators.Add(ElevatorNode);
-    //     F1.FloorTitle = "(Floor1) Fun";
-    //     CurrentFloorData.Add(F1);
+        foreach (var kpv in EntranceDungeonCache)
+        {
+            if (kpv.Value != dungeon)
+                continue;
 
-    //     LethalMin.Logger.LogInfo("Registered PlayZone Floors");
-    // }
+
+            FloorData currentFloor = data.OrderBy(floor =>
+                    Mathf.Abs(kpv.Key.GetPosition().y - floor.FloorRoot.y))
+                    .FirstOrDefault();
+
+            if (currentFloor == F1)
+                F1.Exits.Add(kpv.Key);
+
+            if (currentFloor == F2)
+                F2.Exits.Add(kpv.Key);
+
+            LethalMin.Logger.LogDebug($"({kpv.Key.name}) Floor: {currentFloor.FloorTitle} Position: {kpv.Key.GetPosition()}");
+        }
+
+        LethalMin.Logger.LogInfo("Registered PlayZone Floors");
+
+        return data;
+    }
 
     private static DungeonType DetermineDungeonType(Dungeon dungeon, out Object? elevatorObject)
     {

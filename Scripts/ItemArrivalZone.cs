@@ -24,7 +24,7 @@ namespace LethalMin
         private float checkDistance = 0.1f;
         private EntranceTeleport entranceTeleport = null!;
         private DepositItemsDesk desk = null!;
-        private VehicleController vehicleController = null!;
+        private PikminVehicleController vehicleController = null!;
         private MineshaftElevatorController mineShaftElevator = null!;
 
         public static void CreateZoneOnObject(GameObject obj, ArrivalZoneType type)
@@ -49,7 +49,7 @@ namespace LethalMin
                     zoneCollider = StartOfRound.Instance.shipInnerRoomBounds;
                     break;
                 case ArrivalZoneType.Crusier:
-                    vehicleController = GetComponent<VehicleController>();
+                    vehicleController = GetComponent<PikminVehicleController>();
                     positionCheck = vehicleController.transform;
                     break;
                 case ArrivalZoneType.Counter:
@@ -75,7 +75,7 @@ namespace LethalMin
                     || LethalMin.TakeItemsToOnionOnCompany && LethalMin.OnCompany && itemChecking.ItemScript.itemProperties.isScrap;
 
                 case ArrivalZoneType.Crusier:
-                    return Vector3.Distance(positionCheck.position, StartOfRound.Instance.shipBounds.transform.position) < 50f;
+                    return vehicleController.IsNearByShip() || vehicleController.controller.carDestroyed;
 
                 case ArrivalZoneType.MineElevator:
                     return !mineShaftElevator.elevatorMovingDown && LethalMin.UseExitsWhenCarryingItems.InternalValue;

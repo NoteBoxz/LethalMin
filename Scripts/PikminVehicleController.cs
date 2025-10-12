@@ -95,6 +95,11 @@ namespace LethalMin
         {
         }
 
+        public bool IsNearByShip()
+        {
+            return Vector3.Distance(transform.position, StartOfRound.Instance.shipAnimatorObject.transform.position) < 20f;
+        }
+
         void Update()
         {
             if (controller.carDestroyed &&
