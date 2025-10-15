@@ -11,20 +11,19 @@ namespace LethalMin.Patches
     [HarmonyPatch(typeof(MineshaftElevatorController))]
     public class MineshaftElevatorControllerPatch
     {
-        public static RouteNode node = null!;
-        [HarmonyPatch(nameof(MineshaftElevatorController.LateUpdate))]
+        [HarmonyPatch(nameof(MineshaftElevatorController.OnEnable))]
         [HarmonyPrefix]
-        private static void SetRoute(MineshaftElevatorController __instance)
+        private static void OnEnablePrefix(MineshaftElevatorController __instance)
         {
             try
             {
-                if(node == null || node.cachedNode == null) { return; }
-
-                node.cachedNode.DontDoInRangeCheck = !__instance.elevatorMovingDown && LethalMin.CanPathOutsideWhenInside.InternalValue;
+                if (__instance.GetComponent<ItemArrivalZone>() != null) return;
+                
+                ItemArrivalZone.CreateZoneOnObject(__instance.gameObject, ItemArrivalZone.ArrivalZoneType.MineElevator);
             }
             catch (System.Exception e)
             {
-                LethalMin.Logger.LogError($"Failed to patch NavMeshAgent.setdest for {__instance.gameObject.name} due to: {e}");
+                LethalMin.Logger.LogError($"Failed to patch OnEnable for {__instance.gameObject.name} due to: {e}");
             }
         }
     }

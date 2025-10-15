@@ -18,6 +18,7 @@ using LethalModDataLib.Features;
 using UnityEngine.Animations.Rigging;
 using LethalMin.Achivements;
 using GameNetcodeStuff;
+using LethalMin.Routeing;
 
 namespace LethalMin
 {
@@ -44,6 +45,7 @@ namespace LethalMin
         public Coroutine ChargeTweenCoroutine = null!;
         public bool UseSaveModLib => LethalMin.IsDependencyLoaded("MaxWasUnavailable.LethalModDataLib");
         public ShipPhaseOnionContainer shipPhaseOnionContainer = null!;
+        public MoonSettings? CurrentMoonSettings = null;
         public Dictionary<string, int> LeaflingPlayers = new Dictionary<string, int>();
         internal NetworkVariable<bool> Cheat_WhistleMakesNoiseAtNoticeZone = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         internal NetworkVariable<bool> Cheat_DontMakeAudibleNoises = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -56,19 +58,14 @@ namespace LethalMin
         internal NetworkVariable<float> Cheat_PlayerNoticeZoneSize = new NetworkVariable<float>(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         internal NetworkVariable<float> Cheat_PikminDamageMultipler = new NetworkVariable<float>(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         internal NetworkVariable<float> Cheat_PikminSpeedMultipler = new NetworkVariable<float>(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-
-
+        internal NetworkVariable<float> Cheat_ChargeCoolDown = new NetworkVariable<float>(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        internal NetworkVariable<float> Cheat_ChargeDistance = new NetworkVariable<float>(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         #region Initialization & Core Methods
         void Awake()
         {
-            if (instance == null)
-            {
-                instance = this;
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
+            instance = this;
+            name = "Pikmin Manager";
+            gameObject.AddComponent<PikminRouteManager>();
         }
         void Start()
         {
@@ -142,6 +139,8 @@ namespace LethalMin
                 Cheat_PlayerNoticeZoneSize.Value = LethalMin.PlayerNoticeZoneSize;
                 Cheat_PikminDamageMultipler.Value = LethalMin.PikminDamageMultipler;
                 Cheat_PikminSpeedMultipler.Value = LethalMin.PikminSpeedMultipler;
+                Cheat_ChargeCoolDown.Value = LethalMin.ChargeCooldown;
+                Cheat_ChargeDistance.Value = LethalMin.ChargeDistance;
             }
             if (!StartOfRound.Instance.inShipPhase && IsServer)
             {
@@ -237,6 +236,7 @@ namespace LethalMin
         public Dictionary<EnemyType, Item> EnemyItems { get; private set; } = new Dictionary<EnemyType, Item>();
         public HashSet<PuffminLeader> PuffminLeaders { get; private set; } = new HashSet<PuffminLeader>();
         public HashSet<PuffminAI> PuffminAIs { get; private set; } = new HashSet<PuffminAI>();
+        public HashSet<ItemArrivalZone> ItemArrivalZones { get; private set; } = new HashSet<ItemArrivalZone>();
         public List<FreezeableWater> FreezeableWaters = new List<FreezeableWater>();
         public List<int> ScannedPiklopediaIDs = new List<int>();
         public List<int> NewlyScannedPiklopediaIDs = new List<int>();
@@ -288,6 +288,7 @@ namespace LethalMin
                 return;
             }
             Leaders.Add(leader);
+            Leaders = Leaders.OrderBy(l => l.name).ThenBy(l => l.OwnerClientId).ToList();
         }
 
         public void AddOnion(Onion onion)
@@ -433,12 +434,9 @@ namespace LethalMin
         {
             LethalMin.Logger.LogInfo($"__ LethalMin On Game Loaded __");
             //PikUtils.AddTextToChangeOnLocalClient($"Game Loaded, initializing PikminManager");
-            PikminRoute.NodeCache.Clear();
-            PikminRoute.GetFloorData();
-            PikminRoute.FireNodes = PikminRoute.FindFireExitRouteNodes();
-            PikminRoute.MoonSettingss = Resources.FindObjectsOfTypeAll<MoonSettings>().ToList();
             CanPathOnMoonGlobal = PikChecks.IsNavMeshOnMap();
             EndOfGameStats.Refresh();
+            GetMoonSettings();
             SpawnTeleportTriggers();
             AddWaterTriggers();
             AddBridgeTriggers();
@@ -467,6 +465,7 @@ namespace LethalMin
                     netObj.Spawn();
                 }
             }
+            PikminRouteManager.Instance.OnGameLoaded();
             LethalMin.Logger.LogInfo($"Can path on moon: {CanPathOnMoonGlobal} {PikChecks.IsNavMeshOnMap()}");
 
             // if (IsServer)
@@ -524,6 +523,14 @@ namespace LethalMin
             }
         }
 
+        /// <summary>
+        /// Called when the game fully ends and the results screen is showed
+        /// </summary>
+        public void OnGameEnded()
+        {
+            PikminRouteManager.Instance.OnGameEnded();
+        }
+
         public bool IsPikminInSafetyRange(PikminAI pikmin)
         {
             Onion? PossibleOnion = Onion.GetOnionOfPikmin(pikmin);
@@ -542,6 +549,21 @@ namespace LethalMin
 
 
         #region Game Load Initalizeations
+
+        public void GetMoonSettings()
+        {
+            CurrentMoonSettings = null;
+            foreach (MoonSettings settings in Resources.FindObjectsOfTypeAll<MoonSettings>())
+            {
+                if (settings.Level == RoundManager.Instance.currentLevel)
+                {
+                    CurrentMoonSettings = settings;
+                    LethalMin.Logger.LogInfo($"Found Moon Settings for {settings.name} on {settings.Level.sceneName}");
+                    return;
+                }
+            }
+        }
+
         public void AddDeathTriggers()
         {
             foreach (KillLocalPlayer killLocalPlayer in FindObjectsOfType<KillLocalPlayer>(true))
@@ -832,7 +854,7 @@ namespace LethalMin
 
         public void SpawnTeleportTriggers()
         {
-            GameObject SpawnTeleportTrigger(Vector3 TPostion, Vector3 Scale, Vector3 DestPos)
+            GameObject SpawnTeleportTrigger(Vector3 TPostion, Vector3 Scale, Vector3 DestPos, int ID)
             {
                 Scene currentScene = SceneManager.GetSceneByName(RoundManager.Instance.currentLevel.sceneName);
 
@@ -850,6 +872,8 @@ namespace LethalMin
                 TPZone.GetComponent<PikminTeleportTrigger>().Destination = Dest.transform;
                 SceneManager.MoveGameObjectToScene(Dest, currentScene);
 
+                PikminRouteManager.Instance.AddedTelepointsForExits.Add(ID, Dest.transform);
+
                 Destroy(TPZone.GetComponent<Renderer>());
                 Destroy(Dest.GetComponent<Renderer>());
                 Destroy(Dest.GetComponent<Collider>());
@@ -860,26 +884,27 @@ namespace LethalMin
             //Offense's FireExit
             if (RoundManager.Instance.currentLevel.sceneName == "Level7Offense")
             {
-                SpawnTeleportTrigger(new Vector3(-6.9494f, 18.3041f, -134.7692f), new Vector3(10f, 10f, 10f), new Vector3(7.9994f, 0.4394f, -136.0314f));
+                SpawnTeleportTrigger(new Vector3(-6.9494f, 18.3041f, -134.7692f), new Vector3(10f, 10f, 10f), new Vector3(7.9994f, 0.4394f, -136.0314f), 1);
             }
 
             //Assurance's FireExit
             if (RoundManager.Instance.currentLevel.sceneName == "Level2Assurance")
             {
-                SpawnTeleportTrigger(new Vector3(101.3612f, 15.7869f, -74.0713f), new Vector3(2.5527f, 4.6818f, 7.8745f), new Vector3(99.9956f, 2.2635f, -57.4636f));
+                SpawnTeleportTrigger(new Vector3(101.3612f, 15.7869f, -74.0713f), new Vector3(2.5527f, 4.6818f, 7.8745f), new Vector3(99.9956f, 2.2635f, -57.4636f), 1);
             }
 
             //March's 3rd FireExit
             if (RoundManager.Instance.currentLevel.sceneName == "Level4March")
             {
-                SpawnTeleportTrigger(new Vector3(125.5447f, 8.4454f, -17.235f), new Vector3(1.0982f, 0.8345f, 5.8745f), new Vector3(129.4601f, 6.4522f, -16.061f));
+                SpawnTeleportTrigger(new Vector3(125.5447f, 8.4454f, -17.235f), new Vector3(1.0982f, 0.8345f, 5.8745f), new Vector3(129.4601f, 6.4522f, -16.061f), 3);
             }
 
             //Embrion's Main
             if (RoundManager.Instance.currentLevel.sceneName == "Level11Embrion")
             {
-                GameObject go = SpawnTeleportTrigger(new Vector3(-190.1637f, 10.6708f, -16.6201f), new Vector3(4.0527f, 10.9381f, 18.4337f), new Vector3(-181.8325f, 0.5593f, -15.6719f));
-                go.transform.rotation = Quaternion.Euler(0, 40, 0);
+                GameObject point =
+                SpawnTeleportTrigger(new Vector3(-190.1637f, 10.6708f, -16.6201f), new Vector3(4.0527f, 10.9381f, 18.4337f), new Vector3(-181.8325f, 0.5593f, -15.6719f), 0);
+                point.transform.rotation = Quaternion.Euler(0, 40, 0);
             }
         }
 
@@ -1028,6 +1053,9 @@ namespace LethalMin
 
 
 
+
+
+
         #region Achievements
         [Rpc(SendTo.Everyone)]
         public void SpawnWhatHappenedTriggerRpc(Vector3 position)
@@ -1058,6 +1086,9 @@ namespace LethalMin
             LethalMin.Logger.LogInfo($"What Happened Trigger placed at {triggerObj.scene.name}");
         }
         #endregion
+
+
+
 
 
 

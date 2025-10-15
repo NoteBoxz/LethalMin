@@ -215,5 +215,19 @@ namespace LethalMin
                 NetworkObject.Despawn(true);
             }
         }
+
+        [Rpc(SendTo.Everyone)]
+        public void SpawnLeaflingGhostRpc()
+        {
+            GameObject ghost = GameObject.Instantiate(LethalMin.assetBundle.LoadAsset<GameObject>("Assets/LethalMin/PlayerGhostPrefab.prefab"),
+            transform.position, Quaternion.identity);
+            PlayerGhost pg = ghost.GetComponent<PlayerGhost>();
+            Renderer renderer = pg.GetComponentInChildren<Renderer>();
+            renderer.material.color = new Color(0.18823529411f, 0.09803921568f, 0.20392156862f, 0.75f);
+            AudioSource ghostAudio = pg.GetComponentInChildren<AudioSource>();
+            ghostAudio.pitch = 0.8f; // slightly lower pitch for ghost
+            IncrumentDestoryCountServerRpc();
+            LethalMin.Logger.LogInfo($"Spawned ghost for Leafling {gameObject.name} at {ghost.transform.position}");
+        }
     }
 }

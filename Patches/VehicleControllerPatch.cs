@@ -11,8 +11,17 @@ namespace LethalMin.Patches
         [HarmonyPostfix]
         public static void AwakePostfix(VehicleController __instance)
         {
-            if (__instance.gameObject.GetComponent<PikminVehicleController>() == null)
-                __instance.gameObject.AddComponent<PikminVehicleController>();
+            try
+            {
+                if (__instance.gameObject.GetComponent<PikminVehicleController>() == null)
+                    __instance.gameObject.AddComponent<PikminVehicleController>();
+
+                ItemArrivalZone.CreateZoneOnObject(__instance.gameObject, ItemArrivalZone.ArrivalZoneType.Crusier);
+            }
+            catch (System.Exception e)
+            {
+                LethalMin.Logger.LogError($"Error in VehicleControllerPatch.Awake: {e}");
+            }
         }
     }
 }

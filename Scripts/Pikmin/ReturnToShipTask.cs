@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using LethalMin.Routeing;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Video;
@@ -8,7 +9,8 @@ namespace LethalMin.Pikmin
 {
     public class ReturnToShipTask : PikminTask
     {
-        public PikminRoute ReturnToShipRoute = null!; // Route to the ship, if any
+        private PikminRoute route = null!;
+
         public ReturnToShipTask(PikminAI pikminAssigningTo) : base(pikminAssigningTo)
         {
 
@@ -16,24 +18,44 @@ namespace LethalMin.Pikmin
 
         public override void OnTaskCreated()
         {
-            base.OnTaskCreated();
-            ReturnToShipRoute = new PikminRoute(pikmin);
-            ReturnToShipRoute.OnRouteEnd.AddListener(pikmin.FinishTask);
+            CreateRoute();
         }
 
-        public override void IntervaledUpdate()
+        private void CreateRoute()
         {
-            if (pikmin == null)
+            PikminRouteRequest request = new PikminRouteRequest
             {
-                LethalMin.Logger.LogWarning($"RTST: Owner is null in IntervaledUpdate");
+                Pikmin = pikmin,
+                Intent = RouteIntent.ToShip
+            };
+
+            route = PikminRouteManager.Instance.CreateRoute(request);
+
+            if (route == null)
+            {
+                LethalMin.Logger.LogWarning($"{pikmin.DebugID}: Failed to create route to ship!");
+                pikmin.FinishTask();
                 return;
             }
-            NavMeshAgent agent = pikmin.agent;
 
-            agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
-            agent.stoppingDistance = 0;
+            route.OnRouteComplete.AddListener(OnRouteComplete);
+            route.OnRouteInvalidated.AddListener(OnRouteInvalidated);
+        }
 
-            ReturnToShipRoute.UpdateRoute();
+        private void OnRouteInvalidated(RouteValidation.InvalidationReason reason)
+        {
+            LethalMin.Logger.LogDebug($"{pikmin.DebugID}: Route invalidated on node {route.CurNode.name} ({reason}), regenerating");
+            CreateRoute();
+        }
+
+        private void OnRouteComplete()
+        {
+            pikmin.FinishTask();
+        }
+
+        public override void Update()
+        {
+            route?.Update();
         }
     }
 }

@@ -33,7 +33,7 @@ namespace LethalMin
             if (controller == null)
                 controller = GetComponent<VehicleController>();
             if (PointsRegion == null)
-                PointsRegion = transform.Find("NavSurface").GetComponent<BoxCollider>();
+                PointsRegion = controller.transform.Find("InsideTruckNavBounds").GetComponent<BoxCollider>();
             if (PikminCheckRegion == null)
                 PikminCheckRegion = transform.Find("VehicleBounds").GetComponent<Collider>();
 
@@ -59,49 +59,45 @@ namespace LethalMin
             else
             {
                 GameObject Point = new GameObject($"{pikmin.DebugID}Point");
-                Point.transform.SetParent(PointsRegion.transform);
-                Point.transform.rotation = Quaternion.identity;
-
 
                 Vector3 extents = PointsRegion.size / 2f;
                 Vector3 point = new Vector3(
-                    -extents.x + (2 * extents.x) * (float)RNG.NextDouble(),
-                    -extents.y + (2 * extents.y) * (float)RNG.NextDouble(),
-                    -extents.z + (2 * extents.z) * (float)RNG.NextDouble()
+                    Random.Range(-extents.x, extents.x),
+                    Random.Range(-extents.y, extents.y),
+                    Random.Range(-extents.z, extents.z)
                 );
 
                 // Convert local point to world space
                 Vector3 randomPoint = PointsRegion.transform.TransformPoint(point);
-                Vector3 finalPos = randomPoint;
 
                 // Ensure the point is on the NavMesh
                 NavMeshHit hit;
-                if (NavMesh.SamplePosition(randomPoint, out hit, 2.5f, NavMesh.AllAreas))
+                if (NavMesh.SamplePosition(randomPoint, out hit, 1.0f, NavMesh.AllAreas))
                 {
-                    finalPos = hit.position;
+                    Point.transform.position = hit.position;
                 }
                 else
                 {
-                    LethalMin.Logger.LogWarning($"Failed to ensure the point is on the NavMesh for: {pikmin.DebugID}");
+                    // If no valid NavMesh position found, return the original random point
+                    Point.transform.position = randomPoint;
                 }
+                Point.transform.SetParent(PointsRegion.transform, true);
+                Point.transform.rotation = Quaternion.identity;
 
-                Point.transform.position = finalPos;
+                PikminPoints[pikmin] = Point.transform;
 
-                PikminPoints.Add(pikmin, Point.transform);
-
-                // GameObject CustomBounds = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                // CustomBounds.GetComponent<Collider>().enabled = false;
-                // CustomBounds.transform.SetParent(Point.transform);
-                // CustomBounds.transform.localPosition = new Vector3(0f, 0f, 0f);
-                // CustomBounds.transform.localScale = new Vector3(1f, 1f, 1f);
-                // CustomBounds.GetComponent<Renderer>().material = LethalMin.assetBundle.LoadAsset<Material>("Assets/LethalMin/Materials/MapDotA.mat");
-                LethalMin.Logger.LogInfo($"Created point at {finalPos} for {pikmin.DebugID}");
+                LethalMin.Logger.LogInfo($"Created point at {Point.transform.position} for {pikmin.DebugID}");
                 return Point.transform;
             }
         }
 
         public void RemovePikminPoint(PikminAI pikmin)
         {
+        }
+
+        public bool IsNearByShip()
+        {
+            return Vector3.Distance(transform.position, StartOfRound.Instance.shipAnimatorObject.transform.position) < 20f;
         }
 
         void Update()

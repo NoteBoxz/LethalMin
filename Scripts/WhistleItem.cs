@@ -32,8 +32,7 @@ namespace LethalMin
         public WhistleSoundPack[] Sounds = new WhistleSoundPack[0];
         public Animator WhistleAnim = null!;
         public NetworkVariable<int> CurrentSoundPackIndex = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
-        float ChargeCooldown = 0f; // Cooldown for charge ability
-        float ChargeButtonCooldown = 0.1f;
+        float ChargeCooldown = 0f;
         public static int WhistleAudioID = -1;
         ScanNodeProperties sNode = null!;
 
@@ -84,10 +83,6 @@ namespace LethalMin
             if (ChargeCooldown >= 0)
             {
                 ChargeCooldown -= Time.deltaTime;
-            }
-            if (ChargeButtonCooldown >= 0)
-            {
-                ChargeButtonCooldown -= Time.deltaTime;
             }
         }
 
@@ -257,8 +252,8 @@ namespace LethalMin
             if (!IsOwner) { return; }
             if (isPocketed || !isHeld) { return; }
             if (StartOfRound.Instance.localPlayerController.quickMenuManager.isMenuOpen) { return; }
-            if (ChargeButtonCooldown > 0) { return; }
             if (PikminManager.instance.LocalLeader.glowmob != null && PikminManager.instance.LocalLeader.glowmob.IsDoingGlowmob) { return; }
+            if (playerHeldBy == null || playerCamera == null) { return; }
             if (LethalMin.InVRMode && SecondaryChargeAction != null)
             {
                 if (callbackContext.action == ChargeAction && !SecondaryChargeAction.IsPressed() ||
@@ -268,57 +263,61 @@ namespace LethalMin
                     return;
                 }
             }
-            ChargeButtonCooldown = 0.1f; // Cooldown for the charge button to prevent spamming
-            Vector3 ChargePos = playerHeldBy.transform.position + playerHeldBy.transform.forward * 15f;
-            if (LethalMin.InVRMode)
+            if (ChargeCooldown > 0)
             {
-                ChargePos = transform.position + transform.forward * 15f;
+                ChargeUse();
+                ChargeUseRpc();
+                return;
             }
-            Transform linecasttransform = noticeZone.LeaderScript.NoticeZone.transform;
-            if (LethalMin.InVRMode)
+
+            // Determine ray origin and direction based on VR mode (similar to UpdateWhistleZonePosition)
+            Vector3 rayDirection = LethalMin.InVRMode && !LethalMin.DisableWhistleFix.InternalValue ? transform.forward : playerCamera.transform.forward;
+            Vector3 startPosition = LethalMin.InVRMode && !LethalMin.DisableWhistleFix.InternalValue ? transform.position : playerCamera.transform.position;
+
+            float chargeDistance = PikminManager.instance.Cheat_ChargeDistance.Value == -1 ? 15 : PikminManager.instance.Cheat_ChargeDistance.Value;
+            Vector3 endPosition = startPosition + rayDirection * chargeDistance;
+            Vector3 ChargePos = endPosition;
+
+            // Use similar raycast approach as UpdateWhistleZonePosition (should have done that from the start)
+            if (Physics.Raycast(startPosition, rayDirection, out RaycastHit hit, chargeDistance, collidersAndRoomMask, QueryTriggerInteraction.Ignore))
             {
-                linecasttransform = WhisStartPoint;
+                if (!hit.collider.isTrigger)
+                {
+                    LethalMin.Logger.LogInfo($"WhistleItem: Charge raycast hit at {hit.point} by {hit.collider.gameObject.name}");
+                    ChargePos = hit.point + hit.normal * 0.05f;
+                }
             }
-            if (Physics.Linecast(linecasttransform.position + linecasttransform.up * 2 + linecasttransform.forward * 1.5f,
-            ChargePos + Vector3.up * 2, out RaycastHit hitInfo, LethalMin.PikminColideable))
+            else if (Physics.Raycast(endPosition, Vector3.down, out hit, maxRaycastDistance, collidersAndRoomMask, QueryTriggerInteraction.Ignore))
             {
-                LethalMin.Logger.LogInfo($"WhistleItem: Charge linecast hit at {hitInfo.point} by {hitInfo.collider.gameObject.name}");
-                ChargePos = hitInfo.point;
+                if (!hit.collider.isTrigger)
+                {
+                    LethalMin.Logger.LogInfo($"WhistleItem: Charge downward raycast hit at {hit.point} by {hit.collider.gameObject.name}");
+                    ChargePos = hit.point + hit.normal * 0.05f;
+                }
             }
-            if (NavMesh.SamplePosition(ChargePos, out NavMeshHit hit, 15f, NavMesh.AllAreas))
+
+            // Sample NavMesh position
+            if (NavMesh.SamplePosition(ChargePos, out NavMeshHit navHit, 5f, NavMesh.AllAreas))
             {
-                ChargePos = hit.position;
+                ChargePos = navHit.position;
             }
             ChargeUse(ChargePos);
-            ChargeUseServerRpc(ChargePos);
+            ChargeUseRpc(ChargePos);
         }
-        [ServerRpc]
-        public void ChargeUseServerRpc(Vector3 ChargePos)
+
+        [Rpc(SendTo.NotOwner)]
+        public void ChargeUseRpc(Vector3 ChargePos)
         {
-            ChargeUseClientRpc(ChargePos);
-        }
-        [ClientRpc]
-        public void ChargeUseClientRpc(Vector3 ChargePos)
-        {
-            if (!IsOwner)
-                ChargeUse(ChargePos);
+            ChargeUse(ChargePos);
         }
         public void ChargeUse(Vector3 ChargePos)
         {
-            if (ChargeCooldown > 0)
-            {
-                if (WhistleAnim != null)
-                    WhistleAnim.SetTrigger("diss");
-                audioSource.PlayOneShot(chargeFailSound);
-                return;
-            }
-            ChargeCooldown = 2f;
+            ChargeCooldown = PikminManager.instance.Cheat_ChargeCoolDown.Value == -1 ? 0.1f : PikminManager.instance.Cheat_ChargeCoolDown.Value;
             LethalMin.Logger.LogInfo($"WhistleItem: ChargeUse at position {ChargePos} by {playerHeldBy?.playerUsername}");
-            OverridePikminPosition pikminPosition = new OverridePikminPosition(ChargePos, true, 4f, 5f);
+            OverridePikminPosition pikminPosition = new OverridePikminPosition("WhisCharge", ChargePos, true, 4f, 0.1f);
             audioSource.PlayOneShot(chargeSound);
             if (WhistleAnim != null)
                 WhistleAnim.SetTrigger("char");
-            //PikUtils.CreateDebugCube(Color.red).transform.position = ChargePos;
             if (IsOwner)
             {
                 if (!(LethalMin.InVRMode && LethalMin.DisableChargeMotionBlur))
@@ -326,15 +325,46 @@ namespace LethalMin
             }
             foreach (PikminAI ai in noticeZone.LeaderScript.PikminInSquad)
             {
+                float vol = ai.leader == null || ai.leader.PikminInSquad.Count == 0 ? 1.0f : 1.0f / ai.leader.PikminInSquad.Count;
+                ai.PlayAudioOnLocalClient(PikminSoundPackSounds.Charge.ToString(), true, vol);
+                ai.PlayAnimation(ai.animController.AnimPack.EditorNoticeAnim);
+                if (!ai.IsOwner)
+                {
+                    continue;
+                }
+                
                 if (Vector3.Distance(ai.transform.position, noticeZone.LeaderScript.transform.position) > 30f)
                 {
                     LethalMin.Logger.LogInfo($"WhistleItem: ChargeUse - {ai.name} is too far away, skipping charge.");
                     continue;
                 }
+                if (ai.OverrideFollowPosition != null && ai.OverrideFollowPosition.Value.ID == "MoveToVPoint")
+                {
+                    LethalMin.Logger.LogInfo($"{ai.DebugID}: Charge interrupted by vehicle");
+                    continue;
+                }
                 ai.OverrideFollowPosition = pikminPosition;
-                ai.StartCoroutine(ai.DoCharge(4, ChargePos));
+                if (ai.chargeRoutine != null)
+                {
+                    ai.StopCoroutine(ai.chargeRoutine);
+                    ai.chargeRoutine = null;
+                }
+                ai.chargeRoutine = ai.StartCoroutine(ai.DoCharge(4));
             }
         }
+
+        [Rpc(SendTo.NotOwner)]
+        public void ChargeUseRpc()
+        {
+            ChargeUse();
+        }
+        public void ChargeUse()
+        {
+            if (WhistleAnim != null)
+                WhistleAnim.SetTrigger("diss");
+            audioSource.PlayOneShot(chargeFailSound);
+        }
+
 
         [ServerRpc]
         public void DismissUseServerRpc()
@@ -493,7 +523,7 @@ namespace LethalMin
                             if (ai != null && ai.pikminType != null && IdlePositions.ContainsKey(ai.pikminType))
                             {
                                 ai.LeaderAssesmentDelay = LethalMin.DismissWindownTime;
-                                ai.OverrideIdlePosition = new OverridePikminPosition(IdlePositions[ai.pikminType], true, 2f, 2f);
+                                ai.OverrideIdlePosition = new OverridePikminPosition("WhisDismiss", IdlePositions[ai.pikminType], true, 2f, 2f);
                             }
                         }
                     }

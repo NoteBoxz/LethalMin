@@ -11,13 +11,7 @@ namespace LethalMin.Pikmin
     public class MoonSettings : ScriptableObject
     {
         public SelectableLevel Level = null!;
-        public List<Transform> IndoorPoints = new List<Transform>();
-        public List<Transform> OutdoorPoints = new List<Transform>();
-        public List<RouteNode> IndoorRouteNodes = new List<RouteNode>();
-        public List<RouteNode> OutdoorRouteNodes = new List<RouteNode>();
-        public bool UseIndoorRouteNodes = true;
-        public bool UseOutdoorRouteNodes = true;
-        public bool CheckPathableIndoor = true;
-        public bool CheckPathableOutdoor = true;
+
+        public bool OverridePathing = false;
     }
 }

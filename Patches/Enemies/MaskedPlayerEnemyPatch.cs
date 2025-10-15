@@ -60,16 +60,9 @@ namespace LethalMin.Patches.AI
         [HarmonyPostfix]
         public static void KillEnemyPostfix(MaskedPlayerEnemy __instance)
         {
-            if (__instance.TryGetComponent(out MaskedPlayerPikminEnemy pikminEnemy) && pikminEnemy.IsLeafling)
+            if (__instance.TryGetComponent(out MaskedPlayerPikminEnemy pikminEnemy) && pikminEnemy.IsOwner && pikminEnemy.IsLeafling)
             {
-                GameObject ghost = GameObject.Instantiate(LethalMin.assetBundle.LoadAsset<GameObject>("Assets/LethalMin/PlayerGhostPrefab.prefab"),
-                __instance.transform.position, Quaternion.identity);
-                PlayerGhost pg = ghost.GetComponent<PlayerGhost>();
-                Renderer renderer = pg.GetComponentInChildren<Renderer>();
-                renderer.material.color = new Color(0.18823529411f, 0.09803921568f, 0.20392156862f, 0.75f);
-                AudioSource ghostAudio = pg.GetComponentInChildren<AudioSource>();
-                ghostAudio.pitch = 0.8f; // slightly lower pitch for ghost
-                pikminEnemy.IncrumentDestoryCountServerRpc();
+                pikminEnemy.SpawnLeaflingGhostRpc();
             }
         }
     }

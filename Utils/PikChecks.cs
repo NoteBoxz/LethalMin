@@ -163,7 +163,7 @@ namespace LethalMin.Utils
             && itm.PikminOnItem.Count < itm.GrabToPositions.Count
             && !itm.HasArrived
             && itm.settings.GrabableToPikmin
-            && !PikminRoute.NodeCache.Any(node => node.IsInRange(itm.ItemScript.transform.position));
+            && !PikminManager.instance.ItemArrivalZones.Any(zone => zone.IsItemInZone(itm));
         }
         public static bool IsEnemyVaildToAttack(PikminEnemy Penemy)
         {

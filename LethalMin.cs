@@ -98,6 +98,8 @@ namespace LethalMin
         public static GameObject GrabPosPrefab = null!;
         public static OnionSoundPack DefaultOnionSoundPack = null!;
         public static OnionType ShipOnionType = null!;
+        public static GameObject SSRenviourment = null!;
+        public static Vector3 enviormentStartPos = Vector3.zero;
         public const string FullEnglishAlphabetUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         public const string FullEnglishAlphabetLower = "abcdefghijklmnopqrstuvwxyz";
         public const string FullEnglishAlhabet = FullEnglishAlphabetUpper + FullEnglishAlphabetLower;
@@ -751,10 +753,11 @@ namespace LethalMin
         public static ConfigItem<List<string>> AttackBlacklistConfig = null!;
         public static ConfigItem<List<string>> ItemBlacklistConfig = null!;
         public static ConfigItem<List<string>> EnemyBodyConvertBlacklistConfig = null!;
-        public static ConfigItem<bool> CanPathOutsideWhenInside = null!;
-        public static ConfigItem<bool> CarryNonScrapItemsOnCompany = null!;
+        public static ConfigItem<bool> UseExitsWhenCarryingItems = null!;
         public static ConfigItem<PfollowMode> PikminFollowMode = null!;
         public static ConfigItem<float> TimeFallingFailSafe = null!;
+        public static ConfigItem<bool> CarryNonScrapItemsToCompany = null!;
+        public static ConfigItem<bool> IgnoreNonScrapItemsToCompany = null!;
         public static ConfigItem<bool> TakeItemsToOnionOnCompany = null!;
         public static ConfigItem<bool> TakeItemsToTheCar = null!;
         public static ConfigItem<bool> TakeItemsToTheOnion = null!;
@@ -936,6 +939,8 @@ namespace LethalMin
         public static ConfigItem<float> PlayerNoticeZoneSize = null!;
         public static ConfigItem<float> PikminDamageMultipler = null!;
         public static ConfigItem<float> PikminSpeedMultipler = null!;
+        public static ConfigItem<float> ChargeCooldown = null!;
+        public static ConfigItem<float> ChargeDistance = null!;
         public static ConfigItem<bool> DontPurgeAfterFire = null!;
         #endregion
 
@@ -1380,19 +1385,11 @@ namespace LethalMin
                 true,
                 ConfigItemAuthority.Host);
 
-            CarryNonScrapItemsOnCompany = new ConfigItem<bool>(
+            UseExitsWhenCarryingItems = new ConfigItem<bool>(
                 "Pikmin Behavior",
-                "Carry Non-Scrap Items On Company",
-                false,
-                "Makes it so pikmin carry Non-Scrap items (Flashlights, Keys, etc.) to the company counter",
-                false,
-                ConfigItemAuthority.Client);
-
-            CanPathOutsideWhenInside = new ConfigItem<bool>(
-                "Pikmin Behavior",
-                "Can Path Outside When Inside",
+                "Use Exits When Carrying Items",
                 true,
-                "Whether or not Pikmin can path outside when inside the facility",
+                "Whether or not Pikmin can path outside directly to the ship when inside, or just leave it at an exit when inside",
                 false,
                 ConfigItemAuthority.Client);
 
@@ -1414,6 +1411,22 @@ namespace LethalMin
                 "Time Falling Fail Safe",
                 10f,
                 "The time it takes for a pikmin to be concitered falling infintly and teleport back into bounds",
+                false,
+                ConfigItemAuthority.Client);
+
+            CarryNonScrapItemsToCompany = new ConfigItem<bool>(
+                "Pikmin Behavior",
+                "Carry Non-Scrap Items To Company",
+                false,
+                "Makes it so pikmin carry Non-Scrap items (Flashlights, Keys, etc.) to the company counter instead of the ship",
+                false,
+                ConfigItemAuthority.Client);
+            
+            IgnoreNonScrapItemsToCompany = new ConfigItem<bool>(
+                "Pikmin Behavior",
+                "Ignore Non-Scrap Items On Company",
+                false,
+                "Makes it so pikmin ignore Non-Scrap items (Flashlights, Keys, etc.) on the company entirely",
                 false,
                 ConfigItemAuthority.Client);
 
@@ -2443,6 +2456,22 @@ namespace LethalMin
                 "Pikmin Speed Multiplier",
                 -1.0f,
                 "The multiplier for pikmin speed (1.0 = normal, 2.0 = double speed, etc.)",
+                false,
+                ConfigItemAuthority.Host);
+
+            ChargeDistance = new ConfigItem<float>(
+                "`Cheats`",
+                "Charge Distance",
+                -1.0f,
+                "The distance pikmin can be charged (in units)",
+                false,
+                ConfigItemAuthority.Host);
+
+            ChargeCooldown = new ConfigItem<float>(
+                "`Cheats`",
+                "Charge Cooldown",
+                -1.0f,
+                "The cooldown for charging pikmin (in seconds)",
                 false,
                 ConfigItemAuthority.Host);
 

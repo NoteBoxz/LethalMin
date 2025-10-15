@@ -25,15 +25,15 @@ namespace LethalMin
             {
                 lastLeaderInsideFactory = PrimaryLeader.Controller.isInsideFactory;
                 caveDwellerAI.isOutside = !PrimaryLeader.Controller.isInsideFactory;
-                if (PrimaryPikminOnItem.IsOwner)
-                {
-                    PrimaryPikminOnItem.agent.Warp(PrimaryLeader.transform.position);
-                }
-                PrimaryPikminOnItem.transform2.TeleportOnLocalClient(PrimaryLeader.transform.position);
-                foreach (PikminAI pikmin in PikminOnItem)
-                {
-                    pikmin.isOutside = !PrimaryLeader.Controller.isInsideFactory;
-                }
+                // if (PrimaryPikminOnItem.IsOwner)
+                // {
+                //     PrimaryPikminOnItem.agent.Warp(PrimaryLeader.transform.position);
+                // }
+                // PrimaryPikminOnItem.transform2.TeleportOnLocalClient(PrimaryLeader.transform.position);
+                // foreach (PikminAI pikmin in PikminOnItem)
+                // {
+                //     pikmin.isOutside = !PrimaryLeader.Controller.isInsideFactory;
+                // }
             }
         }
 

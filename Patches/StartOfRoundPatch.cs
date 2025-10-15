@@ -14,22 +14,41 @@ namespace LethalMin.Patches
         [HarmonyPostfix]
         private static void CreatePikminManager(StartOfRound __instance)
         {
-            SaveManager.settings.path = GameNetworkManager.Instance.currentSaveFileName + "_LethalMinSave";
-            if (!__instance.IsServer)
+            try
             {
-                return;
+                GameObject env = GameObject.Find("Environment");
+                LethalMin.enviormentStartPos = env.transform.position;
+                LethalMin.SSRenviourment = env;
+                ItemArrivalZone.CreateZoneOnObject(__instance.shipAnimatorObject.gameObject, ItemArrivalZone.ArrivalZoneType.Ship);
+
+                SaveManager.settings.path = GameNetworkManager.Instance.currentSaveFileName + "_LethalMinSave";
+                if (!__instance.IsServer)
+                {
+                    return;
+                }
+                LethalMin.Logger.LogInfo("Creating PikminManager");
+                if (PikminManager.instance == null)
+                {
+                    GameObject obj = LethalMin.assetBundle.LoadAsset<GameObject>("Assets/LethalMin/PikminManager.prefab");
+                    NetworkObject netObj = GameObject.Instantiate(obj).GetComponent<NetworkObject>();
+                    netObj.Spawn();
+                }
+                else
+                {
+                    LethalMin.Logger.LogWarning("PikminManager already exists");
+                }
             }
-            LethalMin.Logger.LogInfo("Creating PikminManager");
-            if (PikminManager.instance == null)
+            catch (System.Exception e)
             {
-                GameObject obj = LethalMin.assetBundle.LoadAsset<GameObject>("Assets/LethalMin/PikminManager.prefab");
-                NetworkObject netObj = GameObject.Instantiate(obj).GetComponent<NetworkObject>();
-                netObj.Spawn();
+                LethalMin.Logger.LogFatal($"Failed to create PikminManager due to: {e}");
             }
-            else
-            {
-                LethalMin.Logger.LogWarning("PikminManager already exists");
-            }
+        }
+
+        [HarmonyPatch(nameof(StartOfRound.SetShipReadyToLand))]
+        [HarmonyPostfix]
+        public static void StartPikminManager(StartOfRound __instance)
+        {
+            PikminManager.instance.OnGameEnded();
         }
 
 
