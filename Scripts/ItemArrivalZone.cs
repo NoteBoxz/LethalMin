@@ -99,7 +99,8 @@ namespace LethalMin
 
         public bool LCOFFICE_CBMOOZ(PikminItem itemChecking)
         {
-            return ElevatorSystem.elevatorFloor == 1 && LethalMin.UseExitsWhenCarryingItems.InternalValue;
+            FloorData? currentFloor = PikminRouteManager.Instance.GetFloorFromPosition(itemChecking.transform.position)!;
+            return currentFloor != null && currentFloor.Exits != null && currentFloor.Exits.Count > 0f;
         }
 
         public bool ZENEROS_CBMOOZ(PikminItem itemChecking)

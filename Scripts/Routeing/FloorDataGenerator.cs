@@ -6,6 +6,7 @@ using LCOffice.Components;
 using LethalMin.Utils;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 
 namespace LethalMin.Routeing;
 
@@ -57,7 +58,7 @@ public static class FloorDataGenerator
                 HandlePlayDunGen(elevatorObject!, dungeon, ref floorDataList);
                 break;
             case DungeonType.PiggyDungen:
-
+                HandlePiggyDunGen(elevatorObject!, dungeon, ref floorDataList);
                 break;
         }
 
@@ -75,6 +76,18 @@ public static class FloorDataGenerator
         else
         {
             LethalMin.Logger.LogError("Elevator object is not of type PlayZoneElevator.");
+        }
+    }
+
+    public static void HandlePiggyDunGen(Object elevatorObject, Dungeon dungeon, ref List<FloorData> floorDataList)
+    {
+        if (elevatorObject is ElevatorController piggyElevator)
+        {
+            floorDataList = GetPiggyFloorData(dungeon, piggyElevator);
+        }
+        else
+        {
+            LethalMin.Logger.LogError("Elevator object is not of type ElevatorController.");
         }
     }
 
@@ -172,148 +185,79 @@ public static class FloorDataGenerator
         return data;
     }
 
-    // /// <summary>
-    // /// Gets the floor data from the Piggy LC-Office mod.
-    // /// </summary>
-    // public static void GetPiggyFloorData()
-    // {
-    //     List<RouteNode> FireExits = FindFireExitRouteNodes();
-    //     LCOffice.Components.ElevatorSystem ElevatorSystem = Object.FindObjectOfType<LCOffice.Components.ElevatorSystem>();
-    //     PlayerPhysicsRegion ElevatorRegion = ElevatorSystem.animator.GetComponentInChildren<PlayerPhysicsRegion>();
-    //     Scene currentScene = SceneManager.GetSceneByName(RoundManager.Instance.currentLevel.sceneName);
+    /// <summary>
+    /// Gets the floor data from the Piggy LC-Office mod.
+    /// </summary>
+    public static List<FloorData> GetPiggyFloorData(Dungeon dungeon, ElevatorController elevator)
+    {
+        List<FloorData> data = new List<FloorData>();
+        ElevatorSystem ElevatorSystem = Object.FindObjectOfType<ElevatorSystem>();
+        PlayerPhysicsRegion ElevatorRegion = ElevatorSystem.animator.GetComponentInChildren<PlayerPhysicsRegion>();
+        Scene currentScene = SceneManager.GetSceneByName(RoundManager.Instance.currentLevel.sceneName);
 
-    //     GameObject CreateDebugCube(Vector3 LocalPos)
-    //     {
-    //         //GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-    //         GameObject cube = new GameObject("Floor Ref Pos");
-    //         SceneManager.MoveGameObjectToScene(cube, currentScene);
-    //         cube.transform.SetParent(ElevatorSystem.animator.transform.parent);
-    //         cube.transform.localPosition = LocalPos;
-    //         //cube.GetComponent<Renderer>().material = LethalMin.assetBundle.LoadAsset<Material>("Assets/LethalMin/Materials/MapDotA.mat");
-    //         return cube;
-    //     }
+        GameObject CreateDebugCube(Vector3 LocalPos)
+        {
+            //GameObject cube = PikUtils.CreateDebugCube(Color.magenta);
+            GameObject cube = new GameObject("Floor Ref Pos");
+            SceneManager.MoveGameObjectToScene(cube, currentScene);
+            cube.transform.SetParent(ElevatorSystem.animator.transform.parent);
+            cube.transform.localPosition = LocalPos;
+            return cube;
+        }
 
-    //     RouteNode MainNode = new RouteNode(
-    //         "Main",
-    //         RoundManager.FindMainEntranceScript(true),
-    //         0.45f
-    //     );
+        RouteNode ElevatorNode = new RouteNode
+        (
+            name: ElevatorSystem.name,
+            point: ElevatorRegion.transform,
+            check: ElevatorRegion.GetComponent<Collider>()
+        );
 
-    //     RouteNode ElevatorNode = new RouteNode(
-    //         "Elevator",
-    //         ElevatorSystem.animator.transform,
-    //         -1,
-    //         ElevatorRegion.GetComponent<Collider>()
-    //     );
-    //     if (!ElevatorRegion.gameObject.TryGetComponent(out DirectlyPathZone zone))
-    //     {
-    //         zone = ElevatorRegion.gameObject.AddComponent<DirectlyPathZone>();
-    //     }
+        FloorData F1 = new FloorData();
+        GameObject cubeA = CreateDebugCube(new Vector3(-2.32f, -11.41f, 1.01f));
+        F1.FloorRoot = cubeA.transform.position;
+        F1.Elevators.Add(ElevatorNode);
+        F1.FloorTitle = "(Floor1) Basement";
+        data.Add(F1);
 
-    //     ElevatorNode.CheckBuffer = 0.25f;
-    //     ElevatorNode.GetNavPos = true;
-    //     PiggyElevatorSystemPatch.ElevateNode = ElevatorNode;
+        FloorData F2 = new FloorData();
+        GameObject cubeB = CreateDebugCube(new Vector3(-2.32f, 22.09f, 1.01f));
+        F2.FloorRoot = cubeB.transform.position;
+        F2.Elevators.Add(ElevatorNode);
+        F2.FloorTitle = "(Floor2) Lobby";
+        data.Add(F2);
 
-    //     FloorData F1 = new FloorData();
-    //     GameObject cubeA = CreateDebugCube(new Vector3(-2.32f, -11.41f, 1.01f));
-    //     F1.FloorRoot = cubeA.transform.position;
-    //     F1.Elevators.Add(ElevatorNode);
-    //     F1.FloorTitle = "(Floor1) Basement";
-    //     CurrentFloorData.Add(F1);
+        FloorData F3 = new FloorData();
+        GameObject cubeC = CreateDebugCube(new Vector3(-2.32f, 61.44f, 1.01f));
+        F3.FloorRoot = cubeC.transform.position;
+        F3.Elevators.Add(ElevatorNode);
+        F3.FloorTitle = "(Floor3) Upstairs Basement";
+        data.Add(F3);
 
-    //     FloorData F2 = new FloorData();
-    //     GameObject cubeB = CreateDebugCube(new Vector3(-2.32f, 22.09f, 1.01f));
-    //     F2.FloorRoot = cubeB.transform.position;
-    //     F2.Elevators.Add(ElevatorNode);
-    //     F2.MainExits.Add(MainNode);
-    //     F2.FloorTitle = "(Floor2) Lobby";
-    //     CurrentFloorData.Add(F2);
-    //     DefultFloorData = F2;
+        foreach (var kpv in EntranceDungeonCache)
+        {
+            if (kpv.Value != dungeon)
+                continue;
 
-    //     FloorData F3 = new FloorData();
-    //     GameObject cubeC = CreateDebugCube(new Vector3(-2.32f, 61.44f, 1.01f));
-    //     F3.FloorRoot = cubeC.transform.position;
-    //     F3.Elevators.Add(ElevatorNode);
-    //     F3.FloorTitle = "(Floor3) Upstairs Basement";
-    //     CurrentFloorData.Add(F3);
 
-    //     GameObject PonlyZone = PikUtils.CreateDebugCube(cubeC.transform.position + new Vector3(0, 1.5f, 0));
-    //     PonlyZone.transform.localScale = new Vector3(4.3f, 4.25f, 7f);
-    //     PonlyZone.GetComponent<Collider>().isTrigger = true;
-    //     PonlyZone.GetComponent<Collider>().enabled = true;
-    //     PonlyZone.AddComponent<PikminOnlyZone>();
-    //     PonlyZone.GetComponent<Renderer>().enabled = false;
-    //     PonlyZone.name = "LC-Office Pikmin Only Zone";
-    //     SceneManager.MoveGameObjectToScene(PonlyZone, currentScene);
-    //     PiggyElevatorSystemPatch.POnlyZone = PonlyZone;
+            FloorData currentFloor = data.OrderBy(floor =>
+                    Mathf.Abs(kpv.Key.GetPosition().y - floor.FloorRoot.y))
+                    .FirstOrDefault();
 
-    //     if (LethalMin.AddNavLinkToThridFloorOffice)
-    //     {
-    //         GameObject link = new GameObject();
-    //         link.name = $"LethalMinFloor3Link";
-    //         SceneManager.MoveGameObjectToScene(link, currentScene);
+            if (currentFloor == F1)
+                F1.Exits.Add(kpv.Key);
 
-    //         GameObject LcubeA = new GameObject(); //PikUtils.CreateDebugCube(new Vector3(0, 0, 0));
-    //         GameObject LcubeB = new GameObject(); //PikUtils.CreateDebugCube(new Vector3(0, 0, 0));
-    //         LcubeA.name = "LethalMinLinkCubeA";
-    //         LcubeB.name = "LethalMinLinkCubeB";
-    //         SceneManager.MoveGameObjectToScene(LcubeA, currentScene);
-    //         SceneManager.MoveGameObjectToScene(LcubeB, currentScene);
-    //         LcubeA.transform.SetParent(link.transform);
-    //         LcubeB.transform.SetParent(link.transform);
+            if (currentFloor == F2)
+                F2.Exits.Add(kpv.Key);
 
-    //         link.transform.SetParent(ElevatorSystem.animator.transform);
-    //         link.transform.localPosition = new Vector3(2.19f, -3.62f, 0.015f);
-    //         link.transform.localRotation = Quaternion.Euler(0, 90, 0);
+            if (currentFloor == F3)
+                F3.Exits.Add(kpv.Key);
 
-    //         NavMeshLink Sasueage = link.AddComponent<NavMeshLink>();
+            LethalMin.Logger.LogDebug($"({kpv.Key.name}) Floor: {currentFloor.FloorTitle} Position: {kpv.Key.GetPosition()}");
+        }
 
-    //         Sasueage.width = 3f;
-    //         Sasueage.startPoint = new Vector3(0, 0, -1);
-    //         Sasueage.endPoint = new Vector3(0, 0, 2);
-
-    //         PiggyElevatorSystemPatch.Link = Sasueage;
-    //         PiggyElevatorSystemPatch.DebugCubeA = LcubeA;
-    //         PiggyElevatorSystemPatch.DebugCubeB = LcubeB;
-    //     }
-
-    //     FloorData DetermineFloor(GameObject obj)
-    //     {
-    //         Vector3 objPosition = obj.transform.position;
-    //         return CurrentFloorData.OrderBy(floor =>
-    //             Mathf.Abs(objPosition.y - floor.FloorRoot.y))
-    //             .FirstOrDefault();
-    //     }
-
-    //     foreach (RouteNode exit in FireExits)
-    //     {
-    //         if (exit.Entrance == null)
-    //         {
-    //             LethalMin.Logger.LogWarning($"({exit.NodeName}) Entrance is null, skipping exit registration.");
-    //             continue;
-    //         }
-    //         if (exit.Entrance.exitPoint == null)
-    //         {
-    //             exit.Entrance.FindExitPoint();
-    //         }
-    //         GameObject? Point = exit.Entrance.exitPoint?.gameObject;
-    //         if (!exit.Entrance.gotExitPoint)
-    //         {
-    //             Point = FindEntranceExitPoint(exit.Entrance);
-    //         }
-    //         if (Point == null)
-    //         {
-    //             LethalMin.Logger.LogWarning($"({exit.NodeName}) Exit point is null, skipping exit registration.");
-    //             continue;
-    //         }
-
-    //         FloorData floor = DetermineFloor(Point);
-    //         LethalMin.Logger.LogDebug($"({exit.NodeName}) Floor: {floor.FloorTitle} Position: {Point.transform.position}");
-    //         CurrentFloorData[CurrentFloorData.IndexOf(floor)].FireExits.Add(exit);
-    //     }
-
-    //     LethalMin.Logger.LogInfo("Registered LC-Office Floors");
-    // }
+        LethalMin.Logger.LogInfo("Registered LC-Office Floors");
+        return data;
+    }
 
     /// <summary>
     /// Gets the floor data from the PlayZone mod.

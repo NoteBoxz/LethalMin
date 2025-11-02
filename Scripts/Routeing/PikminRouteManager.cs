@@ -174,7 +174,7 @@ public class PikminRouteManager : MonoBehaviour
         // Determine current location
         context.IsInside = request.Pikmin.isOutside == false;
         context.IsInShip = IsInShipBounds(request.Pikmin.transform.position);
-        context.CurrentFloor = context.IsInside ? GetFloorPikminIsOn(request.Pikmin) : null;
+        context.CurrentFloor = context.IsInside ? GetFloorFromPosition(request.Pikmin.transform.position) : null;
 
         // Determine destination location
         switch (request.Intent)
@@ -227,37 +227,22 @@ public class PikminRouteManager : MonoBehaviour
         return context;
     }
 
-    public FloorData? GetFloorPikminIsOn(PikminAI pikmin)
+    public FloorData? GetFloorFromPosition(Vector3 position)
     {
         List<FloorData> floors = CurrentFloorData;
         if (Dungeons.Count > 1)
         {
-            floors = FloorDataGenerator.GenerateFloorDataInterior(GetClosestDungeon(pikmin.transform.position));
+            floors = FloorDataGenerator.GenerateFloorDataInterior(GetClosestDungeon(position));
         }
-        FloorData FloorOn;
-        FloorOn = null!;
         if (floors.Count == 0)
         {
             return null;
         }
 
         FloorData currentFloor = floors.OrderBy(floor =>
-                Mathf.Abs(pikmin.transform.position.y - floor.FloorRoot.y))
+                Mathf.Abs(position.y - floor.FloorRoot.y))
                 .FirstOrDefault();
 
-        if (currentFloor != null)
-        {
-            //LethalMin.Logger.LogInfo($"({pikmin.DebugID}) Current floor: {currentFloor.FloorTitle}");
-        }
-        else
-        {
-            LethalMin.Logger.LogWarning($"({pikmin.DebugID}) No valid floor found for Pikmin");
-        }
-
-        if (currentFloor != null)
-        {
-            FloorOn = currentFloor;
-        }
         return currentFloor;
     }
 
