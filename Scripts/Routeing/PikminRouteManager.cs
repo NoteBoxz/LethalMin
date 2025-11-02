@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DunGen;
@@ -56,7 +57,7 @@ public class PikminRouteManager : MonoBehaviour
         {
             LethalMin.Logger.LogDebug("No Dungeons found in scene on game load.");
         }
-            
+
         FloorDataGenerator.DungeonFloorDataCache.Clear();
         FloorDataGenerator.EntranceDungeonCache.Clear();
 
@@ -65,6 +66,17 @@ public class PikminRouteManager : MonoBehaviour
         EntranceTeleport[] entrances = Object.FindObjectsOfType<EntranceTeleport>();
         RefreshEntrancePairs(entrances);
         EntranceNodes = GetAllEntranceNodes(entrances);
+        StartCoroutine(GetFloorData());
+    }
+
+    IEnumerator GetFloorData()
+    {
+        WaitForEndOfFrame wait = new WaitForEndOfFrame();
+        for (int i = 0; i < 10; i++)
+        {
+            yield return wait;
+        }
+        LethalMin.Logger.LogInfo($"Generating Floor Data for {Dungeons.Count} Dungeons.");
         if (Dungeons.Count > 0)
             CurrentFloorData = FloorDataGenerator.GenerateFloorDataInterior(Dungeons[0]);
     }
@@ -104,6 +116,7 @@ public class PikminRouteManager : MonoBehaviour
 
     public void OnGameEnded()
     {
+        Dungeons.Clear();
         CurrentFloorData.Clear();
         EntranceExitPoints.Clear();
         AddedTelepointsForExits.Clear();

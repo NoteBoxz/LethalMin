@@ -26,6 +26,7 @@ namespace LethalMin
         private DepositItemsDesk desk = null!;
         private PikminVehicleController vehicleController = null!;
         private MineshaftElevatorController mineShaftElevator = null!;
+        private Object piggyElevatorSystem = null!;
 
         public static void CreateZoneOnObject(GameObject obj, ArrivalZoneType type)
         {
@@ -59,8 +60,18 @@ namespace LethalMin
                     break;
                 case ArrivalZoneType.MineElevator:
                     mineShaftElevator = GetComponent<MineshaftElevatorController>();
+                    zoneCollider = GetComponentInChildren<DirectlyPathZone>().GetComponent<Collider>();
+                    break;
+                case ArrivalZoneType.OfficeElvator:
+                    GetPiggyCompents();
                     break;
             }
+        }
+
+        void GetPiggyCompents()
+        {
+            piggyElevatorSystem = GetComponent<ElevatorSystem>();
+            zoneCollider = GetComponentInChildren<DirectlyPathZone>().GetComponent<Collider>();
         }
 
         public bool CanBeMovedOutofZone(PikminItem itemChecking)
@@ -78,7 +89,7 @@ namespace LethalMin
                     return vehicleController.IsNearByShip() || vehicleController.controller.carDestroyed;
 
                 case ArrivalZoneType.MineElevator:
-                    return !mineShaftElevator.elevatorMovingDown && LethalMin.UseExitsWhenCarryingItems.InternalValue;
+                    return !mineShaftElevator.elevatorMovingDown && mineShaftElevator.elevatorFinishedMoving && LethalMin.UseExitsWhenCarryingItems.InternalValue;
 
                 case ArrivalZoneType.Counter:
                     return !itemChecking.ItemScript.itemProperties.isScrap;
@@ -99,8 +110,7 @@ namespace LethalMin
 
         public bool LCOFFICE_CBMOOZ(PikminItem itemChecking)
         {
-            FloorData? currentFloor = PikminRouteManager.Instance.GetFloorFromPosition(itemChecking.transform.position)!;
-            return currentFloor != null && currentFloor.Exits != null && currentFloor.Exits.Count > 0f;
+            return ElevatorSystem.elevatorFloor == 1 && !((ElevatorSystem)piggyElevatorSystem).elevatorMoving;
         }
 
         public bool ZENEROS_CBMOOZ(PikminItem itemChecking)

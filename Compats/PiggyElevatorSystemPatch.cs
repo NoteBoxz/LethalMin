@@ -24,8 +24,9 @@ namespace LethalMin.Compats
             try
             {
                 PlayerPhysicsRegion ElevatorRegion = __instance.animator.GetComponentInChildren<PlayerPhysicsRegion>();
-                ItemArrivalZone.CreateZoneOnObject(ElevatorRegion.gameObject, ItemArrivalZone.ArrivalZoneType.OfficeElvator);
                 ElevatorRegion.gameObject.AddComponent<DirectlyPathZone>();
+                ItemArrivalZone.CreateZoneOnObject(ElevatorRegion.gameObject, ItemArrivalZone.ArrivalZoneType.OfficeElvator);
+                LethalMin.Logger.LogDebug("Patched ElevatorSystem OnNetworkSpawn to add ItemArrivalZone and DirectlyPathZone.");
             }
             catch (Exception e)
             {

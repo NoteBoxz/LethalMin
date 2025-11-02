@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DunGen;
@@ -129,15 +130,7 @@ public static class FloorDataGenerator
     public static List<FloorData> GetVanillaFloorData(Dungeon dungeon, MineshaftElevatorController elevator)
     {
         List<FloorData> data = new List<FloorData>();
-        GameObject CustomBounds = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        CustomBounds.GetComponent<Collider>().isTrigger = true;
-        CustomBounds.transform.SetParent(elevator.GetComponentInChildren<PlayerPhysicsRegion>().transform.parent);
-        CustomBounds.transform.localPosition = new Vector3(0.0001f, 0.7978f, 0f);
-        CustomBounds.transform.localScale = new Vector3(2f, 4f, 2f);
-        CustomBounds.GetComponent<Renderer>().enabled = false;
-        CustomBounds.AddComponent<DirectlyPathZone>();
-        //CustomBounds.GetComponent<Renderer>().material = LethalMin.assetBundle.LoadAsset<Material>("Assets/LethalMin/Materials/MapDotA.mat");
-        CustomBounds.name = "Pikmin Elevator Bounds";
+        GameObject CustomBounds = elevator.GetComponentInChildren<DirectlyPathZone>().gameObject;
 
         RouteNode ElevatorNode = new RouteNode
         (
@@ -188,10 +181,11 @@ public static class FloorDataGenerator
     /// <summary>
     /// Gets the floor data from the Piggy LC-Office mod.
     /// </summary>
-    public static List<FloorData> GetPiggyFloorData(Dungeon dungeon, ElevatorController elevator)
+    public static List<FloorData> GetPiggyFloorData(Dungeon dungeon, Object elevator)
     {
         List<FloorData> data = new List<FloorData>();
         ElevatorSystem ElevatorSystem = Object.FindObjectOfType<ElevatorSystem>();
+        ElevatorController elevatorCtrl = (ElevatorController)elevator;
         PlayerPhysicsRegion ElevatorRegion = ElevatorSystem.animator.GetComponentInChildren<PlayerPhysicsRegion>();
         Scene currentScene = SceneManager.GetSceneByName(RoundManager.Instance.currentLevel.sceneName);
 
@@ -208,7 +202,7 @@ public static class FloorDataGenerator
         RouteNode ElevatorNode = new RouteNode
         (
             name: ElevatorSystem.name,
-            point: ElevatorRegion.transform,
+            point: elevatorCtrl.insidePos,
             check: ElevatorRegion.GetComponent<Collider>()
         );
 

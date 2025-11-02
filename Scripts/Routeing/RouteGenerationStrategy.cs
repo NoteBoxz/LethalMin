@@ -97,7 +97,15 @@ public abstract class RouteGenerationStrategy
                 LethalMin.Logger.LogDebug($"GMPEN: No {outsideStr} entrance nodes available!");
                 return null!;
             }
-            bestNode = validNodes.OrderBy(n => Vector3.Distance(from, n.GetPosition())).First();
+            if (validNodes.Count == 0)
+            {
+                LethalMin.Logger.LogDebug($"GMPEN: No valid {outsideStr} entrance nodes available!");
+                bestNode = entranceNodes.OrderBy(n => Vector3.Distance(from, n.GetPosition())).First();
+            }
+            else
+            {
+                bestNode = validNodes.OrderBy(n => Vector3.Distance(from, n.GetPosition())).First();
+            }
             bestNode = new RouteNode(bestNode);
             bestNode.name += " (Unpathable)";
             bestNode.UnpathableOnCreation = true;
@@ -351,7 +359,7 @@ public class IndoorToOutdoorStrategy : RouteGenerationStrategy
 
         RouteNode mostPathableExit = GetMostPathableEntranceNode(false, GetPathStartPos(request), TargetExits);
 
-        if(mostPathableExit == null)
+        if (mostPathableExit == null)
         {
             LethalMin.Logger.LogWarning("No pathable exit found, cannot create route.");
             return nodes;
@@ -466,7 +474,7 @@ public class OutdoorToIndoorStrategy : RouteGenerationStrategy
 
         RouteNode mostPathableExit = GetMostPathableEntranceNode(true, GetPathStartPos(request), manager.EntranceNodes);
 
-        if(mostPathableExit == null)
+        if (mostPathableExit == null)
         {
             LethalMin.Logger.LogWarning("No pathable entrance found, cannot create route.");
             return nodes;
