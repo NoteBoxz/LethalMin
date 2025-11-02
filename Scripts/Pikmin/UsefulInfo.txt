@@ -1,0 +1,7 @@
+We'll have to manually cache the entrance points our selves. Because they only get assigned when a player uses an exit
+For the outside entrance, the entrance point varible is set to it's own telepoint. for the exit point varible it is set to the telepoint of the entrance inside.
+Same for the inside entrance, the entrance point is set to it's own point, and the exit point is set to the outside telepoint.
+
+So: 
+EntracePoint = Exit's own telepoint
+ExitPoint = Exit's destination telepoint, should be it's outside/inside equivilant

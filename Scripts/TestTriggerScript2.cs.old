@@ -1,0 +1,27 @@
+using System.Collections;
+using System.Collections.Generic;
+using LethalMin;
+using TMPro;
+using UnityEngine;
+
+public class TestTriggerScript2 : MonoBehaviour
+{
+    public PikminLatchTrigger trigger = null!;
+    public float Anger;
+    public TMP_Text txt = null!;
+    void Update()
+    {
+        txt.text = "Anger: " + Anger.ToString("F2");
+        if (trigger.PikminOnLatch.Count > 0)
+        {
+            Anger += Time.deltaTime * trigger.PikminOnLatch.Count;
+        }
+        else if (Anger > 0){
+            Anger -= Time.deltaTime * 4;
+        }
+
+        if(Anger > 10 && trigger.IsOwner){
+            trigger.RemoveAllPikminServerRpc(0);
+        }
+    }
+}

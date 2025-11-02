@@ -1,0 +1,30 @@
+using System.Collections.Generic;
+using UnityEngine;
+using GameNetcodeStuff;
+using HarmonyLib;
+using Unity.Netcode;
+using UnityEngine.AI;
+
+namespace LethalMin.Patches
+{
+    [HarmonyPatch(typeof(NavMeshAgent))]
+    public class NavMeshAgentPatch
+    {
+        [HarmonyPatch(nameof(NavMeshAgent.Warp))]
+        [HarmonyPostfix]
+        private static void Warp(NavMeshAgent __instance, Vector3 newPosition)
+        {
+            try
+            {
+                if (__instance.transform.TryGetComponent(out AgentWarpListener listener))
+                {
+                    listener.OnWarped.Invoke(newPosition);
+                }
+            }
+            catch (System.Exception e)
+            {
+                LethalMin.Logger.LogError($"Failed to patch NavMeshAgent.Warp for {__instance.gameObject.name} due to: {e}");
+            }
+        }
+    }
+}

@@ -1,0 +1,713 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using BepInEx.Configuration;
+using LethalConfig;
+using LethalConfig.ConfigItems;
+using LethalConfig.ConfigItems.Options;
+using Unity.Netcode;
+using UnityEngine;
+
+namespace LethalMin
+{
+   /// <summary>
+   /// Host: The config item only takes effect when the host has it enabled.
+   /// Client: The config item takes effect per client and other clients can see the effect without them needing to enable it.
+   /// Local: The config item only takes effect on the local player. (Other players will not see the effect.)
+   /// </summary>
+   public enum ConfigItemAuthority
+   {
+      None = -1,
+      Host,
+      Client,
+      Local,
+      DoNotSync
+   }
+
+   public struct ConfigItemNetworkData : INetworkSerializable
+   {
+      public ConfigItemAuthority Authority;
+      public string Section;
+      public string Name;
+      public string Type;
+      public string Value;
+
+      public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+      {
+         serializer.SerializeValue(ref Authority);
+
+         // Handle potentially null strings
+         Section = Section ?? string.Empty;
+         Name = Name ?? string.Empty;
+         Type = Type ?? string.Empty;
+         Value = Value ?? string.Empty;
+
+         serializer.SerializeValue(ref Section);
+         serializer.SerializeValue(ref Name);
+         serializer.SerializeValue(ref Type);
+         serializer.SerializeValue(ref Value);
+      }
+   }
+
+   public class ConfigItemAuthorityManager : NetworkBehaviour
+   {
+      public static ConfigItemAuthorityManager Instance { get; private set; } = null!;
+      private void Awake()
+      {
+         if (Instance == null)
+         {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+         }
+         else
+         {
+            Destroy(gameObject);
+         }
+      }
+
+
+      public List<object> ServerConfigItems = new List<object>();
+      public static List<ConfigItem<List<ConfigItemAuthority>>> ConfigItemAuthorityList = new List<ConfigItem<List<ConfigItemAuthority>>>();
+
+      public static void SetUpAuthConfigs()
+      {
+         List<string> Sections = new List<string>();
+         foreach (var key in LethalMin.Instance.Config.Keys)
+         {
+            if (!Sections.Contains(key.Section))
+            {
+               Sections.Add(key.Section);
+            }
+         }
+
+         foreach (var section in Sections)
+         {
+            if (section == "Controls" || section == "Pikmin")
+            {
+               continue; // Skip controls section
+            }
+            List<ConfigItemAuthority> DefaultVal = new List<ConfigItemAuthority> { ConfigItemAuthority.Host };
+            if (section == "Cheats" || section == "Enemy Behavior")
+            {
+               DefaultVal.Add(ConfigItemAuthority.Client);
+            }
+            ConfigItem<List<ConfigItemAuthority>> configItem = new ConfigItem<List<ConfigItemAuthority>>(
+               section,
+               "ConfigItemAuthority",
+               DefaultVal,
+               "The types of config items."
+               + " Host: The config item only takes effect when the host has it enabled."
+               + " Client: The config item takes effect per client and other clients can see the effect without them needing to enable it."
+               + " Local: The config item only takes effect on the local player. (Other players will not see the effect.)"
+               + "Any config item with this authority will be forced synced to the client.",
+               false,
+               ConfigItemAuthority.Host
+               );
+            configItem.OnValueChanged += (_) => ResyncConfigsForallClients();
+            LethalMin.ConfigItems.Add(configItem);
+            ConfigItemAuthorityList.Add(configItem);
+            if (LethalMin.IsDependencyLoaded("ainavt.lc.lethalconfig"))
+               BindLCEntry(configItem);
+         }
+      }
+
+      public static void BindLCEntry(ConfigItem<List<ConfigItemAuthority>> configItem)
+      {
+         BaseConfigItem? _baseConfigItem = configItem.baseConfigItem as BaseConfigItem;
+
+         if (_baseConfigItem != null)
+         {
+            _baseConfigItem.Options.CanModifyCallback = () =>
+            {
+               if (NetworkManager.Singleton != null && !NetworkManager.Singleton.IsServer)
+               {
+                  return CanModifyResult.False("Only the host can modify Config Authority.");
+               }
+               return CanModifyResult.True();
+            };
+         }
+      }
+
+      public static void ResyncConfigsForallClients()
+      {
+         if (Instance.IsServer)
+         {
+            Instance.FetchServerConfigsServerRpc();
+         }
+      }
+
+      public static List<ConfigItemAuthority> GetAuthoritiesOfSection(string Section)
+      {
+         foreach (var config in ConfigItemAuthorityList)
+         {
+            if (config.Section == Section)
+            {
+               return config.InternalValue;
+            }
+         }
+         return new List<ConfigItemAuthority>();
+      }
+
+      public ConfigItemNetworkData ConvertConfigToNetworkData(ConfigItem<object> configItem)
+      {
+         ConfigItemNetworkData data = new ConfigItemNetworkData
+         {
+            Authority = configItem.Authority,
+            Section = configItem.Section,
+            Name = configItem.Name,
+            Type = configItem.GetType().ToString(),
+            Value = configItem.Entry.BoxedValue.ToString()
+         };
+         return data;
+      }
+
+      public object? ConvertNetworkDataToConfig(ConfigItemNetworkData data)
+      {
+         // Find the matching config item in LethalMin.ConfigItems
+         foreach (var item in LethalMin.ConfigItems)
+         {
+            // Use reflection to check section and name properties
+            var itemType = item.GetType();
+
+            // Get the Section property
+            var sectionProperty = itemType.GetField("Section");
+            if (sectionProperty == null) continue;
+            string section = (string)sectionProperty.GetValue(item);
+
+            // Get the Name property
+            var nameProperty = itemType.GetField("Name");
+            if (nameProperty == null) continue;
+            string name = (string)nameProperty.GetValue(item);
+
+            // Check if this is the config item we're looking for
+            if (section == data.Section && name == data.Name)
+            {
+               // If we need to update the value
+               if (data.Authority != ConfigItemAuthority.None)
+               {
+                  // Get Entry property - all ConfigItem<T> have this property
+                  var entryProperty = itemType.GetField("Entry");
+                  if (entryProperty != null)
+                  {
+                     var entry = entryProperty.GetValue(item);
+                     if (entry != null)
+                     {
+                        // Try to update BoxedValue
+                        var boxedValueProperty = entry.GetType().GetField("BoxedValue");
+                        if (boxedValueProperty != null)
+                        {
+                           try
+                           {
+                              // Convert the string value to the appropriate type
+                              var convertedValue = ConvertValueToType(data.Value, data.Type);
+                              if (convertedValue != null)
+                              {
+                                 boxedValueProperty.SetValue(entry, convertedValue);
+                              }
+                           }
+                           catch (Exception e)
+                           {
+                              LethalMin.Logger.LogError($"Failed to convert value {data.Value} to type {data.Type}: {e}");
+                           }
+                        }
+                     }
+                  }
+               }
+
+               // Return the actual config item
+               return item;
+            }
+         }
+
+         LethalMin.Logger.LogWarning($"Could not find config item: {data.Section}.{data.Name}");
+         return null;
+      }
+
+      private object ConvertValueToType(string value, string typeName)
+      {
+         // Handle common types directly
+         if (typeName.Contains("Boolean") || typeName.Contains("Bool"))
+            return bool.Parse(value);
+         if (typeName.Contains("Int32") || typeName.Contains("Int"))
+            return int.Parse(value);
+         if (typeName.Contains("Single") || typeName.Contains("Float"))
+            return float.Parse(value);
+         if (typeName.Contains("String"))
+            return value;
+
+         // For more complex types
+         if (typeName.Contains("Vector2"))
+         {
+            // Parse Vector2 format
+            string[] parts = value.Split(LethalMin.UseCommasInVectorConfigs.Value ? ',' : ' ');
+            if (parts.Length >= 2)
+               return new Vector2(float.Parse(parts[0]), float.Parse(parts[1]));
+         }
+
+         if (typeName.Contains("Vector3"))
+         {
+            // Parse Vector3 format
+            string[] parts = value.Split(LethalMin.UseCommasInVectorConfigs.Value ? ',' : ' ');
+            if (parts.Length >= 3)
+               return new Vector3(float.Parse(parts[0]), float.Parse(parts[1]), float.Parse(parts[2]));
+         }
+
+         // For enums
+         if (typeName.Contains("Enum"))
+         {
+            // Try to determine the actual enum type from the config item
+            // This is a simplified approach and might need more complexity
+            string enumTypeName = typeName.Split('[', ']')[1];
+            Type enumType = Type.GetType(enumTypeName);
+            if (enumType != null && enumType.IsEnum)
+               return Enum.Parse(enumType, value);
+         }
+
+         // For lists (simplified)
+         if (typeName.Contains("List"))
+         {
+            // More complex logic would be needed here depending on your list types
+            return value.Split(',').ToList();
+         }
+
+         // Default - return the string value
+         return value;
+      }
+
+      [ServerRpc(RequireOwnership = false)]
+      public void FetchServerConfigsServerRpc()
+      {
+         // Only process if we're the server
+         if (!IsServer) return;
+
+         // Create a list to store all the configs to send
+         List<ConfigItemNetworkData> configsToSend = new List<ConfigItemNetworkData>();
+
+         // Loop through all config items and convert them for network transmission
+         foreach (var configItem in LethalMin.ConfigItems)
+         {
+            // Check if the item is a ConfigItem<object> or similar
+            // Using reflection to get the Authority property
+            var itemType = configItem.GetType();
+            //LethalMin.Logger.LogInfo($"Processing config item: {(string)itemType.GetField("Name").GetValue(configItem)}");
+
+            // Get the Authority property
+            var authorityProperty = itemType.GetField("Authority");
+            if (authorityProperty == null)
+            {
+               LethalMin.Logger.LogDebug($"Config item {(string)itemType.GetField("Name").GetValue(configItem)} does not have an Authority property.");
+               continue;
+            }
+
+            ConfigItemAuthority authority = (ConfigItemAuthority)authorityProperty.GetValue(configItem);
+
+            // Only sync configs that should be synced (not DoNotSync)
+            if (authority == ConfigItemAuthority.DoNotSync)
+            {
+               LethalMin.Logger.LogDebug($"Config item {(string)itemType.GetField("Name").GetValue(configItem)} has DoNotSync authority. Skipping.");
+               continue;
+            }
+            // Try to convert to NetworkData
+            try
+            {
+               ConfigItemNetworkData data = new ConfigItemNetworkData();
+
+               // Get Section property
+               var sectionProperty = itemType.GetField("Section");
+               if (sectionProperty != null)
+                  data.Section = (string)sectionProperty.GetValue(configItem);
+
+               // Get Name property
+               var nameProperty = itemType.GetField("Name");
+               if (nameProperty != null)
+                  data.Name = (string)nameProperty.GetValue(configItem);
+
+               // Get Entry property
+               var entryProperty = itemType.GetField("Entry");
+               if (entryProperty != null)
+               {
+                  var entry = entryProperty.GetValue(configItem);
+                  if (entry != null)
+                  {
+                     // Get BoxedValue
+                     var boxedValueProperty = entry.GetType().GetProperty("BoxedValue");
+                     if (boxedValueProperty != null)
+                     {
+                        var value = boxedValueProperty.GetValue(entry);
+                        if (value != null)
+                        {
+                           data.Value = value.ToString();
+                           // Get the type name
+                           data.Type = value.GetType().ToString();
+                        }
+                        else
+                        {
+                           LethalMin.Logger.LogError($"Config item {(string)itemType.GetField("Name").GetValue(configItem)} has null value. Skipping.");
+                           continue;
+                        }
+                     }
+                     else
+                     {
+                        LethalMin.Logger.LogError($"Config item {(string)itemType.GetField("Name").GetValue(configItem)} does not have a BoxedValue property. Skipping.");
+                        continue;
+                     }
+                  }
+                  else
+                  {
+                     LethalMin.Logger.LogError($"Config item {(string)itemType.GetField("Name").GetValue(configItem)} does not have an Entry value. Skipping.");
+                     continue;
+                  }
+               }
+               else
+               {
+                  LethalMin.Logger.LogError($"Config item {(string)itemType.GetField("Name").GetValue(configItem)} does not have an Entry property. Skipping.");
+                  continue;
+               }
+
+               // Set authority
+               data.Authority = authority;
+
+               LethalMin.Logger.LogInfo($"Sending config: ({data.Section}){data.Name} = ({data.Type}){data.Value} (Authority: {data.Authority})");
+
+               // Add to list
+               configsToSend.Add(data);
+            }
+            catch (Exception e)
+            {
+               LethalMin.Logger.LogError($"Failed to convert config item for network: {e}");
+            }
+         }
+
+         // Send all config data to the requesting client
+         ReceiveServerConfigsClientRpc(configsToSend.ToArray());
+      }
+
+      [ClientRpc]
+      public void ReceiveServerConfigsClientRpc(ConfigItemNetworkData[] configs)
+      {
+         if (IsServer)
+         {
+            return;
+         }
+         // Clear previous server configs
+         ServerConfigItems.Clear();
+
+         // Process each config
+         foreach (var configData in configs)
+         {
+            try
+            {
+               ConfigItem<List<ConfigItemAuthority>> authConfig = null!;
+               foreach (var config in ConfigItemAuthorityList)
+               {
+                  if (config.Section == configData.Section)
+                  {
+                     authConfig = config;
+                     break;
+                  }
+               }
+               if (authConfig == null)
+               {
+                  LethalMin.Logger.LogError($"Could not find config item: {configData.Section}.{configData.Name}");
+                  continue;
+               }
+
+               // Convert the network data back to a config item
+               object? configItem = ConvertNetworkDataToConfig(configData);
+
+               if (configItem != null)
+               {
+                  // Store the config item
+                  ServerConfigItems.Add(configItem);
+
+                  // Apply the config based on authority
+                  if (authConfig.InternalValue.Contains(configData.Authority))
+                  {
+                     // These types should be applied on the client
+                     LethalMin.Logger.LogInfo($"Applied server config: {configData.Section}.{configData.Name} = {configData.Value} (Authority: {configData.Authority})");
+
+                     // Find the matching ConfigItem in LethalMin.ConfigItems and apply the value
+                     ApplyServerConfigToLocalVar(configData.Section, configData.Name, configData.Value, configData.Type);
+                  }
+               }
+            }
+            catch (Exception e)
+            {
+               LethalMin.Logger.LogError($"Failed to process received config: {e}");
+            }
+         }
+
+         LethalMin.Logger.LogInfo($"Received and processed {ServerConfigItems.Count} server configs");
+      }
+
+      [ServerRpc(RequireOwnership = false)]
+      public void SendSpecificConfigServerRpc(string section, string name)
+      {
+         // Only process if we're the server
+         if (!IsServer) return;
+
+         // Find the specific config item
+         foreach (var configItem in LethalMin.ConfigItems)
+         {
+            // Using reflection to get properties
+            var itemType = configItem.GetType();
+
+            // Get the Section property
+            var sectionProperty = itemType.GetField("Section");
+            if (sectionProperty == null) continue;
+            string itemSection = (string)sectionProperty.GetValue(configItem);
+
+            // Get the Name property
+            var nameProperty = itemType.GetField("Name");
+            if (nameProperty == null) continue;
+            string itemName = (string)nameProperty.GetValue(configItem);
+
+            // If this is the config item we're looking for
+            if (itemSection == section && itemName == name)
+            {
+               try
+               {
+                  // Get the Authority property
+                  var authorityProperty = itemType.GetField("Authority");
+                  if (authorityProperty == null)
+                  {
+                     LethalMin.Logger.LogError($"Config item {section}.{name} does not have an Authority property.");
+                     return;
+                  }
+
+                  ConfigItemAuthority authority = (ConfigItemAuthority)authorityProperty.GetValue(configItem);
+
+                  // Only sync configs that should be synced (not DoNotSync)
+                  if (authority == ConfigItemAuthority.DoNotSync)
+                  {
+                     LethalMin.Logger.LogWarning($"Config item {section}.{name} has DoNotSync authority.");
+                     return;
+                  }
+
+                  // Convert to NetworkData
+                  ConfigItemNetworkData data = new ConfigItemNetworkData();
+                  data.Section = itemSection;
+                  data.Name = itemName;
+                  data.Authority = authority;
+
+                  // Get Entry property
+                  var entryProperty = itemType.GetField("Entry");
+                  if (entryProperty != null)
+                  {
+                     var entry = entryProperty.GetValue(configItem);
+                     if (entry != null)
+                     {
+                        // Get BoxedValue
+                        var boxedValueProperty = entry.GetType().GetProperty("BoxedValue");
+                        if (boxedValueProperty != null)
+                        {
+                           var value = boxedValueProperty.GetValue(entry);
+                           if (value != null)
+                           {
+                              data.Value = value.ToString();
+                              data.Type = value.GetType().ToString();
+                           }
+                           else
+                           {
+                              LethalMin.Logger.LogError($"Config item {section}.{name} has null value.");
+                              return;
+                           }
+                        }
+                     }
+                  }
+                  else
+                  {
+                     // For collection types or pseudo-string types
+                     var stringEntryProperty = itemType.GetField("StringEntry");
+                     if (stringEntryProperty != null)
+                     {
+                        var stringEntry = stringEntryProperty.GetValue(configItem);
+                        if (stringEntry != null)
+                        {
+                           var boxedValueProperty = stringEntry.GetType().GetProperty("BoxedValue");
+                           if (boxedValueProperty != null)
+                           {
+                              var value = boxedValueProperty.GetValue(stringEntry);
+                              if (value != null)
+                              {
+                                 data.Value = value.ToString();
+                                 data.Type = itemType.GetGenericArguments()[0].ToString();
+                              }
+                           }
+                        }
+                     }
+                  }
+
+                  LethalMin.Logger.LogInfo($"Sending specific config: ({data.Section}){data.Name} = ({data.Type}){data.Value} (Authority: {data.Authority})");
+
+                  // Send to the requesting client
+                  ReceiveSpecificConfigClientRpc(data);
+                  return;
+               }
+               catch (Exception e)
+               {
+                  LethalMin.Logger.LogError($"Failed to send specific config item {section}.{name}: {e}");
+                  return;
+               }
+            }
+         }
+
+         LethalMin.Logger.LogWarning($"Could not find config item: {section}.{name} to send");
+      }
+
+      [ClientRpc]
+      public void ReceiveSpecificConfigClientRpc(ConfigItemNetworkData configData)
+      {
+         if (IsServer)
+         {
+            return;
+         }
+         try
+         {
+            ConfigItem<List<ConfigItemAuthority>> authConfig = null!;
+            foreach (var config in ConfigItemAuthorityList)
+            {
+               if (config.Section == configData.Section)
+               {
+                  authConfig = config;
+                  break;
+               }
+            }
+
+            if (authConfig == null)
+            {
+               LethalMin.Logger.LogError($"Could not find auth config for item: {configData.Section}.{configData.Name}");
+               return;
+            }
+
+            // Convert the network data to a config item
+            object? configItem = ConvertNetworkDataToConfig(configData);
+
+            if (configItem != null)
+            {
+               // Update or add to ServerConfigItems
+               bool found = false;
+               for (int i = 0; i < ServerConfigItems.Count; i++)
+               {
+                  var existingConfig = ServerConfigItems[i];
+                  var existingType = existingConfig.GetType();
+
+                  var sectionField = existingType.GetField("Section");
+                  var nameField = existingType.GetField("Name");
+
+                  if (sectionField != null && nameField != null)
+                  {
+                     string existingSection = (string)sectionField.GetValue(existingConfig);
+                     string existingName = (string)nameField.GetValue(existingConfig);
+
+                     if (existingSection == configData.Section && existingName == configData.Name)
+                     {
+                        // Replace the existing item
+                        ServerConfigItems[i] = configItem;
+                        found = true;
+                        break;
+                     }
+                  }
+               }
+
+               if (!found)
+               {
+                  // Add as new item
+                  ServerConfigItems.Add(configItem);
+               }
+
+               // Apply the config based on authority
+               if (authConfig.InternalValue.Contains(configData.Authority))
+               {
+                  // Apply the value to local variable
+                  ApplyServerConfigToLocalVar(configData.Section, configData.Name, configData.Value, configData.Type);
+               }
+            }
+         }
+         catch (Exception e)
+         {
+            LethalMin.Logger.LogError($"Failed to process received specific config: {e}");
+         }
+      }
+
+      private void ApplyServerConfigToLocalVar(string section, string name, string value, string typeName)
+      {
+         // Find the matching config item in LethalMin.ConfigItems
+         foreach (var item in LethalMin.ConfigItems)
+         {
+            var itemType = item.GetType();
+
+            // Get the Section property
+            var sectionProperty = itemType.GetField("Section");
+            if (sectionProperty == null) continue;
+            string itemSection = (string)sectionProperty.GetValue(item);
+
+            // Get the Name property
+            var nameProperty = itemType.GetField("Name");
+            if (nameProperty == null) continue;
+            string itemName = (string)nameProperty.GetValue(item);
+
+            // Check if this is the config item we're looking for
+            if (itemSection == section && itemName == name)
+            {
+               // Get Entry field - fix: use item instance not itemType
+               var entryProperty = itemType.GetField("Entry");
+               if (entryProperty == null)
+               {
+                  entryProperty = itemType.GetField("StringEntry");
+               }
+               if (entryProperty == null)
+               {
+                  LethalMin.Logger.LogError($"Config item {section}.{name} does not have an Entry field.");
+                  return;
+               }
+
+               var entry = entryProperty.GetValue(item);
+               if (entry == null)
+               {
+                  entry = itemType.GetField("StringEntry").GetValue(item);
+               }
+               if (entry == null)
+               {
+                  LethalMin.Logger.LogError($"Config item {section}.{name} has null Entry value.");
+                  return;
+               }
+
+               // Get BoxedValue property
+               var boxedValueProperty = entry.GetType().GetProperty("BoxedValue");
+               if (boxedValueProperty == null)
+               {
+                  LethalMin.Logger.LogError($"Config item {section}.{name} Entry does not have a BoxedValue property.");
+                  return;
+               }
+
+               try
+               {
+                  // Convert the string value to the appropriate type
+                  var convertedValue = ConvertValueToType(value, typeName);
+                  if (convertedValue != null)
+                  {
+                     // Set the BoxedValue directly
+                     boxedValueProperty.SetValue(entry, convertedValue);
+                     LethalMin.Logger.LogInfo($"Successfully updated local variable for {section}.{name}");
+                  }
+                  else
+                  {
+                     LethalMin.Logger.LogError($"Failed to convert {value} to type {typeName} for {section}.{name}");
+                  }
+               }
+               catch (Exception e)
+               {
+                  LethalMin.Logger.LogError($"Failed to apply config value {value} to {section}.{name}: {e}");
+               }
+
+               return; // Exit after finding and processing the matching config item
+            }
+         }
+
+         LethalMin.Logger.LogWarning($"Config item {section}.{name} not found in local config items");
+      }
+   }
+}

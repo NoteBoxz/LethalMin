@@ -1,0 +1,142 @@
+-- To Do --
+
+- Fix Zeranos Moon Compat
+- Fix LC Office Compat
+- Add Friendlyier Fire mode
+- Tweek Onion Spawning
+- Fix The Onion HUD counter can go into the negetives when one player withdraws a type that already has some pikmin selected to be taken out
+- Tweek Lumiknull spawn position
+- Fix Non-VR players are unable to pluck sprouts when playing with VR players
+- Fix BetterEmotes Breaking the Plucking Animation
+- Fix Zeneros Cliping with 100 Pikmin in eleavtor
+- Fix Pikmin Death Desync
+
+
+-- things to refactor --
+
+- Re-do Map spawning varibles for Pikmin Types to allow more spesfic configing
+
+- Add system for a single snap point instead of just multiple spesfic ones for the car, idle, ect.
+
+- Add Pikmin 3 SFX
+
+- Refactor Winged Flying to take shortcuts
+
+
+-- would be cool --
+
+- Glow Cannon, an item that holds glowseeds and allows rapid fire of them.
+
+- Make Pikmin scatter after leader gets masked
+
+- Add Funi Ragdolls
+
+- Make onion revive maskeds
+
+- Have Undefined Pikmin replace every other type on some days as like a hard mode
+
+- when you tame a hygrodere with a boombox its unable to trap pikmin.
+
+- Fix Welcome To Ooblterra bugging out Pikmin's Pathfinding
+
+- Add Idlers alert
+
+- Add Flarlicks that give bonus pikmin when collected
+
+- Add Code Rebirth Compat
+
+(⌄⌄⌄ Concepts From BucketBoi ⌄⌄⌄)
+
+- Add Possessed Masks Compat: Have Possessed Masks turn pikmin into puffmin
+
+- Add pushCompany Compat: pressing E on a pikmin will push it, causing it to fall over and lauch a little bit.
+
+- Add Facility Meltdown Compat: Causes all Wild Pikmin to Panic apon pulling the appuratus (inspired by the baby maneater crying when the appuratus is pulled)
+
+- Add Scopophobia Compat: Any Pikmin in the way of scp-096, or pikmin that belonged to his target will get eviscerated, as they saw his face.
+
+- Add Dont_Touch_Me Compat: if pikmin carry it when its degused as scrap, it will explode
+
+- Add Skinwalkers Compat: Pikmin will mimic player voices like any other monster, but its sped up 100% so it sounds like a pikmin lol
+
+- Add Lethal Progression Compat: can use points to upgrade your pikmin, such as higher field limit, buffing glow seed chances, more generous onions and lumiknolls, and other pikmin related buffs i cant think of at the moment 
+
+- Add Haunted Harpists Compat: scare the shit out of any pikmin it comes near when its mad.
+
+- Add Biodiversity Compat: gives Pikmin more... variants. idfk maybe flowers like in pikmin bloom.
+
+- Add Company Creatures Compat: (the mod that adds mushrooms that make you go deaf): can infect pikmin, this doesnt turn them into puffmin but they will ignore your whistle.
+
+- Add Infected Company Compat: all pikmin that belonged to the infected will panic and scream when the infected employee transforms into the killer monster thing.
+
+- Add Surfaced Compat: Winged Pikmin activate the sea mines
+
+- Add CleaningCompany Compat: will have some Pikmin themed messes, such as severed stems, Pikmin Blood, an empty husk of a Bulbmin, and even some dead Pikmin bodies.
+
+- Add Mask the dead Compat: if a Pikmin dies while being near a mask (the item), The pikmin will turn into a wandering Puffmin.
+
+- Add YesFox Compat: the Kidnapper fox will attack and try to kill any pikmin it sees near its nest.
+
+- Add Lethal Elements Compat: The heatwave weather it adds will cause all non-red Pikmin to slowly die from heatstroke if outside for too long. and the solar flare will mess up the Pikmin-signal.
+
+- Add CursedScraps Compat: if the scrap is picked up by pikmin, the pikmin will be given a curse instead, such as making them ignore your whistle, making them louder to dogs,  makes them lose any elemental abilities while they are carrying the cursed scrap, making them take longer paths or unnecessary turns, making them teleport to a random location apon picking it up, and if you're really unlucky, Puffminifying them.
+
+- Add Scp_049_The_Plague_Doctor Compat: apon zombifying a player (they dont become masked, they become a whole diffrent type of zombie) he will also zombify any Pikmin that player had (the lazy route would to puffminify them, but i think actualy making them look like failed pikmin disections would be so much cooler)
+
+- Add Ship Turrets Compat: make it not target Pikmin as its a friendly turret
+
+- Add ArtificeBlizzard Compat: Buffs ice pikmin spawns on artifice.
+
+- Add LegendWeathers Compat: (we alreay talked about this but if typing it again in case you forgot) when a pikmin is whisled by a majora masked, the usual mushroom on the puffmins stem will be replaced with a mushroom from the legend of zelda, and that puffmin will be faster, stronger, and will be able to chase and latch on without being thrown.
+
+- Add LethalDiscord Compat: When exploring, displays how many pikmin are on the field, how many you have, and how many died that day.  When orbiting, displays the total Pikmin Count. and when getting fired, displays how many Pikmin died and how many were raised throughout the entire game.
+
+- Add Coroner Compat: adds some pikmin related messages, for both alive and dead players. such as 
+ Should probably be checked for carpal tunnel (raised the most pikmin)
+Had a Dandori issue (lost the most Pikmin)
+Overdosed on Psilocybin (killed by Puffmin)
+Saw Fiddlebert (was revived by the onion)
+Carried, Fought, Multiplied, and was eaten.  (Died as a Leafling)
+
+- Add Emergency Dice Compat: add some special effects for lethalmin, perhaps add a custom die for Pikmin spesficly.
+
+(˄˄˄ Concepts From BucketBoi ˄˄˄)
+
+-- unproitized bugs --
+
+Fix Desynced Dead Pikmin (Caused by gaurd clause bools being desynced)
+
+Fix Onion HUD slot Going Into the negetives (No idea)
+
+Fix buggy Winged Pesudo Flying (Flying into cealings, and sometimes under the ship)
+
+Fix Pikmin flip flopping between exits (Unable to reporduce consistantly, happens mostly on march)
+
+Fix RadMech not playing moving animation on other clients after burning pikmin (Unable to reporduce consistantly)
+
+Fix Purples and White being multiplied when moved from container to onion (hack fix)
+
+Fix bug with item being picked up by pikmin not being properly synced (might have fixed)
+
+Fix glowmin getting stuck to items on clinet side when carrying inside before 5 (Unable to reporduce)
+
+Fix bug that occours when a pikmin gets trapped in a slime at the exact same time it grabs an item (Unable to reporduce consistantly)
+
+Fix already collected onion spawning that when collected, the data for all other onions will be erased (Unable to reporduce, Hack Fix)
+
+Fix multiplayer stats not show properly at end of round with 3 or more players
+(Already fixed or unable to replicate)
+
+Add teleport trigger to ship for pikmin moons that don't have links onto the ship
+(Not entirely sure how to implument this)
+
+Fix weird body desync bug that speseficly occurs when player 1 and player 3 dies, then player 2 attempts to throw pikmin that were taken from the onion onto player 1's body-
+-which then causes 2 instances of player 1's body to be picked up with both bodies being visble to players 1 and 3 but onlt 1 body being visible player 2.
+(UNABLE TO REPLICATE!!!!)
+
+Fix lag when setting pikmin to onions at the end of the day (Potinally not a bug)
+
+Fix Pikmin not being whistleable after bringing back courps to onion (Potinally not a bug)
+
+Fix non owner-side pikmin 'stuttering' for pikmin that are moving slowly
+(To do this I think I need to sync each pikmin's agent speed and I think that too much effort-for such a minor bug)

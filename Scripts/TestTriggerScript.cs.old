@@ -1,0 +1,19 @@
+using System.Collections;
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+
+public class TestTriggerScript : MonoBehaviour
+{
+    public TMP_Text txt = null!;
+    public int Score = 0;
+    public void AddScore()
+    {
+        Score++;
+    }
+
+    void Update()
+    {
+        txt.text = "Score: " + Score;
+    }
+}
