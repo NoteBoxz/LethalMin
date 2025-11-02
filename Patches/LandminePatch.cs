@@ -1,22 +1,13 @@
 using HarmonyLib;
-using GameNetcodeStuff;
 using UnityEngine;
-using Unity.Netcode;
 using System.Collections.Generic;
-using LethalMin;
-using System.Collections;
 using LethalMin.Utils;
-using LethalMin.Achivements;
-using UnityEngine.SceneManagement;
-using Dusk;
 
 namespace LethalMin.Patches
 {
     [HarmonyPatch(typeof(Landmine))]
     public class LandminePatch
     {
-        private static Dictionary<Landmine, List<EnemyAI>> landmineEnemySnapshot = new Dictionary<Landmine, List<EnemyAI>>();
-
         [HarmonyPatch(nameof(Landmine.OnTriggerEnter))]
         [HarmonyPostfix]
         private static void OnTriggerEnterPostfix(Landmine __instance, Collider other)
@@ -48,49 +39,8 @@ namespace LethalMin.Patches
             {
                 if (LethalMin.TriggerLandmines && other.TryGetComponent(out PikminCollisionDetect detect) && detect.mainPikmin.IsOwner)
                 {
-                    if (LethalMin.UsingAchivements && AchivementController.WhatHappenedDoable())
-                        AchivementController.LandminesTriggeredByPikmin.Add(__instance);
-
                     __instance.TriggerMineOnLocalClientByExiting();
                 }
-            }
-        }
-
-        [HarmonyPatch(nameof(Landmine.Detonate))]
-        [HarmonyPrefix]
-        public static void DetonatePrePatch(Landmine __instance)
-        {
-            if (LethalMin.UsingAchivements && AchivementController.WhatHappenedDoable())
-            {
-                if (!AchivementController.LandminesTriggeredByPikmin.Contains(__instance))
-                    return;
-                AchivementController controller = (AchivementController)LethalMin.AchivementController;
-                if (controller != null)
-                {
-                    // Capture enemies that are alive before explosion
-                    List<EnemyAI> aliveEnemies = PikUtils.GetAliveEnemiesNearPosition(__instance.transform.position, 6f);
-                    landmineEnemySnapshot[__instance] = aliveEnemies;
-                }
-            }
-        }
-
-        [HarmonyPatch(nameof(Landmine.Detonate))]
-        [HarmonyPostfix]
-        public static void DetonatePostPatch(Landmine __instance)
-        {
-            if (LethalMin.UsingAchivements
-            && AchivementController.WhatHappenedDoable()
-            && AchivementController.LandminesTriggeredByPikmin.Contains(__instance)
-            && landmineEnemySnapshot.TryGetValue(__instance, out List<EnemyAI> enemiesAliveBeforeExplosion))
-            {
-                AchivementController controller = (AchivementController)LethalMin.AchivementController;
-                if (controller != null)
-                {
-                    __instance.StartCoroutine(controller.CheckForWhatHappenedAchievement(__instance, enemiesAliveBeforeExplosion));
-                }
-
-                // Clean up the snapshot
-                landmineEnemySnapshot.Remove(__instance);
             }
         }
 

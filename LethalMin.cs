@@ -17,8 +17,6 @@ using LobbyCompatibility.Features;
 using LobbyCompatibility.Enums;
 using LethalMin.HUD;
 using BepInEx.Configuration;
-using Dusk;
-using LethalMin.Achivements;
 
 namespace LethalMin
 {
@@ -39,7 +37,6 @@ namespace LethalMin
     [BepInDependency("BMX.LobbyCompatibility", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("giosuel.Imperium", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("pacoito.itolib", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("com.github.teamxiaolan.dawnlib.dusk", BepInDependency.DependencyFlags.SoftDependency)]
     public class LethalMin : BaseUnityPlugin
     {
         public static LethalMin Instance { get; private set; } = null!;
@@ -105,7 +102,6 @@ namespace LethalMin
         public const string FullEnglishAlhabet = FullEnglishAlphabetUpper + FullEnglishAlphabetLower;
         public const string FullNumbers = "0123456789";
         public static object AchivementController = null!;
-        public static bool UsingAchivements => IsDependencyLoaded("com.github.teamxiaolan.dawnlib.dusk") && AchivementController != null;
 
 
         private void Awake()
@@ -144,10 +140,6 @@ namespace LethalMin
             if (IsDependencyLoaded("BMX.LobbyCompatibility"))
             {
                 RegisterLobbyCompat();
-            }
-            if (IsDependencyLoaded("com.github.teamxiaolan.dawnlib.dusk"))
-            {
-                RegisterDuskModCompat();
             }
 
             GameObject go = new GameObject("PikminGenerationManager");
@@ -634,56 +626,6 @@ namespace LethalMin
         {
             PluginHelper.RegisterPlugin(MyPluginInfo.PLUGIN_GUID, new Version(MyPluginInfo.PLUGIN_VERSION), CompatibilityLevel.Everyone, VersionStrictness.Patch);
         }
-
-        public void RegisterDuskModCompat()
-        {
-            Logger.LogInfo("LethalMin: Registering DuskMod Compat");
-            string assemblyLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (assemblyLocation == null)
-            {
-                throw new InvalidOperationException("Unable to determine assembly location.");
-            }
-
-            string duskModBundlePath = Path.Combine(assemblyLocation, "lethalminassetsdawnlib");
-            AssetBundle duskModAssetBundle = AssetBundle.LoadFromFile(duskModBundlePath);
-            string achivmentsPath = Path.Combine(assemblyLocation, "lethalminachivements");
-            AssetBundle achivmentsBundle = AssetBundle.LoadFromFile(achivmentsPath);
-
-            if (duskModAssetBundle == null)
-            {
-                throw new InvalidOperationException("Failed to load DuskMod AssetBundle.");
-            }
-            if (achivmentsBundle == null)
-            {
-                throw new InvalidOperationException("Failed to load Achivments AssetBundle.");
-            }
-            DuskMod DM = DuskMod.RegisterMod(this, duskModAssetBundle);
-            DM.Content.assetBundles.Add(new AssetBundleData
-            {
-                assetBundleName = "lethalminachivements",
-                AlwaysKeepLoaded = true,
-                configName = "LethalMinAchivements",
-            });
-            DefaultContentHandler contentHandler = new DefaultContentHandler(DM);
-            contentHandler.LoadAllContent(new DefaultBundle(achivmentsBundle)
-            {
-                AssetBundleData = DM.Content.assetBundles[0]
-            }); // Because I do NOT want to add a whole sub directory just for a single bundle
- 
-            Type achivmentControllerType = typeof(AchivementController);
-            if (achivmentControllerType != null)
-            {
-                AchivementController = Activator.CreateInstance(achivmentControllerType, DM);
-                ((AchivementController)AchivementController).ModAssetBundle = duskModAssetBundle;
-                ((AchivementController)AchivementController).AchivementAssetBundle = achivmentsBundle;
-            }
-            else
-            {
-                Logger.LogError("Failed to find AchivementController type.");
-            }
-        }
-
-
         #region CONFIG
 
         //public static List<object> ConfigItems = new List<object>();

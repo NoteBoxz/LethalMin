@@ -216,7 +216,7 @@ namespace LethalMin
             }
         }
 
-        [Rpc(SendTo.Everyone)]
+        [Rpc(SendTo.ClientsAndHost)]
         public void SpawnLeaflingGhostRpc()
         {
             GameObject ghost = GameObject.Instantiate(LethalMin.assetBundle.LoadAsset<GameObject>("Assets/LethalMin/PlayerGhostPrefab.prefab"),

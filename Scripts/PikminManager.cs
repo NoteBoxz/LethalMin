@@ -16,7 +16,6 @@ using BepInEx;
 using System.IO;
 using LethalModDataLib.Features;
 using UnityEngine.Animations.Rigging;
-using LethalMin.Achivements;
 using GameNetcodeStuff;
 using LethalMin.Routeing;
 
@@ -1048,42 +1047,6 @@ namespace LethalMin
             itm.Initalize();
 
             ConvertedAIs.Add(enemy); // Add to the converted AIs list for tracking
-        }
-        #endregion
-
-
-
-
-
-
-        #region Achievements
-        [Rpc(SendTo.Everyone)]
-        public void SpawnWhatHappenedTriggerRpc(Vector3 position)
-        {
-            PlayerControllerB localPlayer = StartOfRound.Instance.localPlayerController;
-            // Store whether player saw the explosion
-            bool playerSawExplosion = localPlayer.HasLineOfSightToPosition(position);
-
-            if (playerSawExplosion)
-            {
-                LethalMin.Logger.LogInfo("Player saw the explosion, not spawning What Happened Trigger");
-                return;
-            }
-
-            GameObject triggerPrefab = ((AchivementController)LethalMin.AchivementController)
-            .AchivementAssetBundle.LoadAsset<GameObject>("Assets/LethalMin/DuskMod/Achievements/WHLookTrigger.prefab");
-            if (triggerPrefab == null)
-            {
-                LethalMin.Logger.LogError("Failed to load WhatHappenedLookTrigger prefab");
-                return;
-            }
-
-            GameObject triggerObj = Object.Instantiate(triggerPrefab, position, Quaternion.identity);
-
-            SceneManager.MoveGameObjectToScene(triggerObj,
-                SceneManager.GetSceneByName(StartOfRound.Instance.currentLevel.sceneName));
-
-            LethalMin.Logger.LogInfo($"What Happened Trigger placed at {triggerObj.scene.name}");
         }
         #endregion
 
