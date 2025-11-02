@@ -70,8 +70,8 @@ namespace LethalMin
 
         void GetPiggyCompents()
         {
-            piggyElevatorSystem = GetComponent<ElevatorSystem>();
-            zoneCollider = GetComponentInChildren<DirectlyPathZone>().GetComponent<Collider>();
+            piggyElevatorSystem = GetComponentInParent<ElevatorSystem>();
+            zoneCollider = GetComponent<Collider>();
         }
 
         public bool CanBeMovedOutofZone(PikminItem itemChecking)
