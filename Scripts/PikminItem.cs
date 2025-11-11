@@ -270,10 +270,6 @@ namespace LethalMin
                 settings.CarryStrength = numb;
                 settings.SproutsToSpawn = numb;
             }
-            if (!LethalMin.TakeItemsToTheOnion)
-            {
-                settings.CanProduceSprouts = false;
-            }
         }
 
         public override void OnNetworkDespawn()

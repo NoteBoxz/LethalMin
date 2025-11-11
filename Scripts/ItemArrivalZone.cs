@@ -82,7 +82,8 @@ namespace LethalMin
                     return LethalMin.UseExitsWhenCarryingItems;
 
                 case ArrivalZoneType.Ship:
-                    return itemChecking.settings.CanProduceSprouts && PikminManager.instance.Onions.Count > 0
+                    return LethalMin.TakeItemsToTheOnion && (!LethalMin.OnCompany || LethalMin.TakeItemsToOnionOnCompany) &&
+                     itemChecking.settings.CanProduceSprouts && PikminManager.instance.Onions.Count > 0
                     || LethalMin.TakeItemsToOnionOnCompany && LethalMin.OnCompany && itemChecking.ItemScript.itemProperties.isScrap;
 
                 case ArrivalZoneType.Crusier:
