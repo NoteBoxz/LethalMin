@@ -1218,6 +1218,12 @@ namespace LethalMin
                     PikminCounter.SetCounterColor(DefultColor);
                 }
             }
+            else if(TargetOnion != null)
+            {
+                LethalMin.Logger.LogDebug($"Not taking item to onion due to company settings, setting target onion to null.");
+                TargetOnion = null!;
+                PikminCounter.SetCounterColor(DefultColor);
+            }
 
             // Try company counter route if applicable
             if (LethalMin.OnCompany)
