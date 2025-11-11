@@ -1205,7 +1205,7 @@ namespace LethalMin
             }
 
             // Try onion route if applicable
-            if (TargetOnion != null && (!LethalMin.OnCompany || LethalMin.TakeItemsToOnionOnCompany))
+            if (LethalMin.TakeItemsToTheOnion && TargetOnion != null && (!LethalMin.OnCompany || LethalMin.TakeItemsToOnionOnCompany))
             {
                 if (TestRoute(RouteIntent.ToOnion))
                 {
