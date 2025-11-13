@@ -1216,7 +1216,7 @@ namespace LethalMin
             }
             else if(TargetOnion != null)
             {
-                LethalMin.Logger.LogDebug($"Not taking item to onion due to company settings, setting target onion to null.");
+                LethalMin.Logger.LogDebug($"Not taking item to onion due to configs, setting target onion to null.");
                 TargetOnion = null!;
                 PikminCounter.SetCounterColor(DefultColor);
             }

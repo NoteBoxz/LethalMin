@@ -81,8 +81,8 @@ namespace LethalMin
                 return false; // Don't fly while laying
             if (currentBehaviourStateIndex == PANIC)
                 return false; // Don't fly while Panicing
-            if (TargetItem != null && TargetItem.PrimaryPikminOnItem == this && !IsWingedPikminOnItem(TargetItem))
-                return false; // Don't fly while carrying items and no other Winged Pikmin is on it
+            if (TargetItem != null && !AllWingedPikminOnItem(TargetItem))
+                return false; // Don't fly while carrying items and all pikmin are not winged
 
             return true;
         }
@@ -153,7 +153,7 @@ namespace LethalMin
             }
         }
 
-        public static bool IsWingedPikminOnItem(PikminItem itm)
+        public static bool AllWingedPikminOnItem(PikminItem itm)
         {
             if (itm.PikminOnItem.Count == 1 && itm.PrimaryPikminOnItem is WingedPikminAI)
             {
@@ -161,12 +161,12 @@ namespace LethalMin
             }
             foreach (PikminAI pikmin in itm.PikminOnItem)
             {
-                if (pikmin != itm.PrimaryPikminOnItem && pikmin is WingedPikminAI)
+                if(pikmin is not WingedPikminAI)
                 {
-                    return true; // Found a Winged Pikmin on the item
+                    return false; // Found a non-Winged Pikmin
                 }
             }
-            return false; // No Winged Pikmin found on the item
+            return false; // Pikmin found on the item
         }
     }
 }
