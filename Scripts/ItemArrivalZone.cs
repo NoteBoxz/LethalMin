@@ -124,7 +124,7 @@ namespace LethalMin
             bool inBounds = zoneCollider == null ? false : zoneCollider.bounds.Contains(item.transform.position);
             bool withinRange = positionCheck == null ? false : Vector3.Distance(item.transform.position, positionCheck.position) <= checkDistance;
 
-            return !CanBeMovedOutofZone(item) && (inBounds || withinRange);
+            return (inBounds || withinRange) && !CanBeMovedOutofZone(item);
         }
 
         public void OnDestroy()

@@ -10,7 +10,7 @@ namespace LethalMin
     {
         public FlyingNavAgentController FlyingNavAgentController { get; private set; } = null!;
         public NoticeZoneOnlyDetect NoticeZoneOnlyDetect { get; private set; } = null!;
-        List<int> NoFlyOffsetStaets = new List<int>
+        List<int> NoFlyOffsetStates = new List<int>
         {
             3,
             4,
@@ -130,7 +130,7 @@ namespace LethalMin
                 return TargetItem.CurrentRoute.Nodes[TargetItem.CurrentRoute.CurrentNodeIndex].IsPikminNearNode(this, 10f) ? 0f : 4f;
             }
 
-            if (NoFlyOffsetStaets.Contains(currentBehaviourStateIndex))
+            if (NoFlyOffsetStates.Contains(currentBehaviourStateIndex))
                 return 0f; // Disable flying offset for certain states
 
             return 2f; // Default flight height
@@ -155,18 +155,22 @@ namespace LethalMin
 
         public static bool AllWingedPikminOnItem(PikminItem itm)
         {
+            if (itm.PikminOnItem.Count == 0)
+            {
+                return false; // No Pikmin on the item
+            }
             if (itm.PikminOnItem.Count == 1 && itm.PrimaryPikminOnItem is WingedPikminAI)
             {
                 return true; // Only one Winged Pikmin on the item
             }
             foreach (PikminAI pikmin in itm.PikminOnItem)
             {
-                if(pikmin is not WingedPikminAI)
+                if (pikmin is not WingedPikminAI)
                 {
                     return false; // Found a non-Winged Pikmin
                 }
             }
-            return false; // Pikmin found on the item
+            return true; // All Pikmin on the item are Winged Pikmin
         }
     }
 }

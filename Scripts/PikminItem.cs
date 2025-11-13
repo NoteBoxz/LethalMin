@@ -1214,7 +1214,7 @@ namespace LethalMin
                     PikminCounter.SetCounterColor(DefultColor);
                 }
             }
-            else if(TargetOnion != null)
+            else if (TargetOnion != null)
             {
                 LethalMin.Logger.LogDebug($"Not taking item to onion due to configs, setting target onion to null.");
                 TargetOnion = null!;
@@ -1360,25 +1360,25 @@ namespace LethalMin
             if (!IsOwner)
                 return;
 
-            OnRouteEnd();
+            OnRouteEnd(TargetOnion != null);
             if (NetworkObject.IsSpawned)
             {
-                OnRouteEndServerRpc();
+                OnRouteEndServerRpc(TargetOnion != null); // Now the owner does the != null check and we hope all the other clients are in sync
             }
         }
 
         [ServerRpc]
-        public void OnRouteEndServerRpc()
+        public void OnRouteEndServerRpc(bool suckItemIntoOnion)
         {
-            OnRouteEndClientRpc();
+            OnRouteEndClientRpc(suckItemIntoOnion);
         }
         [ClientRpc]
-        public void OnRouteEndClientRpc()
+        public void OnRouteEndClientRpc(bool suckItemIntoOnion)
         {
             if (!IsOwner)
-                OnRouteEnd();
+                OnRouteEnd(suckItemIntoOnion);
         }
-        public void OnRouteEnd()
+        public void OnRouteEnd(bool suckItemIntoOnion = false)
         {
             LethalMin.Logger.LogInfo($"{gameObject.name} has reached its route end");
             HasArrived = true;
@@ -1386,9 +1386,12 @@ namespace LethalMin
             ArrivePosition = ItemScript.transform.position;
             StartCoroutine(DoYays(PikminOnItem));
             ClearCurrentRoute();
-            if (TargetOnion != null)
+            if (suckItemIntoOnion)
             {
-                TargetOnion.SuckItemIntoOnion(this, TargetPikminTypeOnion);
+                if (TargetOnion == null)
+                    LethalMin.Logger.LogError($"{gameObject.name} owner requested to have sucked into onion, but it has no target onion to suck item into!");
+                else
+                    TargetOnion.SuckItemIntoOnion(this, TargetPikminTypeOnion);
             }
             RemoveAllPikminFromItemOnLocalClient();
         }
