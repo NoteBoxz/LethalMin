@@ -5,7 +5,7 @@
         <AssemblyName>NoteBoxz.LethalMin</AssemblyName>
         <Product>LethalMin</Product>
         <!-- Change to whatever version you're currently on. -->
-        <Version>1.0.27</Version>
+        <Version>1.0.28</Version>
     </PropertyGroup>
 
     <!-- Project Properties -->

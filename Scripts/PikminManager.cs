@@ -2224,6 +2224,11 @@ namespace LethalMin
         public void ClearSavedData()
         {
             if (!IsServer) return;
+            if (LethalMin.DontPurgeAfterFire)
+            {
+                LethalMin.Logger.LogInfo("Skipping clearing saved Pikmin data due to DontPurgeAfterFire being enabled");
+                return;
+            }
 
             SaveManager.DeleteFile();
 

@@ -123,7 +123,6 @@ namespace LethalMin.Patches
             }
             
             PikminManager.instance.ClearSavedData();
-
         }
 
         [HarmonyPatch(nameof(StartOfRound.unloadSceneForAllPlayers))]
