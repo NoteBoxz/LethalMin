@@ -2,8 +2,10 @@ using ElevatorMod.Patches;
 using HarmonyLib;
 using LethalMin.HUD;
 using LethalMin.Pikmin;
+using LethalMin.Routeing;
 using LethalMin.Utils;
 using PiggyVarietyMod.Patches;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -19,7 +21,7 @@ namespace LethalMin.Compats
     public static class EndlessElevatorPatch
     {
         public static MoonSettings ZelevatorPath = null!;
-        public static RouteNode ZelevatorNode = null!;
+        public static RouteNode ElevateNode = null!;
         public static List<ElevatorPikminData> PikminSaved = new List<ElevatorPikminData>();
         public static GameObject POnlyZone = null!;
 
@@ -50,26 +52,23 @@ namespace LethalMin.Compats
                     ZelevatorPath.name = "Zelevator Path";
                     ZelevatorPath.Level = StartOfRound.Instance.currentLevel;
                 }
-                //Update ZelevatorPath
-                ZelevatorPath.CheckPathableIndoor = false;
-                ZelevatorPath.CheckPathableOutdoor = false;
-                ZelevatorPath.IndoorRouteNodes.Clear();
-                RouteNode ElevateNode = new RouteNode(
-                    "Zelevator",
-                    __instance.playerPhysicsRegion_elevator.transform,
-                    -1,
-                    __instance.playerPhysicsRegion_elevator.GetComponent<Collider>()
+                ZelevatorPath.OverridePathing = true;
+                ZelevatorPath.CustomPathingCondition = (request, context) =>
+                {
+                    return context.IsInside;
+                };
+                ElevateNode = new RouteNode(
+                    name: "Zelevator Endless Elevator Node",
+                    point: __instance.playerPhysicsRegion_elevator.transform,
+                    check: __instance.playerPhysicsRegion_elevator.GetComponent<Collider>()
                 );
-                ZelevatorNode = ElevateNode;
-                ZelevatorPath.IndoorRouteNodes.Add(ElevateNode);
-                ElevateNode.CheckBuffer = 0.25f;
                 if (!__instance.playerPhysicsRegion_elevator.TryGetComponent(out DirectlyPathZone zone))
                 {
                     zone = __instance.playerPhysicsRegion_elevator.gameObject.AddComponent<DirectlyPathZone>();
                 }
-                if (!PikminRoute.MoonSettingss.Contains(ZelevatorPath))
+                if (!__instance.playerPhysicsRegion_elevator.TryGetComponent(out ItemArrivalZone arrivalZone))
                 {
-                    PikminRoute.MoonSettingss.Add(ZelevatorPath);
+                    arrivalZone = ItemArrivalZone.CreateZoneOnObject(__instance.playerPhysicsRegion_elevator.gameObject, ItemArrivalZone.ArrivalZoneType.Zelevator);
                 }
 
                 Scene currentScene = SceneManager.GetSceneByName(RoundManager.Instance.currentLevel.sceneName);
@@ -145,10 +144,6 @@ namespace LethalMin.Compats
         [HarmonyPostfix]
         public static void UpdatePostfix(EndlessElevator __instance)
         {
-            if (ZelevatorNode != null && ZelevatorNode.cachedNode != null)
-            {
-                ZelevatorNode.cachedNode.DontDoInRangeCheck = !StartOfRound.Instance.localPlayerController.isInsideFactory;
-            }
             if (POnlyZone != null)
             {
                 POnlyZone.SetActive(LethalMin.BlockEnemiesFromEnteringZeranosShip.InternalValue);
@@ -188,6 +183,11 @@ namespace LethalMin.Compats
         {
             EndlessElevator __instance = GameObject.FindObjectOfType<EndlessElevator>();
             LethalMin.Logger.LogInfo($"Respawning: {PikminSaved.Count} Pikmin from elevator.");
+            __instance.StartCoroutine(WaitRespawnPikmin(__instance));
+        }
+
+        static IEnumerator WaitRespawnPikmin(EndlessElevator __instance)
+        {
             foreach (ElevatorPikminData data in PikminSaved)
             {
                 LethalMin.Logger.LogInfo("Respawning Pikmin: " + data.baseData.DebugName);
@@ -200,6 +200,7 @@ namespace LethalMin.Compats
                 props.OverrideBirthDate = data.baseData.BirthDate;
                 PikminManager.instance.SpawnPikminOnServer(LethalMin.GetPikminTypeByID(data.baseData.TypeID), __instance.playerPhysicsRegion_elevator.transform.position,
                 __instance.playerPhysicsRegion_elevator.transform.rotation, props);
+                yield return new WaitForSeconds(0.03f);
             }
             PikminSaved.Clear();
 
@@ -218,7 +219,11 @@ namespace LethalMin.Compats
         {
             LethalMin.Logger.LogMessage("Warping Pikmin on elevator stop.");
             EndlessElevator __instance = GameObject.FindObjectOfType<EndlessElevator>();
+            __instance.StartCoroutine(WaitWarpOnElevatorStop(__instance));
+        }
 
+        static IEnumerator WaitWarpOnElevatorStop(EndlessElevator __instance)
+        {
             foreach (PikminAI ai in PikminManager.instance.PikminAIs)
             {
                 if (ai == null) { continue; }
@@ -241,6 +246,8 @@ namespace LethalMin.Compats
                     ai.isOutside = !leader.Controller.isInsideFactory;
                 }
                 ai.transform2.TeleportOnLocalClient(__instance.playerPhysicsRegion_elevator.transform.position);
+
+                yield return null;
             }
         }
     }

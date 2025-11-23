@@ -28,11 +28,12 @@ namespace LethalMin
         private MineshaftElevatorController mineShaftElevator = null!;
         private Object piggyElevatorSystem = null!;
 
-        public static void CreateZoneOnObject(GameObject obj, ArrivalZoneType type)
+        public static ItemArrivalZone CreateZoneOnObject(GameObject obj, ArrivalZoneType type)
         {
             ItemArrivalZone newZone = obj.AddComponent<ItemArrivalZone>();
             newZone.zoneType = type;
             LethalMin.Logger.LogInfo($"Created Item Arrival Zone of type {type} on object {obj.name}");
+            return newZone;
         }
 
         public void Start()

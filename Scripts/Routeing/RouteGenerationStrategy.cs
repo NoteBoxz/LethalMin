@@ -512,7 +512,8 @@ public class MoonOverrideStrategy : RouteGenerationStrategy
 
     public override bool CanHandle(PikminRouteRequest request, RouteContext context)
     {
-        return base.CanHandle(request, context) && PikminManager.instance.CurrentMoonSettings != null && PikminManager.instance.CurrentMoonSettings.OverridePathing;
+        return base.CanHandle(request, context) && PikminManager.instance.CurrentMoonSettings != null 
+        && PikminManager.instance.CurrentMoonSettings.CanSettingsHandlePathing(request, context);
     }
 
     public override int Priority => 200; // Second Highest
@@ -525,8 +526,6 @@ public class MoonOverrideStrategy : RouteGenerationStrategy
     /// <returns></returns>
     public override List<RouteNode> GenerateRoute(PikminRouteRequest request, RouteContext context)
     {
-        List<RouteNode> nodes = new List<RouteNode>();
-
-        return nodes;
+        return null!;
     }
 }
